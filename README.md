@@ -1,14 +1,20 @@
 # Fitto - AI-Supported Healthy Lifestyle, Nutrition & Social Tracking App
 
-> 🇹🇷 Fitto, kullanıcıların kalori, makro besin, su, egzersiz, uyku, kilo ve sağlıklı yaşam verilerini takip edebildiği; tarifler, diyet planları, sosyal medya, mesajlaşma, hatırlatıcılar ve yapay zekâ destekli rehberlik özelliklerini bir araya getiren kapsamlı bir Android mobil uygulamasıdır.
+> 🇹🇷 Fitto, kullanıcıların kalori, makro besin, su, egzersiz, uyku, kilo ve vücut ölçüsü gibi sağlıklı yaşam verilerini takip edebildiği; Gemini API destekli yapay zekâ rehberliği, tarifler, diyet planları, kamera ile yemek tanıma, sosyal medya, mesajlaşma, hatırlatıcılar ve gelişim raporlarını tek bir mobil platformda birleştiren kapsamlı bir Android uygulamasıdır.
 
-Fitto is an AI-supported Android mobile application that combines calorie and macro tracking, personalized healthy lifestyle guidance, recipe and diet plan management, social sharing, messaging, reminders and progress reporting in a single mobile platform.
+Fitto is an AI-supported Android healthy lifestyle platform that combines nutrition tracking, personalized goal guidance, recipe and diet plan management, camera-based food recognition, social sharing, messaging, reminders and progress analytics in a single mobile application.
+
+---
 
 ## Project Overview
 
-Fitto was designed as a comprehensive healthy lifestyle assistant rather than a simple calorie tracking application. The application helps users track their daily nutrition and lifestyle habits while also offering personalized onboarding, AI-supported guidance, recipe management, diet planning, social interaction, messaging and progress visualization.
+Fitto was designed as a comprehensive healthy lifestyle assistant rather than a simple calorie tracking application. The application helps users track daily nutrition and lifestyle habits while also offering personalized onboarding, AI-supported guidance, recipe management, diet planning, social interaction, messaging, reminders and progress visualization.
 
-The project aims to make healthy living more sustainable by allowing users to manage nutrition, activity, hydration, sleep, weight and personal goals from one integrated mobile experience.
+The project focuses on making healthy living more sustainable by allowing users to manage nutrition, hydration, physical activity, sleep, weight, body measurements and personal goals from one integrated mobile experience.
+
+One of the key strengths of Fitto is its AI-supported guidance flow. Gemini API is used to support users during target weight selection and to provide meaningful feedback based on daily user inputs such as meals, water intake, exercise records and weight progress.
+
+---
 
 ## Project Highlights
 
@@ -19,24 +25,48 @@ The project aims to make healthy living more sustainable by allowing users to ma
 - Water, exercise, sleep, step and weight tracking
 - Weight and body measurement tracking
 - Recipe browsing, filtering and custom recipe creation
+- Shopping list and fridge inventory support
 - Diet plan management and custom diet plan creation
 - Intermittent fasting tracking
+- Camera-based food recognition flow
 - Social media features such as posts, likes, comments and following
 - Direct messaging and group messaging support
 - Firebase-based authentication, social data and media storage
-- Camera-supported food recognition flow
 - Health Connect integration for step and active calorie data
 - Progress reports and chart-based visualization
 - Reminder and notification system
 - Modern Android UI with Material Design components
 
+---
+
 ## Main Modules
 
-Fitto is structured around five main modules:
+Fitto is structured around several major modules that together create a full healthy lifestyle platform.
 
-### Daily Tracking
+### 1. Personalized Onboarding & AI Guidance
 
-The daily tracking module allows users to monitor their daily health and nutrition data.
+Fitto starts with a detailed onboarding flow to understand the user and generate personalized goals.
+
+During onboarding, the application collects information such as:
+
+- Age
+- Height
+- Weight
+- Gender
+- Activity level
+- Goal type
+- Target weight
+- Goal motivation
+
+Based on this information, Fitto calculates daily calorie and macro targets. The application also evaluates whether the selected target is healthy, aggressive or not recommended, and provides safer guidance when needed.
+
+Gemini API is used to support this process by generating AI-assisted explanations and recommendations for the user’s target and plan.
+
+---
+
+### 2. Daily Nutrition & Lifestyle Tracking
+
+The daily tracking module is the central part of the application. It allows users to monitor their daily health and nutrition data in one place.
 
 Users can track:
 
@@ -48,11 +78,32 @@ Users can track:
 - Sleep duration
 - Step count
 - Active calories
-- Weight and body measurements
+- Weight updates
+- Body measurements
 
-### Recipes and Kitchen Support
+Fitto also provides AI-supported daily interpretation based on the user’s current data. This helps the application act not only as a tracker, but also as a smart assistant that gives contextual feedback.
 
-The recipe module helps users discover and manage healthy meal options.
+---
+
+### 3. Camera-Based Food Recognition
+
+Fitto includes a camera-supported meal entry flow. Users can take a photo of a meal and receive food suggestions through an external food recognition service.
+
+The camera-based flow includes:
+
+- Capturing a food image with CameraX
+- Sending the optimized image to the food recognition API
+- Listing detected food candidates
+- Allowing the user to select and adjust the correct food item
+- Adding selected food items to the meal log
+
+This feature reduces manual search effort and improves the meal entry experience.
+
+---
+
+### 4. Recipes & Kitchen Support
+
+The recipe module helps users discover, save and manage healthy meal options.
 
 Users can:
 
@@ -61,61 +112,102 @@ Users can:
 - View recipe details
 - Save favorite recipes
 - Create custom recipes
+- Use cooking mode
 - Add ingredients to a shopping list
-- Use kitchen-support features such as fridge and ingredient tracking
+- Track available ingredients with fridge inventory support
 
-### Diet Plans
+This module makes Fitto more than a tracking app by supporting meal planning and daily kitchen organization.
 
-Fitto supports diet plan management for users with different health and nutrition goals.
+---
+
+### 5. Diet Plans & Intermittent Fasting
+
+Fitto supports structured diet planning for users with different goals.
 
 Users can:
 
 - View predefined diet plans
-- Activate a diet plan
+- Activate a selected diet plan
 - Follow planned meals
 - Create custom diet plans
-- Manage intermittent fasting sessions
+- Manage diet plan preferences
+- Track intermittent fasting sessions
+- Create custom fasting plans
 
-### Social Media and Messaging
+The diet plan and fasting features help users follow a more organized and sustainable nutrition routine.
 
-Fitto includes social features to increase user motivation and interaction.
+---
+
+### 6. Social Media & Messaging
+
+Fitto includes social features designed to increase motivation and user interaction.
 
 Users can:
 
 - Create posts
-- Like and comment on posts
+- Share healthy lifestyle content
+- Like posts
+- Comment on posts
 - Follow other users
+- View notifications
 - Send direct messages
-- Join group conversations
-- Share healthy lifestyle progress and content
+- Create and manage group conversations
 
-### Reports and Profile
+Firebase services are used to support social data, real-time messaging states and media storage.
 
-The reports and profile modules allow users to manage their personal settings and track their progress over time.
+---
 
-Users can:
+### 7. Reports & Progress Analytics
 
-- View calorie reports
-- Track macro distribution
-- Monitor weight progress
-- Manage profile information
-- Configure reminders
-- Change theme and language preferences
-- Manage privacy and notification settings
+Fitto provides visual progress tracking through reports and charts.
+
+Reports include:
+
+- Calorie tracking
+- Macro distribution
+- Weight progress
+- Body measurement progress
+- Daily and historical summaries
+
+Chart-based visualization helps users understand their progress more clearly and stay motivated.
+
+---
+
+### 8. Profile, Settings & Reminders
+
+The profile module allows users to manage personal settings and preferences.
+
+Users can manage:
+
+- Profile information
+- Weight history
+- Body measurements
+- Theme preferences
+- Language preferences
+- Notification settings
+- Privacy options
+- Reminder settings
+
+Fitto includes reminder and notification support for meals, water intake, exercise, weight tracking and custom reminders.
+
+---
 
 ## AI-Supported Features
 
-Fitto uses Gemini API to support users during goal setting and daily progress tracking.
+Fitto uses Gemini API to provide intelligent guidance throughout the user journey.
 
 AI-supported features include:
 
 - Target weight guidance
+- Healthy goal evaluation support
+- Personalized plan explanation
 - Daily progress interpretation
 - Feedback based on meals, water, exercise and weight entries
-- Personalized motivational and informative responses
-- Healthier goal recommendation support during onboarding
+- Motivational and informative responses
 
-These features help Fitto act not only as a tracking application, but also as a smart assistant that guides users throughout their healthy lifestyle journey.
+These features help Fitto act as a smart healthy lifestyle assistant rather than a passive data tracking application.
+
+---
 
 ## Technologies Used
 
@@ -139,6 +231,9 @@ These features help Fitto act not only as a tracking application, but also as a 
 - AlarmManager
 - SharedPreferences
 - Repository and DAO structures
+- Fragment-based navigation
+
+---
 
 ## Architecture
 
@@ -148,13 +243,16 @@ Main architectural components include:
 
 - Application layer
 - Activity and Fragment-based presentation layer
+- ViewModel-based state management
 - Repository layer
 - Local data layer with Room and DAO structures
 - Remote data layer with Firebase and external APIs
 - Preference / Store layer for lightweight local states
-- ViewModel-based state management for onboarding and tracking flows
+- Notification and reminder scheduling components
 
 This structure improves maintainability, separates responsibilities and makes the application easier to extend.
+
+---
 
 ## Data Management
 
@@ -184,6 +282,7 @@ SharedPreferences-based stores are used for lightweight user states such as:
 - Theme and language preferences
 - Nutrition targets
 - Diet plan preferences
+- Fasting session data
 - Notification history
 
 ### Remote Data
@@ -197,6 +296,8 @@ Firebase services include:
 - Firebase Realtime Database for online status and typing indicators
 - Firebase Storage for profile photos, post images, recipe images, group photos and message attachments
 
+---
+
 ## External API Integrations
 
 Fitto includes several external integrations:
@@ -205,6 +306,8 @@ Fitto includes several external integrations:
 - **USDA FoodData Central API** for online food search
 - **LogMeal API** for camera-based food recognition
 - **Health Connect** for step count and active calorie data
+
+---
 
 ## Privacy and Security
 
@@ -219,10 +322,27 @@ Fitto includes several privacy and security-focused mechanisms:
 - Notification permissions handled according to Android requirements
 - Profile visibility and social interaction controls
 - Reporting and blocking mechanisms for social features
+- Reminder and session management support
+
+---
 
 ## Screenshots
 
-Screenshots will be added soon.
+| Welcome & Onboarding | AI Goal Guidance | Daily Tracking |
+|---|---|---|
+| <img src="docs/screenshots/welcome.png" width="220"/> | <img src="docs/screenshots/onboarding-ai.png" width="220"/> | <img src="docs/screenshots/daily-tracking.png" width="220"/> |
+
+| Camera Food Entry | Recipes | Diet Plans |
+|---|---|---|
+| <img src="docs/screenshots/camera-food.png" width="220"/> | <img src="docs/screenshots/recipes.png" width="220"/> | <img src="docs/screenshots/diet-plans.png" width="220"/> |
+
+| Social Feed | Messaging | Reports & Profile |
+|---|---|---|
+| <img src="docs/screenshots/social-feed.png" width="220"/> | <img src="docs/screenshots/messaging.png" width="220"/> | <img src="docs/screenshots/reports-profile.png" width="220"/> |
+
+> Screenshots should be captured using demo data. Personal health data, private messages, real user information and API keys should not be shown.
+
+---
 
 ## Contributors
 
@@ -231,9 +351,15 @@ This project was developed by:
 - [Nursena Duyku](https://github.com/nursena-pc)
 - [İrem Nur Şahin](https://github.com/Iremnursh)
 
+---
+
 ## Project Status
 
 Developed in 2026 as an Android mobile programming project and portfolio work.
+
+The project is currently maintained as a portfolio project.
+
+---
 
 ## License
 
