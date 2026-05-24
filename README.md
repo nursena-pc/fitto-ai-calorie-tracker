@@ -328,20 +328,23 @@ Fitto includes several privacy and security-focused mechanisms:
 
 ## Screenshots
 
-| Welcome & Onboarding | AI Goal Guidance | Daily Tracking |
+| Welcome | Target Weight | AI / Daily Needs Result |
 |---|---|---|
-| <img src="docs/screenshots/welcome.png" width="220"/> | <img src="docs/screenshots/onboarding-ai.png" width="220"/> | <img src="docs/screenshots/daily-tracking.png" width="220"/> |
+| <img src="docs/screenshots/welcome.png" width="220"/> | <img src="docs/screenshots/onboarding-targetweight.jpeg" width="220"/> | <img src="docs/screenshots/Dailyneedsresult.jpeg" width="220"/> |
 
-| Camera Food Entry | Recipes | Diet Plans |
+| Daily Tracking | Food Entry | Recipes |
 |---|---|---|
-| <img src="docs/screenshots/camera-food.png" width="220"/> | <img src="docs/screenshots/recipes.png" width="220"/> | <img src="docs/screenshots/diet-plans.png" width="220"/> |
+| <img src="docs/screenshots/daily-tracking.jpeg" width="220"/> | <img src="docs/screenshots/foodentry.jpeg" width="220"/> | <img src="docs/screenshots/recipes.jpeg" width="220"/> |
 
-| Social Feed | Messaging | Reports & Profile |
+| Recipe Detail | Diet Plans | Social Feed |
 |---|---|---|
-| <img src="docs/screenshots/social-feed.png" width="220"/> | <img src="docs/screenshots/messaging.png" width="220"/> | <img src="docs/screenshots/reports-profile.png" width="220"/> |
+| <img src="docs/screenshots/recipesdetail.jpeg" width="220"/> | <img src="docs/screenshots/diet-plans.jpeg" width="220"/> | <img src="docs/screenshots/social-feed.jpeg" width="220"/> |
 
-> Screenshots should be captured using demo data. Personal health data, private messages, real user information and API keys should not be shown.
+| Messaging | Reports | Profile |
+|---|---|---|
+| <img src="docs/screenshots/messaging.jpeg" width="220"/> | <img src="docs/screenshots/reports.jpeg" width="220"/> | <img src="docs/screenshots/profile.jpeg" width="220"/> |
 
+> Screenshots were captured using demo data. Personal health data, private messages, real user information and API keys are not shown.
 ---
 
 ## Contributors
