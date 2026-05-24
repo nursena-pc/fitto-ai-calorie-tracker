@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="150dp"
+    android:layout_height="132dp"
+    android:layout_marginEnd="10dp"
+    app:cardBackgroundColor="@color/fitto_surface"
+    app:cardCornerRadius="18dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/fitto_divider_soft"
+    app:strokeWidth="1dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+        <ImageView android:layout_width="match_parent" android:layout_height="76dp" android:scaleType="centerCrop" android:src="@drawable/plant_based_diet_cover" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="10dp" android:paddingTop="8dp" android:paddingEnd="10dp" android:text="Sebzeli Yumurta" android:textColor="@color/fitto_text_dark" android:textSize="13sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingStart="10dp" android:paddingEnd="10dp" android:text="20 dk • Kolay" android:textColor="@color/fitto_text_secondary" android:textSize="11sp" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/cardProfileAchievement"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="14dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/profile_menu_background"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="2dp"
+        app:strokeColor="@color/profile_stroke"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <FrameLayout
+                    android:id="@+id/viewAchievementIconContainer"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:background="@drawable/bg_profile_avatar"
+                    android:backgroundTint="@color/white">
+
+                <ImageView
+                        android:id="@+id/imageAchievementIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_star_outline"
+                        android:tint="@color/fitto_green" />
+
+            </FrameLayout>
+
+            <TextView
+                    android:id="@+id/textAchievementStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_achievement_status_chip"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:paddingStart="13dp"
+                    android:paddingEnd="13dp"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            <Space
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1" />
+
+            <TextView
+                    android:id="@+id/textAchievementChevron"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:text="›"
+                    android:textColor="@color/profile_subtext"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/textAchievementTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:includeFontPadding="false"
+                android:textColor="@color/profile_text"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        <TextView
+                android:id="@+id/textAchievementDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:includeFontPadding="false"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/profile_subtext"
+                android:textSize="13sp" />
+
+        <ProgressBar
+                android:id="@+id/progressAchievement"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="16dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/fitto_green"
+                android:progressBackgroundTint="@color/profile_progress_track" />
+
+        <TextView
+                android:id="@+id/textAchievementProgress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

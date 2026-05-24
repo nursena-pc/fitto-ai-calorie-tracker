@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:paddingBottom="12dp">
+
+    <!-- Öndeki gerçek kart -->
+    <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardReminder"
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            app:cardBackgroundColor="@color/profile_card_background"
+            app:cardCornerRadius="22dp"
+            app:cardElevation="2dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="14dp">
+
+            <TextView
+                    android:id="@+id/textReminderIcon"
+                    android:layout_width="54dp"
+                    android:layout_height="54dp"
+                    android:gravity="center"
+                    android:textSize="25sp" />
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/textReminderTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/profile_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                <LinearLayout
+                        android:id="@+id/layoutReminderTagRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <TextView
+                            android:id="@+id/textReminderTag"
+                            android:layout_width="wrap_content"
+                            android:layout_height="22dp"
+                            android:background="@drawable/bg_reminder_tag"
+                            android:gravity="center"
+                            android:minWidth="54dp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:textSize="12sp" />
+
+                    <ImageView
+                            android:id="@+id/imageReminderNotifyMode"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginStart="7dp"
+                            android:background="@drawable/bg_reminder_tag"
+                            android:contentDescription="@string/reminder_dialog_notify_mode"
+                            android:padding="5dp"
+                            android:src="@drawable/ic_notify_sound_vibration"
+                            app:tint="@color/profile_subtext" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="102dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/textReminderTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/profile_text"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/textReminderRepeat"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/profile_subtext"
+                        android:textSize="13sp" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchReminder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

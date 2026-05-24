@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/createAccountRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingStart="24dp"
+        android:paddingTop="40dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+    <View
+            android:id="@+id/createAccountDecorBlob"
+            android:layout_width="220dp"
+            android:layout_height="190dp"
+            android:alpha="0.75"
+            android:background="@drawable/bg_auth_decor_blob"
+            android:rotation="-8"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+            android:id="@+id/createAccountLeafDecor"
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:layout_marginTop="26dp"
+            android:layout_marginEnd="26dp"
+            android:alpha="0.78"
+            android:rotation="18"
+            android:src="@drawable/ic_leaf_decor"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toTopOf="@id/createAccountDecorBlob"
+            app:layout_constraintEnd_toEndOf="@id/createAccountDecorBlob" />
+
+    <ImageButton
+            android:id="@+id/createAccountBackButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_fitto_circle_white"
+            android:contentDescription="@string/back"
+            android:elevation="4dp"
+            android:padding="18dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+            android:id="@+id/createAccountScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="120dp"
+            app:layout_constraintTop_toBottomOf="@id/createAccountBackButton"
+            app:layout_constraintBottom_toTopOf="@id/createAccountButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:id="@+id/createAccountContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/createAccountTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:text="@string/login_create_account_lower"
+                    android:textColor="#123B2F"
+                    android:textSize="40sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/createAccountDescriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:lineSpacingExtra="8dp"
+                    android:text="@string/register_desc"                    android:textColor="#5F6467"
+                    android:textSize="19sp" />
+
+            <LinearLayout
+                    android:id="@+id/createAccountFormCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="54dp"
+                    android:background="@drawable/bg_fitto_card_large"
+                    android:elevation="3dp"
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingTop="22dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="22dp">
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/emailInputLayout"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/register_email"                        app:boxBackgroundColor="@color/fitto_surface"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:boxStrokeColor="@color/fitto_green"
+                        app:errorEnabled="true"
+                        app:hintTextColor="@color/fitto_green"
+                        app:startIconDrawable="@drawable/ic_email"
+                        app:startIconTint="@color/fitto_green">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/emailEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:inputType="textEmailAddress"
+                            android:singleLine="true"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="17sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/passwordInputLayout"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:hint="@string/register_password"                        app:boxBackgroundColor="@color/fitto_surface"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:boxStrokeColor="@color/fitto_green"
+                        app:endIconMode="password_toggle"
+                        app:errorEnabled="true"
+                        app:hintTextColor="@color/fitto_green"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="@color/fitto_green">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/passwordEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPassword"
+                            android:singleLine="true"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="17sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/passwordRepeatInputLayout"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:hint="@string/register_password_again"                        app:boxBackgroundColor="@color/fitto_surface"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:boxStrokeColor="@color/fitto_green"
+                        app:endIconMode="password_toggle"
+                        app:errorEnabled="true"
+                        app:hintTextColor="@color/fitto_green"
+                        app:startIconDrawable="@drawable/ic_lock"
+                        app:startIconTint="@color/fitto_green">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/passwordRepeatEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionDone"
+                            android:inputType="textPassword"
+                            android:singleLine="true"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="17sp" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/loginRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="42dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/already_have_account"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="17sp" />
+
+                <TextView
+                        android:id="@+id/loginText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:text="@string/login"                        android:textColor="@color/fitto_green"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <TextView
+            android:id="@+id/createAccountButton"
+            android:layout_width="0dp"
+            android:layout_height="68dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_fitto_button_pill_primary"
+            android:clickable="true"
+            android:elevation="6dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/register_button"            android:textColor="@color/white"
+            android:textSize="21sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

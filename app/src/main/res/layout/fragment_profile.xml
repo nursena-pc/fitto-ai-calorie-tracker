@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/profileScreenRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/profile_screen_background">
+
+    <com.example.fitto.feature_home.presentation.profile.view.FittoBottomDecorationView
+            android:id="@+id/fittoBottomDecoration"
+            android:layout_width="match_parent"
+            android:layout_height="170dp"
+            android:layout_gravity="bottom" />
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/profileScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+        <LinearLayout
+                android:id="@+id/profileRootLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="190dp">
+
+            <include
+                    android:id="@+id/includeProfileHero"
+                    layout="@layout/layout_profile_hero" />
+
+            <include
+                    android:id="@+id/includeProfileSummaryCards"
+                    layout="@layout/layout_profile_summary_cards" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/profileMenuRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    android:paddingStart="16dp"
+                    android:paddingTop="6dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="18dp" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</FrameLayout>

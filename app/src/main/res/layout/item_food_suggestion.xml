@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+        <TextView
+                android:id="@+id/foodEmojiText"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:background="@drawable/bg_add_meal_food_thumbnail"
+                android:gravity="center"
+                android:textSize="30sp"
+                tools:text="🥣" />
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/foodNameText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="Yulaf Ezmesi"
+                    android:lineSpacingExtra="1dp"/>
+
+            <TextView
+                    android:id="@+id/foodServingText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="13sp"
+                    tools:text="1 porsiyon (40 g)" />
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/foodCaloriesText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="150 kcal" />
+        <ImageButton
+                android:id="@+id/favoriteFoodButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/add_meal_favorite_food"
+                android:padding="9dp"
+                android:src="@drawable/ic_star_outline"
+                app:tint="@color/fitto_text_secondary" />
+
+        <ImageButton
+                android:id="@+id/addFoodButton"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_add_meal_plus_circle"
+                android:contentDescription="@string/add_meal_add_food"
+                android:padding="8dp"
+                android:src="@drawable/ic_add"
+                app:tint="@color/white" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

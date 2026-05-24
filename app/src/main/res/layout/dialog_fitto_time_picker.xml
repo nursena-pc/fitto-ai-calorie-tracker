@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="22dp">
+
+        <TextView
+                android:id="@+id/timePickerTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/hourPlusButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="52dp"
+                        android:layout_height="44dp"
+                        android:text="+"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="22sp"
+                        app:cornerRadius="18dp"
+                        app:strokeColor="@color/fitto_green" />
+
+                <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:cardBackgroundColor="@color/fitto_surface_soft"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/fitto_green"
+                        app:strokeWidth="2dp">
+
+                    <TextView
+                            android:id="@+id/hourValueText"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="42sp"
+                            android:textStyle="bold" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/hourMinusButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="52dp"
+                        android:layout_height="44dp"
+                        android:text="−"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="22sp"
+                        app:cornerRadius="18dp"
+                        app:strokeColor="@color/fitto_green" />
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Saat"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text=":"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="38sp"
+                    android:textStyle="bold" />
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/minutePlusButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="52dp"
+                        android:layout_height="44dp"
+                        android:text="+"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="22sp"
+                        app:cornerRadius="18dp"
+                        app:strokeColor="@color/fitto_green" />
+
+                <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        app:cardBackgroundColor="@color/fitto_surface_soft"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/fitto_divider_soft"
+                        app:strokeWidth="1dp">
+
+                    <TextView
+                            android:id="@+id/minuteValueText"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="42sp"
+                            android:textStyle="bold" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/minuteMinusButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="52dp"
+                        android:layout_height="44dp"
+                        android:text="−"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="22sp"
+                        app:cornerRadius="18dp"
+                        app:strokeColor="@color/fitto_green" />
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Dakika"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/timePickerCancelButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="İptal"
+                    android:textAllCaps="false"
+                    android:textColor="@color/fitto_green" />
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/timePickerOkButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Tamam"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:backgroundTint="@color/fitto_green"
+                    app:cornerRadius="20dp" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

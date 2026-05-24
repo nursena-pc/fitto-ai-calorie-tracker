@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/dailyNeedsLoadingRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="24dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+    <include
+            android:id="@+id/onboardingProgressContainer"
+            layout="@layout/view_onboarding_progress"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+            android:id="@+id/dailyNeedsLoadingBackButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_fitto_circle_soft"
+            android:contentDescription="@string/back"
+            android:padding="18dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toBottomOf="@id/onboardingProgressContainer"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+            android:id="@+id/dailyNeedsLoadingScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="18dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp"
+            app:layout_constraintTop_toBottomOf="@id/dailyNeedsLoadingBackButton"
+            app:layout_constraintBottom_toTopOf="@id/showPlanButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:id="@+id/dailyNeedsLoadingContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/dailyNeedsLoadingSparkleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✦ ✦"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="22sp" />
+
+            <TextView
+                    android:id="@+id/dailyNeedsLoadingTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center"
+                    android:text="@string/daily_needs_loading_title"
+                    android:textColor="#123B2F"
+                    android:textSize="34sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/dailyNeedsLoadingMotivationText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="5dp"
+                    android:text="@string/daily_needs_loading_motivation"
+                    android:textColor="#5E6467"
+                    android:textSize="17sp" />
+
+            <FrameLayout
+                    android:id="@+id/dailyNeedsLoadingHeroCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="330dp"
+                    android:layout_marginTop="26dp"
+                    android:background="@drawable/bg_fitto_card_large"
+                    android:elevation="3dp">
+
+                <View
+                        android:layout_width="250dp"
+                        android:layout_height="250dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:alpha="0.75" />
+
+                <TextView
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="28dp"
+                        android:background="@drawable/bg_fitto_circle_white"
+                        android:elevation="3dp"
+                        android:gravity="center"
+                        android:text="📊"
+                        android:textSize="20sp" />
+
+                <TextView
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="28dp"
+                        android:background="@drawable/bg_fitto_circle_white"
+                        android:elevation="3dp"
+                        android:gravity="center"
+                        android:text="🛡️"
+                        android:textSize="20sp" />
+
+                <ImageView
+                        android:id="@+id/dailyNeedsLoadingMascotImage"
+                        android:layout_width="230dp"
+                        android:layout_height="230dp"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/fitto_calculating_mascot" />
+
+                <LinearLayout
+                        android:id="@+id/dailyNeedsLoadingMessageCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginEnd="24dp"
+                        android:layout_marginBottom="20dp"
+                        android:background="@drawable/bg_fitto_card"
+                        android:elevation="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="14dp">
+
+                    <FrameLayout
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:background="@drawable/bg_fitto_circle_soft">
+
+                        <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_info"
+                                app:tint="@color/fitto_green" />
+
+                    </FrameLayout>
+
+                    <TextView
+                            android:id="@+id/dailyNeedsLoadingSubtitleText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/daily_needs_loading_subtitle"
+                            android:textColor="#555B5E"
+                            android:textSize="15sp" />
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <FrameLayout
+            android:id="@+id/showPlanButton"
+            android:layout_width="0dp"
+            android:layout_height="68dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_fitto_button_loading_track"
+            android:clickable="true"
+            android:clipToOutline="true"
+            android:elevation="4dp"
+            android:enabled="false"
+            android:focusable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <View
+                android:id="@+id/showPlanButtonFill"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_fitto_button_primary" />
+
+        <TextView
+                android:id="@+id/showPlanButtonText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/daily_needs_preparing"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

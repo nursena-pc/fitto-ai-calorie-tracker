@@ -1,0 +1,4 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient android:startColor="@color/fitto_surface_soft" android:centerColor="@color/fitto_chip_background" android:endColor="@color/fitto_primary_extra_soft" android:angle="0"/>
+    <corners android:radius="22dp"/>
+</shape>

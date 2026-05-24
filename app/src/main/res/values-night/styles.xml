@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Fitto.FullScreenDialog" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowIsFloating">false</item>
+
+        <item name="android:windowBackground">@color/fitto_background_light</item>
+        <item name="android:statusBarColor">@color/fitto_background_light</item>
+        <item name="android:navigationBarColor">@color/fitto_background_light</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnPrimaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnSecondaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorTertiary">@color/fitto_orange</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorTertiaryContainer">@color/fitto_tertiary_soft</item>
+        <item name="colorOnTertiaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+
+        <item name="materialSwitchStyle">@style/Widget.Fitto.MaterialSwitch</item>
+        <item name="materialAlertDialogTheme">@style/FittoAlertDialogTheme</item>
+        <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
+    </style>
+
+    <style name="ThemeOverlay.Fitto.WhiteAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@color/fitto_text_on_light_surface</item>
+        <item name="colorSurfaceVariant">@android:color/white</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary_on_light_surface</item>
+        <item name="colorSurfaceContainerLowest">@android:color/white</item>
+        <item name="colorSurfaceContainerLow">@android:color/white</item>
+        <item name="colorSurfaceContainer">@android:color/white</item>
+        <item name="colorSurfaceContainerHigh">@android:color/white</item>
+        <item name="colorSurfaceContainerHighest">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="backgroundTint">@android:color/white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="buttonBarButtonStyle">@style/Widget.Fitto.WhiteDialog.Button</item>
+    </style>
+
+    <style name="Widget.Fitto.WhiteDialog.Button" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/fitto_green</item>
+    </style>
+
+    <style name="ThemeOverlay.Fitto.WhiteBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="android:colorBackground">@color/fitto_surface</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+        <item name="bottomSheetStyle">@style/Widget.Fitto.BottomSheet</item>
+    </style>
+
+    <style name="Widget.Fitto.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_fitto_bottom_sheet</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+    </style>
+
+    <style name="FittoWhitePopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_white</item>
+    </style>
+
+    <style name="FittoWhitePopupMenuOverlay">
+        <item name="popupMenuStyle">@style/FittoWhitePopupMenu</item>
+    </style>
+
+
+
+    <style name="ThemeOverlay.Fitto.ChatActionDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerLow">@color/fitto_surface</item>
+        <item name="colorSurfaceContainer">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/fitto_surface</item>
+        <item name="android:colorBackground">@color/fitto_surface</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="buttonBarButtonStyle">@style/Widget.Fitto.ChatActionDialog.Button</item>
+    </style>
+
+    <style name="Widget.Fitto.ChatActionDialog.Button" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/fitto_green</item>
+    </style>
+
+    <style name="ThemeOverlay.Fitto.WhiteTimePicker" parent="ThemeOverlay.Material3.MaterialTimePicker">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerLow">@color/fitto_surface</item>
+        <item name="colorSurfaceContainer">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/fitto_surface</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@color/fitto_surface</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+    </style>
+
+</resources>

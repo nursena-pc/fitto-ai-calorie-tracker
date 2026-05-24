@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/addMealRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/addMealScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="128dp">
+
+            <LinearLayout
+                    android:id="@+id/addMealTopBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <ImageButton
+                        android:id="@+id/backButton"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/back"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/fitto_text_dark" />
+
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/add_meal_title"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                <Space
+                        android:layout_width="44dp"
+                        android:layout_height="44dp" />
+            </LinearLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/addMealHeroCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="142dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_add_meal_hero"
+                    android:clipToOutline="true"
+                    android:paddingStart="18dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="14dp">
+
+                <TextView
+                        android:id="@+id/heroTitleText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/add_meal_hero_title"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="21sp"
+                        android:textStyle="bold"
+                        app:layout_constraintEnd_toStartOf="@id/heroMascotImage"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                        android:id="@+id/heroSubtitleText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/add_meal_hero_subtitle"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toStartOf="@id/heroMascotImage"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/heroTitleText" />
+
+                <TextView
+                        android:id="@+id/targetMealChipText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_fitto_chip"
+                        android:paddingStart="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="4dp"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/heroSubtitleText"
+                        tools:text="Kahvaltı için" />
+
+                <ImageView
+                        android:id="@+id/heroMascotImage"
+                        android:layout_width="136dp"
+                        android:layout_height="150dp"
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/girdi_mascot"
+                        android:translationY="14dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                        android:id="@+id/heroLeafIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:alpha="0.55"
+                        android:src="@drawable/ic_leaf_decor"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="@color/fitto_green" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/searchBarCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="58dp"
+                    android:layout_marginTop="18dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp">
+
+                    <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="@string/add_meal_search_hint"
+                            android:src="@drawable/ic_search"
+                            app:tint="@color/fitto_green" />
+
+                    <EditText
+                            android:id="@+id/searchEditText"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="@string/add_meal_search_hint"
+                            android:imeOptions="actionSearch"
+                            android:inputType="textCapWords"
+                            android:maxLines="1"
+                            android:padding="0dp"
+                            android:singleLine="true"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textColorHint="@color/fitto_text_secondary"
+                            android:textSize="15sp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/cameraButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/add_meal_camera_action"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_camera"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/fitto_green"
+                        app:strokeColor="@color/fitto_green"
+                        app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/favoriteButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/add_meal_favorites_action"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="13sp"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_star_outline"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/fitto_yellow"
+                        app:strokeColor="@color/fitto_divider_soft"
+                        app:strokeWidth="1dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:id="@+id/foodsSectionTitleText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/add_meal_suggested_foods"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/seeAllFoodsText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:drawableStart="@drawable/ic_add"
+                        android:drawablePadding="4dp"
+                        android:gravity="center"
+                        android:paddingStart="8dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="6dp"
+                        android:text="@string/add_meal_create_food_short"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:drawableTint="@color/fitto_green" />
+            </LinearLayout>
+
+
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/suggestedFoodsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:overScrollMode="never"
+                    tools:itemCount="4"
+                    tools:listitem="@layout/item_food_suggestion" />
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/loadMoreFoodsButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/add_meal_load_more_foods"
+                    android:textAllCaps="false"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    app:cornerRadius="16dp"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/fitto_green"
+                    app:strokeColor="@color/fitto_green"
+                    app:strokeWidth="1dp" />
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/add_meal_selected_foods"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/selectedSummaryText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        tools:text="2 besin seçildi · 315 kcal" />
+            </LinearLayout>
+
+            <TextView
+                    android:id="@+id/emptySelectedText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_add_meal_selected_card"
+                    android:gravity="center"
+                    android:padding="18dp"
+                    android:text="@string/add_meal_empty_selected"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/selectedFoodsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    tools:itemCount="2"
+                    tools:listitem="@layout/item_selected_food" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.card.MaterialCardView
+            android:id="@+id/addMealBottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="104dp"
+            android:layout_gravity="bottom"
+            app:cardBackgroundColor="@color/fitto_surface"
+            app:cardCornerRadius="0dp"
+            app:cardElevation="10dp"
+            app:strokeWidth="0dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/cancelButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_marginEnd="7dp"
+                    android:layout_weight="0.82"
+                    android:text="@string/common_cancel"
+                    android:textAllCaps="false"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/fitto_green"
+                    app:strokeWidth="1.2dp" />
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/addMealButton"
+                    android:layout_width="0dp"
+                    android:layout_height="58dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_weight="1.18"
+                    android:backgroundTint="@color/fitto_green"
+                    android:text="@string/add_meal_submit"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="16dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

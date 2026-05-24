@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/activityLevelRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="24dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+    <include
+            android:id="@+id/onboardingProgressContainer"
+            layout="@layout/view_onboarding_progress"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+            android:id="@+id/activityLevelBackButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_fitto_circle_soft"
+            android:contentDescription="@string/back"
+            android:padding="18dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toBottomOf="@id/onboardingProgressContainer"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+            android:id="@+id/activityLevelScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="26dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp"
+            app:layout_constraintTop_toBottomOf="@id/activityLevelBackButton"
+            app:layout_constraintBottom_toTopOf="@id/activityLevelNextButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:id="@+id/activityLevelContentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/activityLevelTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/activity_level_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="25sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/activityLevelDescriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="5dp"
+                    android:text="@string/activity_level_desc"
+                    android:textColor="#666A6D"
+                    android:textSize="18sp" />
+
+            <LinearLayout
+                    android:id="@+id/activityLowCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:gravity="center"
+                        android:text="🪑"
+                        android:textSize="22sp" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/activityLowTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/activity_low_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/activityLowDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/activity_low_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/activityLowCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/activityModerateCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:gravity="center"
+                        android:text="🚶"
+                        android:textSize="22sp" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/activityModerateTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/activity_moderate_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/activityModerateDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/activity_moderate_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/activityModerateCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/activityHighCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:gravity="center"
+                        android:text="🏃"
+                        android:textSize="22sp" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/activityHighTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/activity_high_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/activityHighDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/activity_high_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/activityHighCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/activityVeryHighCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:gravity="center"
+                        android:text="🔥"
+                        android:textSize="22sp" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/activityVeryHighTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/activity_very_high_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/activityVeryHighDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/activity_very_high_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/activityVeryHighCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <TextView
+            android:id="@+id/activityLevelNextButton"
+            android:layout_width="0dp"
+            android:layout_height="68dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_fitto_button_primary"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/calculate_my_daily_needs"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

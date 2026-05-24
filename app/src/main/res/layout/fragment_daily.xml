@@ -1,0 +1,1726 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/dailyRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/dailyScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+        <LinearLayout
+                android:id="@+id/dailyContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="22dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="160dp">
+
+            <!-- Başlık ve Bildirimler -->
+            <LinearLayout
+                    android:id="@+id/dailyHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <ImageView
+                            android:id="@+id/dailyLogoIcon"
+                            android:layout_width="34dp"
+                            android:layout_height="34dp"
+                            android:layout_marginEnd="8dp"
+                            android:contentDescription="@string/app_name"
+                            android:src="@mipmap/ic_launcher_round" />
+
+                    <TextView
+                            android:id="@+id/dailyLogoText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/fredoka_bold"
+                            android:text="@string/app_name"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="34sp" />
+                </LinearLayout>
+
+                <ImageButton
+                        android:id="@+id/dailyNotificationButton"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/social_notifications"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_notifications"
+                        app:tint="@color/fitto_text_dark" />
+            </LinearLayout>
+
+            <!-- Tarih Seçici -->
+            <LinearLayout
+                    android:id="@+id/dateSelectorContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_fitto_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="12dp">
+
+                <TextView
+                        android:id="@+id/dailySelectedDateText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/daily_today_date_mock"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginStart="6dp"
+                        android:src="@drawable/ic_keyboard_arrow_down"
+                        app:tint="@color/fitto_text_dark" />
+
+                <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="12dp"
+                        android:src="@drawable/ic_calendar_month"
+                        app:tint="@color/fitto_text_dark" />
+            </LinearLayout>
+
+            <!-- Diyet Planı Butonları -->
+            <LinearLayout
+                    android:id="@+id/dietActionRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/dietPlansButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="68dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:minHeight="0dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="@string/daily_diet_plans"
+                        android:textAllCaps="false"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_nav_daily"
+                        app:iconGravity="textStart"
+                        app:iconPadding="10dp"
+                        app:iconTint="@color/fitto_green"
+                        app:strokeColor="@color/fitto_green"
+                        app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/applyTodayPlanButton"
+                        android:layout_width="0dp"
+                        android:layout_height="68dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="@color/fitto_green"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:minHeight="0dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="@string/daily_apply_today_plan"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        app:cornerRadius="20dp"
+                        app:icon="@drawable/ic_add"
+                        app:iconGravity="textStart"
+                        app:iconPadding="10dp"
+                        app:iconTint="@color/white" />
+            </LinearLayout>
+
+            <!-- Günlük Özet Kartı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/dailySummaryCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/daily_summary_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <FrameLayout
+                                android:layout_width="132dp"
+                                android:layout_height="132dp">
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                    android:id="@+id/dailyCalorieProgress"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_gravity="center"
+                                    android:max="100"
+                                    android:progress="36"
+                                    app:indicatorColor="@color/fitto_green"
+                                    app:indicatorDirectionCircular="clockwise"
+                                    app:indicatorInset="6dp"
+                                    app:indicatorSize="126dp"
+                                    app:trackColor="@color/fitto_yellow"
+                                    app:trackThickness="12dp" />
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/daily_remaining_calorie"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="11sp" />
+
+                                <TextView
+                                        android:id="@+id/remainingCaloriesText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="820"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="30sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="kcal"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="12sp" />
+                            </LinearLayout>
+                        </FrameLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="16dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/dailyIntakeText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_intake_mock"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp" />
+
+                            <TextView
+                                    android:id="@+id/dailyBurnedText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="@string/daily_burned_mock"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp" />
+
+                            <TextView
+                                    android:id="@+id/dailyRemainingText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="@string/daily_remaining_mock"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <ImageView
+                                android:id="@+id/dailySummaryMascot"
+                                android:layout_width="92dp"
+                                android:layout_height="92dp"
+                                android:layout_marginStart="4dp"
+                                android:adjustViewBounds="true"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/daily_mascot" />
+                    </LinearLayout>
+
+                    <!-- Makro İlerleme Çubukları -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_macro_carbs_label"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/dailyCarbValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="120 / 280 g"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                    android:id="@+id/dailyCarbProgress"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:progress="43"
+                                    app:indicatorColor="@color/fitto_green"
+                                    app:trackColor="@color/fitto_primary_soft" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:layout_marginEnd="4dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_macro_protein_label"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/dailyProteinValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="75 / 120 g"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                    android:id="@+id/dailyProteinProgress"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:progress="62"
+                                    app:indicatorColor="@color/fitto_yellow"
+                                    app:trackColor="@color/fitto_primary_soft" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_macro_fat_label"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/dailyFatValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:text="32 / 70 g"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                            <com.google.android.material.progressindicator.LinearProgressIndicator
+                                    android:id="@+id/dailyFatProgress"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:progress="46"
+                                    app:indicatorColor="@color/fitto_orange"
+                                    app:trackColor="@color/fitto_primary_soft" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Fitto AI Günlük Yorum Kartı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/dailyAiCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/dailyAiTitleText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/daily_ai_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                                android:id="@+id/dailyAiProgressIndicator"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:indeterminate="true"
+                                android:visibility="gone"
+                                app:indicatorColor="@color/fitto_green"
+                                app:indicatorSize="24dp"
+                                app:trackThickness="3dp"
+                                tools:visibility="visible" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/dailyAiMessageText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/daily_ai_default_message"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp"
+                            android:lineSpacingExtra="2dp" />
+
+                    <TextView
+                            android:id="@+id/dailyAiSubtitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="@string/daily_ai_default_subtitle"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Aktif Plan Kartı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/activePlanCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <!-- Başlık -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/activePlanTitleText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:ellipsize="end"
+                                android:maxLines="2"
+                                android:text="@string/daily_active_plan_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="17sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/activePlanBadgeText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:paddingStart="12dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="6dp"
+                                android:text="@string/daily_active_plan_badge"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Oruç kontrol alanı -->
+                    <LinearLayout
+                            android:id="@+id/fastingActionContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:background="@drawable/bg_daily_meal_recommendation"
+                            android:orientation="vertical"
+                            android:padding="14dp"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:id="@+id/fastingHourglassText"
+                                    android:layout_width="42dp"
+                                    android:layout_height="42dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="⌛"
+                                    android:textSize="24sp" />
+
+                            <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:id="@+id/fastingCountdownTitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/daily_fasting_countdown_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/fastingCountdownText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="3dp"
+                                        android:text="@string/daily_fasting_not_started"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="12sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/startFastingButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="46dp"
+                                android:layout_marginTop="12dp"
+                                android:backgroundTint="@color/fitto_green"
+                                android:text="@string/daily_fasting_start_button"
+                                android:textAllCaps="false"
+                                android:textColor="@color/white"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="16dp" />
+
+                        <TextView
+                                android:id="@+id/fastingMealSuggestionText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:lineSpacingExtra="3dp"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                tools:text="@string/daily_fasting_meal_suggestion_long" />
+                    </LinearLayout>
+
+                    <!-- Oruç vücut analizi -->
+                    <LinearLayout
+                            android:id="@+id/fastingAnalysisContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_daily_meal_recommendation"
+                            android:orientation="vertical"
+                            android:padding="14dp"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                        <TextView
+                                android:id="@+id/fastingAnalysisTitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/daily_fasting_analysis_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/fastingAnalysisRangeText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/daily_fasting_analysis_not_started_title"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/fastingAnalysisBodyText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:lineSpacingExtra="4dp"
+                                android:text="@string/daily_fasting_analysis_not_started_body"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Normal planlar için metrik alanı -->
+                    <LinearLayout
+                            android:id="@+id/activePlanMetricsContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/activePlanIconText"
+                                android:layout_width="52dp"
+                                android:layout_height="64dp"
+                                android:gravity="center"
+                                android:text="⏳"
+                                android:textSize="38sp" />
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/activePlanMetricOneLabelText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_fasting_duration"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/activePlanMetricOneValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:autoSizeMaxTextSize="24sp"
+                                    android:autoSizeMinTextSize="16sp"
+                                    android:autoSizeStepGranularity="1sp"
+                                    android:autoSizeTextType="uniform"
+                                    android:maxLines="1"
+                                    android:text="@string/daily_fasting_duration_mock"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View
+                                android:id="@+id/activePlanDivider"
+                                android:layout_width="1dp"
+                                android:layout_height="52dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginEnd="8dp"
+                                android:background="@color/fitto_divider_soft" />
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/activePlanMetricTwoLabelText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_eating_window"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/activePlanMetricTwoValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:autoSizeMaxTextSize="18sp"
+                                    android:autoSizeMinTextSize="12sp"
+                                    android:autoSizeStepGranularity="1sp"
+                                    android:autoSizeTextType="uniform"
+                                    android:maxLines="1"
+                                    android:text="@string/daily_eating_window_mock"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/fastingProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:progress="69"
+                            app:indicatorColor="@color/fitto_green"
+                            app:trackColor="@color/fitto_primary_soft" />
+
+                    <TextView
+                            android:id="@+id/plannedMealFoodsText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:background="@drawable/bg_daily_meal_recommendation"
+                            android:lineSpacingExtra="4dp"
+                            android:paddingStart="14dp"
+                            android:paddingTop="12dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="12dp"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="15sp"
+                            tools:text="Öğün önerisi&#10;Yoğurt &amp; çilek&#10;&#10;Besin önerisi&#10;Yoğurt, çilek" />
+
+                    <com.google.android.material.button.MaterialButton
+                            android:id="@+id/applyPlannedMealButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/daily_apply_planned_meal"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:visibility="gone"
+                            app:backgroundTint="@color/fitto_green"
+                            app:cornerRadius="16dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Öğünler -->
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/daily_meals_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/mealsCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="8dp">
+
+                    <LinearLayout
+                            android:id="@+id/breakfastMealRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp">
+
+                        <TextView
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="🍳"
+                                android:textSize="22sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:text="@string/daily_breakfast"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/breakfastCaloriesText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 kcal"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp" />
+
+                        <ImageButton
+                                android:id="@+id/breakfastAddButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="10dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/daily_breakfast"
+                                android:padding="8dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/fitto_divider_soft" />
+
+                    <LinearLayout
+                            android:id="@+id/snackMealRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp">
+
+                        <TextView
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="🥛"
+                                android:textSize="22sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:text="@string/daily_snack"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/snackCaloriesText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 kcal"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp" />
+
+                        <ImageButton
+                                android:id="@+id/snackAddButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="10dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/daily_snack"
+                                android:padding="8dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/fitto_divider_soft" />
+
+                    <LinearLayout
+                            android:id="@+id/lunchMealRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp">
+
+                        <TextView
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="🍲"
+                                android:textSize="22sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:text="@string/daily_lunch"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/lunchCaloriesText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 kcal"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp" />
+
+                        <ImageButton
+                                android:id="@+id/lunchAddButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="10dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/daily_lunch"
+                                android:padding="8dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+
+                    <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="@color/fitto_divider_soft" />
+
+                    <LinearLayout
+                            android:id="@+id/dinnerMealRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="54dp"
+                            android:background="?attr/selectableItemBackground"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="6dp"
+                            android:paddingEnd="6dp">
+
+                        <TextView
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:gravity="center"
+                                android:text="🍽️"
+                                android:textSize="22sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:text="@string/daily_dinner"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/dinnerCaloriesText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 kcal"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp" />
+
+                        <ImageButton
+                                android:id="@+id/dinnerAddButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="10dp"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="@string/daily_dinner"
+                                android:padding="8dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Su Takibi -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/waterTrackingCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/daily_water_tracking"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/waterAmountText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/daily_water_mock"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:id="@+id/waterBottleRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <HorizontalScrollView
+                                android:id="@+id/waterBottleScrollView"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:overScrollMode="never"
+                                android:scrollbars="none">
+
+                            <LinearLayout
+                                    android:id="@+id/waterBottleContainer"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal" />
+                        </HorizontalScrollView>
+
+                        <ImageButton
+                                android:id="@+id/addWaterBottleSlotButton"
+                                android:layout_width="42dp"
+                                android:layout_height="42dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:contentDescription="@string/daily_add_more_bottles"
+                                android:padding="9dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/addWater250Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:text="@string/daily_add_water_250"
+                                android:textAllCaps="false"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="14dp"
+                                app:strokeColor="@color/fitto_green" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/addWater500Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="44dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:minWidth="0dp"
+                                android:text="@string/daily_add_water_500"
+                                android:textAllCaps="false"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="14dp"
+                                app:strokeColor="@color/fitto_green" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Aktivite Özeti -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/activitySummaryCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/activitySummaryTitleText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/daily_activity_summary"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/activitySyncStatusText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:paddingStart="10dp"
+                                android:paddingTop="5dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="5dp"
+                                android:text="@string/daily_activity_source_connect"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                tools:text="Fitto sayacı aktif" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:gravity="center"
+                                    android:text="👟"
+                                    android:textSize="28sp" />
+
+                            <TextView
+                                    android:id="@+id/activityStepCountText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="0"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    tools:text="@string/daily_steps_mock_value" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_step_unit"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="36dp"
+                                    android:layout_height="36dp"
+                                    android:gravity="center"
+                                    android:text="🏃"
+                                    android:textSize="28sp" />
+
+                            <TextView
+                                    android:id="@+id/activityDurationText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="0 dk"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    tools:text="@string/daily_active_time_mock_value" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_exercise_unit"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <ImageView
+                                    android:layout_width="30dp"
+                                    android:layout_height="30dp"
+                                    android:src="@drawable/ic_fire"
+                                    app:tint="@color/fitto_orange" />
+
+                            <TextView
+                                    android:id="@+id/activityBurnedCaloriesText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="0"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    tools:text="320" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="kcal"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Uyku ve Kilo -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/sleepCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/daily_sleep_weight"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                        <!-- Uyku -->
+                        <LinearLayout
+                                android:id="@+id/sleepContentContainer"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:orientation="vertical"
+                                android:padding="14dp">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/daily_sleep_duration"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/sleepValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="@string/daily_no_sleep_data_short"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    tools:text="7sa 20dk" />
+
+                            <TextView
+                                    android:id="@+id/sleepStatusText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="@string/daily_no_sleep_data_desc"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <!-- Kilo -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:orientation="vertical"
+                                android:padding="14dp">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/weight_label"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/weightValueText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="@string/daily_weight_unknown_short"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="20sp"
+                                    android:textStyle="bold"
+                                    tools:text="72.4 kg" />
+
+                            <TextView
+                                    android:id="@+id/weightStatusText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:lineSpacingExtra="2dp"
+                                    android:text="@string/daily_weight_from_profile"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Haftalık İlerleme -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/weeklyProgressCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/daily_weekly_progress"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/weeklyProgressDescriptionText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/daily_no_weekly_data"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/weeklyWaterProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:progress="0"
+                            app:indicatorColor="@color/fitto_green"
+                            app:trackColor="@color/fitto_primary_soft"
+                            app:trackCornerRadius="8dp"
+                            app:trackThickness="8dp" />
+
+                    <LinearLayout
+                            android:id="@+id/weeklySleepChartContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="132dp"
+                            android:layout_marginTop="18dp"
+                            android:baselineAligned="false"
+                            android:gravity="bottom"
+                            android:orientation="horizontal">
+
+                        <!-- 1 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar1"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Pzt"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 2 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue2"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar2"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay2"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Sal"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 3 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue3"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar3"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay3"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Çar"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 4 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue4"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar4"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay4"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Per"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 5 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue5"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar5"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay5"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Cum"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 6 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue6"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar6"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay6"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Cmt"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <!-- 7 -->
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="bottom|center_horizontal"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/weekValue7"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="—"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+
+                            <View
+                                    android:id="@+id/weekBar7"
+                                    android:layout_width="14dp"
+                                    android:layout_height="18dp"
+                                    android:layout_marginTop="6dp"
+                                    android:background="@drawable/bg_fitto_week_bar" />
+
+                            <TextView
+                                    android:id="@+id/weekDay7"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="Paz"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="10sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Hızlı Ekleme FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/dailyQuickAddFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="24dp"
+            android:contentDescription="@string/daily_quick_add_title"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/fitto_green"
+            app:fabCustomSize="64dp"
+            app:maxImageSize="30dp"
+            app:tint="@color/white" />
+
+</FrameLayout>

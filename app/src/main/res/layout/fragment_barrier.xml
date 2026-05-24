@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/barrierRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="24dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+    <include
+            android:id="@+id/onboardingProgressContainer"
+            layout="@layout/view_onboarding_progress"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+            android:id="@+id/barrierBackButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_fitto_circle_soft"
+            android:contentDescription="@string/back"
+            android:padding="18dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toBottomOf="@id/onboardingProgressContainer"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+            android:id="@+id/barrierScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="18dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp"
+            app:layout_constraintTop_toBottomOf="@id/barrierBackButton"
+            app:layout_constraintBottom_toTopOf="@id/barrierNextButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:id="@+id/barrierContentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:animateLayoutChanges="true"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/barrierTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/barrier_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="25sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/barrierDescriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:lineSpacingExtra="5dp"
+                    android:text="@string/barrier_desc"
+                    android:textColor="#666A6D"
+                    android:textSize="18sp" />
+
+            <LinearLayout
+                    android:id="@+id/barrierOptionsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="28dp"
+                    android:orientation="vertical">
+
+                <LinearLayout
+                        android:id="@+id/barrierSupportCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_support" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierSupportCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierBodyConcernCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_body_concern" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierBodyConcernCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierFamilyDietCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_family_diet" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierFamilyDietCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierTimeCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_time" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierTimeCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierMotivationCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_motivation" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierMotivationCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierEmotionalEatingCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_emotional_eating" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierEmotionalEatingCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierMealPlanningCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_meal_planning" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierMealPlanningCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierHealthCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_health" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierHealthCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierKnowledgeCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_knowledge" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierKnowledgeCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierOtherCard"
+                        style="@style/Widget_Fitto_BarrierCard">
+
+                    <TextView
+                            style="@style/Widget_Fitto_BarrierText"
+                            android:text="@string/barrier_other" />
+
+                    <FrameLayout
+                            android:id="@+id/barrierOtherCheck"
+                            style="@style/Widget_Fitto_BarrierCheck">
+
+                        <ImageView
+                                style="@style/Widget_Fitto_BarrierCheckIcon" />
+                    </FrameLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/barrierOtherInputContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_fitto_card"
+                        android:orientation="vertical"
+                        android:padding="18dp"
+                        android:visibility="gone">
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/barrier_other_label"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/barrierOtherEditText"
+                            android:layout_width="match_parent"
+                            android:layout_height="72dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_fitto_input"
+                            android:hint="@string/barrier_other_placeholder"
+                            android:inputType="textMultiLine|textCapSentences"
+                            android:maxLines="3"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textColorHint="#7D8386"
+                            android:textSize="16sp" />
+
+                    <TextView
+                            android:id="@+id/barrierOtherErrorText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/barrier_other_error"
+                            android:textColor="#B3261E"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <TextView
+            android:id="@+id/barrierNextButton"
+            android:layout_width="0dp"
+            android:layout_height="68dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_fitto_button_primary"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/next"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

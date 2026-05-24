@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/headerCreatePostCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="2dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp">
+
+        <FrameLayout
+                android:id="@+id/headerAvatarContainer"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:background="@drawable/bg_circle_primary_soft"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_person_outline"
+                    app:tint="@color/fitto_green" />
+        </FrameLayout>
+
+        <TextView
+                android:id="@+id/headerPromptText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="12dp"
+                android:lineSpacingExtra="4dp"
+                android:text="Bugün ne paylaşmak\nistersın?"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toStartOf="@+id/headerMascotImage"
+                app:layout_constraintStart_toEndOf="@id/headerAvatarContainer"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/headerCreatePostButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:text="@string/social_create_post"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_add"
+                app:iconTint="@android:color/white"
+                app:layout_constraintStart_toEndOf="@id/headerAvatarContainer"
+                app:layout_constraintTop_toBottomOf="@id/headerPromptText" />
+
+        <ImageView
+                android:id="@+id/headerMascotImage"
+                android:layout_width="132dp"
+                android:layout_height="132dp"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/gonderi_paylas"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

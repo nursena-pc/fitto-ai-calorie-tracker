@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/profileDetailRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/profile_screen_background">
+
+    <com.example.fitto.feature_home.presentation.profile.view.FittoBottomDecorationView
+            android:id="@+id/fittoBottomDecoration"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_gravity="bottom" />
+
+    <LinearLayout
+            android:id="@+id/profileDetailContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:orientation="vertical">
+
+        <LinearLayout
+                android:id="@+id/profileDetailToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
+
+            <TextView
+                    android:id="@+id/buttonProfileDetailBack"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_profile_avatar"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="‹"
+                    android:textColor="@color/profile_text"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/textProfileDetailTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/profile_text"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/buttonProfileAlbumDateFilter"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:contentDescription="@string/profile_album_date_picker_title"
+                    android:gravity="center"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    android:visibility="gone"
+                    app:backgroundTint="@color/fitto_surface"
+                    app:cornerRadius="21dp"
+                    app:icon="@drawable/ic_calendar_month"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconTint="@color/fitto_green"
+                    app:rippleColor="@color/fitto_primary_soft" />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/profileDetailRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="130dp" />
+
+        <LinearLayout
+                android:id="@+id/profilePhotoAlbumContent"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+            <LinearLayout
+                    android:id="@+id/layoutProfileAlbumDateFilter"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="16dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="6dp">
+
+                <TextView
+                        android:id="@+id/textProfileAlbumDateFilterHint"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_profile_menu_item"
+                        android:includeFontPadding="false"
+                        android:paddingStart="12dp"
+                        android:paddingTop="8dp"
+                        android:paddingEnd="12dp"
+                        android:paddingBottom="8dp"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonProfileAlbumDateClear"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/profile_album_filter_date_clear"
+                        android:textColor="@color/fitto_green"
+                        android:visibility="gone" />
+
+            </LinearLayout>
+
+            <TextView
+                    android:id="@+id/textProfileAlbumEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginEnd="20dp"
+                    android:background="@drawable/bg_profile_menu_item"
+                    android:gravity="center"
+                    android:padding="18dp"
+                    android:text="@string/profile_album_empty"
+                    android:textColor="@color/profile_subtext"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerProfilePhotoAlbum"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:paddingStart="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="130dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

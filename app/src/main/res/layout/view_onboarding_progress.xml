@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.progressindicator.LinearProgressIndicator
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/onboardingProgressContainer"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:max="12"
+        android:progress="1"
+        app:indicatorColor="@color/fitto_green"
+        app:trackColor="@color/fitto_primary_soft"
+        app:trackThickness="6dp" />

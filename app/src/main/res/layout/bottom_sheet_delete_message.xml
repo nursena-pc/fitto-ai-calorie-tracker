@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="18dp"
+        android:background="@drawable/bg_delete_bottom_sheet">
+
+    <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="18dp"
+            android:background="@drawable/bg_bottom_sheet_handle" />
+
+    <TextView
+            android:id="@+id/deleteSheetTitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/chat_delete_message_title"
+            android:textColor="@color/fitto_text_dark"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+    <LinearLayout
+            android:id="@+id/deleteForMeContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@color/report_dialog_option_stroke"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:minHeight="58dp"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp">
+
+        <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/fitto_text_secondary" />
+
+        <TextView
+                android:id="@+id/deleteForMeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:text="@string/chat_delete_for_me"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="17sp"
+                android:textStyle="normal" />
+
+    </LinearLayout>
+
+    <LinearLayout
+            android:id="@+id/deleteForEveryoneContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/report_dialog_option_stroke"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:minHeight="58dp"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp">
+
+        <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/fitto_error" />
+
+        <TextView
+                android:id="@+id/deleteForEveryoneText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:text="@string/chat_delete_for_everyone"
+                android:textColor="@color/fitto_error"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/deleteCancelText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_add_meal_food_thumbnail"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center"
+            android:minHeight="54dp"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="14dp"
+            android:text="@string/common_cancel_upper"
+            android:textColor="@color/fitto_green"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+</LinearLayout>

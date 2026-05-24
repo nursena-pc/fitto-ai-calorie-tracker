@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/goalSelectionRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="24dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
+
+    <include
+            android:id="@+id/onboardingProgressContainer"
+            layout="@layout/view_onboarding_progress"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+            android:id="@+id/goalBackButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_fitto_circle_soft"
+            android:contentDescription="@string/back"
+            android:padding="18dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toBottomOf="@id/onboardingProgressContainer"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+            android:id="@+id/goalScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="18dp"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:paddingBottom="92dp"
+            app:layout_constraintTop_toBottomOf="@id/goalBackButton"
+            app:layout_constraintBottom_toTopOf="@id/goalNextButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:id="@+id/goalContentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:animateLayoutChanges="true">
+
+            <TextView
+                    android:id="@+id/goalTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/goal_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/goalDescriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:lineSpacingExtra="5dp"
+                    android:text="@string/goal_description"
+                    android:textColor="#666A6D"
+                    android:textSize="18sp" />
+
+            <LinearLayout
+                    android:id="@+id/goalLoseCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <FrameLayout
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_fitto_circle_soft">
+
+                    <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_straighten"
+                            app:tint="@color/fitto_green" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/goalLoseTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/goal_lose"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/goalLoseDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/goal_lose_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/goalLoseCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/goalMaintainCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <FrameLayout
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_fitto_circle_soft">
+
+                    <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_favorite_border"
+                            app:tint="@color/fitto_green" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/goalMaintainTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/goal_maintain"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/goalMaintainDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/goal_maintain_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/goalMaintainCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/goalGainCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <FrameLayout
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_fitto_circle_soft">
+
+                    <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_monitor_weight"
+                            app:tint="@color/fitto_green" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/goalGainTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/goal_gain"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/goalGainDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/goal_gain_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/goalGainCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/goalLearnCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <FrameLayout
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_fitto_circle_soft">
+
+                    <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_info"
+                            app:tint="@color/fitto_green" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/goalLearnTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/goal_learn"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/goalLearnDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/goal_learn_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/goalLearnCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/goalHealthyCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_fitto_card_normal"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <FrameLayout
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="@drawable/bg_fitto_circle_soft">
+
+                    <ImageView
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_leaf"
+                            app:tint="@color/fitto_green" />
+
+                </FrameLayout>
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/goalHealthyTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/goal_healthy"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="19sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/goalHealthyDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="@string/goal_healthy_desc"
+                            android:textColor="#666A6D"
+                            android:textSize="14sp"
+                            android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <FrameLayout
+                        android:id="@+id/goalHealthyCheck"
+                        android:layout_width="34dp"
+                        android:layout_height="34dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_fitto_circle_check"
+                        android:visibility="gone">
+
+                    <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check_white" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <TextView
+            android:id="@+id/goalNextButton"
+            android:layout_width="0dp"
+            android:layout_height="68dp"
+            android:layout_marginBottom="20dp"
+            android:background="@drawable/bg_fitto_button_primary"
+            android:clickable="true"
+            android:elevation="4dp"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/next"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

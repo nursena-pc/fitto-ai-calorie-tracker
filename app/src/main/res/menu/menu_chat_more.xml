@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+            android:id="@+id/action_media_links_files"
+            android:icon="@drawable/ic_media_links_files"
+            android:title="@string/chat_media_links_files" />
+
+    <item
+            android:id="@+id/action_clear_chat"
+            android:icon="@drawable/ic_clear_chat"
+            android:title="@string/chat_clear_chat" />
+
+    <item
+            android:id="@+id/action_block_user"
+            android:icon="@drawable/ic_block_user"
+            android:title="@string/chat_block" />
+
+    <item
+            android:id="@+id/action_report_user"
+            android:icon="@drawable/ic_report_flag"
+            android:title="@string/chat_report" />
+
+</menu>

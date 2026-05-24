@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
+
+        <TextView
+                android:id="@+id/foodEmojiText"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_add_meal_food_thumbnail"
+                android:gravity="center"
+                android:text="🍽️"
+                android:textSize="23sp" />
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/foodNameText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="Yulaf ezmesi" />
+
+            <TextView
+                    android:id="@+id/foodAmountText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="60 g" />
+
+            <TextView
+                    android:id="@+id/foodMacrosText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="P 7.8 g · K 40.2 g · Y 4.2 g" />
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/foodCaloriesText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:textColor="@color/fitto_green"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="225 kcal" />
+
+        <ImageButton
+                android:id="@+id/editFoodButton"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_edit"
+                android:padding="9dp"
+                android:src="@drawable/ic_edit"
+                app:tint="@color/fitto_green" />
+
+        <ImageButton
+                android:id="@+id/deleteFoodButton"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_delete"
+                android:padding="9dp"
+                android:src="@drawable/ic_delete"
+                app:tint="@color/fitto_error" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,44 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Local Android config
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+.DS_Store
+
+# Keystore / signing
+*.jks
+*.keystore
+*.pem
+*.key
+
+# Secrets / environment
+secrets.properties
+.env
+*.env
+
+# Firebase / Google services
+google-services.json
+
+# API keys
+apikey.properties
+api-keys.properties
+
+# Logs
+*.log
+
+# Generated files
+captures/
+.externalNativeBuild/
+.cxx/
+out/
+
+# Archives
+*.zip
+*.rar
+*.7z

@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_surface"
+        android:orientation="vertical">
+
+    <View
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_fitto_bottom_sheet_handle" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+            android:paddingStart="22dp"
+            android:paddingEnd="12dp">
+
+        <TextView
+                android:id="@+id/titleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/recipes_filter_advanced_title"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@id/resultInfoText"
+                app:layout_constraintEnd_toStartOf="@id/closeButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+                android:id="@+id/resultInfoText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/recipes_filter_result_preview"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/closeButton"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/titleText" />
+
+        <ImageButton
+                android:id="@+id/closeButton"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/recipes_close"
+                android:padding="10dp"
+                android:src="@drawable/ic_close"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/fitto_text_dark" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/fitto_divider_soft" />
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/filterScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:paddingStart="22dp"
+            android:paddingEnd="22dp"
+            android:paddingBottom="18dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="14dp">
+
+            <TextView
+                    android:id="@+id/mainCategoryTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipes_filter_main_question"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                <LinearLayout
+                        android:id="@+id/mainCategoryIconRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <TextView
+                    android:id="@+id/subcategoryTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/recipes_filter_subcategory_title_clean"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+            <LinearLayout
+                    android:id="@+id/subcategoryLockedRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_recipe_lock_24"
+                        app:tint="@color/fitto_text_secondary" />
+
+                <TextView
+                        android:id="@+id/subcategoryLockedText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/recipes_filter_subcategory_locked"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="12sp" />
+            </LinearLayout>
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/subcategoryChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/recipes_filter_main_ingredients_clean"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                <LinearLayout
+                        android:id="@+id/mainIngredientIconRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/recipes_filter_diet_preferences_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/dietChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/recipes_filter_cooking_methods_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                <LinearLayout
+                        android:id="@+id/methodIconRow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/recipes_filter_difficulty_title_clean"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/difficultyChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+            <TextView
+                    android:id="@+id/durationSectionTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/recipes_filter_duration_slider_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/durationChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+
+            <LinearLayout
+                    android:id="@+id/includeIngredientHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="18dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/recipes_filter_include_ingredients_title"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                <ImageView
+                        android:id="@+id/includeIngredientArrow"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_keyboard_arrow_down"
+                        app:tint="@color/fitto_green" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/includeIngredientContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/includeIngredientSelectButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="@string/recipes_filter_add"
+                        android:textColor="@color/fitto_green"
+                        app:cornerRadius="14dp"
+                        app:icon="@drawable/ic_add"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/fitto_green"
+                        app:strokeColor="@color/fitto_primary_soft" />
+
+                <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/includeIngredientChipGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/excludeIngredientHeader"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="14dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/recipes_filter_exclude_ingredients_title"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                <ImageView
+                        android:id="@+id/excludeIngredientArrow"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_keyboard_arrow_down"
+                        app:tint="@color/fitto_green" />
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/excludeIngredientContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/excludeIngredientSelectButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:gravity="center_vertical"
+                        android:text="@string/recipes_filter_add"
+                        android:textColor="@color/fitto_green"
+                        app:cornerRadius="14dp"
+                        app:icon="@drawable/ic_add"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/fitto_green"
+                        app:strokeColor="@color/fitto_primary_soft" />
+
+                <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/excludeIngredientChipGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="22dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="22dp"
+            android:paddingBottom="20dp">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/applyButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="@string/recipes_filter_show_results"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="18dp" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/recipes_filter_clear_all"
+                android:textColor="@color/fitto_green" />
+    </LinearLayout>
+</LinearLayout>

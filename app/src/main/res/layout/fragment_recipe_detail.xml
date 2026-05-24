@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fitto_background_light">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/detailScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="28dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="300dp">
+
+                <ImageView
+                    android:id="@+id/recipeImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/recipes_detail_image"
+                    android:scaleType="centerCrop" />
+
+
+                <ImageButton
+                    android:id="@+id/backButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/bg_recipe_detail_floating_button"
+                    android:contentDescription="@string/recipes_back"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/fitto_text_dark" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/topShareButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginEnd="18dp"
+                    android:contentDescription="@string/recipes_detail_options"
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetRight="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="0dp"
+                    android:text=""
+                    app:backgroundTint="@color/fitto_surface"
+                    app:cornerRadius="23dp"
+                    app:icon="@drawable/ic_more_vert"
+                    app:iconGravity="textStart"
+                    app:iconPadding="0dp"
+                    app:iconSize="21dp"
+                    app:iconTint="@color/fitto_text_dark"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp" />
+            </FrameLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="-46dp"
+                android:layout_marginEnd="12dp"
+                app:cardBackgroundColor="@color/fitto_surface"
+                app:cardCornerRadius="30dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/fitto_divider_soft"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="18dp"
+                    android:paddingTop="22dp"
+                    android:paddingEnd="18dp"
+                    android:paddingBottom="18dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/titleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="25sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/subcategoryText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/categoryBadgeText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="34dp"
+                            android:layout_marginStart="10dp"
+                            android:background="@drawable/bg_recipe_category_badge"
+                            android:gravity="center"
+                            android:minWidth="66dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/topCookModeCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_gravity="end"
+                        android:layout_marginTop="6dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        app:cardBackgroundColor="@color/fitto_surface"
+                        app:cardCornerRadius="18dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="@color/fitto_primary_soft"
+                        app:strokeWidth="1dp">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="vertical"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp">
+
+                            <TextView
+                                android:id="@+id/topCookModeTitleText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/recipes_detail_cook_mode_title"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/topCookModeStatusText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="1dp"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="10sp"
+                                android:text="@string/recipes_detail_cook_mode_subtitle" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                        android:id="@+id/infoRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+                            <ImageView android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/ic_group" app:tint="@color/fitto_text_secondary" />
+                            <TextView android:id="@+id/infoServingText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textColor="@color/fitto_text_dark" android:textSize="11sp" />
+                        </LinearLayout>
+                        <View android:layout_width="1dp" android:layout_height="18dp" android:background="@color/fitto_divider_soft" />
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="horizontal">
+                            <ImageView android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/ic_schedule" app:tint="@color/fitto_text_secondary" />
+                            <TextView android:id="@+id/infoDurationText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textColor="@color/fitto_text_dark" android:textSize="11sp" />
+                        </LinearLayout>
+                        <View android:layout_width="1dp" android:layout_height="18dp" android:background="@color/fitto_divider_soft" />
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="horizontal">
+                            <ImageView android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/ic_bar_chart" app:tint="@color/fitto_text_secondary" />
+                            <TextView android:id="@+id/infoDifficultyText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textColor="@color/fitto_text_dark" android:textSize="11sp" />
+                        </LinearLayout>
+                        <View android:layout_width="1dp" android:layout_height="18dp" android:background="@color/fitto_divider_soft" />
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="horizontal">
+                            <ImageView android:layout_width="15dp" android:layout_height="15dp" android:src="@drawable/ic_fire" app:tint="@color/fitto_orange" />
+                            <TextView android:id="@+id/infoKcalText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="5dp" android:textColor="@color/fitto_text_dark" android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/tabContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_recipe_tab_container"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="4dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/overviewTabButton"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:minHeight="0dp"
+                            android:minWidth="0dp"
+                            android:paddingStart="0dp"
+                            android:paddingEnd="0dp"
+                            android:text="@string/recipes_detail_tab_overview"
+                            android:textSize="12sp"
+                            app:cornerRadius="18dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/ingredientsTabButton"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:minHeight="0dp"
+                            android:minWidth="0dp"
+                            android:paddingStart="0dp"
+                            android:paddingEnd="0dp"
+                            android:text="@string/recipes_detail_tab_ingredients"
+                            android:textSize="12sp"
+                            app:cornerRadius="18dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/stepsTabButton"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:minHeight="0dp"
+                            android:minWidth="0dp"
+                            android:paddingStart="0dp"
+                            android:paddingEnd="0dp"
+                            android:text="@string/recipes_detail_tab_steps"
+                            android:textSize="12sp"
+                            app:cornerRadius="18dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/overviewContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="vertical">
+
+                        <TextView android:id="@+id/overviewDescriptionText" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
+                        <TextView android:id="@+id/tipText" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="116dp"
+                                android:layout_height="128dp"
+                                app:cardBackgroundColor="@color/fitto_surface"
+                                app:cardCornerRadius="20dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/recipes_detail_portion"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:orientation="horizontal">
+
+                                        <ImageButton android:id="@+id/portionMinusButton" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_recipe_detail_floating_button" android:contentDescription="@string/recipes_detail_decrease_portion" android:src="@drawable/ic_remove" app:tint="@color/fitto_green" />
+                                        <TextView android:id="@+id/portionValueText" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:textColor="@color/fitto_text_dark" android:textSize="22sp" android:textStyle="bold" />
+                                        <ImageButton android:id="@+id/portionPlusButton" android:layout_width="34dp" android:layout_height="34dp" android:background="@drawable/bg_recipe_detail_floating_button" android:contentDescription="@string/recipes_detail_increase_portion" android:src="@drawable/ic_add" app:tint="@color/fitto_green" />
+                                    </LinearLayout>
+
+                                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/recipes_detail_per_serving" android:textColor="@color/fitto_text_secondary" android:textSize="11sp" />
+                                    <TextView android:id="@+id/perServingKcalText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/fitto_green" android:textSize="18sp" android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="128dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_surface"
+                                app:cardCornerRadius="20dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:orientation="vertical"
+                                    android:padding="12dp">
+
+                                    <TextView
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/recipes_detail_quick_ingredients_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                    <LinearLayout
+                                        android:id="@+id/overviewIngredientListContainer"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_marginTop="6dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+                        </LinearLayout>
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/overviewNutritionCard"
+                            android:layout_width="match_parent"
+                            android:layout_height="190dp"
+                            android:layout_marginTop="14dp"
+                            app:cardBackgroundColor="@color/fitto_surface_soft"
+                            app:cardCornerRadius="22dp"
+                            app:cardElevation="0dp"
+                            app:strokeColor="@color/fitto_primary_soft"
+                            app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="14dp">
+
+                                <com.example.fitto.feature_recipes.view.RecipeMacroDonutView
+                                    android:id="@+id/macroDonutView"
+                                    android:layout_width="142dp"
+                                    android:layout_height="142dp" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_marginStart="16dp"
+                                    android:layout_weight="1"
+                                    android:gravity="center_vertical"
+                                    android:orientation="vertical">
+
+                                    <TextView android:id="@+id/overviewTotalLabelText" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/fitto_text_secondary" android:textSize="13sp" android:textStyle="bold" />
+                                    <TextView android:id="@+id/overviewTotalKcalText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textColor="@color/fitto_text_dark" android:textSize="28sp" android:textStyle="bold" />
+                                    <TextView android:id="@+id/overviewCarbText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="@color/fitto_green" android:textSize="12sp" android:textStyle="bold" />
+                                    <TextView android:id="@+id/overviewProteinText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/fitto_orange" android:textSize="12sp" android:textStyle="bold" />
+                                    <TextView android:id="@+id/overviewFatText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textColor="@color/fitto_text_dark" android:textSize="12sp" android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ingredientsContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/recipes_detail_ingredients" android:textColor="@color/fitto_text_dark" android:textSize="18sp" android:textStyle="bold" />
+
+                            <TextView android:id="@+id/ingredientEditToggleButton" android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center" android:text="@string/recipes_detail_edit_for_me_short" android:textColor="@color/fitto_green" android:textSize="12sp" android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView android:id="@+id/editModeInfoText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/recipes_detail_original_safe_note" android:textColor="@color/fitto_text_secondary" android:textSize="12sp" />
+                        <LinearLayout android:id="@+id/ingredientListContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/addIngredientButton" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="44dp" android:layout_gravity="end" android:layout_marginTop="2dp" android:text="@string/recipes_detail_add_ingredient" android:textColor="@color/fitto_green" android:visibility="gone" app:icon="@drawable/ic_add" app:iconGravity="textStart" app:iconTint="@color/fitto_green" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/saveEditedRecipeButton" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="8dp" android:text="@string/recipes_detail_save_edited" android:textColor="@color/white" android:textSize="13sp" android:visibility="gone" app:backgroundTint="@color/fitto_green" app:cornerRadius="18dp" app:icon="@drawable/ic_bookmark" app:iconGravity="textStart" app:iconTint="@color/white" />
+                    </LinearLayout>
+
+                    <LinearLayout android:id="@+id/stepsContent" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="vertical" android:visibility="gone">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/recipes_detail_cooking_steps" android:textColor="@color/fitto_text_dark" android:textSize="18sp" android:textStyle="bold" />
+                        <LinearLayout android:id="@+id/stepsContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="vertical" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/startCookingButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="16dp" android:text="@string/recipes_detail_start_cooking" android:textColor="@color/white" app:backgroundTint="@color/fitto_green" app:cornerRadius="18dp" app:icon="@drawable/ic_chevron_right" app:iconGravity="textEnd" app:iconTint="@color/white" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/bottomActionRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/bottomShoppingButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:text="@string/recipes_detail_add_to_shopping"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="@color/fitto_green"
+                            app:cornerRadius="18dp"
+                            app:icon="@drawable/ic_shopping_cart_24"
+                            app:iconGravity="textStart"
+                            app:iconTint="@color/white" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</FrameLayout>

@@ -1,0 +1,234 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <style name="ThemeOverlay.Fitto.WhiteAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/fitto_text_on_light_surface</item>
+        <item name="colorSurfaceVariant">@color/white</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary_on_light_surface</item>
+        <item name="colorSurfaceContainerLowest">@color/white</item>
+        <item name="colorSurfaceContainerLow">@color/white</item>
+        <item name="colorSurfaceContainer">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/white</item>
+        <item name="colorSurfaceContainerHighest">@color/white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="backgroundTint">@color/white</item>
+    </style>
+    <style name="ThemeOverlay.Fitto.ChatActionDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerLow">@color/fitto_surface</item>
+        <item name="colorSurfaceContainer">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/fitto_surface</item>
+        <item name="android:colorBackground">@color/fitto_surface</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="buttonBarButtonStyle">@style/Widget.Fitto.ChatActionDialog.Button</item>
+    </style>
+    <style name="Widget.Fitto.ChatActionDialog.Button" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/fitto_green</item>
+    </style>
+    <style name="ShapeAppearance.Fitto" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
+    <style name="ShapeAppearance.Fitto.Circle" parent="@style/ShapeAppearance.Fitto">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+    <style name="ShapeAppearance.Fitto.PostImage" parent="@style/ShapeAppearance.Fitto">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+    <style name="Theme.Fitto.FullScreenDialog" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@color/fitto_background_light</item>
+        <item name="android:statusBarColor">@color/fitto_background_light</item>
+        <item name="android:navigationBarColor">@color/fitto_background_light</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnPrimaryContainer">@color/fitto_text_dark</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnSecondaryContainer">@color/fitto_text_dark</item>
+        <item name="colorTertiary">@color/fitto_orange</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/white</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+        <item name="materialSwitchStyle">@style/Widget.Fitto.MaterialSwitch</item>
+        <item name="materialAlertDialogTheme">@style/FittoAlertDialogTheme</item>
+    </style>
+    <style name="Widget_Fitto_BarrierCard">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">64dp</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:background">@drawable/bg_fitto_card_normal</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">18dp</item>
+    </style>
+    <style name="Widget_Fitto_BarrierText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/fitto_text_dark</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+    <style name="Widget_Fitto_BarrierCheck">
+        <item name="android:layout_width">34dp</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:layout_marginStart">12dp</item>
+        <item name="android:background">@drawable/bg_fitto_circle_check</item>
+        <item name="android:visibility">gone</item>
+    </style>
+    <style name="Widget_Fitto_BarrierCheckIcon">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:src">@drawable/ic_check_white</item>
+    </style>
+    <style name="ShapeAppearance.Fitto.DatePicker" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+    <style name="Widget.Fitto.DatePicker.Button" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/fitto_green</item>
+    </style>
+    <style name="FittoWhitePopupMenu" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup_white</item>
+    </style>
+    <style name="FittoWhitePopupMenuOverlay">
+        <item name="popupMenuStyle">@style/FittoWhitePopupMenu</item>
+    </style>
+    <style name="ThemeOverlay.Fitto.WhiteBottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Fitto.BottomSheet</item>
+    </style>
+    <style name="Widget.Fitto.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+    <style name="FittoSearchChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:background">@drawable/bg_fitto_chip</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:textColor">@color/fitto_text_dark</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+    <style name="RecipeDetailMetricText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginEnd">6dp</item>
+        <item name="android:background">@color/fitto_surface</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:textColor">@color/fitto_text_dark</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="RecipeFilterHeaderRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">?attr/selectableItemBackground</item>
+    </style>
+    <style name="RecipeFilterHeaderText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/fitto_text_dark</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="RecipeFilterHeaderArrow">
+        <item name="android:layout_width">22dp</item>
+        <item name="android:layout_height">22dp</item>
+        <item name="android:src">@drawable/ic_expand_more_24</item>
+        <item name="android:tint">@color/fitto_text_secondary</item>
+    </style>
+    <style name="RecipeDurationLabelText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/fitto_text_secondary</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+    <style name="ThemeOverlay.Fitto.WhiteTimePicker" parent="ThemeOverlay.Material3.MaterialTimePicker">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnPrimaryContainer">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnSecondaryContainer">@color/fitto_green</item>
+        <item name="colorTertiary">@color/fitto_green</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorTertiaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnTertiaryContainer">@color/fitto_green</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/white</item>
+        <item name="colorSurfaceContainerLow">@color/white</item>
+        <item name="colorSurfaceContainer">@color/white</item>
+        <item name="colorSurfaceContainerHigh">@color/white</item>
+        <item name="colorSurfaceContainerHighest">@color/white</item>
+        <item name="colorOutline">@color/profile_stroke</item>
+        <item name="colorOutlineVariant">@color/fitto_divider_soft</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackground">@color/white</item>
+        <item name="backgroundTint">@color/white</item>
+        <item name="buttonBarButtonStyle">@style/Widget.Fitto.TimePicker.Button</item>
+    </style>
+    <style name="Widget.Fitto.TimePicker.Button" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/fitto_green</item>
+    </style>
+    <style name="RecipeDetailNutritionText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/fitto_text_dark</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+</resources>

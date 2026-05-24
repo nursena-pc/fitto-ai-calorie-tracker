@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="170dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_add_meal_selected_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+        <TextView
+                android:id="@+id/selectedFoodEmojiText"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_add_meal_food_thumbnail"
+                android:gravity="center"
+                android:textSize="23sp"
+                tools:text="🥣" />
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/selectedFoodNameText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    tools:text="Yulaf Ezmesi" />
+
+            <TextView
+                    android:id="@+id/selectedFoodAmountText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="11sp"
+                    tools:text="40 g · 150 kcal" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageButton
+            android:id="@+id/removeSelectedFoodButton"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="top|end"
+            android:background="@drawable/bg_add_meal_remove_circle"
+            android:contentDescription="@string/add_meal_remove_food"
+            android:padding="7dp"
+            android:src="@drawable/ic_close"
+            app:tint="@color/white" />
+
+</FrameLayout>

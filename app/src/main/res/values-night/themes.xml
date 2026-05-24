@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Fitto" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnPrimaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSecondaryContainer">@color/fitto_primary_soft</item>
+        <item name="colorOnSecondaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorTertiary">@color/fitto_orange</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <item name="colorTertiaryContainer">@color/fitto_tertiary_soft</item>
+        <item name="colorOnTertiaryContainer">@color/fitto_text_dark</item>
+
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+        <item name="colorSurfaceContainerLowest">@color/fitto_background_dark</item>
+        <item name="colorSurfaceContainerLow">@color/fitto_surface</item>
+        <item name="colorSurfaceContainer">@color/fitto_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/fitto_surface_soft</item>
+        <item name="colorSurfaceContainerHighest">@color/fitto_surface_soft</item>
+
+        <item name="android:windowBackground">@color/fitto_background_light</item>
+        <item name="android:navigationBarColor">@color/fitto_background_light</item>
+        <item name="android:statusBarColor">@color/fitto_background_light</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+
+        <item name="materialButtonStyle">@style/Widget.Material3.Button</item>
+        <item name="materialSwitchStyle">@style/Widget.Fitto.MaterialSwitch</item>
+        <item name="materialAlertDialogTheme">@style/FittoAlertDialogTheme</item>
+        <item name="materialCalendarTheme">@style/ThemeOverlay.Fitto.MaterialDatePicker</item>
+        <item name="materialCalendarFullscreenTheme">@style/ThemeOverlay.Fitto.MaterialDatePicker</item>
+    </style>
+
+    <!-- Bu style SADECE burada tanımlı. values-night/styles.xml içinde tekrar yok. -->
+    <style name="FittoAlertDialogTheme" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- AlertDialog beyaz kalacaksa yazılar sabit koyu olmalı. -->
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@color/fitto_text_on_light_surface</item>
+        <item name="colorSurfaceVariant">@android:color/white</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary_on_light_surface</item>
+        <item name="colorSurfaceContainerLowest">@android:color/white</item>
+        <item name="colorSurfaceContainerLow">@android:color/white</item>
+        <item name="colorSurfaceContainer">@android:color/white</item>
+        <item name="colorSurfaceContainerHigh">@android:color/white</item>
+        <item name="colorSurfaceContainerHighest">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="backgroundTint">@android:color/white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="buttonBarButtonStyle">@style/Widget.Fitto.WhiteDialog.Button</item>
+    </style>
+
+    <style name="ThemeOverlay.Fitto.MaterialDatePicker" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">@color/fitto_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/fitto_green</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorAccent">@color/fitto_green</item>
+        <item name="android:colorAccent">@color/fitto_green</item>
+        <item name="colorControlActivated">@color/fitto_green</item>
+        <item name="android:colorControlActivated">@color/fitto_green</item>
+
+        <item name="colorSurface">@color/fitto_surface</item>
+        <item name="colorOnSurface">@color/fitto_text_dark</item>
+        <item name="colorSurfaceVariant">@color/fitto_surface_soft</item>
+        <item name="colorOnSurfaceVariant">@color/fitto_text_secondary</item>
+
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Fitto.DatePicker</item>
+        <item name="materialButtonStyle">@style/Widget.Fitto.DatePicker.Button</item>
+        <item name="materialCalendarStyle">@style/Widget.Fitto.MaterialCalendar</item>
+    </style>
+
+    <style name="Widget.Fitto.MaterialCalendar" parent="Widget.MaterialComponents.MaterialCalendar">
+        <item name="android:background">@color/fitto_surface</item>
+        <item name="backgroundTint">@color/fitto_surface</item>
+        <item name="dayStyle">@style/Widget.Fitto.MaterialCalendar.Day</item>
+        <item name="daySelectedStyle">@style/Widget.Fitto.MaterialCalendar.Day.Selected</item>
+        <item name="dayTodayStyle">@style/Widget.Fitto.MaterialCalendar.Day.Today</item>
+    </style>
+
+    <style name="Widget.Fitto.MaterialCalendar.Day" parent="Widget.MaterialComponents.MaterialCalendar.Day">
+        <item name="itemTextColor">@color/fitto_text_dark</item>
+    </style>
+
+    <style name="Widget.Fitto.MaterialCalendar.Day.Selected" parent="Widget.MaterialComponents.MaterialCalendar.Day.Selected">
+        <item name="itemFillColor">@color/fitto_primary_soft</item>
+        <item name="itemTextColor">@color/fitto_text_dark</item>
+        <item name="itemStrokeColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.Fitto.MaterialCalendar.Day.Today" parent="Widget.MaterialComponents.MaterialCalendar.Day.Today">
+        <item name="itemTextColor">@color/fitto_green</item>
+        <item name="itemStrokeColor">@color/fitto_green</item>
+    </style>
+
+    <style name="Widget.Fitto.MaterialSwitch" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="thumbTint">@color/switch_thumb_fitto</item>
+        <item name="trackTint">@color/switch_track_fitto</item>
+    </style>
+
+</resources>

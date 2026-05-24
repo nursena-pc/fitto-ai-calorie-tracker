@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="28dp"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp"
+        app:cardElevation="0dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/sleepDialogTitleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sleep_dialog_title"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/sleepDialogSubtitleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/sleep_dialog_subtitle"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="14sp" />
+            </LinearLayout>
+
+            <ImageView
+                    android:id="@+id/sleepMascotImage"
+                    android:layout_width="92dp"
+                    android:layout_height="92dp"
+                    android:src="@drawable/sleep_mascot"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter" />
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/bedtimeCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/fitto_background_light"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sleep_bedtime"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <TextView
+                            android:id="@+id/bedtimeValueText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="23:00"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <Space
+                    android:layout_width="12dp"
+                    android:layout_height="1dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/wakeTimeCard"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:cardCornerRadius="18dp"
+                    app:cardBackgroundColor="@color/fitto_background_light"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/sleep_wake_time"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <TextView
+                            android:id="@+id/wakeTimeValueText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:text="07:00"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_fitto_chip"
+                android:padding="16dp">
+
+            <TextView
+                    android:id="@+id/sleepDurationResultText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sleep_duration_placeholder"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/sleepCaloriesResultText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sleep_calories_placeholder"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sleepCancelButton"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/common_cancel" />
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/sleepSaveButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="@string/common_save" />
+        </LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

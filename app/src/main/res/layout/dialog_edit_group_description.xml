@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="24dp"
+    app:cardBackgroundColor="@color/fitto_surface"
+    app:cardCornerRadius="28dp"
+    app:cardElevation="8dp"
+    app:strokeColor="@color/fitto_divider_soft"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/fitto_surface"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Üst başlık alanı -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/dialogTitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/group_edit_description_title"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/dialogCloseButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_close"
+                android:padding="8dp"
+                android:src="@drawable/ic_close"
+                app:tint="@color/fitto_text_dark" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/dialogSubtitleText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/group_edit_description_subtitle"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="14sp" />
+
+        <!-- Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/groupDescriptionInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:hint="@string/group_description_label"
+            app:boxBackgroundColor="@color/fitto_surface"
+            app:boxCornerRadiusTopStart="20dp"
+            app:boxCornerRadiusTopEnd="20dp"
+            app:boxCornerRadiusBottomStart="20dp"
+            app:boxCornerRadiusBottomEnd="20dp"
+            app:boxStrokeColor="@color/fitto_green"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp"
+            app:counterEnabled="true"
+            app:counterMaxLength="180"
+            app:hintTextColor="@color/fitto_green">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/groupDescriptionEditText"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:gravity="top|start"
+                android:inputType="textCapSentences|textMultiLine"
+                android:maxLength="180"
+                android:maxLines="5"
+                android:minLines="4"
+                android:paddingTop="14dp"
+                android:textColor="@color/fitto_text_dark"
+                android:textColorHint="@color/fitto_text_secondary"
+                android:textSize="16sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Bilgi satırı -->
+        <LinearLayout
+            android:id="@+id/dialogInfoRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_info"
+                app:tint="@color/fitto_green" />
+
+            <TextView
+                android:id="@+id/dialogInfoText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/group_edit_description_helper"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- Butonlar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialogCancelButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="0dp"
+                android:text="@string/common_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/dialogSaveButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="140dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="12dp"
+                android:text="@string/common_save"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="26dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

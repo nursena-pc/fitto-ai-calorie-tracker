@@ -1,0 +1,41 @@
+{
+  "foodCount": 107,
+  "categories": [
+    "beverage",
+    "condiment",
+    "dairy",
+    "drink",
+    "fat",
+    "fruit",
+    "fruit_fat",
+    "grain",
+    "legume",
+    "nut",
+    "plant_dish",
+    "plant_protein",
+    "protein",
+    "seed",
+    "soup",
+    "starchy_vegetable",
+    "sweetener",
+    "turkish_dish",
+    "vegetable"
+  ],
+  "dietTags": [
+    "balanced",
+    "dash",
+    "elimination",
+    "keto",
+    "mediterranean",
+    "mind",
+    "plant_based",
+    "weight_gain"
+  ],
+  "mealTypes": [
+    "breakfast",
+    "dinner",
+    "lunch",
+    "snack",
+    "water"
+  ]
+}

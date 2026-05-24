@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <ScrollView
+            android:id="@+id/userInfoScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="24dp"
+                android:paddingTop="20dp"
+                android:paddingEnd="24dp"
+                android:paddingBottom="28dp">
+
+            <include
+                    layout="@layout/view_onboarding_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp" />
+
+            <ImageButton
+                    android:id="@+id/userInfoBackButton"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/bg_fitto_circle_soft"
+                    android:contentDescription="@string/back"
+                    android:padding="18dp"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/fitto_green" />
+
+            <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingEnd="20dp"> <TextView
+                        android:id="@+id/userInfoTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/user_info_title"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="28sp"
+                        android:textStyle="bold"
+                        android:maxLines="2"
+                        android:ellipsize="none" /> <TextView
+                        android:id="@+id/userInfoDescriptionText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/user_info_desc"
+                        android:textColor="#6E7376"
+                        android:textSize="18sp" />
+
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <LinearLayout
+                    android:id="@+id/personalInfoCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="26dp"
+                    android:background="@drawable/bg_fitto_card"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <FrameLayout
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:background="@drawable/bg_fitto_circle_soft">
+
+                        <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_person_outline"
+                                app:tint="@color/fitto_green" />
+
+                    </FrameLayout>
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="@string/user_info_personal_title"
+                            android:textColor="#234A22"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/nameInputContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="72dp"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_fitto_input"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
+
+                    <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_person_outline"
+                            app:tint="@color/fitto_green" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/nameEditText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="@string/name_label"
+                            android:imeOptions="actionNext"
+                            android:inputType="textPersonName"
+                            android:padding="0dp"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textColorHint="#7D8386"
+                            android:textSize="18sp" />
+
+                </LinearLayout>
+
+                <TextView
+                        android:id="@+id/nameErrorText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#B3261E"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+
+                <TextView
+                        android:id="@+id/nameInfoText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/user_info_name_privacy"
+                        android:textColor="#8A8F92"
+                        android:textSize="14sp" />
+
+                <LinearLayout
+                        android:id="@+id/ageInputContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="72dp"
+                        android:layout_marginTop="18dp"
+                        android:background="@drawable/bg_fitto_input"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp">
+
+                    <ImageView
+                            android:id="@+id/ageCalendarIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_calendar_today"
+                            app:tint="@color/fitto_green" />
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/ageEditText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:hint="@string/age_label"
+                            android:imeOptions="actionNext"
+                            android:inputType="number"
+                            android:maxLength="3"
+                            android:padding="0dp"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textColorHint="#7D8386"
+                            android:textSize="18sp" />
+
+                </LinearLayout>
+
+                <TextView
+                        android:id="@+id/ageErrorText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:textColor="#B3261E"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+
+                <TextView
+                        android:id="@+id/ageInfoText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="10dp"
+                        android:text="@string/user_info_calendar_hint"
+                        android:textColor="#8A8F92"
+                        android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/bodyInfoCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_fitto_card"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <FrameLayout
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:background="@drawable/bg_fitto_circle_soft">
+
+                        <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_straighten"
+                                app:tint="@color/fitto_green" />
+
+                    </FrameLayout>
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="@string/user_info_body_title"
+                            android:textColor="#234A22"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/bodyInputRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:orientation="horizontal">
+
+                    <LinearLayout
+                            android:id="@+id/heightInputContainer"
+                            android:layout_width="0dp"
+                            android:layout_height="72dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_fitto_input"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_straighten"
+                                app:tint="@color/fitto_green" />
+
+                        <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/heightEditText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:hint="@string/height_label"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textColorHint="#7D8386"
+                                android:textSize="18sp" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="cm"
+                                android:textColor="#777D81"
+                                android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                    <Space
+                            android:layout_width="14dp"
+                            android:layout_height="wrap_content" />
+
+                    <LinearLayout
+                            android:id="@+id/weightInputContainer"
+                            android:layout_width="0dp"
+                            android:layout_height="72dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_fitto_input"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_monitor_weight"
+                                app:tint="@color/fitto_green" />
+
+                        <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/weightEditText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:hint="@string/weight_label"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textColorHint="#7D8386"
+                                android:textSize="18sp" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="kg"
+                                android:textColor="#777D81"
+                                android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/bodyErrorRow"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                    <TextView
+                            android:id="@+id/heightErrorText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="#B3261E"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+
+                    <Space
+                            android:layout_width="14dp"
+                            android:layout_height="wrap_content" />
+
+                    <TextView
+                            android:id="@+id/weightErrorText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="#B3261E"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:id="@+id/genderCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_fitto_card"
+                    android:elevation="2dp"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <FrameLayout
+                            android:layout_width="54dp"
+                            android:layout_height="54dp"
+                            android:background="@drawable/bg_fitto_circle_soft">
+
+                        <ImageView
+                                android:layout_width="26dp"
+                                android:layout_height="26dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_favorite_border"
+                                app:tint="@color/fitto_green" />
+
+                    </FrameLayout>
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:text="@string/gender_label"
+                            android:textColor="#234A22"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                        android:id="@+id/genderOptionsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:orientation="vertical">
+
+                    <LinearLayout
+                            android:id="@+id/genderTopRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:id="@+id/womanOption"
+                                android:layout_width="0dp"
+                                android:layout_height="86dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_card_normal"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:orientation="horizontal"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp">
+
+                            <ImageView
+                                    android:id="@+id/womanOptionIcon"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_woman"
+                                    app:tint="#5F6669" />
+
+                            <TextView
+                                    android:id="@+id/womanOptionText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="@string/gender_female"
+                                    android:textColor="#454A4D"
+                                    android:textSize="16sp" />
+
+                        </LinearLayout>
+
+                        <Space
+                                android:layout_width="12dp"
+                                android:layout_height="wrap_content" />
+
+                        <LinearLayout
+                                android:id="@+id/manOption"
+                                android:layout_width="0dp"
+                                android:layout_height="86dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_card_normal"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center"
+                                android:orientation="horizontal"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp">
+
+                            <ImageView
+                                    android:id="@+id/manOptionIcon"
+                                    android:layout_width="24dp"
+                                    android:layout_height="24dp"
+                                    android:src="@drawable/ic_man"
+                                    app:tint="#5F6669" />
+
+                            <TextView
+                                    android:id="@+id/manOptionText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="10dp"
+                                    android:text="@string/gender_male"
+                                    android:textColor="#454A4D"
+                                    android:textSize="16sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:id="@+id/preferNotOption"
+                            android:layout_width="match_parent"
+                            android:layout_height="76dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_fitto_card_normal"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <ImageView
+                                android:id="@+id/preferNotOptionIcon"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_person_off"
+                                app:tint="#5F6669" />
+
+                        <TextView
+                                android:id="@+id/preferNotOptionText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="10dp"
+                                android:text="@string/gender_prefer_not"
+                                android:textColor="#454A4D"
+                                android:textSize="16sp" />
+
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/genderErrorText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textColor="#B3261E"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                    android:id="@+id/userInfoNextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="72dp"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/bg_fitto_button_primary"
+                    android:clickable="true"
+                    android:elevation="3dp"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/next"
+                    android:textColor="@color/white"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

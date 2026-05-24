@@ -1,0 +1,1641 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <LinearLayout
+            android:id="@+id/topBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHorizontal_bias="0.0">
+
+        <ImageView
+                android:id="@+id/backButton"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="@string/common_back"
+                android:src="@drawable/ic_arrow_back"
+                android:tint="@color/fitto_text_dark" />
+        <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/topBar">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="16dp">
+
+            <!-- Hero -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="210dp">
+
+                        <ImageView
+                                android:id="@+id/heroCoverImage"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:adjustViewBounds="true"
+                                android:contentDescription="@null"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/intermittent_fasting_cover" />
+
+                        <TextView
+                                android:id="@+id/heroTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="top|start"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginTop="16dp"
+                                android:background="#DFFFFFFF"
+                                android:paddingStart="10dp"
+                                android:paddingTop="6dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="6dp"
+                                android:text="@string/if_detail_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+                    </FrameLayout>
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fillViewport="true"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:paddingStart="12dp"
+                                android:paddingTop="12dp"
+                                android:paddingEnd="12dp"
+                                android:paddingBottom="8dp">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="32dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:text="@string/if_detail_badge_calorie"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="32dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:text="@string/diet_plan_detail_badge_duration"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="32dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:text="@string/if_detail_badge_flexibility"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="32dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:paddingStart="12dp"
+                                    android:paddingEnd="12dp"
+                                    android:text="@string/if_detail_badge_sustainable"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="14dp">
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/applyPlanButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_apply"
+                                android:textAllCaps="false"
+                                android:textColor="@android:color/white"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                app:backgroundTint="@color/fitto_green"
+                                app:cornerRadius="16dp"
+                                app:icon="@null" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/savePlanButton"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_save"
+                                android:textAllCaps="false"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                app:cornerRadius="16dp"
+                                app:icon="@null"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Oruç Planı Seçenekleri -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_options_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ⓘ"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlan12Card"
+                                    android:layout_width="78dp"
+                                    android:layout_height="88dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="12:12"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="10dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_beginner"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="11sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlan15Card"
+                                    android:layout_width="78dp"
+                                    android:layout_height="88dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="15:9"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="10dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_balanced"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="11sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlan16Card"
+                                    android:layout_width="78dp"
+                                    android:layout_height="88dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_green"
+                                    app:strokeWidth="1.5dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="16:8"
+                                            android:textColor="@color/fitto_green"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="10dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_popular"
+                                            android:textColor="@color/fitto_green"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlan61Card"
+                                    android:layout_width="78dp"
+                                    android:layout_height="88dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="6:1"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="10dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_weekly"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="11sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlan52Card"
+                                    android:layout_width="78dp"
+                                    android:layout_height="88dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="5:2"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="18sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="10dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_5_2"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="11sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/fastingPlanCustomCard"
+                                    android:layout_width="88dp"
+                                    android:layout_height="88dp"
+                                    app:cardBackgroundColor="@color/fitto_surface"
+                                    app:cardCornerRadius="16dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:padding="8dp">
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/if_detail_option_custom_title"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="14sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="8dp"
+                                            android:gravity="center"
+                                            android:text="@string/if_detail_option_custom_desc"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="11sp" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Seçilen plan -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:id="@+id/selectedPlanLabelText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/if_detail_selected_plan"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="14sp" />
+
+                    <TextView
+                            android:id="@+id/selectedPlanRatioText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/if_detail_selected_plan_ratio"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="18dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🌙"
+                                    android:textSize="22sp" />
+
+                            <TextView
+                                    android:id="@+id/timeStartText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="@string/if_detail_time_start"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:id="@+id/timeStartSubText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/if_detail_time_start_sub"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <View
+                                android:layout_width="0dp"
+                                android:layout_height="2dp"
+                                android:layout_weight="1"
+                                android:background="@color/fitto_yellow" />
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🌤️"
+                                    android:textSize="22sp" />
+
+                            <TextView
+                                    android:id="@+id/timeEatText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="@string/if_detail_time_eat"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:id="@+id/timeEatSubText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/if_detail_time_eat_sub"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="11sp" />
+                        </LinearLayout>
+
+                        <View
+                                android:layout_width="0dp"
+                                android:layout_height="2dp"
+                                android:layout_weight="1"
+                                android:background="@color/fitto_green" />
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="☀️"
+                                    android:textSize="22sp" />
+
+                            <TextView
+                                    android:id="@+id/timeEndText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:text="@string/if_detail_time_end"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:id="@+id/timeEndSubText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/if_detail_time_end_sub"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="11sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Plan Hakkında -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🍃"
+                                    android:textSize="16sp" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="@string/if_detail_about_title"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                                android:id="@+id/aboutDescText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="@string/if_detail_about_desc"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:gravity="center"
+                            android:text="🌿"
+                            android:textSize="22sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Faydaları -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/if_detail_benefits_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="❤️"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit1TitleText"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:ellipsize="end"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:text="@string/if_detail_benefit_1_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit1DescText"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:gravity="center"
+                                        android:maxLines="3"
+                                        android:text="@string/if_detail_benefit_1_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="10sp" />
+
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🔋"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit2TitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center"
+                                        android:layout_marginTop="6dp"
+                                        android:ellipsize="end"
+                                        android:maxLines="2"
+                                        android:text="@string/if_detail_benefit_2_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit2DescText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:maxLines="3"
+                                        android:gravity="center"
+                                        android:text="@string/if_detail_benefit_2_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="150dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🧠"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit3TitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="center"
+                                        android:layout_marginTop="6dp"
+                                        android:ellipsize="end"
+                                        android:maxLines="2"
+                                        android:text="@string/if_detail_benefit_3_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit3DescText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:maxLines="3"
+                                        android:gravity="center"
+                                        android:text="@string/if_detail_benefit_3_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Kimler için uygun -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="✅"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_for_whom_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⌄"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/forWhomDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/if_detail_for_whom_desc"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="@string/if_detail_for_whom_busy"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="@string/if_detail_for_whom_beginner"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="36dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="@string/if_detail_for_whom_routine"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Haftalık Akış Önizlemesi -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_weekly_flow_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ⓘ"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_mon"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_tue"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_wed"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_thu"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_fri"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_sat"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="@string/day_sun"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="🟢"
+                                android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/weeklyFlowDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:text="@string/if_detail_weekly_flow_desc"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Oruçta Serbest İçecekler -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_drinks_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="ⓘ"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="110dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🥛"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="@string/if_detail_drink_water"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/if_detail_drink_water_sub"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="110dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="☕"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="@string/if_detail_drink_coffee"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/if_detail_drink_coffee_sub"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="110dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🍵"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="@string/if_detail_drink_tea"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/if_detail_drink_tea_sub"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="110dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🧴"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:text="@string/if_detail_drink_mineral"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/if_detail_drink_mineral_sub"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Dikkat edilmesi gerekenler -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚠️"
+                                    android:textSize="16sp" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="@string/if_detail_attention_title"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="10dp"
+                                android:text="@string/if_detail_attention_1"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+
+                        <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/if_detail_attention_2"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+
+                        <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/if_detail_attention_3"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+
+                        <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/if_detail_attention_4"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Sık Sorulan Sorular -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/if_detail_faq_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <!-- FAQ 1 -->
+                    <LinearLayout
+                            android:id="@+id/faq1Header"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_fitto_chip"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <TextView
+                                android:id="@+id/faq1QuestionText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_faq_1"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/faq1Arrow"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⌃"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/faq1Answer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="12dp"
+                            android:text="@string/if_detail_faq_1_answer"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <!-- FAQ 2 -->
+                    <LinearLayout
+                            android:id="@+id/faq2Header"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_fitto_chip"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <TextView
+                                android:id="@+id/faq2QuestionText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_faq_2"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/faq2Arrow"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⌄"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/faq2Answer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="12dp"
+                            android:text="@string/if_detail_faq_2_answer"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp"
+                            android:visibility="gone" />
+
+                    <!-- FAQ 3 -->
+                    <LinearLayout
+                            android:id="@+id/faq3Header"
+                            android:layout_width="match_parent"
+                            android:layout_height="52dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_fitto_chip"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center_vertical"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <TextView
+                                android:id="@+id/faq3QuestionText"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/if_detail_faq_3"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/faq3Arrow"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⌄"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="18sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/faq3Answer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingStart="14dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="14dp"
+                            android:paddingBottom="12dp"
+                            android:text="@string/if_detail_faq_3_answer"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp"
+                            android:visibility="gone" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

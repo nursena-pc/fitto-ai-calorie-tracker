@@ -1,0 +1,135 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <color name="fitto_water_blue">#4FA7FF</color>
+    <color name="fitto_text_on_light_surface">#212121</color>
+    <color name="fitto_text_secondary_on_light_surface">#5F6467</color>
+    <color name="fitto_time_picker_surface">#FFFFFF</color>
+    <color name="fitto_time_picker_field">#F1F8E9</color>
+    <color name="report_dialog_background">#FFFFFF</color>
+    <color name="report_dialog_option_bg">#FFFFFF</color>
+    <color name="report_dialog_option_selected_bg">#EEF9E9</color>
+    <color name="report_dialog_option_stroke">#DDE7D8</color>
+    <color name="report_dialog_cancel_text">#5F6467</color>
+    <color name="chat_action_dialog_background">#FFFFFF</color>
+    <color name="fitto_green">#4CAF50</color>
+    <color name="fitto_yellow">#FFD54F</color>
+    <color name="fitto_orange">#FF9800</color>
+    <color name="fitto_background_light">#F1F8E9</color>
+    <color name="fitto_background_dark">#1B2621</color>
+    <color name="profile_screen_background">#F1F8E9</color>
+    <color name="fitto_text_dark">#212121</color>
+    <color name="fitto_text_light">#F5F5F5</color>
+    <color name="fitto_surface">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="fitto_primary_soft">#224CAF50</color>
+    <color name="fitto_primary_extra_soft">#0D4CAF50</color>
+    <color name="fitto_badge_background">#E8F5E9</color>
+    <color name="fitto_chip_background">#EEF8EF</color>
+    <color name="fitto_divider_soft">#1A000000</color>
+    <color name="fitto_tertiary_soft">#33FF9800</color>
+    <color name="fitto_surface_soft">#F8FFF4</color>
+    <color name="fitto_text_secondary">#5F6467</color>
+    <color name="fitto_error">#E45B6C</color>
+    <color name="tag_chip_green_bg">#E7F6EA</color>
+    <color name="tag_chip_green_text">#2E7D32</color>
+    <color name="tag_chip_yellow_bg">#FFF8D9</color>
+    <color name="tag_chip_yellow_text">#B28704</color>
+    <color name="tag_chip_blue_bg">#E6F1FF</color>
+    <color name="tag_chip_blue_text">#1565C0</color>
+    <color name="tag_chip_purple_bg">#F1E8FF</color>
+    <color name="tag_chip_purple_text">#7B1FA2</color>
+    <color name="tag_chip_orange_bg">#FFF0E5</color>
+    <color name="tag_chip_orange_text">#EF6C00</color>
+    <color name="fitto_white">#FFFFFF</color>
+    <color name="fitto_surface_softns">#F8FFF4</color>
+    <color name="fitto_text_secondaryns">#5F6467</color>
+    <color name="profile_card_background">#FFFFFB</color>
+    <color name="profile_menu_background">#FAFFF8</color>
+    <color name="profile_text">#212121</color>
+    <color name="profile_subtext">#6D776F</color>
+    <color name="profile_stroke">#224CAF50</color>
+    <color name="profile_progress_track">#E8EDE6</color>
+    <color name="reminder_hero_green">#19783A</color>
+    <color name="reminder_delete">#EF4444</color>
+    <color name="reminder_chip_all">#CDEED2</color>
+    <color name="reminder_meal">#B88900</color>
+    <color name="reminder_meal_soft">#FFF2CC</color>
+    <color name="reminder_water">#209BD4</color>
+    <color name="reminder_water_soft">#DDF4FF</color>
+    <color name="reminder_exercise">#3F9B3D</color>
+    <color name="reminder_exercise_soft">#E0F4D8</color>
+    <color name="reminder_weight">#7661C9</color>
+    <color name="reminder_weight_soft">#EAE4FF</color>
+    <color name="reminder_custom_soft">#FFE2DC</color>
+    <color name="reminder_marker_water">#64C7EE</color>
+    <color name="reminder_marker_weight">#B783F2</color>
+    <color name="transparent">#00000000</color>
+    <color name="fitto_red">#E45B6C</color>
+    <color name="fitto_anim_bg">#f0efee</color>
+    <color name="report_screen_background">#F6FAF4</color>
+    <color name="report_card_background">#FFFFFF</color>
+    <color name="report_card_stroke">#E1ECE0</color>
+    <color name="report_stat_card_background">#F2FAF1</color>
+    <color name="report_stat_card_stroke">#D7E9D6</color>
+    <color name="report_chart_background">#FFFFFF</color>
+
+    <color name="report_text_primary">#142318</color>
+    <color name="report_text_secondary">#617066</color>
+    <color name="report_icon_tint">#142318</color>
+    <color name="report_brand_text">#2E7D32</color>
+    <color name="report_divider">#DCE8DA</color>
+
+    <color name="report_tab_selected">#2E7D32</color>
+    <color name="report_tab_unselected">#708275</color>
+
+    <color name="report_chart_axis_text">#708275</color>
+    <color name="report_chart_grid">#E2ECE0</color>
+    <color name="report_chart_value_text">#617066</color>
+
+    <color name="report_calorie_line">#2FA84F</color>
+    <color name="report_calorie_fill">#DDF6E4</color>
+    <color name="report_target_line">#F0A72E</color>
+
+    <color name="report_macro_protein">#2FA84F</color>
+    <color name="report_macro_carbs">#F3B53E</color>
+    <color name="report_macro_fat">#F47652</color>
+
+    <color name="report_weight_line">#2E7D32</color>
+    <color name="report_weight_fill">#DDF6E4</color>
+
+
+
+    <!-- Reports screen resources -->
+    <color name="reports_screen_background">#F6FAF4</color>
+    <color name="reports_card_background">#FFFFFF</color>
+    <color name="reports_card_stroke">#E1ECE0</color>
+    <color name="reports_stat_card_background">#F2FAF1</color>
+    <color name="reports_stat_card_stroke">#D7E9D6</color>
+    <color name="reports_chart_background">#FFFFFF</color>
+    <color name="reports_text_primary">#142318</color>
+    <color name="reports_text_secondary">#617066</color>
+    <color name="reports_icon_tint">#142318</color>
+    <color name="reports_brand_text">#2E7D32</color>
+    <color name="reports_divider">#DCE8DA</color>
+    <color name="reports_tab_selected">#2E7D32</color>
+    <color name="reports_tab_unselected">#708275</color>
+    <color name="reports_chart_axis_text">#708275</color>
+    <color name="reports_chart_grid">#E2ECE0</color>
+    <color name="reports_chart_value_text">#617066</color>
+    <color name="reports_calorie_line">#2FA84F</color>
+    <color name="reports_calorie_fill">#DDF6E4</color>
+    <color name="reports_target_line">#F0A72E</color>
+    <color name="reports_macro_protein">#2FA84F</color>
+    <color name="reports_macro_carbs">#F3B53E</color>
+    <color name="reports_macro_fat">#F47652</color>
+    <color name="reports_weight_line">#2E7D32</color>
+    <color name="reports_weight_fill">#DDF6E4</color>
+    <!-- Fitto AI soft status colors -->
+    <color name="ai_status_green_bg">#EEF8F0</color>
+    <color name="ai_status_green_text">#236B35</color>
+    <color name="ai_status_yellow_bg">#FFF7E3</color>
+    <color name="ai_status_yellow_text">#8A5A00</color>
+    <color name="ai_status_red_bg">#FDECEC</color>
+    <color name="ai_status_red_text">#9A3030</color>
+
+</resources>

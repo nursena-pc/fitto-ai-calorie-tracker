@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_number_picker_dialog"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="22dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="18dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+        <TextView
+                android:id="@+id/numberDialogIconText"
+                android:layout_width="46dp"
+                android:layout_height="46dp"
+                android:background="@drawable/bg_number_picker_icon"
+                android:gravity="center"
+                android:text="🔥"
+                android:textSize="24sp" />
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/numberDialogTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/numberDialogHelperText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="2dp"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="86dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_number_picker_icon"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/numberDialogMinusButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="14dp"
+                android:text=""
+                app:backgroundTint="@color/fitto_surface"
+                app:cornerRadius="26dp"
+                app:icon="@drawable/ic_remove"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="@color/fitto_text_dark"
+                app:strokeColor="@color/fitto_divider_soft"
+                app:strokeWidth="1dp" />
+
+        <EditText
+                android:id="@+id/numberDialogInput"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLines="1"
+                android:selectAllOnFocus="true"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+
+        <TextView
+                android:id="@+id/numberDialogUnitText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="kcal"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/numberDialogPlusButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="14dp"
+                android:text=""
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="26dp"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="@android:color/white" />
+
+    </LinearLayout>
+
+    <TextView
+            android:id="@+id/numberDialogRangeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="12sp" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/numberDialogCancelButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/common_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="18dp"
+                app:strokeColor="@color/fitto_green" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/numberDialogSaveButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/common_save"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="18dp" />
+    </LinearLayout>
+</LinearLayout>

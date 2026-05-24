@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/profile_screen_background">
+
+    <com.example.fitto.feature_home.presentation.profile.view.FittoBottomDecorationView
+            android:id="@+id/fittoBottomDecorationWeight"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_gravity="bottom" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbarWeight"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:background="@android:color/transparent"
+                android:paddingStart="8dp"
+                app:menu="@menu/menu_weight_toolbar"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:title="@string/profile_menu_weight"
+                app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                app:titleTextColor="@color/profile_text" />
+
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+            <androidx.core.widget.NestedScrollView
+                    android:id="@+id/scrollWeightMain"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="130dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="6dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardWeightInfo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="14dp">
+
+                            <ImageView
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_recipe_icon_soft_circle"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_info"
+                                    app:tint="@color/fitto_green" />
+
+                            <TextView
+                                    android:id="@+id/textWeightInfo"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_weight="1"
+                                    android:text="@string/weight_info_text"
+                                    android:textColor="@color/profile_subtext"
+                                    android:textSize="13sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardCurrentWeight"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="14dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackground"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="28dp"
+                            app:cardElevation="2dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_horizontal"
+                                android:orientation="vertical"
+                                android:paddingHorizontal="22dp"
+                                android:paddingTop="20dp"
+                                android:paddingBottom="16dp">
+
+                            <TextView
+                                    android:id="@+id/textCurrentWeightLabel"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/weight_current_label"
+                                    android:textColor="@color/profile_subtext"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold" />
+
+                            <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:gravity="center"
+                                    android:orientation="horizontal">
+
+                                <EditText
+                                        android:id="@+id/editCurrentWeightValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:autofillHints="weight"
+                                        android:background="@null"
+                                        android:gravity="center"
+                                        android:hint="@string/weight_input_hint"
+                                        android:imeOptions="actionDone|flagNoExtractUi"
+                                        android:includeFontPadding="false"
+                                        android:inputType="numberDecimal"
+                                        android:maxLines="1"
+                                        android:minWidth="112dp"
+                                        android:selectAllOnFocus="true"
+                                        android:textColor="@color/profile_text"
+                                        android:textColorHint="@color/profile_subtext"
+                                        android:textSize="42sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:text="kg"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="22sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <TextView
+                                    android:id="@+id/textLastWeighDate"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="8dp"
+                                    android:text="@string/weight_last_weigh_default"
+                                    android:textColor="@color/profile_subtext"
+                                    android:textSize="14sp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/buttonSaveWeight"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="50dp"
+                                    android:layout_marginTop="14dp"
+                                    android:text="@string/weight_save"
+                                    android:textAllCaps="false"
+                                    android:textStyle="bold"
+                                    app:backgroundTint="@color/fitto_green"
+                                    app:cornerRadius="18dp"
+                                    app:icon="@drawable/ic_check_circle"
+                                    app:iconGravity="textStart"
+                                    app:iconPadding="8dp"
+                                    app:iconTint="@android:color/white" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/buttonReturnCurrentWeight"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="50dp"
+                                    android:layout_marginTop="10dp"
+                                    android:text="@string/weight_return_current"
+                                    android:textAllCaps="false"
+                                    android:textStyle="bold"
+                                    android:visibility="gone"
+                                    app:cornerRadius="18dp"
+                                    app:icon="@drawable/ic_history"
+                                    app:iconPadding="8dp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardInitialWeight"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/profile_card_background"
+                                app:cardCornerRadius="20dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="@color/profile_stroke"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:padding="16dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/weight_initial_label"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="13sp" />
+
+                                <TextView
+                                        android:id="@+id/textInitialWeightValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="@string/profile_data_not_saved_yet"
+                                        android:textColor="@color/profile_text"
+                                        android:textSize="23sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:id="@+id/cardTargetWeight"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/profile_card_background"
+                                app:cardCornerRadius="20dp"
+                                app:cardElevation="1dp"
+                                app:strokeColor="@color/profile_stroke"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:padding="16dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/weight_target_label"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="13sp" />
+
+                                <TextView
+                                        android:id="@+id/textTargetWeightValue"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="6dp"
+                                        android:text="@string/profile_data_not_saved_yet"
+                                        android:textColor="@color/profile_text"
+                                        android:textSize="23sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="14dp"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/textLostSoFar"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/weight_lost_so_far_default"
+                                android:textColor="@color/profile_text"
+                                android:textSize="14sp" />
+
+                        <TextView
+                                android:id="@+id/textRemainingWeight"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="end"
+                                android:text="@string/weight_remaining_default"
+                                android:textColor="@color/profile_text"
+                                android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/textWeightChartTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="22dp"
+                            android:layout_marginTop="22dp"
+                            android:text="@string/weight_chart_title"
+                            android:textColor="@color/profile_text"
+                            android:textSize="21sp"
+                            android:textStyle="bold" />
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardWeightChart"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="24dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:paddingBottom="12dp">
+
+                            <TextView
+                                    android:id="@+id/textChartSubtitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="16dp"
+                                    android:layout_marginTop="14dp"
+                                    android:text="@string/weight_chart_subtitle"
+                                    android:textColor="@color/profile_subtext"
+                                    android:textSize="13sp" />
+
+                            <com.example.fitto.feature_home.presentation.profile.view.WeightTrendChartView
+                                    android:id="@+id/weightTrendChartView"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="214dp"
+                                    android:padding="16dp" />
+
+                            <LinearLayout
+                                    android:id="@+id/layoutWeightChartSummary"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="14dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:visibility="gone">
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginEnd="6dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_first_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textWeightChartFirstValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/profile_text"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginHorizontal="3dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_last_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textWeightChartLastValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/fitto_green"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginStart="6dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_change_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textWeightChartChangeValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/fitto_green"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardReminderBanner"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="18dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="20dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="14dp">
+
+                            <ImageView
+                                    android:id="@+id/buttonReminder"
+                                    android:layout_width="34dp"
+                                    android:layout_height="34dp"
+                                    android:background="@drawable/bg_recipe_icon_soft_circle"
+                                    android:padding="8dp"
+                                    android:src="@drawable/ic_alarm"
+                                    app:tint="@color/fitto_green" />
+
+                            <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="12dp"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                <TextView
+                                        android:id="@+id/textReminderTitle"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/weight_reminder_title"
+                                        android:textColor="@color/profile_text"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/textReminderSubtitle"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="3dp"
+                                        android:text="@string/weight_reminder_subtitle"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="12.5sp" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+            <androidx.core.widget.NestedScrollView
+                    android:id="@+id/scrollWeightHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="130dp"
+                    android:visibility="gone">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="6dp">
+
+                    <LinearLayout
+                            android:id="@+id/layoutWeightHistory"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>

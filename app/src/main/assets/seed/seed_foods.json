@@ -1,0 +1,2997 @@
+{
+  "schemaVersion": 2,
+  "seedVersion": 2,
+  "descriptionTr": "Fitto v2 USDA ağırlıklı temel besin seed dosyası. Tekil gıdalar USDA FoodData Central kaynaklıdır; Türk yemekleri Fitto tarif varsayımlarıyla USDA bileşen değerlerinden hesaplanmıştır.",
+  "baseUnit": "100g_or_100ml",
+  "sourcePolicyTr": "USDA FoodData Central verileri public domain/CC0 olarak kullanılabilir. Uygulama içinde FoodData Central kaynak gösterimi yapılmalıdır. TürkKomp için ticari kullanım/sözleşme konusu netleşene kadar doğrudan veri kopyalanmamıştır.",
+  "foods": [
+    {
+      "id": "water",
+      "nameTr": "Su",
+      "nameEn": "Water",
+      "category": "beverage",
+      "defaultUnit": "ml",
+      "defaultServingAmount": 250,
+      "caloriesPer100g": 0,
+      "proteinPer100g": 0,
+      "carbsPer100g": 0,
+      "fatPer100g": 0,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Water",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "water"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "filter_coffee",
+      "nameTr": "Filtre kahve",
+      "nameEn": "Coffee, brewed",
+      "category": "beverage",
+      "defaultUnit": "ml",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 1,
+      "proteinPer100g": 0.12,
+      "carbsPer100g": 0,
+      "fatPer100g": 0.02,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Coffee, brewed",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "green_tea",
+      "nameTr": "Yeşil çay",
+      "nameEn": "Tea, green, brewed",
+      "category": "beverage",
+      "defaultUnit": "ml",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 1,
+      "proteinPer100g": 0,
+      "carbsPer100g": 0,
+      "fatPer100g": 0,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tea, green, brewed",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "oatmeal",
+      "nameTr": "Yulaf ezmesi",
+      "nameEn": "Oats, rolled, raw",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 40,
+      "caloriesPer100g": 379,
+      "proteinPer100g": 13.15,
+      "carbsPer100g": 67.7,
+      "fatPer100g": 6.52,
+      "fiberPer100g": 10.1,
+      "source": "usda_fdc",
+      "sourceFoodName": "Oats, rolled, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "rolled_oats_cooked",
+      "nameTr": "Pişmiş yulaf lapası",
+      "nameEn": "Oatmeal, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 180,
+      "caloriesPer100g": 71,
+      "proteinPer100g": 2.54,
+      "carbsPer100g": 12.0,
+      "fatPer100g": 1.52,
+      "fiberPer100g": 1.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Oatmeal, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "whole_wheat_bread",
+      "nameTr": "Tam buğday ekmeği",
+      "nameEn": "Bread, whole-wheat",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 50,
+      "caloriesPer100g": 247,
+      "proteinPer100g": 12.95,
+      "carbsPer100g": 41.29,
+      "fatPer100g": 4.2,
+      "fiberPer100g": 6.8,
+      "source": "usda_fdc",
+      "sourceFoodName": "Bread, whole-wheat",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack",
+        "lunch"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "rye_bread",
+      "nameTr": "Çavdar ekmeği",
+      "nameEn": "Bread, rye",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 50,
+      "caloriesPer100g": 259,
+      "proteinPer100g": 8.5,
+      "carbsPer100g": 48.3,
+      "fatPer100g": 3.3,
+      "fiberPer100g": 5.8,
+      "source": "usda_fdc",
+      "sourceFoodName": "Bread, rye",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "white_rice_cooked",
+      "nameTr": "Pişmiş beyaz pirinç",
+      "nameEn": "Rice, white, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 130,
+      "proteinPer100g": 2.69,
+      "carbsPer100g": 28.17,
+      "fatPer100g": 0.28,
+      "fiberPer100g": 0.4,
+      "source": "usda_fdc",
+      "sourceFoodName": "Rice, white, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "brown_rice_cooked",
+      "nameTr": "Pişmiş esmer pirinç",
+      "nameEn": "Rice, brown, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 123,
+      "proteinPer100g": 2.74,
+      "carbsPer100g": 25.58,
+      "fatPer100g": 0.97,
+      "fiberPer100g": 1.6,
+      "source": "usda_fdc",
+      "sourceFoodName": "Rice, brown, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "bulgur_cooked",
+      "nameTr": "Pişmiş bulgur",
+      "nameEn": "Bulgur, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 83,
+      "proteinPer100g": 3.08,
+      "carbsPer100g": 18.58,
+      "fatPer100g": 0.24,
+      "fiberPer100g": 4.5,
+      "source": "usda_fdc",
+      "sourceFoodName": "Bulgur, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "whole_wheat_pasta_cooked",
+      "nameTr": "Pişmiş tam buğday makarna",
+      "nameEn": "Pasta, whole-wheat, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 160,
+      "caloriesPer100g": 124,
+      "proteinPer100g": 5.33,
+      "carbsPer100g": 26.54,
+      "fatPer100g": 0.54,
+      "fiberPer100g": 3.9,
+      "source": "usda_fdc",
+      "sourceFoodName": "Pasta, whole-wheat, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "quinoa_cooked",
+      "nameTr": "Pişmiş kinoa",
+      "nameEn": "Quinoa, cooked",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 120,
+      "proteinPer100g": 4.4,
+      "carbsPer100g": 21.3,
+      "fatPer100g": 1.92,
+      "fiberPer100g": 2.8,
+      "source": "usda_fdc",
+      "sourceFoodName": "Quinoa, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "rice_cake",
+      "nameTr": "Pirinç patlağı",
+      "nameEn": "Rice cakes, brown rice, plain",
+      "category": "grain",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 387,
+      "proteinPer100g": 8.2,
+      "carbsPer100g": 81.5,
+      "fatPer100g": 2.8,
+      "fiberPer100g": 4.2,
+      "source": "usda_fdc",
+      "sourceFoodName": "Rice cakes, brown rice, plain",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "elimination",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "plain_yogurt",
+      "nameTr": "Yoğurt, sade",
+      "nameEn": "Yogurt, plain, whole milk",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 61,
+      "proteinPer100g": 3.47,
+      "carbsPer100g": 4.66,
+      "fatPer100g": 3.25,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Yogurt, plain, whole milk",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "greek_yogurt_plain",
+      "nameTr": "Süzme yoğurt",
+      "nameEn": "Greek yogurt, plain",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 97,
+      "proteinPer100g": 9.0,
+      "carbsPer100g": 3.98,
+      "fatPer100g": 5.0,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Greek yogurt, plain",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "milk_semi_skimmed",
+      "nameTr": "Yarım yağlı süt",
+      "nameEn": "Milk, reduced fat, 2%",
+      "category": "dairy",
+      "defaultUnit": "ml",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 50,
+      "proteinPer100g": 3.36,
+      "carbsPer100g": 4.8,
+      "fatPer100g": 1.9,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Milk, reduced fat, 2%",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "dash",
+        "mind",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "kefir_plain",
+      "nameTr": "Kefir, sade",
+      "nameEn": "Kefir, plain",
+      "category": "dairy",
+      "defaultUnit": "ml",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 52,
+      "proteinPer100g": 3.4,
+      "carbsPer100g": 4.8,
+      "fatPer100g": 2.0,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Kefir, plain",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "white_cheese",
+      "nameTr": "Beyaz peynir",
+      "nameEn": "Feta cheese",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 60,
+      "caloriesPer100g": 264,
+      "proteinPer100g": 14.21,
+      "carbsPer100g": 4.09,
+      "fatPer100g": 21.28,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Feta cheese",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "kasar_cheese",
+      "nameTr": "Kaşar peyniri",
+      "nameEn": "Cheese, kashar style / hard cheese",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 40,
+      "caloriesPer100g": 350,
+      "proteinPer100g": 24.0,
+      "carbsPer100g": 2.2,
+      "fatPer100g": 27.0,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Cheese, kashar style / hard cheese",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "cottage_cheese_lor",
+      "nameTr": "Lor peyniri",
+      "nameEn": "Cottage cheese, lowfat",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 98,
+      "proteinPer100g": 11.12,
+      "carbsPer100g": 3.38,
+      "fatPer100g": 4.3,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Cottage cheese, lowfat",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "cream_cheese",
+      "nameTr": "Krem peynir",
+      "nameEn": "Cream cheese",
+      "category": "dairy",
+      "defaultUnit": "g",
+      "defaultServingAmount": 30,
+      "caloriesPer100g": 342,
+      "proteinPer100g": 5.93,
+      "carbsPer100g": 4.07,
+      "fatPer100g": 34.24,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Cream cheese",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "keto",
+        "weight_gain"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "egg_whole",
+      "nameTr": "Yumurta",
+      "nameEn": "Egg, whole, raw, fresh",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 50,
+      "caloriesPer100g": 143,
+      "proteinPer100g": 12.56,
+      "carbsPer100g": 0.72,
+      "fatPer100g": 9.51,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Egg, whole, raw, fresh",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "egg"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "egg_white",
+      "nameTr": "Yumurta beyazı",
+      "nameEn": "Egg white, raw",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 52,
+      "proteinPer100g": 10.9,
+      "carbsPer100g": 0.73,
+      "fatPer100g": 0.17,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Egg white, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "egg"
+      ],
+      "dietTags": [
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "chicken_breast_grilled",
+      "nameTr": "Izgara tavuk göğsü",
+      "nameEn": "Chicken breast, grilled, cooked",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 165,
+      "proteinPer100g": 31.02,
+      "carbsPer100g": 0,
+      "fatPer100g": 3.57,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Chicken breast, grilled, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "turkey_breast_grilled",
+      "nameTr": "Izgara hindi göğsü",
+      "nameEn": "Turkey breast, roasted",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 135,
+      "proteinPer100g": 29.0,
+      "carbsPer100g": 0,
+      "fatPer100g": 1.6,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Turkey breast, roasted",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tuna_canned_water",
+      "nameTr": "Ton balığı, suda",
+      "nameEn": "Tuna, canned in water",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 116,
+      "proteinPer100g": 25.51,
+      "carbsPer100g": 0,
+      "fatPer100g": 0.82,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tuna, canned in water",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "fish"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "salmon_grilled",
+      "nameTr": "Izgara somon",
+      "nameEn": "Salmon, cooked, dry heat",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 120,
+      "caloriesPer100g": 206,
+      "proteinPer100g": 22.1,
+      "carbsPer100g": 0,
+      "fatPer100g": 12.35,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Salmon, cooked, dry heat",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "fish"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "sea_bass_grilled",
+      "nameTr": "Izgara levrek",
+      "nameEn": "Sea bass, cooked",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 120,
+      "caloriesPer100g": 124,
+      "proteinPer100g": 23.63,
+      "carbsPer100g": 0,
+      "fatPer100g": 2.56,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Sea bass, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "fish"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "lean_beef_cooked",
+      "nameTr": "Yağsız dana eti, pişmiş",
+      "nameEn": "Beef, lean, cooked",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 217,
+      "proteinPer100g": 26.1,
+      "carbsPer100g": 0,
+      "fatPer100g": 11.8,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Beef, lean, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "lamb_lean_cooked",
+      "nameTr": "Yağsız kuzu eti, pişmiş",
+      "nameEn": "Lamb, lean, cooked",
+      "category": "protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 206,
+      "proteinPer100g": 28.2,
+      "carbsPer100g": 0,
+      "fatPer100g": 9.5,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Lamb, lean, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "elimination",
+        "keto",
+        "weight_gain"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "red_lentil_cooked",
+      "nameTr": "Pişmiş kırmızı mercimek",
+      "nameEn": "Lentils, cooked",
+      "category": "legume",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 116,
+      "proteinPer100g": 9.02,
+      "carbsPer100g": 20.13,
+      "fatPer100g": 0.38,
+      "fiberPer100g": 7.9,
+      "source": "usda_fdc",
+      "sourceFoodName": "Lentils, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "green_lentil_cooked",
+      "nameTr": "Pişmiş yeşil mercimek",
+      "nameEn": "Lentils, cooked",
+      "category": "legume",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 116,
+      "proteinPer100g": 9.02,
+      "carbsPer100g": 20.13,
+      "fatPer100g": 0.38,
+      "fiberPer100g": 7.9,
+      "source": "usda_fdc",
+      "sourceFoodName": "Lentils, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "chickpea_cooked",
+      "nameTr": "Pişmiş nohut",
+      "nameEn": "Chickpeas, cooked",
+      "category": "legume",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 164,
+      "proteinPer100g": 8.86,
+      "carbsPer100g": 27.42,
+      "fatPer100g": 2.59,
+      "fiberPer100g": 7.6,
+      "source": "usda_fdc",
+      "sourceFoodName": "Chickpeas, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "white_beans_cooked",
+      "nameTr": "Pişmiş kuru fasulye",
+      "nameEn": "Beans, white, cooked",
+      "category": "legume",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 139,
+      "proteinPer100g": 9.73,
+      "carbsPer100g": 25.09,
+      "fatPer100g": 0.35,
+      "fiberPer100g": 6.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Beans, white, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "black_beans_cooked",
+      "nameTr": "Pişmiş siyah fasulye",
+      "nameEn": "Beans, black, cooked",
+      "category": "legume",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 132,
+      "proteinPer100g": 8.86,
+      "carbsPer100g": 23.71,
+      "fatPer100g": 0.54,
+      "fiberPer100g": 8.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Beans, black, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "mind",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tofu_firm",
+      "nameTr": "Tofu",
+      "nameEn": "Tofu, firm",
+      "category": "plant_protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 144,
+      "proteinPer100g": 15.78,
+      "carbsPer100g": 3.88,
+      "fatPer100g": 8.72,
+      "fiberPer100g": 2.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tofu, firm",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "soy"
+      ],
+      "dietTags": [
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tempeh",
+      "nameTr": "Tempeh",
+      "nameEn": "Tempeh",
+      "category": "plant_protein",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 193,
+      "proteinPer100g": 20.29,
+      "carbsPer100g": 7.64,
+      "fatPer100g": 10.8,
+      "fiberPer100g": 4.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tempeh",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "soy"
+      ],
+      "dietTags": [
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "olive_oil",
+      "nameTr": "Zeytinyağı",
+      "nameEn": "Oil, olive",
+      "category": "fat",
+      "defaultUnit": "g",
+      "defaultServingAmount": 10,
+      "caloriesPer100g": 884,
+      "proteinPer100g": 0,
+      "carbsPer100g": 0,
+      "fatPer100g": 100,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Oil, olive",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "butter",
+      "nameTr": "Tereyağı",
+      "nameEn": "Butter, salted",
+      "category": "fat",
+      "defaultUnit": "g",
+      "defaultServingAmount": 10,
+      "caloriesPer100g": 717,
+      "proteinPer100g": 0.85,
+      "carbsPer100g": 0.06,
+      "fatPer100g": 81.11,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Butter, salted",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "keto",
+        "weight_gain"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "black_olives",
+      "nameTr": "Siyah zeytin",
+      "nameEn": "Olives, ripe, canned",
+      "category": "fat",
+      "defaultUnit": "g",
+      "defaultServingAmount": 30,
+      "caloriesPer100g": 115,
+      "proteinPer100g": 0.84,
+      "carbsPer100g": 6.26,
+      "fatPer100g": 10.68,
+      "fiberPer100g": 3.2,
+      "source": "usda_fdc",
+      "sourceFoodName": "Olives, ripe, canned",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "avocado",
+      "nameTr": "Avokado",
+      "nameEn": "Avocados, raw",
+      "category": "fruit_fat",
+      "defaultUnit": "g",
+      "defaultServingAmount": 70,
+      "caloriesPer100g": 160,
+      "proteinPer100g": 2.0,
+      "carbsPer100g": 8.53,
+      "fatPer100g": 14.66,
+      "fiberPer100g": 6.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Avocados, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack",
+        "lunch"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "walnut",
+      "nameTr": "Ceviz",
+      "nameEn": "Walnuts, English",
+      "category": "nut",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 654,
+      "proteinPer100g": 15.23,
+      "carbsPer100g": 13.71,
+      "fatPer100g": 65.21,
+      "fiberPer100g": 6.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Walnuts, English",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "tree_nut"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "almond",
+      "nameTr": "Badem",
+      "nameEn": "Almonds",
+      "category": "nut",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 579,
+      "proteinPer100g": 21.15,
+      "carbsPer100g": 21.55,
+      "fatPer100g": 49.93,
+      "fiberPer100g": 12.5,
+      "source": "usda_fdc",
+      "sourceFoodName": "Almonds",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "tree_nut"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack",
+        "breakfast"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "hazelnut",
+      "nameTr": "Fındık",
+      "nameEn": "Hazelnuts",
+      "category": "nut",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 628,
+      "proteinPer100g": 14.95,
+      "carbsPer100g": 16.7,
+      "fatPer100g": 60.75,
+      "fiberPer100g": 9.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Hazelnuts",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "tree_nut"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack",
+        "breakfast"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "peanut_butter",
+      "nameTr": "Fıstık ezmesi",
+      "nameEn": "Peanut butter, smooth",
+      "category": "nut",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 588,
+      "proteinPer100g": 25.09,
+      "carbsPer100g": 19.56,
+      "fatPer100g": 50.39,
+      "fiberPer100g": 6.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Peanut butter, smooth",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "peanut"
+      ],
+      "dietTags": [
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "chia_seed",
+      "nameTr": "Chia tohumu",
+      "nameEn": "Chia seeds",
+      "category": "seed",
+      "defaultUnit": "g",
+      "defaultServingAmount": 15,
+      "caloriesPer100g": 486,
+      "proteinPer100g": 16.54,
+      "carbsPer100g": 42.12,
+      "fatPer100g": 30.74,
+      "fiberPer100g": 34.4,
+      "source": "usda_fdc",
+      "sourceFoodName": "Chia seeds",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "flaxseed",
+      "nameTr": "Keten tohumu",
+      "nameEn": "Flaxseed",
+      "category": "seed",
+      "defaultUnit": "g",
+      "defaultServingAmount": 10,
+      "caloriesPer100g": 534,
+      "proteinPer100g": 18.29,
+      "carbsPer100g": 28.88,
+      "fatPer100g": 42.16,
+      "fiberPer100g": 27.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Flaxseed",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "pumpkin_seed",
+      "nameTr": "Kabak çekirdeği içi",
+      "nameEn": "Pumpkin seeds",
+      "category": "seed",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 559,
+      "proteinPer100g": 30.23,
+      "carbsPer100g": 10.71,
+      "fatPer100g": 49.05,
+      "fiberPer100g": 6.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Pumpkin seeds",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tahini",
+      "nameTr": "Tahin",
+      "nameEn": "Tahini",
+      "category": "seed",
+      "defaultUnit": "g",
+      "defaultServingAmount": 20,
+      "caloriesPer100g": 595,
+      "proteinPer100g": 17.0,
+      "carbsPer100g": 21.19,
+      "fatPer100g": 53.76,
+      "fiberPer100g": 9.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tahini",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [
+        "sesame"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "apple",
+      "nameTr": "Elma",
+      "nameEn": "Apple, raw, with skin",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 52,
+      "proteinPer100g": 0.26,
+      "carbsPer100g": 13.81,
+      "fatPer100g": 0.17,
+      "fiberPer100g": 2.4,
+      "source": "usda_fdc",
+      "sourceFoodName": "Apple, raw, with skin",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "banana",
+      "nameTr": "Muz",
+      "nameEn": "Banana, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 120,
+      "caloriesPer100g": 89,
+      "proteinPer100g": 1.09,
+      "carbsPer100g": 22.84,
+      "fatPer100g": 0.33,
+      "fiberPer100g": 2.6,
+      "source": "usda_fdc",
+      "sourceFoodName": "Banana, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "orange",
+      "nameTr": "Portakal",
+      "nameEn": "Orange, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 47,
+      "proteinPer100g": 0.94,
+      "carbsPer100g": 11.75,
+      "fatPer100g": 0.12,
+      "fiberPer100g": 2.4,
+      "source": "usda_fdc",
+      "sourceFoodName": "Orange, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "strawberry",
+      "nameTr": "Çilek",
+      "nameEn": "Strawberries, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 32,
+      "proteinPer100g": 0.67,
+      "carbsPer100g": 7.68,
+      "fatPer100g": 0.3,
+      "fiberPer100g": 2.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Strawberries, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "blueberry",
+      "nameTr": "Yaban mersini",
+      "nameEn": "Blueberries, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 57,
+      "proteinPer100g": 0.74,
+      "carbsPer100g": 14.49,
+      "fatPer100g": 0.33,
+      "fiberPer100g": 2.4,
+      "source": "usda_fdc",
+      "sourceFoodName": "Blueberries, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "pear",
+      "nameTr": "Armut",
+      "nameEn": "Pear, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 57,
+      "proteinPer100g": 0.36,
+      "carbsPer100g": 15.23,
+      "fatPer100g": 0.14,
+      "fiberPer100g": 3.1,
+      "source": "usda_fdc",
+      "sourceFoodName": "Pear, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "plant_based",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "kiwi",
+      "nameTr": "Kivi",
+      "nameEn": "Kiwifruit, raw",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 61,
+      "proteinPer100g": 1.14,
+      "carbsPer100g": 14.66,
+      "fatPer100g": 0.52,
+      "fiberPer100g": 3.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Kiwifruit, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "dates",
+      "nameTr": "Hurma",
+      "nameEn": "Dates, medjool",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 30,
+      "caloriesPer100g": 277,
+      "proteinPer100g": 1.81,
+      "carbsPer100g": 74.97,
+      "fatPer100g": 0.15,
+      "fiberPer100g": 6.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Dates, medjool",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "raisins",
+      "nameTr": "Kuru üzüm",
+      "nameEn": "Raisins",
+      "category": "fruit",
+      "defaultUnit": "g",
+      "defaultServingAmount": 30,
+      "caloriesPer100g": 299,
+      "proteinPer100g": 3.07,
+      "carbsPer100g": 79.18,
+      "fatPer100g": 0.46,
+      "fiberPer100g": 3.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Raisins",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tomato",
+      "nameTr": "Domates",
+      "nameEn": "Tomatoes, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 18,
+      "proteinPer100g": 0.88,
+      "carbsPer100g": 3.89,
+      "fatPer100g": 0.2,
+      "fiberPer100g": 1.2,
+      "source": "usda_fdc",
+      "sourceFoodName": "Tomatoes, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "cucumber",
+      "nameTr": "Salatalık",
+      "nameEn": "Cucumber, raw, with peel",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 15,
+      "proteinPer100g": 0.65,
+      "carbsPer100g": 3.63,
+      "fatPer100g": 0.11,
+      "fiberPer100g": 0.5,
+      "source": "usda_fdc",
+      "sourceFoodName": "Cucumber, raw, with peel",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "bell_pepper",
+      "nameTr": "Biber",
+      "nameEn": "Peppers, sweet, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 80,
+      "caloriesPer100g": 31,
+      "proteinPer100g": 0.99,
+      "carbsPer100g": 6.03,
+      "fatPer100g": 0.3,
+      "fiberPer100g": 2.1,
+      "source": "usda_fdc",
+      "sourceFoodName": "Peppers, sweet, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "carrot_raw",
+      "nameTr": "Havuç",
+      "nameEn": "Carrots, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 80,
+      "caloriesPer100g": 41,
+      "proteinPer100g": 0.93,
+      "carbsPer100g": 9.58,
+      "fatPer100g": 0.24,
+      "fiberPer100g": 2.8,
+      "source": "usda_fdc",
+      "sourceFoodName": "Carrots, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "snack",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "lettuce",
+      "nameTr": "Marul",
+      "nameEn": "Lettuce, green leaf, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 80,
+      "caloriesPer100g": 15,
+      "proteinPer100g": 1.36,
+      "carbsPer100g": 2.87,
+      "fatPer100g": 0.15,
+      "fiberPer100g": 1.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Lettuce, green leaf, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "mixed_greens",
+      "nameTr": "Karışık yeşillik",
+      "nameEn": "Mixed salad greens",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 80,
+      "caloriesPer100g": 20,
+      "proteinPer100g": 1.8,
+      "carbsPer100g": 3.5,
+      "fatPer100g": 0.3,
+      "fiberPer100g": 2.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Mixed salad greens",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "spinach_raw",
+      "nameTr": "Ispanak",
+      "nameEn": "Spinach, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 80,
+      "caloriesPer100g": 23,
+      "proteinPer100g": 2.86,
+      "carbsPer100g": 3.63,
+      "fatPer100g": 0.39,
+      "fiberPer100g": 2.2,
+      "source": "usda_fdc",
+      "sourceFoodName": "Spinach, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "broccoli_steamed",
+      "nameTr": "Buharda brokoli",
+      "nameEn": "Broccoli, cooked, steamed",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 35,
+      "proteinPer100g": 2.38,
+      "carbsPer100g": 7.18,
+      "fatPer100g": 0.41,
+      "fiberPer100g": 3.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Broccoli, cooked, steamed",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "cauliflower_steamed",
+      "nameTr": "Buharda karnabahar",
+      "nameEn": "Cauliflower, cooked",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 23,
+      "proteinPer100g": 1.84,
+      "carbsPer100g": 4.11,
+      "fatPer100g": 0.45,
+      "fiberPer100g": 2.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Cauliflower, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "zucchini_cooked",
+      "nameTr": "Pişmiş kabak",
+      "nameEn": "Zucchini, cooked",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 17,
+      "proteinPer100g": 1.21,
+      "carbsPer100g": 3.11,
+      "fatPer100g": 0.32,
+      "fiberPer100g": 1.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Zucchini, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "eggplant_cooked",
+      "nameTr": "Pişmiş patlıcan",
+      "nameEn": "Eggplant, cooked",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 35,
+      "proteinPer100g": 0.83,
+      "carbsPer100g": 8.73,
+      "fatPer100g": 0.23,
+      "fiberPer100g": 2.5,
+      "source": "usda_fdc",
+      "sourceFoodName": "Eggplant, cooked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "mushroom",
+      "nameTr": "Mantar",
+      "nameEn": "Mushrooms, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 100,
+      "caloriesPer100g": 22,
+      "proteinPer100g": 3.09,
+      "carbsPer100g": 3.26,
+      "fatPer100g": 0.34,
+      "fiberPer100g": 1.0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Mushrooms, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "elimination",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "onion_raw",
+      "nameTr": "Soğan",
+      "nameEn": "Onions, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 50,
+      "caloriesPer100g": 40,
+      "proteinPer100g": 1.1,
+      "carbsPer100g": 9.34,
+      "fatPer100g": 0.1,
+      "fiberPer100g": 1.7,
+      "source": "usda_fdc",
+      "sourceFoodName": "Onions, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "garlic",
+      "nameTr": "Sarımsak",
+      "nameEn": "Garlic, raw",
+      "category": "vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 5,
+      "caloriesPer100g": 149,
+      "proteinPer100g": 6.36,
+      "carbsPer100g": 33.06,
+      "fatPer100g": 0.5,
+      "fiberPer100g": 2.1,
+      "source": "usda_fdc",
+      "sourceFoodName": "Garlic, raw",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "potato_boiled",
+      "nameTr": "Haşlanmış patates",
+      "nameEn": "Potatoes, boiled",
+      "category": "starchy_vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 180,
+      "caloriesPer100g": 87,
+      "proteinPer100g": 1.87,
+      "carbsPer100g": 20.13,
+      "fatPer100g": 0.1,
+      "fiberPer100g": 1.8,
+      "source": "usda_fdc",
+      "sourceFoodName": "Potatoes, boiled",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "plant_based",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "sweet_potato_baked",
+      "nameTr": "Fırın tatlı patates",
+      "nameEn": "Sweet potato, baked",
+      "category": "starchy_vegetable",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 90,
+      "proteinPer100g": 2.01,
+      "carbsPer100g": 20.71,
+      "fatPer100g": 0.15,
+      "fiberPer100g": 3.3,
+      "source": "usda_fdc",
+      "sourceFoodName": "Sweet potato, baked",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "dash",
+        "mind",
+        "plant_based",
+        "elimination",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "menemen",
+      "nameTr": "Menemen",
+      "nameEn": "Menemen, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 220,
+      "caloriesPer100g": 105,
+      "proteinPer100g": 6.1,
+      "carbsPer100g": 5.2,
+      "fatPer100g": 7.1,
+      "fiberPer100g": 1.6,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Menemen, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "egg"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "keto",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "lunch"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "lentil_soup",
+      "nameTr": "Mercimek çorbası",
+      "nameEn": "Lentil soup, Fitto recipe",
+      "category": "soup",
+      "defaultUnit": "g",
+      "defaultServingAmount": 250,
+      "caloriesPer100g": 72,
+      "proteinPer100g": 3.8,
+      "carbsPer100g": 10.8,
+      "fatPer100g": 1.8,
+      "fiberPer100g": 2.6,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Lentil soup, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "ezogelin_soup",
+      "nameTr": "Ezogelin çorbası",
+      "nameEn": "Ezogelin soup, Fitto recipe",
+      "category": "soup",
+      "defaultUnit": "g",
+      "defaultServingAmount": 250,
+      "caloriesPer100g": 84,
+      "proteinPer100g": 3.2,
+      "carbsPer100g": 13.8,
+      "fatPer100g": 2.1,
+      "fiberPer100g": 2.6,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Ezogelin soup, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "bulgur_pilaf",
+      "nameTr": "Bulgur pilavı",
+      "nameEn": "Bulgur pilaf, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 180,
+      "caloriesPer100g": 125,
+      "proteinPer100g": 3.6,
+      "carbsPer100g": 23.5,
+      "fatPer100g": 2.2,
+      "fiberPer100g": 4.2,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Bulgur pilaf, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "rice_pilaf",
+      "nameTr": "Pirinç pilavı",
+      "nameEn": "Rice pilaf, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 170,
+      "proteinPer100g": 3.0,
+      "carbsPer100g": 28.0,
+      "fatPer100g": 5.0,
+      "fiberPer100g": 0.5,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Rice pilaf, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "cacik",
+      "nameTr": "Cacık",
+      "nameEn": "Cacik, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 55,
+      "proteinPer100g": 3.0,
+      "carbsPer100g": 4.5,
+      "fatPer100g": 2.8,
+      "fiberPer100g": 0.5,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Cacik, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "coban_salad",
+      "nameTr": "Çoban salata",
+      "nameEn": "Shepherd salad, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 35,
+      "proteinPer100g": 1.2,
+      "carbsPer100g": 6.0,
+      "fatPer100g": 0.8,
+      "fiberPer100g": 2.0,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Shepherd salad, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "chicken_salad",
+      "nameTr": "Tavuklu salata",
+      "nameEn": "Chicken salad, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 250,
+      "caloriesPer100g": 118,
+      "proteinPer100g": 12.5,
+      "carbsPer100g": 4.2,
+      "fatPer100g": 5.7,
+      "fiberPer100g": 2.0,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Chicken salad, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "tuna_salad",
+      "nameTr": "Ton balıklı salata",
+      "nameEn": "Tuna salad, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 250,
+      "caloriesPer100g": 108,
+      "proteinPer100g": 11.5,
+      "carbsPer100g": 4.0,
+      "fatPer100g": 4.2,
+      "fiberPer100g": 2.2,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Tuna salad, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "fish"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "keto",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "kisir",
+      "nameTr": "Kısır",
+      "nameEn": "Kisir bulgur salad, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 150,
+      "caloriesPer100g": 178,
+      "proteinPer100g": 5.0,
+      "carbsPer100g": 30.0,
+      "fatPer100g": 5.0,
+      "fiberPer100g": 5.0,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Kisir bulgur salad, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "gluten"
+      ],
+      "dietTags": [
+        "mediterranean",
+        "plant_based",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "olive_oil_green_beans",
+      "nameTr": "Zeytinyağlı taze fasulye",
+      "nameEn": "Green beans with olive oil, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 200,
+      "caloriesPer100g": 85,
+      "proteinPer100g": 2.0,
+      "carbsPer100g": 8.0,
+      "fatPer100g": 5.0,
+      "fiberPer100g": 3.0,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Green beans with olive oil, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "dash",
+        "mind",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "stuffed_peppers_olive_oil",
+      "nameTr": "Zeytinyağlı biber dolması",
+      "nameEn": "Stuffed peppers, Fitto recipe",
+      "category": "turkish_dish",
+      "defaultUnit": "g",
+      "defaultServingAmount": 180,
+      "caloriesPer100g": 150,
+      "proteinPer100g": 3.0,
+      "carbsPer100g": 23.0,
+      "fatPer100g": 5.5,
+      "fiberPer100g": 3.5,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Stuffed peppers, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "plant_based",
+        "balanced"
+      ],
+      "mealTypes": [
+        "lunch",
+        "dinner"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "honey",
+      "nameTr": "Bal",
+      "nameEn": "Honey",
+      "category": "sweetener",
+      "defaultUnit": "g",
+      "defaultServingAmount": 10,
+      "caloriesPer100g": 304,
+      "proteinPer100g": 0.3,
+      "carbsPer100g": 82.4,
+      "fatPer100g": 0,
+      "fiberPer100g": 0.2,
+      "source": "usda_fdc",
+      "sourceFoodName": "Honey",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "mediterranean",
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "molasses",
+      "nameTr": "Pekmez",
+      "nameEn": "Molasses",
+      "category": "sweetener",
+      "defaultUnit": "g",
+      "defaultServingAmount": 15,
+      "caloriesPer100g": 290,
+      "proteinPer100g": 0,
+      "carbsPer100g": 75,
+      "fatPer100g": 0.1,
+      "fiberPer100g": 0,
+      "source": "usda_fdc",
+      "sourceFoodName": "Molasses",
+      "sourceCitation": "USDA FoodData Central",
+      "preferredSource": "usda_fdc",
+      "isVerified": true,
+      "sourceNotesTr": "USDA FoodData Central temel gıda değerlerinden 100 g / 100 ml bazında düzenlendi.",
+      "allergens": [],
+      "dietTags": [
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "smoothie_banana_yogurt",
+      "nameTr": "Muzlu yoğurt smoothie",
+      "nameEn": "Banana yogurt smoothie, Fitto recipe",
+      "category": "drink",
+      "defaultUnit": "g",
+      "defaultServingAmount": 300,
+      "caloriesPer100g": 95,
+      "proteinPer100g": 3.5,
+      "carbsPer100g": 16.0,
+      "fatPer100g": 2.0,
+      "fiberPer100g": 1.5,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Banana yogurt smoothie, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    },
+    {
+      "id": "protein_smoothie",
+      "nameTr": "Protein smoothie",
+      "nameEn": "Protein smoothie, Fitto recipe",
+      "category": "drink",
+      "defaultUnit": "g",
+      "defaultServingAmount": 350,
+      "caloriesPer100g": 120,
+      "proteinPer100g": 9.0,
+      "carbsPer100g": 14.0,
+      "fatPer100g": 3.0,
+      "fiberPer100g": 1.5,
+      "source": "fitto_recipe_usda_calculated",
+      "sourceFoodName": "Protein smoothie, Fitto recipe",
+      "sourceCitation": "Fitto recipe calculation using USDA FoodData Central ingredient values",
+      "preferredSource": "usda_fdc",
+      "isVerified": false,
+      "sourceNotesTr": "Türk yemeği değeri, USDA kaynaklı bileşen değerleriyle Fitto tarif varsayımına göre hesaplanmıştır; yayın öncesi diyetisyen kontrolü önerilir.",
+      "allergens": [
+        "milk"
+      ],
+      "dietTags": [
+        "weight_gain",
+        "balanced"
+      ],
+      "mealTypes": [
+        "breakfast",
+        "snack"
+      ],
+      "createdForSeedVersion": 2
+    }
+  ]
+}

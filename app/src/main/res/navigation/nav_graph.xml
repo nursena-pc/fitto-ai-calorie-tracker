@@ -1,0 +1,220 @@
+<navigation
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/nav_graph"
+        app:startDestination="@id/welcomeFragment">
+
+    <fragment
+            android:id="@+id/welcomeFragment"
+            android:name="com.example.fitto.feature_auth.presentation.welcome.WelcomeFragment"
+            android:label="@string/app_name">
+
+        <action
+                android:id="@+id/action_welcomeFragment_to_loginFragment"
+                app:destination="@id/loginFragment" />
+
+        <action
+                android:id="@+id/action_loginFragment_to_consentFragment"
+                app:destination="@id/consentFragment" />
+
+        <action
+                android:id="@+id/action_welcomeFragment_to_consentFragment"
+                app:destination="@id/consentFragment" />
+
+        <action
+                android:id="@+id/action_welcomeFragment_to_homeFragment"
+                app:destination="@id/homeFragment"
+                app:popUpTo="@id/welcomeFragment"
+                app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/loginFragment"
+            android:name="com.example.fitto.feature_auth.login.LoginFragment"
+            android:label="@string/login_title">
+
+        <action
+                android:id="@+id/action_loginFragment_to_homeFragment"
+                app:destination="@id/homeFragment"
+                app:popUpTo="@id/welcomeFragment"
+                app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/consentFragment"
+            android:name="com.example.fitto.feature_auth.register.ConsentFragment"
+            android:label="@string/consent_title">
+
+        <action
+                android:id="@+id/action_consentFragment_to_regionFragment"
+                app:destination="@id/regionFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/regionFragment"
+            android:name="com.example.fitto.feature_auth.register.RegionFragment"
+            android:label="@string/region_title">
+
+        <action
+                android:id="@+id/action_regionFragment_to_userInfoFragment"
+                app:destination="@id/userInfoFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/userInfoFragment"
+            android:name="com.example.fitto.feature_auth.register.UserInfoFragment"
+            android:label="@string/user_info_title">
+
+        <action
+                android:id="@+id/action_userInfoFragment_to_introGreetingFragment"
+                app:destination="@id/introGreetingFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/introGreetingFragment"
+            android:name="com.example.fitto.feature_auth.register.IntroGreetingFragment"
+            android:label="@string/app_name">
+
+        <action
+                android:id="@+id/action_introGreetingFragment_to_goalSelectionFragment"
+                app:destination="@id/goalSelectionFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/goalSelectionFragment"
+            android:name="com.example.fitto.feature_auth.register.GoalSelectionFragment"
+            android:label="@string/goal_title">
+
+        <action
+                android:id="@+id/action_goalSelectionFragment_to_barrierFragment"
+                app:destination="@id/barrierFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/barrierFragment"
+            android:name="com.example.fitto.feature_auth.register.BarrierFragment"
+            android:label="@string/barrier_title">
+
+        <action
+                android:id="@+id/action_barrierFragment_to_dailyNeedsFragment"
+                app:destination="@id/dailyNeedsFragment" />
+
+    </fragment>
+
+    <fragment
+            android:id="@+id/dailyNeedsFragment"
+            android:name="com.example.fitto.feature_auth.register.DailyNeedsFragment"
+            android:label="@string/daily_needs_title">
+
+        <action
+                android:id="@+id/action_dailyNeedsFragment_to_weightLossReasonFragment"
+                app:destination="@id/weightLossReasonFragment" />
+
+        <action
+                android:id="@+id/action_dailyNeedsFragment_to_activityLevelFragment"
+                app:destination="@id/activityLevelFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/weightLossReasonFragment"
+            android:name="com.example.fitto.feature_auth.register.WeightLossReasonFragment"
+            android:label="@string/reason_title">
+
+        <action
+                android:id="@+id/action_weightLossReasonFragment_to_activityLevelFragment"
+                app:destination="@id/activityLevelFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/activityLevelFragment"
+            android:name="com.example.fitto.feature_auth.register.ActivityLevelFragment"
+            android:label="@string/activity_level_title">
+
+        <action
+                android:id="@+id/action_activityLevelFragment_to_targetWeightFragment"
+                app:destination="@id/targetWeightFragment" />
+
+        <action
+                android:id="@+id/action_activityLevelFragment_to_dailyNeedsLoadingFragment"
+                app:destination="@id/dailyNeedsLoadingFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/targetWeightFragment"
+            android:name="com.example.fitto.feature_auth.register.TargetWeightFragment"
+            android:label="@string/target_weight_title">
+
+        <action
+                android:id="@+id/action_targetWeightFragment_to_dailyNeedsLoadingFragment"
+                app:destination="@id/dailyNeedsLoadingFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/dailyNeedsLoadingFragment"
+            android:name="com.example.fitto.feature_auth.register.DailyNeedsLoadingFragment"
+            android:label="@string/daily_needs_loading_title">
+
+        <action
+                android:id="@+id/action_dailyNeedsLoadingFragment_to_dailyNeedsResultFragment"
+                app:destination="@id/dailyNeedsResultFragment" />
+        <action
+                android:id="@+id/action_dailyNeedsResultFragment_to_loginFragment"
+                app:destination="@id/loginFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/dailyNeedsResultFragment"
+            android:name="com.example.fitto.feature_auth.register.DailyNeedsResultFragment"
+            android:label="@string/result_title">
+
+        <action
+                android:id="@+id/action_dailyNeedsResultFragment_to_createAccountFragment"
+                app:destination="@id/createAccountFragment" />
+        <action
+                android:id="@+id/action_dailyNeedsResultFragment_to_homeFragment"
+                app:destination="@id/homeFragment"
+                app:popUpTo="@id/welcomeFragment"
+                app:popUpToInclusive="true" />
+        <action
+                android:id="@+id/action_dailyNeedsResultFragment_to_usernameSetupFragment"
+                app:destination="@id/usernameSetupFragment" />
+    </fragment>
+    <fragment
+            android:id="@+id/createAccountFragment"
+            android:name="com.example.fitto.feature_auth.register.CreateAccountFragment"
+            android:label="@string/register_title">
+
+        <action
+                android:id="@+id/action_createAccountFragment_to_loginFragment"
+                app:destination="@id/loginFragment" />
+
+        <action
+                android:id="@+id/action_createAccountFragment_to_usernameSetupFragment"
+                app:destination="@id/usernameSetupFragment" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/usernameSetupFragment"
+            android:name="com.example.fitto.feature_auth.register.UsernameSetupFragment"
+            android:label="@string/username_setup_title">
+
+        <action
+                android:id="@+id/action_usernameSetupFragment_to_homeFragment"
+                app:destination="@id/homeFragment"
+                app:popUpTo="@id/welcomeFragment"
+                app:popUpToInclusive="true" />
+
+    </fragment>
+    <fragment
+            android:id="@+id/homeFragment"
+            android:name="com.example.fitto.feature_home.presentation.HomeFragment"
+            android:label="@string/app_name" />
+
+</navigation>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/mealEntryTitleText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="Yulaf ezmesi, yoğurt" />
+
+                <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                    <TextView
+                            android:id="@+id/mealEntrySourceText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_fitto_chip"
+                            android:paddingStart="8dp"
+                            android:paddingTop="3dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="3dp"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            tools:text="Manuel" />
+
+                    <TextView
+                            android:id="@+id/mealEntryFoodCountText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="12sp"
+                            tools:text="2 besin" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                    android:id="@+id/mealEntryCaloriesText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="315 kcal" />
+
+            <ImageButton
+                    android:id="@+id/editEntryButton"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/meal_detail_edit_entry"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_edit"
+                    app:tint="@color/fitto_green" />
+
+            <ImageButton
+                    android:id="@+id/deleteEntryButton"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/meal_detail_delete_entry"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_delete"
+                    app:tint="@color/fitto_text_secondary" />
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/mealEntryFoodsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="13sp"
+                tools:text="Yulaf ezmesi (40 g), Yoğurt (150 g)" />
+
+        <TextView
+                android:id="@+id/mealEntryMacrosText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/fitto_green"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="P 12.4 g · K 43.2 g · Y 8.1 g" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,62 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24"
+        android:viewportHeight="24">
+
+    <!-- Kapak -->
+    <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="1.7"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M9,2.8h6v1.8H9z" />
+
+    <!-- Boyun -->
+    <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="1.7"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M10,4.6v1.8M14,4.6v1.8" />
+
+    <!-- Şişe dış hat -->
+    <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeWidth="1.7"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M10,6.4
+                          L8.7,8.2
+                          V18.2
+                          C8.7,20 9.8,21.2 11.6,21.2
+                          H12.4
+                          C14.2,21.2 15.3,20 15.3,18.2
+                          V8.2
+                          L14,6.4
+                          Z" />
+
+    <!-- İç doluluk alanı -->
+    <path
+            android:fillColor="#FF000000"
+            android:fillAlpha="0.16"
+            android:pathData="M9.7,12.2
+                          H14.3
+                          V18
+                          C14.3,19.1 13.6,19.8 12.5,19.8
+                          H11.5
+                          C10.4,19.8 9.7,19.1 9.7,18
+                          Z" />
+
+    <!-- Ortadaki su seviyesi çizgisi hissi -->
+    <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FF000000"
+            android:strokeAlpha="0.22"
+            android:strokeWidth="1.2"
+            android:strokeLineCap="round"
+            android:pathData="M10.2,10.2h3.6" />
+</vector>

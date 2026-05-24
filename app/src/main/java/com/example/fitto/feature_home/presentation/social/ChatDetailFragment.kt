@@ -1,0 +1,1602 @@
+package com.example.fitto.feature_home.presentation.social
+
+import android.app.Dialog
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.widget.Toast
+import androidx.core.os.bundleOf
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import coil.load
+import com.example.fitto.R
+import com.example.fitto.databinding.FragmentChatDetailBinding
+import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import android.Manifest
+import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.media.MediaRecorder
+import android.os.Build
+import android.os.SystemClock
+import android.util.Log
+import androidx.core.content.ContextCompat
+import java.io.File
+import androidx.appcompat.widget.PopupMenu
+import android.view.Gravity
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.ImageView
+import androidx.appcompat.view.ContextThemeWrapper
+class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
+
+    private var _binding: FragmentChatDetailBinding? = null
+    private val binding get() = _binding!!
+
+    private val repository = SocialRepository()
+    private lateinit var messageAdapter: ChatMessageAdapter
+
+    private val handler = Handler(Looper.getMainLooper())
+    private var isSending = false
+    private var typingDotIndex = 0
+    private var currentTypingUsers: List<TypingUserUiModel> = emptyList()
+    private var mediaRecorder: MediaRecorder? = null
+    private var currentVoiceFile: File? = null
+    private var voiceRecordStartedAt: Long = 0L
+    private var isRecordingVoice = false
+
+    private var mediaPlayer: MediaPlayer? = null
+    private var playingAudioUrl: String? = null
+    private var latestThread: MessageThreadUiModel? = null
+    private var currentThreadPhotoUrl: String? = null
+    private var lastPresence: PresenceStatusUiModel? = null
+    private var selectedMessage: ChatMessageUiModel? = null
+    private var hasHandledHighlightMessage = false
+    private var isCurrentChatBlocked = false
+    private var isOtherUserDeleted = false
+    private var latestMessages: List<ChatMessageUiModel> = emptyList()
+    private var hiddenMessageRanges: List<MessageHiddenRange> = emptyList()
+    private val stopTypingRunnable = Runnable {
+        repository.setTyping(threadId, false)
+    }
+    private val recordAudioPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                toggleVoiceRecording()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_permission_required),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    private val filePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            if (uri != null) {
+                sendFileMessage(uri)
+            }
+        }
+    private val typingAnimationRunnable = object : Runnable {
+        override fun run() {
+            updateTypingText(currentTypingUsers)
+            if (currentTypingUsers.isNotEmpty()) {
+                handler.postDelayed(this, TYPING_ANIMATION_DELAY_MILLIS)
+            }
+        }
+    }
+
+    private val threadId: String by lazy {
+        requireArguments().getString(ARG_THREAD_ID).orEmpty()
+    }
+
+    private val threadTitle: String by lazy {
+        requireArguments().getString(ARG_THREAD_TITLE).orEmpty()
+    }
+    private val highlightMessageId: String? by lazy {
+        requireArguments().getString(ARG_HIGHLIGHT_MESSAGE_ID)
+    }
+    private val threadInitials: String by lazy {
+        requireArguments().getString(ARG_THREAD_INITIALS).orEmpty()
+    }
+
+    private val isGroup: Boolean by lazy {
+        requireArguments().getBoolean(ARG_IS_GROUP, false)
+    }
+
+    private val otherParticipantId: String? by lazy {
+        requireArguments().getString(ARG_OTHER_PARTICIPANT_ID)
+    }
+
+    private val threadPhotoUrl: String? by lazy {
+        requireArguments().getString(ARG_THREAD_PHOTO_URL)
+    }
+
+    private val memberCount: Int by lazy {
+        requireArguments().getInt(ARG_MEMBER_COUNT, 0)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(STYLE_NORMAL, R.style.Theme_Fitto_FullScreenDialog)
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        return super.onCreateDialog(savedInstanceState).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        RealtimePresenceManager.start()
+        dialog?.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    override fun onStop() {
+        repository.setTyping(threadId, false)
+        super.onStop()
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        _binding = FragmentChatDetailBinding.bind(view)
+        currentThreadPhotoUrl = threadPhotoUrl
+
+        setupHeader()
+        setupRecyclerView()
+        setupInput()
+        setupClicks()
+        observeMessages()
+        observePresence()
+        observeTypingUsers()
+        markThreadAsRead()
+        updateSendButton()
+        observeBlockState()
+        checkDeletedDirectUserState()
+        setupDeleteMessageResultListener()
+        parentFragmentManager.setFragmentResultListener(
+            GroupEditNameFragment.REQUEST_KEY_GROUP_NAME_UPDATED,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val updatedName = bundle.getString(GroupEditNameFragment.BUNDLE_KEY_GROUP_NAME).orEmpty()
+
+            if (updatedName.isNotBlank()) {
+                binding.chatTitleText.text = updatedName
+                latestThread = latestThread?.copy(title = updatedName)
+            }
+        }
+        parentFragmentManager.setFragmentResultListener(
+            GroupInfoFragment.REQUEST_KEY_GROUP_LEFT,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val leftThreadId = bundle.getString(GroupInfoFragment.BUNDLE_KEY_LEFT_THREAD_ID).orEmpty()
+            if (leftThreadId == threadId) {
+                dismiss()
+            }
+        }
+        parentFragmentManager.setFragmentResultListener(
+            GroupInfoFragment.REQUEST_KEY_GROUP_PHOTO_UPDATED,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val updatedThreadId = bundle.getString(GroupInfoFragment.BUNDLE_KEY_PHOTO_THREAD_ID).orEmpty()
+            val updatedPhotoUrl = bundle.getString(GroupInfoFragment.BUNDLE_KEY_GROUP_PHOTO_URL)
+
+            if (updatedThreadId == threadId) {
+                currentThreadPhotoUrl = updatedPhotoUrl
+                latestThread = latestThread?.copy(photoUrl = updatedPhotoUrl)
+                updateHeaderPhoto()
+            }
+        }
+    }
+
+    private fun setupDeleteMessageResultListener() {
+        parentFragmentManager.setFragmentResultListener(
+            DeleteMessageOptionsBottomSheet.REQUEST_KEY_DELETE_MESSAGE_ACTION,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val deleteForEveryone = bundle.getBoolean(
+                DeleteMessageOptionsBottomSheet.BUNDLE_KEY_DELETE_FOR_EVERYONE,
+                false
+            )
+
+            deleteSelectedMessage(deleteForEveryone)
+        }
+    }
+    private fun setupHeader() = with(binding) {
+        chatTitleText.text = threadTitle
+        chatInitialsText.text = threadInitials
+
+        updateHeaderPhoto()
+
+        chatSubtitleText.isVisible = true
+        chatSubtitleText.text = if (isGroup) {
+            getString(R.string.chat_group_members, memberCount)
+        } else {
+            getString(R.string.chat_offline)
+        }
+
+        chatInfoButton.isVisible = false
+        chatDeleteButton.isVisible = false
+        updateMoreButtonVisibility()
+    }
+
+    private fun updateHeaderPhoto() = with(binding) {
+        val displayPhotoUrl = currentThreadPhotoUrl ?: threadPhotoUrl
+        val hasPhoto = !displayPhotoUrl.isNullOrBlank()
+
+        chatAvatarImage.isVisible = hasPhoto
+        chatGroupIcon.isVisible = isGroup && !hasPhoto
+        chatInitialsText.isVisible = !hasPhoto && !isGroup
+
+        if (hasPhoto) {
+            chatAvatarImage.load(displayPhotoUrl)
+        } else {
+            chatAvatarImage.setImageDrawable(null)
+        }
+    }
+
+    private fun setupRecyclerView() {
+        messageAdapter = ChatMessageAdapter(
+            onMessageLongClick = { message ->
+                selectMessage(message)
+            },
+            onMessageClick = { message ->
+                if (selectedMessage?.id == message.id) {
+                    clearSelectedMessage()
+                } else {
+                    selectMessage(message)
+                }
+            },
+            onAttachmentClick = { message ->
+                openAttachment(message)
+            },
+            onAudioClick = { url ->
+                playOrStopAudio(url)
+            }
+        )
+
+        binding.chatMessagesRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext()).apply {
+                stackFromEnd = true
+            }
+            adapter = messageAdapter
+            setHasFixedSize(false)
+        }
+    }
+
+    private fun setupInput() = with(binding) {
+        chatMessageEditText.doAfterTextChanged { editable ->
+            updateSendButton()
+
+            val hasText = editable?.toString()?.trim()?.isNotBlank() == true
+            repository.setTyping(threadId, hasText)
+            handler.removeCallbacks(stopTypingRunnable)
+            if (hasText) {
+                handler.postDelayed(stopTypingRunnable, STOP_TYPING_DELAY_MILLIS)
+            }
+        }
+
+        chatMessageEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                sendMessage()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun setupClicks() = with(binding) {
+        chatBackButton.setOnClickListener {
+            if (selectedMessage != null) {
+                clearSelectedMessage()
+            } else {
+                dismiss()
+            }
+        }
+        chatMoreButton.setOnClickListener { view ->
+            if (!isCurrentGroupChat()) {
+                showChatMoreMenu(view)
+            }
+        }
+        chatVoiceButton.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                toggleVoiceRecording()
+            } else {
+                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+        chatInfoButton.setOnClickListener {
+            showSelectedMessageInfo()
+        }
+
+        chatDeleteButton.setOnClickListener {
+            showDeleteMessageDialog()
+        }
+
+        chatAttachButton.setOnClickListener {
+            filePickerLauncher.launch(arrayOf("*/*"))
+        }
+
+        chatTitleContainer.setOnClickListener {
+            if (selectedMessage != null) return@setOnClickListener
+
+            if (isGroup) {
+                openGroupInfoScreen()
+            } else {
+                openDirectUserSocialProfile()
+            }
+        }
+
+        chatAvatarContainer.setOnClickListener {
+            if (selectedMessage != null) return@setOnClickListener
+
+            if (isGroup) {
+                openGroupInfoScreen()
+            } else {
+                openDirectUserSocialProfile()
+            }
+        }
+
+        chatSendButton.setOnClickListener {
+            sendMessage()
+        }
+    }
+    private fun openMediaLinksFilesScreen() {
+        ThreadSharedContentFragment
+            .newInstance(threadId)
+            .show(parentFragmentManager, "ThreadSharedContentFragment")
+    }
+    private fun openOtherUserProfile() {
+        val userId = otherParticipantId ?: return
+
+        Toast.makeText(
+            requireContext(),
+            "Profil açılacak: $userId",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun showClearChatDialog() {
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.FittoAlertDialogTheme)
+            .setTitle(R.string.chat_clear_chat)
+            .setMessage(R.string.chat_clear_chat_confirm)
+            .setNegativeButton(R.string.common_cancel, null)
+            .setPositiveButton(R.string.chat_clear_chat) { _, _ ->
+                clearChatForMe()
+            }
+            .show()
+
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_white)
+    }
+    private fun showBlockUserDialog() {
+        if (isGroup) return
+
+        val targetUserId = otherParticipantId ?: return
+        val userName = binding.chatTitleText.text?.toString().orEmpty()
+            .ifBlank { getString(R.string.chat_user_placeholder) }
+
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.FittoAlertDialogTheme)
+            .setTitle(getString(R.string.chat_block_user_title))
+            .setMessage(getString(R.string.chat_block_user_message, userName))
+            .setNegativeButton(R.string.common_cancel, null)
+            .setPositiveButton(R.string.chat_block_user_confirm) { _, _ ->
+                blockUser(targetUserId)
+            }
+            .show()
+
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_white)
+    }
+    private fun showUnblockUserDialog() {
+        if (isGroup) return
+
+        val targetUserId = otherParticipantId ?: return
+        val userName = binding.chatTitleText.text?.toString().orEmpty()
+            .ifBlank { getString(R.string.chat_user_placeholder) }
+
+        val dialog = MaterialAlertDialogBuilder(requireContext(), R.style.FittoAlertDialogTheme)
+            .setTitle(getString(R.string.chat_unblock_user_title))
+            .setMessage(getString(R.string.chat_unblock_user_message, userName))
+            .setNegativeButton(R.string.common_cancel, null)
+            .setPositiveButton(R.string.chat_unblock_user_confirm) { _, _ ->
+                unblockUser(targetUserId)
+            }
+            .show()
+
+        dialog.window?.setBackgroundDrawableResource(R.drawable.bg_dialog_white)
+    }
+
+    private fun showReportUserDialog() {
+        if (isGroup) return
+
+        ReportReasonDialogHelper.show(
+            fragment = this,
+            title = getString(R.string.chat_report_user_title),
+            subtitle = getString(R.string.chat_report_user_subtitle),
+            reasons = listOf(
+                ReportReasonDialogHelper.ReasonItem(
+                    key = "spam",
+                    label = getString(R.string.chat_report_reason_spam)
+                ),
+                ReportReasonDialogHelper.ReasonItem(
+                    key = "harassment",
+                    label = getString(R.string.chat_report_reason_harassment)
+                ),
+                ReportReasonDialogHelper.ReasonItem(
+                    key = "inappropriate_content",
+                    label = getString(R.string.chat_report_reason_inappropriate)
+                ),
+                ReportReasonDialogHelper.ReasonItem(
+                    key = "other",
+                    label = getString(R.string.chat_report_reason_other)
+                )
+            )
+        ) { selectedReason ->
+            reportUser(selectedReason.key)
+        }
+    }
+
+    private fun reportUser(reason: String) {
+        val targetUserId = otherParticipantId ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.reportUser(
+                    targetUserId = targetUserId,
+                    threadId = threadId,
+                    reason = reason
+                )
+            }.onSuccess {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_report_user_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_report_user_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+    private fun blockUser(targetUserId: String) {
+        val lastVisibleMessage = latestMessages.lastOrNull { message ->
+            !message.isDeleted
+        }
+
+        val previewText = lastVisibleMessage?.text
+            ?.takeIf { it.isNotBlank() }
+            ?: "Henüz mesaj yok."
+
+        val previewCreatedAt = lastVisibleMessage?.createdAt
+            ?: System.currentTimeMillis()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.blockUser(
+                    targetUserId = targetUserId,
+                    threadId = threadId,
+                    previewText = previewText,
+                    previewCreatedAt = previewCreatedAt
+                )
+            }.onSuccess {
+                checkBlockState()
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_block_user_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_block_user_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun unblockUser(targetUserId: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.unblockUser(
+                    targetUserId = targetUserId,
+                    threadId = threadId
+                )
+            }.onSuccess {
+                checkBlockState()
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_unblock_user_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_unblock_user_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun clearChatForMe() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.clearChatForMe(threadId)
+            }.onSuccess {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_clear_chat_success),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_clear_chat_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+    private fun observeBlockState() {
+        if (isGroup) return
+
+        val targetUserId = otherParticipantId ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.observeDirectThreadBlockState(
+                    threadId = threadId,
+                    targetUserId = targetUserId
+                ).collect { blockState ->
+                    isCurrentChatBlocked = blockState.isBlocked
+                    hiddenMessageRanges = blockState.hiddenRanges
+
+                    if (_binding != null) {
+                        if (isCurrentChatBlocked) {
+                            applyBlockedChatUi()
+                            repository.setTyping(threadId, false)
+                        } else {
+                            applyUnblockedChatUi()
+                        }
+
+                        submitMessages(latestMessages)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkBlockState() {
+        if (isGroup) return
+
+        val targetUserId = otherParticipantId ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val blockState = repository.getDirectThreadBlockState(
+                threadId = threadId,
+                targetUserId = targetUserId
+            )
+
+            isCurrentChatBlocked = blockState.isBlocked
+            hiddenMessageRanges = blockState.hiddenRanges
+
+            if (_binding != null) {
+                if (isCurrentChatBlocked) {
+                    applyBlockedChatUi()
+                } else {
+                    applyUnblockedChatUi()
+                }
+
+                submitMessages(latestMessages)
+            }
+        }
+    }
+
+    private fun checkDeletedDirectUserState() {
+        if (isGroup) return
+
+        val targetUserId = otherParticipantId ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val deleted = runCatching {
+                repository.isUserDeletedOrMissing(targetUserId)
+            }.getOrDefault(false)
+
+            if (_binding == null) return@launch
+
+            isOtherUserDeleted = deleted
+
+            if (deleted) {
+                applyDeletedDirectUserUi()
+            }
+        }
+    }
+
+    private fun applyDeletedDirectUserUi() = with(binding) {
+        chatTitleText.setText(R.string.deleted_user_display_name)
+        chatSubtitleText.setText(R.string.social_deleted_user_unavailable)
+
+        chatMoreButton.isVisible = false
+
+        chatAvatarImage.setImageDrawable(null)
+        chatAvatarImage.isVisible = false
+        chatGroupIcon.isVisible = false
+        chatInitialsText.isVisible = true
+        chatInitialsText.text = getString(R.string.deleted_user_display_name)
+            .firstOrNull()
+            ?.uppercase()
+            ?: "S"
+
+        chatMessageEditText.setText("")
+        chatMessageEditText.hint = getString(R.string.social_deleted_user_unavailable)
+        chatMessageEditText.isEnabled = false
+
+        chatSendButton.isEnabled = false
+        chatVoiceButton.isEnabled = false
+        chatAttachButton.isEnabled = false
+    }
+
+    private fun applyBlockedChatUi() = with(binding) {
+        chatMessageEditText.setText("")
+        chatMessageEditText.hint = getString(R.string.chat_blocked_input_hint)
+        chatMessageEditText.isEnabled = false
+
+        chatSendButton.isEnabled = false
+        chatVoiceButton.isEnabled = false
+        chatAttachButton.isEnabled = false
+    }
+
+    private fun applyUnblockedChatUi() = with(binding) {
+        chatMessageEditText.hint = getString(R.string.chat_message_hint)
+        chatMessageEditText.isEnabled = true
+
+        chatVoiceButton.isEnabled = true
+        chatAttachButton.isEnabled = true
+
+        updateSendButton()
+    }
+
+    private fun showChatMoreMenu(anchor: View) {
+        val themedContext = ContextThemeWrapper(
+            requireContext(),
+            R.style.FittoWhitePopupMenuOverlay
+        )
+
+        val popupMenu = PopupMenu(
+            themedContext,
+            anchor,
+            Gravity.END
+        )
+
+
+        popupMenu.menuInflater.inflate(R.menu.menu_chat_more, popupMenu.menu)
+        popupMenu.setForceShowIcon(true)
+
+        popupMenu.menu.findItem(R.id.action_block_user)?.title =
+            if (isCurrentChatBlocked) {
+                getString(R.string.chat_unblock_user)
+            } else {
+                getString(R.string.chat_block_user)
+            }
+
+        popupMenu.menu.findItem(R.id.action_block_user)?.isVisible = !isGroup
+        popupMenu.menu.findItem(R.id.action_report_user)?.isVisible = !isGroup
+
+        popupMenu.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_media_links_files -> {
+                    openMediaLinksFilesScreen()
+                    true
+                }
+
+                R.id.action_clear_chat -> {
+                    showClearChatDialog()
+                    true
+                }
+
+                R.id.action_block_user -> {
+                    if (isCurrentChatBlocked) {
+                        showUnblockUserDialog()
+                    } else {
+                        showBlockUserDialog()
+                    }
+                    true
+                }
+
+                R.id.action_report_user -> {
+                    showReportUserDialog()
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        popupMenu.show()
+    }
+    private fun observeMessages() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.observeMessages(threadId).collect { messages: List<ChatMessageUiModel> ->
+                    latestMessages = messages
+                    submitMessages(messages)
+                    markThreadAsRead()
+                }
+            }
+        }
+    }
+    private fun openDirectUserProfile() {
+        openDirectUserSocialProfile()
+    }
+    private fun openGroupInfoScreen() {
+        val thread = latestThread ?: MessageThreadUiModel(
+            id = threadId,
+            title = binding.chatTitleText.text?.toString().orEmpty(),
+            lastMessage = "",
+            timeText = "",
+            isGroup = true,
+            initials = binding.chatInitialsText.text?.toString().orEmpty(),
+            unreadCount = 0,
+            participantIds = emptyList(),
+            otherParticipantId = null,
+            photoUrl = currentThreadPhotoUrl ?: threadPhotoUrl,
+            memberCount = memberCount
+        )
+
+        GroupInfoFragment
+            .newInstance(thread)
+            .show(parentFragmentManager, "GroupInfoFragment")
+    }
+    private fun openDirectUserSocialProfile() {
+        val targetUserId = otherParticipantId
+
+        if (targetUserId.isNullOrBlank()) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_user_profile_open_error),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (isOtherUserDeleted) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.social_deleted_user_unavailable),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val deleted = runCatching {
+                repository.isUserDeletedOrMissing(targetUserId)
+            }.getOrDefault(true)
+
+            if (_binding == null) return@launch
+
+            if (deleted) {
+                isOtherUserDeleted = true
+                applyDeletedDirectUserUi()
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.social_deleted_user_unavailable),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@launch
+            }
+
+            SocialProfileFragment
+                .newInstance(targetUserId)
+                .show(childFragmentManager, "SocialProfileFragment")
+        }
+    }
+    private fun observePresence() {
+        if (isGroup || otherParticipantId.isNullOrBlank()) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.observeUserPresence(otherParticipantId.orEmpty()).collect { presence: PresenceStatusUiModel ->
+                    lastPresence = presence
+                    if (_binding == null || currentTypingUsers.isNotEmpty()) return@collect
+                    binding.chatSubtitleText.text = formatPresenceText(presence)
+                }
+            }
+        }
+    }
+
+    private fun observeTypingUsers() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.observeTypingUsers(threadId).collect { users: List<TypingUserUiModel> ->
+                    currentTypingUsers = users
+                    updateTypingUi(users)
+                }
+            }
+        }
+    }
+
+    private fun sendMessage() {
+        if (isCurrentChatBlocked) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_blocked_send_error),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (isSending) return
+
+        val text = binding.chatMessageEditText.text
+            ?.toString()
+            ?.trim()
+            .orEmpty()
+
+        if (text.isBlank()) return
+
+        isSending = true
+        updateSendButton()
+        repository.setTyping(threadId, false)
+        handler.removeCallbacks(stopTypingRunnable)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.sendMessage(
+                    threadId = threadId,
+                    text = text
+                )
+            }.onSuccess {
+                if (_binding == null) return@onSuccess
+                binding.chatMessageEditText.setText("")
+            }.onFailure {
+                if (_binding == null) return@onFailure
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.messages_new_chat_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            isSending = false
+            if (_binding != null) updateSendButton()
+        }
+    }
+    private fun sendFileMessage(fileUri: Uri) {
+        if (isCurrentChatBlocked) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_blocked_send_error),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (isSending) return
+
+        isSending = true
+        updateSendButton()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.sendFileMessage(
+                    context = requireContext(),
+                    threadId = threadId,
+                    fileUri = fileUri
+                )
+            }.onSuccess {
+                if (_binding == null) return@onSuccess
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_file_sent),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                if (_binding == null) return@onFailure
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_file_send_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            isSending = false
+            if (_binding != null) updateSendButton()
+        }
+    }
+    private fun toggleVoiceRecording() {
+        if (isCurrentChatBlocked) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_blocked_send_error),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (isRecordingVoice) {
+            stopVoiceRecordingAndSend()
+        } else {
+            startVoiceRecording()
+        }
+    }
+
+    private fun startVoiceRecording() {
+        if (isSending || isRecordingVoice) return
+
+        val outputFile = File(
+            requireContext().cacheDir,
+            "voice_${System.currentTimeMillis()}.m4a"
+        )
+
+        currentVoiceFile = outputFile
+        voiceRecordStartedAt = SystemClock.elapsedRealtime()
+
+        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(requireContext())
+        } else {
+            @Suppress("DEPRECATION")
+            MediaRecorder()
+        }
+
+        mediaRecorder = recorder
+
+        runCatching {
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            recorder.setAudioEncodingBitRate(128_000)
+            recorder.setAudioSamplingRate(44_100)
+            recorder.setMaxDuration(MAX_VOICE_DURATION_MILLIS.toInt())
+            recorder.setOutputFile(outputFile.absolutePath)
+            recorder.prepare()
+            recorder.start()
+
+            isRecordingVoice = true
+            renderVoiceRecordingState(true)
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_voice_recording_started),
+                Toast.LENGTH_SHORT
+            ).show()
+        }.onFailure {
+            releaseVoiceRecorder()
+            outputFile.delete()
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_voice_recording_error),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun stopVoiceRecordingAndSend() {
+        if (!isRecordingVoice) return
+
+        val recordedFile = currentVoiceFile
+        val duration = SystemClock.elapsedRealtime() - voiceRecordStartedAt
+
+        runCatching {
+            mediaRecorder?.stop()
+        }.onFailure {
+            recordedFile?.delete()
+        }
+
+        releaseVoiceRecorder()
+        renderVoiceRecordingState(false)
+
+        if (recordedFile == null || !recordedFile.exists() || recordedFile.length() <= 0L) {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_voice_recording_error),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        if (duration < MIN_VOICE_DURATION_MILLIS) {
+            recordedFile.delete()
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_voice_too_short),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        sendAudioMessage(recordedFile, duration)
+    }
+
+    private fun releaseVoiceRecorder() {
+        runCatching {
+            mediaRecorder?.reset()
+        }
+
+        runCatching {
+            mediaRecorder?.release()
+        }
+
+        mediaRecorder = null
+        currentVoiceFile = null
+        voiceRecordStartedAt = 0L
+        isRecordingVoice = false
+    }
+
+    private fun renderVoiceRecordingState(isRecording: Boolean) = with(binding) {
+        chatVoiceButton.isSelected = isRecording
+
+        if (isRecording) {
+            chatVoiceButton.alpha = 1f
+            chatMessageEditText.hint = getString(R.string.chat_voice_recording_hint)
+        } else {
+            chatVoiceButton.alpha = 1f
+            chatMessageEditText.hint = getString(R.string.chat_message_hint)
+        }
+    }
+
+    private fun sendAudioMessage(
+        audioFile: File,
+        durationMillis: Long
+    ) {
+        if (isSending) return
+
+        isSending = true
+        updateSendButton()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.sendAudioMessage(
+                    context = requireContext(),
+                    threadId = threadId,
+                    audioFile = audioFile,
+                    durationMillis = durationMillis
+                )
+            }.onSuccess {
+                if (_binding == null) return@onSuccess
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_sent),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                if (_binding == null) return@onFailure
+
+                audioFile.delete()
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_send_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            isSending = false
+            if (_binding != null) updateSendButton()
+        }
+    }
+    private fun openAttachment(message: ChatMessageUiModel) {
+        val url = message.fileUrl.orEmpty()
+        if (url.isBlank()) return
+
+        if (message.fileMimeType?.startsWith("image/") == true || message.type == "image") {
+            showImagePreview(url)
+            return
+        }
+
+        runCatching {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        }.onFailure {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_file_open_error),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun showImagePreview(url: String) {
+        val dialog = Dialog(requireContext()).apply {
+            requestWindowFeature(Window.FEATURE_NO_TITLE)
+        }
+
+        val container = FrameLayout(requireContext()).apply {
+            setBackgroundColor(Color.BLACK)
+        }
+
+        val imageView = ImageView(requireContext()).apply {
+            adjustViewBounds = true
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            load(url) {
+                crossfade(true)
+                placeholder(R.drawable.bg_circle_primary_soft)
+                error(R.drawable.bg_circle_primary_soft)
+            }
+        }
+
+        val closeButton = ImageButton(requireContext()).apply {
+            setImageResource(R.drawable.ic_close)
+            setBackgroundColor(Color.TRANSPARENT)
+            setColorFilter(Color.WHITE)
+            contentDescription = getString(R.string.common_close)
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        container.addView(
+            imageView,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        )
+        container.addView(
+            closeButton,
+            FrameLayout.LayoutParams(
+                (48 * resources.displayMetrics.density).toInt(),
+                (48 * resources.displayMetrics.density).toInt(),
+                Gravity.TOP or Gravity.END
+            ).apply {
+                topMargin = (20 * resources.displayMetrics.density).toInt()
+                marginEnd = (16 * resources.displayMetrics.density).toInt()
+            }
+        )
+        container.setOnClickListener { dialog.dismiss() }
+        imageView.setOnClickListener { }
+
+        dialog.setContentView(container)
+        dialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
+        dialog.show()
+        dialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT
+        )
+    }
+    private fun playOrStopAudio(url: String) {
+        if (url.isBlank()) return
+
+        if (playingAudioUrl == url && mediaPlayer?.isPlaying == true) {
+            stopAudioPlayback()
+            return
+        }
+
+        stopAudioPlayback()
+        messageAdapter.setPlayingAudioUrl(url)
+
+        runCatching {
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build()
+                )
+
+                setDataSource(url)
+
+                setOnPreparedListener { player ->
+                    playingAudioUrl = url
+                    messageAdapter.setPlayingAudioUrl(url)
+                    player.start()
+                }
+                setOnCompletionListener {
+                    stopAudioPlayback()
+                }
+
+                setOnErrorListener { _, what, extra ->
+                    Log.e("FittoAudio", "MediaPlayer error what=$what extra=$extra url=$url")
+                    stopAudioPlayback()
+
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.chat_voice_play_error),
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    true
+                }
+
+                prepareAsync()
+            }
+        }.onFailure { error ->
+            Log.e("FittoAudio", "Audio play failed: ${error.message}", error)
+            stopAudioPlayback()
+
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.chat_voice_play_error),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun stopAudioPlayback() {
+        runCatching {
+            mediaPlayer?.setOnPreparedListener(null)
+            mediaPlayer?.setOnCompletionListener(null)
+            mediaPlayer?.setOnErrorListener(null)
+        }
+
+        runCatching {
+            if (mediaPlayer?.isPlaying == true) {
+                mediaPlayer?.stop()
+            }
+        }
+
+        runCatching {
+            mediaPlayer?.release()
+        }
+
+        mediaPlayer = null
+        playingAudioUrl = null
+        if (::messageAdapter.isInitialized) {
+            messageAdapter.setPlayingAudioUrl(null)
+        }
+    }
+
+    private fun submitMessages(messages: List<ChatMessageUiModel>) {
+        val hiddenSenderId = otherParticipantId
+
+        val visibleMessages = messages.filterNot { message ->
+            if (isGroup || hiddenSenderId.isNullOrBlank()) {
+                false
+            } else {
+                val isMessageFromBlockedUser = message.senderId == hiddenSenderId
+
+                val isInsideHiddenRange = hiddenMessageRanges.any { range ->
+                    range.userId == hiddenSenderId &&
+                            message.createdAt >= range.startAt &&
+                            (range.endAt == null || message.createdAt <= range.endAt)
+                }
+
+                val fallbackHideWhileBlocked =
+                    isCurrentChatBlocked &&
+                            hiddenMessageRanges.isEmpty() &&
+                            isMessageFromBlockedUser
+
+                isMessageFromBlockedUser && (isInsideHiddenRange || fallbackHideWhileBlocked)
+            }
+        }
+
+        val selectedId = selectedMessage?.id
+        if (selectedId != null && visibleMessages.none { it.id == selectedId }) {
+            selectedMessage = null
+            updateSelectionUi()
+        }
+
+        messageAdapter.submitList(visibleMessages) {
+            val targetId = highlightMessageId
+
+            if (!targetId.isNullOrBlank() && !hasHandledHighlightMessage) {
+                val targetIndex = visibleMessages.indexOfFirst { message ->
+                    message.id == targetId
+                }
+
+                if (targetIndex != -1) {
+                    hasHandledHighlightMessage = true
+
+                    binding.chatMessagesRecyclerView.scrollToPosition(targetIndex)
+                    messageAdapter.setHighlightedMessage(targetId)
+
+                    handler.postDelayed({
+                        if (_binding != null) {
+                            messageAdapter.setHighlightedMessage(null)
+                        }
+                    }, 2200L)
+
+                    return@submitList
+                }
+            }
+
+            if (targetId.isNullOrBlank() && visibleMessages.isNotEmpty()) {
+                binding.chatMessagesRecyclerView.scrollToPosition(visibleMessages.lastIndex)
+            }
+        }
+    }
+
+    private fun markThreadAsRead() {
+        FittoNotificationStore.removeMessageNotificationsForThread(requireContext(), threadId)
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                repository.markThreadRead(threadId)
+            }.onSuccess {
+                if (_binding != null) {
+                    FittoNotificationStore.removeMessageNotificationsForThread(requireContext(), threadId)
+                }
+            }
+        }
+    }
+
+    private fun updateTypingUi(users: List<TypingUserUiModel>) = with(binding) {
+        val hasTyping = users.isNotEmpty()
+        chatTypingIndicatorContainer.isVisible = hasTyping
+
+        handler.removeCallbacks(typingAnimationRunnable)
+
+        if (!hasTyping) {
+            if (isGroup) {
+                chatSubtitleText.text = getString(R.string.chat_group_members, memberCount)
+            } else {
+                chatSubtitleText.text = lastPresence?.let { formatPresenceText(it) }
+                    ?: getString(R.string.chat_offline)
+            }
+            return@with
+        }
+
+        val firstUser = users.first()
+        val hasPhoto = !firstUser.photoUrl.isNullOrBlank()
+        chatTypingAvatarImage.isVisible = hasPhoto
+        chatTypingAvatarInitialText.isVisible = !hasPhoto
+        chatTypingAvatarInitialText.text = firstUser.userName.firstOrNull()?.uppercase() ?: "F"
+
+        if (hasPhoto) {
+            ProfilePhotoLoader.load(
+                imageView = chatTypingAvatarImage,
+                photoUrl = firstUser.photoUrl,
+                placeholderResId = R.drawable.ic_profile_person,
+                errorResId = R.drawable.ic_profile_person
+            )
+        } else {
+            chatTypingAvatarImage.setImageDrawable(null)
+        }
+
+        typingDotIndex = 0
+        updateTypingText(users)
+        handler.postDelayed(typingAnimationRunnable, TYPING_ANIMATION_DELAY_MILLIS)
+    }
+
+    private fun updateTypingText(users: List<TypingUserUiModel>) {
+        if (_binding == null || users.isEmpty()) return
+
+        val dots = when (typingDotIndex % 4) {
+            0 -> ""
+            1 -> "."
+            2 -> ".."
+            else -> "..."
+        }
+        typingDotIndex++
+
+        val text = if (isGroup) {
+            if (users.size == 1) {
+                getString(R.string.chat_group_typing_one, users.first().userName, dots)
+            } else {
+                getString(R.string.chat_group_typing_many, users.size, dots)
+            }
+        } else {
+            getString(R.string.chat_typing, dots)
+        }
+
+        binding.chatTypingText.text = text
+        binding.chatSubtitleText.text = text
+    }
+
+    private fun formatPresenceText(presence: PresenceStatusUiModel): String {
+        if (presence.isOnline) return getString(R.string.chat_online)
+        if (presence.lastChanged <= 0L) return getString(R.string.chat_offline)
+
+        val timeText = SimpleDateFormat("HH:mm", Locale("tr", "TR")).format(Date(presence.lastChanged))
+        return getString(R.string.chat_last_seen, timeText)
+    }
+
+
+
+    private fun selectMessage(message: ChatMessageUiModel) {
+        selectedMessage = message
+        messageAdapter.setSelectedMessage(message.id)
+        updateSelectionUi()
+    }
+
+    private fun clearSelectedMessage() {
+        selectedMessage = null
+        messageAdapter.setSelectedMessage(null)
+        updateSelectionUi()
+    }
+    private fun isCurrentGroupChat(): Boolean {
+        return isGroup || threadId.startsWith("group_")
+    }
+
+    private fun updateMoreButtonVisibility() {
+        if (_binding == null) return
+
+        binding.chatMoreButton.isVisible =
+            !isCurrentGroupChat() && selectedMessage == null
+    }
+    private fun updateSelectionUi() = with(binding) {
+        val hasSelection = selectedMessage != null
+
+        chatDeleteButton.isVisible = hasSelection
+        chatInfoButton.isVisible = false
+
+        chatAvatarContainer.isVisible = !hasSelection
+        chatTitleContainer.isVisible = true
+        chatSubtitleText.isVisible = !hasSelection
+
+        chatTitleText.text = if (hasSelection) {
+            getString(R.string.chat_message_selected)
+        } else {
+            latestThread?.title ?: threadTitle
+        }
+
+        updateMoreButtonVisibility()
+    }
+
+    private fun showSelectedMessageInfo() {
+        val message = selectedMessage ?: return
+        val deliveredText = if (message.deliveredAt > 0L) {
+            formatFullTime(message.deliveredAt)
+        } else {
+            getString(R.string.chat_message_info_unknown)
+        }
+        val readers = message.readBy
+            .filterKeys { uid -> uid != message.senderId }
+            .entries
+            .sortedBy { it.value }
+            .joinToString("\n") { entry ->
+                val name = message.participantNames[entry.key] ?: entry.key.take(6)
+                "$name · ${formatFullTime(entry.value)}"
+            }
+            .ifBlank { getString(R.string.chat_message_info_no_readers) }
+        val infoText = getString(
+            R.string.chat_message_info_body,
+            message.senderName,
+            formatFullTime(message.createdAt),
+            deliveredText,
+            readers
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.chat_message_info)
+            .setMessage(infoText)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
+
+    private fun showDeleteMessageDialog() {
+        val message = selectedMessage ?: return
+
+        DeleteMessageOptionsBottomSheet
+            .newInstance(
+                allowDeleteForEveryone = message.isFromMe && !message.isDeleted
+            )
+            .show(parentFragmentManager, "DeleteMessageOptionsBottomSheet")
+    }
+
+    private fun deleteSelectedMessage(deleteForEveryone: Boolean) {
+        val message = selectedMessage ?: return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                if (deleteForEveryone) {
+                    repository.deleteMessageForEveryone(threadId, message.id)
+                } else {
+                    repository.deleteMessageForMe(threadId, message.id)
+                }
+            }.onSuccess {
+                if (_binding == null) return@onSuccess
+
+                clearSelectedMessage()
+
+                Toast.makeText(
+                    requireContext(),
+                    if (deleteForEveryone) {
+                        getString(R.string.chat_delete_for_everyone_success)
+                    } else {
+                        getString(R.string.chat_delete_for_me_success)
+                    },
+                    Toast.LENGTH_SHORT
+                ).show()
+            }.onFailure {
+                if (_binding == null) return@onFailure
+
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_delete_message_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun formatFullTime(timeMillis: Long): String {
+        if (timeMillis <= 0L) return getString(R.string.chat_message_info_unknown)
+        return SimpleDateFormat("dd MMM yyyy HH:mm", Locale("tr", "TR")).format(Date(timeMillis))
+    }
+
+    private fun updateSendButton() {
+        if (_binding == null) return
+
+        val hasText = binding.chatMessageEditText.text
+            ?.toString()
+            ?.trim()
+            ?.isNotBlank() == true
+
+        binding.chatSendButton.isEnabled = hasText && !isSending
+        binding.chatSendButton.alpha = if (hasText && !isSending) 1f else 0.45f
+    }
+
+    override fun onDestroyView() {
+        releaseVoiceRecorder()
+        stopAudioPlayback()
+        handler.removeCallbacks(stopTypingRunnable)
+        handler.removeCallbacks(typingAnimationRunnable)
+        repository.setTyping(threadId, false)
+        binding.chatMessagesRecyclerView.adapter = null
+        _binding = null
+        super.onDestroyView()
+    }
+
+    companion object {
+        private const val ARG_THREAD_ID = "thread_id"
+        private const val MIN_VOICE_DURATION_MILLIS = 800L
+        private const val MAX_VOICE_DURATION_MILLIS = 180_000L
+        private const val ARG_THREAD_TITLE = "thread_title"
+        private const val ARG_THREAD_INITIALS = "thread_initials"
+        private const val ARG_IS_GROUP = "is_group"
+        private const val ARG_OTHER_PARTICIPANT_ID = "other_participant_id"
+        private const val ARG_THREAD_PHOTO_URL = "thread_photo_url"
+        private const val ARG_MEMBER_COUNT = "member_count"
+        private const val STOP_TYPING_DELAY_MILLIS = 1_600L
+        private const val TYPING_ANIMATION_DELAY_MILLIS = 360L
+        private const val ARG_HIGHLIGHT_MESSAGE_ID = "highlight_message_id"
+
+        fun newInstance(
+            thread: MessageThreadUiModel,
+            highlightMessageId: String? = null
+        ): ChatDetailFragment {
+            return ChatDetailFragment().apply {
+                arguments = bundleOf(
+                    ARG_THREAD_ID to thread.id,
+                    ARG_THREAD_TITLE to thread.title,
+                    ARG_THREAD_INITIALS to thread.initials,
+                    ARG_IS_GROUP to thread.isGroup,
+                    ARG_OTHER_PARTICIPANT_ID to thread.otherParticipantId,
+                    ARG_THREAD_PHOTO_URL to thread.photoUrl,
+                    ARG_MEMBER_COUNT to thread.memberCount,
+                    ARG_HIGHLIGHT_MESSAGE_ID to highlightMessageId
+                )
+            }
+        }
+    }
+}

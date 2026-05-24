@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="result_ai_badge_loading_bg">#F2FAF1</color>
+    <color name="result_ai_badge_loading_text">#2E7D32</color>
+    <color name="result_ai_badge_loading_stroke">#D7E9D6</color>
+
+    <color name="result_ai_badge_verified_bg">#E8F5E9</color>
+    <color name="result_ai_badge_verified_text">#2E7D32</color>
+    <color name="result_ai_badge_verified_stroke">#CFE8D2</color>
+
+    <color name="result_ai_badge_adjusted_bg">#FFF8D9</color>
+    <color name="result_ai_badge_adjusted_text">#B28704</color>
+    <color name="result_ai_badge_adjusted_stroke">#F0E4A8</color>
+
+    <color name="result_ai_badge_standard_bg">#F8FFF4</color>
+    <color name="result_ai_badge_standard_text">#5F6467</color>
+    <color name="result_ai_badge_standard_stroke">#E1ECE0</color>
+</resources>

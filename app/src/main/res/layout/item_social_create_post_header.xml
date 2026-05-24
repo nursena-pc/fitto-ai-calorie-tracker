@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/headerCreatePostCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:background="@color/fitto_surface"
+        android:backgroundTint="@color/fitto_surface"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="3dp"
+        app:strokeColor="@color/transparent"
+        app:strokeWidth="0dp">
+
+    <LinearLayout
+            android:id="@+id/headerCreatePostContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/fitto_surface"
+            android:gravity="center_vertical"
+            android:minHeight="144dp"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="18dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="18dp">
+
+        <FrameLayout
+            android:id="@+id/headerAvatarContainer"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="top"
+            android:background="@drawable/bg_circle_primary_soft">
+
+            <ImageView
+                android:id="@+id/headerUserPhotoImage"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:scaleType="center"
+                android:src="@drawable/ic_person_outline"
+                app:tint="@color/fitto_green" />
+
+        </FrameLayout>
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/headerPromptText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/social_create_post_prompt"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="15sp" />
+
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/headerCreatePostButton"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="16dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:text="@string/social_create_post"
+                    android:textAllCaps="false"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/fitto_green"
+                    app:cornerRadius="23dp"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart"
+                    app:iconPadding="6dp"
+                    app:iconTint="@android:color/white"
+                    app:strokeWidth="0dp" />
+        </LinearLayout>
+
+        <ImageView
+                android:id="@+id/headerMascotImage"
+                android:layout_width="88dp"
+                android:layout_height="88dp"
+                android:layout_marginStart="6dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/gonderi_paylas" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

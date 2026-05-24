@@ -1,0 +1,133 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="comment_reply_start_padding">36dp</dimen>
+    <dimen name="comment_root_avatar_size">34dp</dimen>
+    <dimen name="comment_reply_avatar_size">28dp</dimen>
+    <dimen name="profile_album_chip_stroke_width">1dp</dimen>
+    <dimen name="profile_achievement_normal_stroke">1dp</dimen>
+    <dimen name="profile_achievement_active_stroke">2dp</dimen>
+    <dimen name="report_screen_horizontal_padding">20dp</dimen>
+    <dimen name="report_screen_top_padding">22dp</dimen>
+
+    <dimen name="report_header_logo_size">34dp</dimen>
+    <dimen name="report_header_logo_margin_end">8dp</dimen>
+    <dimen name="report_header_logo_text_size">34sp</dimen>
+    <dimen name="report_notification_button_size">44dp</dimen>
+    <dimen name="report_notification_button_padding">10dp</dimen>
+
+    <dimen name="report_title_top_padding">16dp</dimen>
+    <dimen name="report_title_bottom_padding">8dp</dimen>
+    <dimen name="report_subtitle_top_padding">4dp</dimen>
+    <dimen name="report_title_divider_height">1dp</dimen>
+    <dimen name="report_title_divider_top_margin">14dp</dimen>
+
+    <dimen name="report_tab_height">52dp</dimen>
+    <dimen name="report_page_top_padding">12dp</dimen>
+    <dimen name="report_page_bottom_padding">24dp</dimen>
+
+    <dimen name="report_card_radius">28dp</dimen>
+    <dimen name="report_card_elevation">1dp</dimen>
+    <dimen name="report_card_stroke_width">1dp</dimen>
+    <dimen name="report_card_content_padding">18dp</dimen>
+
+    <dimen name="report_section_subtitle_top_padding">4dp</dimen>
+    <dimen name="report_section_subtitle_bottom_padding">12dp</dimen>
+
+    <dimen name="report_stat_row_top_padding">14dp</dimen>
+    <dimen name="report_stat_row_bottom_padding">18dp</dimen>
+    <dimen name="report_stat_card_height">88dp</dimen>
+    <dimen name="report_stat_card_spacing">6dp</dimen>
+    <dimen name="report_stat_card_radius">18dp</dimen>
+    <dimen name="report_stat_card_stroke_width">1dp</dimen>
+    <dimen name="report_stat_card_padding">8dp</dimen>
+
+    <dimen name="report_line_chart_height">330dp</dimen>
+    <dimen name="report_pie_chart_height">340dp</dimen>
+    <dimen name="report_chart_extra_bottom_offset">10dp</dimen>
+    <dimen name="report_chart_extra_top_offset">12dp</dimen>
+    <dimen name="report_chart_line_width">3dp</dimen>
+    <dimen name="report_chart_limit_line_width">2dp</dimen>
+    <dimen name="report_chart_circle_radius">5dp</dimen>
+    <dimen name="report_chart_circle_hole_radius">2dp</dimen>
+    <dimen name="report_chart_dash_line_length">12dp</dimen>
+    <dimen name="report_chart_dash_gap_length">8dp</dimen>
+    <dimen name="report_chart_value_text_size">10sp</dimen>
+    <dimen name="report_chart_legend_text_size">12sp</dimen>
+    <dimen name="report_pie_center_text_size">18sp</dimen>
+    <dimen name="report_pie_value_text_size">12sp</dimen>
+    <dimen name="report_pie_slice_space">3dp</dimen>
+
+
+    <!-- Reports screen resources -->
+    <dimen name="reports_screen_horizontal_padding">20dp</dimen>
+    <dimen name="reports_screen_top_padding">22dp</dimen>
+    <dimen name="reports_header_logo_size">34dp</dimen>
+    <dimen name="reports_header_logo_margin_end">8dp</dimen>
+    <dimen name="reports_header_logo_text_size">34sp</dimen>
+    <dimen name="reports_notification_button_size">44dp</dimen>
+    <dimen name="reports_notification_button_padding">10dp</dimen>
+    <dimen name="reports_title_top_padding">16dp</dimen>
+    <dimen name="reports_title_bottom_padding">8dp</dimen>
+    <dimen name="reports_subtitle_top_padding">4dp</dimen>
+    <dimen name="reports_title_divider_height">1dp</dimen>
+    <dimen name="reports_title_divider_top_margin">14dp</dimen>
+    <dimen name="reports_tab_height">52dp</dimen>
+    <dimen name="reports_page_top_padding">12dp</dimen>
+    <dimen name="reports_page_bottom_padding">24dp</dimen>
+    <dimen name="reports_card_radius">28dp</dimen>
+    <dimen name="reports_card_elevation">1dp</dimen>
+    <dimen name="reports_card_stroke_width">1dp</dimen>
+    <dimen name="reports_card_content_padding">18dp</dimen>
+    <dimen name="reports_section_subtitle_top_padding">4dp</dimen>
+    <dimen name="reports_section_subtitle_bottom_padding">12dp</dimen>
+    <dimen name="reports_stat_row_top_padding">14dp</dimen>
+    <dimen name="reports_stat_row_bottom_padding">18dp</dimen>
+    <dimen name="reports_stat_card_height">88dp</dimen>
+    <dimen name="reports_stat_card_spacing">6dp</dimen>
+    <dimen name="reports_stat_card_radius">18dp</dimen>
+    <dimen name="reports_stat_card_stroke_width">1dp</dimen>
+    <dimen name="reports_stat_card_padding">8dp</dimen>
+    <dimen name="reports_line_chart_height">330dp</dimen>
+    <dimen name="reports_pie_chart_height">340dp</dimen>
+    <dimen name="reports_chart_extra_bottom_offset">10dp</dimen>
+    <dimen name="reports_chart_extra_top_offset">12dp</dimen>
+    <dimen name="reports_chart_line_width">3dp</dimen>
+    <dimen name="reports_chart_limit_line_width">2dp</dimen>
+    <dimen name="reports_chart_circle_radius">5dp</dimen>
+    <dimen name="reports_chart_circle_hole_radius">2dp</dimen>
+    <dimen name="reports_chart_dash_line_length">12dp</dimen>
+    <dimen name="reports_chart_dash_gap_length">8dp</dimen>
+    <dimen name="reports_chart_value_text_size">10sp</dimen>
+    <dimen name="reports_chart_legend_text_size">12sp</dimen>
+    <dimen name="reports_pie_center_text_size">18sp</dimen>
+    <dimen name="reports_pie_value_text_size">12sp</dimen>
+    <dimen name="reports_pie_slice_space">3dp</dimen>
+    
+    <integer name="reports_default_daily_calorie_target">1600</integer>
+    <integer name="reports_days_back">6</integer>
+    <integer name="reports_weight_visible_point_count">8</integer>
+    <integer name="reports_weight_axis_padding_kg">2</integer>
+    <integer name="reports_chart_min_axis_max">100</integer>
+    <integer name="reports_chart_fill_alpha">180</integer>
+    <integer name="reports_chart_x_granularity">1</integer>
+    <integer name="reports_pie_hole_radius_percent">58</integer>
+    <integer name="reports_pie_transparent_radius_percent">62</integer>
+    <integer name="reports_stat_value_max_lines">2</integer>
+    
+    <fraction name="reports_axis_max_padding_multiplier">125%</fraction>
+    <dimen name="reports_date_selector_top_margin">16dp</dimen>
+    <dimen name="reports_date_selector_bottom_margin">8dp</dimen>
+    <dimen name="reports_date_selector_height">56dp</dimen>
+    <dimen name="reports_date_selector_radius">18dp</dimen>
+    <dimen name="reports_date_selector_icon_padding">10dp</dimen>
+    <dimen name="reports_date_selector_horizontal_padding">18dp</dimen>
+    <dimen name="reports_detail_card_top_margin">10dp</dimen>
+    <dimen name="reports_detail_list_top_padding">8dp</dimen>
+    <dimen name="reports_detail_row_vertical_padding">12dp</dimen>
+    <dimen name="reports_detail_divider_height">1dp</dimen>
+    <dimen name="reports_detail_empty_vertical_padding">24dp</dimen>
+    <integer name="reports_default_protein_goal">110</integer>
+    <integer name="reports_default_carb_goal">180</integer>
+    <integer name="reports_default_fat_goal">55</integer>
+    <integer name="reports_default_target_weight_kg">75</integer>
+</resources>

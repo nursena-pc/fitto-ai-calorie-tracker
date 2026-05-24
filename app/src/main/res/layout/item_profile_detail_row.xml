@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/layoutProfileDetailItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <TextView
+            android:id="@+id/textProfileDetailSectionHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:includeFontPadding="false"
+            android:paddingStart="4dp"
+            android:paddingBottom="6dp"
+            android:textColor="@color/fitto_green"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+    <LinearLayout
+            android:id="@+id/layoutProfileDetailRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_profile_menu_item"
+            android:clickable="true"
+            android:elevation="1dp"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="18dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="16dp"
+            android:translationZ="1dp">
+
+        <FrameLayout
+                android:id="@+id/iconProfileDetailRowContainer"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="14dp"
+                android:background="@drawable/bg_profile_avatar"
+                android:visibility="gone">
+
+            <ImageView
+                    android:id="@+id/imageProfileDetailRowIcon"
+                    android:layout_width="21dp"
+                    android:layout_height="21dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_notifications"
+                    android:tint="@color/fitto_green" />
+
+        </FrameLayout>
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/textProfileDetailRowTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/profile_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:id="@+id/textProfileDetailRowSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:includeFontPadding="false"
+                    android:textColor="@color/profile_subtext"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/textProfileDetailRowTrailing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:maxWidth="132dp"
+                android:textColor="@color/profile_subtext"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
+        <Switch
+                android:id="@+id/switchProfileDetailRow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:visibility="gone" />
+
+        <TextView
+                android:id="@+id/textProfileDetailRowChevron"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:includeFontPadding="false"
+                android:text="›"
+                android:textColor="@color/profile_subtext"
+                android:textSize="22sp" />
+    </LinearLayout>
+
+    <View
+            android:id="@+id/viewProfileDetailDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/profile_stroke"
+            android:visibility="gone" />
+</LinearLayout>

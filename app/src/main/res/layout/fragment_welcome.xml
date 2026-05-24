@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="28dp"
+        android:paddingEnd="28dp">
+
+    <LinearLayout
+            android:id="@+id/welcomeContent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.card.MaterialCardView
+                android:id="@+id/welcomeIconCard"
+                android:layout_width="126dp"
+                android:layout_height="126dp"
+                app:cardBackgroundColor="@color/fitto_primary_extra_soft"
+                app:cardCornerRadius="30dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+            <ImageView
+                    android:id="@+id/welcomeIconImage"
+                    android:layout_width="112dp"
+                    android:layout_height="112dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/app_name"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/fitto_icon" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+                android:id="@+id/welcomeTitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/fredoka_bold"
+                android:text="@string/welcome_title"
+                android:textColor="@color/fitto_green"
+                android:textSize="42sp"
+                android:textStyle="bold" />
+
+        <TextView
+                android:id="@+id/welcomeDescriptionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="@string/welcome_description"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="17sp" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/welcomeLoginButton"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="36dp"
+                android:text="@string/welcome_login"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                app:cornerRadius="22dp" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/welcomeRegisterButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="14dp"
+                android:text="@string/welcome_register"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="16sp"
+                app:cornerRadius="22dp"
+                app:strokeColor="@color/fitto_green"
+                app:strokeWidth="1.5dp" />
+
+        <TextView
+                android:id="@+id/welcomeNoteText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:gravity="center"
+                android:text="@string/welcome_continue_note"
+                android:textColor="#99000000"
+                android:textSize="13sp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

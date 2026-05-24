@@ -1,0 +1,4487 @@
+{
+  "schemaVersion": 1,
+  "seedVersion": 1,
+  "descriptionTr": "Fitto hazır diyet planlarındaki gün/öğün kayıtları. Base calories 100 g/ml besin değerlerinden yaklaşık hesaplanmıştır.",
+  "plannedMeals": [
+    {
+      "id": "mediterranean_day1_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day1_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day1_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day1_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day2_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli kahvaltı tabağı",
+      "baseCalories": 395,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day2_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Kefir ve ceviz",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day2_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası dengesi",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day2_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve sebze",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day3_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Menemen ve tam tahıl",
+      "baseCalories": 430,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day3_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Yoğurtlu meyve",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day3_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 520,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day3_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Zeytinyağlı sebze tabağı",
+      "baseCalories": 495,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day4_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Yoğurtlu granola kasesi",
+      "baseCalories": 370,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day4_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Armut ve fındık",
+      "baseCalories": 200,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day4_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu kinoa kasesi",
+      "baseCalories": 510,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day4_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve salata dengesi",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day5_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 380,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day5_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Humus ve havuç",
+      "baseCalories": 165,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day5_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Nohutlu sebze tabağı",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day5_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Somon ve yeşillik",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day6_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Lor peynirli kahvaltı",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day6_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Meyve ve yoğurt",
+      "baseCalories": 160,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day6_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Tam buğday makarna & tavuk",
+      "baseCalories": 505,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day6_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Sebzeli omlet",
+      "baseCalories": 300,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day7_breakfast",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Akdeniz kahvaltı tabağı",
+      "baseCalories": 380,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day7_snack",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Kuru meyve ve badem",
+      "baseCalories": 175,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day7_lunch",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Balıklı bulgur salatası",
+      "baseCalories": 415,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mediterranean_day7_dinner",
+      "dietPlanId": "mediterranean",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu sebze güveç",
+      "baseCalories": 370,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day1_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day1_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 150,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day1_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 530,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day1_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day2_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day2_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 275,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day2_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 435,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day2_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 310,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day3_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 350,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day3_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 145,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day3_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 320,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day3_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 365,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day4_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Ispanaklı omlet",
+      "baseCalories": 295,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day4_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 155,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day4_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Etli sebze kasesi",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day4_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Hindi köfte tabağı",
+      "baseCalories": 360,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day5_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day5_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 150,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day5_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 530,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day5_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day6_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day6_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 275,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day6_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 435,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day6_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 310,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day7_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 350,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day7_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 145,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day7_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 320,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day7_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 365,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day8_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 450,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day8_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 155,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day8_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 550,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day8_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 510,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day9_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 330,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day9_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 285,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day9_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 455,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day9_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 325,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day10_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 365,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day10_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 150,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day10_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 335,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day10_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day11_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Ispanaklı omlet",
+      "baseCalories": 305,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day11_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 165,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day11_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Etli sebze kasesi",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day11_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Hindi köfte tabağı",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day12_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 450,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day12_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 155,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day12_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 550,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day12_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 510,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day13_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 330,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day13_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 285,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day13_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 455,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day13_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 325,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day14_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 365,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day14_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 150,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day14_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 335,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day14_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day15_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 15,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 470,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day15_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 15,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 160,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day15_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 15,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 570,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day15_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 15,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 525,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day16_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 16,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day16_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 16,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 295,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day16_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 16,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 470,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day16_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 16,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 335,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day17_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 17,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 380,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day17_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 17,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 155,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day17_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 17,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 345,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day17_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 17,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 390,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day18_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 18,
+      "mealType": "breakfast",
+      "titleTr": "Ispanaklı omlet",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day18_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 18,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 170,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day18_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 18,
+      "mealType": "lunch",
+      "titleTr": "Etli sebze kasesi",
+      "baseCalories": 460,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day18_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 18,
+      "mealType": "dinner",
+      "titleTr": "Hindi köfte tabağı",
+      "baseCalories": 385,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day19_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 19,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu yumurta",
+      "baseCalories": 470,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day19_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 19,
+      "mealType": "snack",
+      "titleTr": "Salatalık ve peynir",
+      "baseCalories": 160,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day19_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 19,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil salata",
+      "baseCalories": 570,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day19_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 19,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 525,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day20_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 20,
+      "mealType": "breakfast",
+      "titleTr": "Mantarlı omlet",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day20_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 20,
+      "mealType": "snack",
+      "titleTr": "Cevizli süzme yoğurt",
+      "baseCalories": 295,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day20_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 20,
+      "mealType": "lunch",
+      "titleTr": "Hindi marul kasesi",
+      "baseCalories": 470,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day20_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 20,
+      "mealType": "dinner",
+      "titleTr": "Kabak spagetti",
+      "baseCalories": 335,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day21_breakfast",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 21,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli yumurta",
+      "baseCalories": 380,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day21_snack",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 21,
+      "mealType": "snack",
+      "titleTr": "Badem",
+      "baseCalories": 155,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day21_lunch",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 21,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı keto salata",
+      "baseCalories": 345,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "ketogenic_day21_dinner",
+      "dietPlanId": "ketogenic",
+      "dayNumber": 21,
+      "mealType": "dinner",
+      "titleTr": "Tavuk ve karnabahar",
+      "baseCalories": 390,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day1_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve muz",
+      "baseCalories": 350,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day1_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve çilek",
+      "baseCalories": 140,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day1_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Az tuzlu tavuk tabağı",
+      "baseCalories": 470,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day1_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Baklagil salatası",
+      "baseCalories": 440,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day2_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Tam tahıllı kahvaltı",
+      "baseCalories": 265,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day2_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 165,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day2_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Hindi ve esmer pirinç",
+      "baseCalories": 405,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day2_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Balık ve patates",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day3_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Kefirli yulaf",
+      "baseCalories": 305,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day3_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 95,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day3_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Mercimek yemeği",
+      "baseCalories": 375,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day3_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu sebze",
+      "baseCalories": 325,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day4_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Sebzeli omlet",
+      "baseCalories": 260,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day4_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Yoğurt",
+      "baseCalories": 120,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day4_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı tam tahıl",
+      "baseCalories": 355,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day4_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 430,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day5_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day5_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day5_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day5_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day6_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli kahvaltı tabağı",
+      "baseCalories": 395,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day6_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Kefir ve ceviz",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day6_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası dengesi",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day6_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve sebze",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day7_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Menemen ve tam tahıl",
+      "baseCalories": 430,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day7_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Yoğurtlu meyve",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day7_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 520,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day7_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Zeytinyağlı sebze tabağı",
+      "baseCalories": 495,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day8_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve muz",
+      "baseCalories": 365,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day8_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve çilek",
+      "baseCalories": 145,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day8_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Az tuzlu tavuk tabağı",
+      "baseCalories": 485,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day8_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Baklagil salatası",
+      "baseCalories": 455,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day9_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Tam tahıllı kahvaltı",
+      "baseCalories": 275,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day9_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 170,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day9_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Hindi ve esmer pirinç",
+      "baseCalories": 420,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day9_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Balık ve patates",
+      "baseCalories": 385,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day10_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Kefirli yulaf",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day10_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 95,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day10_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Mercimek yemeği",
+      "baseCalories": 385,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day10_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu sebze",
+      "baseCalories": 340,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day11_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Sebzeli omlet",
+      "baseCalories": 270,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day11_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Yoğurt",
+      "baseCalories": 125,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day11_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı tam tahıl",
+      "baseCalories": 365,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day11_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 445,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day12_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 455,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day12_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day12_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 510,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day12_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day13_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli kahvaltı tabağı",
+      "baseCalories": 405,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day13_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Kefir ve ceviz",
+      "baseCalories": 190,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day13_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası dengesi",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day13_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve sebze",
+      "baseCalories": 425,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day14_breakfast",
+      "dietPlanId": "dash",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Menemen ve tam tahıl",
+      "baseCalories": 445,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day14_snack",
+      "dietPlanId": "dash",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Yoğurtlu meyve",
+      "baseCalories": 190,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day14_lunch",
+      "dietPlanId": "dash",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 540,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "dash_day14_dinner",
+      "dietPlanId": "dash",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Zeytinyağlı sebze tabağı",
+      "baseCalories": 505,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day1_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Yaban mersinli yulaf",
+      "baseCalories": 405,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day1_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Yeşil çay ve badem",
+      "baseCalories": 120,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day1_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Yeşillikli nohut salatası",
+      "baseCalories": 360,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day1_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 470,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day2_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Cevizli yoğurt",
+      "baseCalories": 240,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day2_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 85,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day2_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil kase",
+      "baseCalories": 485,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day2_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Mercimek ve salata",
+      "baseCalories": 340,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day3_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Ispanaklı yumurta",
+      "baseCalories": 275,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day3_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Yaban mersini",
+      "baseCalories": 85,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day3_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 320,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day3_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve esmer pirinç",
+      "baseCalories": 420,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day4_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day4_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day4_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day4_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day5_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli kahvaltı tabağı",
+      "baseCalories": 395,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day5_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Kefir ve ceviz",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day5_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası dengesi",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day5_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve sebze",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day6_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Menemen ve tam tahıl",
+      "baseCalories": 430,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day6_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Yoğurtlu meyve",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day6_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 520,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day6_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Zeytinyağlı sebze tabağı",
+      "baseCalories": 495,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day7_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Yoğurtlu granola kasesi",
+      "baseCalories": 370,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day7_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Armut ve fındık",
+      "baseCalories": 200,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day7_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu kinoa kasesi",
+      "baseCalories": 510,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day7_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve salata dengesi",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day8_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Yaban mersinli yulaf",
+      "baseCalories": 420,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day8_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Yeşil çay ve badem",
+      "baseCalories": 120,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day8_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Yeşillikli nohut salatası",
+      "baseCalories": 375,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day8_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Somon ve brokoli",
+      "baseCalories": 485,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day9_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Cevizli yoğurt",
+      "baseCalories": 250,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day9_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 85,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day9_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu yeşil kase",
+      "baseCalories": 505,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day9_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Mercimek ve salata",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day10_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Ispanaklı yumurta",
+      "baseCalories": 285,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day10_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Yaban mersini",
+      "baseCalories": 85,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day10_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 330,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day10_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve esmer pirinç",
+      "baseCalories": 435,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day11_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 455,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day11_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day11_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 510,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day11_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day12_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli kahvaltı tabağı",
+      "baseCalories": 405,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day12_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Kefir ve ceviz",
+      "baseCalories": 190,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day12_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası dengesi",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day12_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve sebze",
+      "baseCalories": 425,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day13_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Menemen ve tam tahıl",
+      "baseCalories": 445,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day13_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Yoğurtlu meyve",
+      "baseCalories": 190,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day13_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Ton balıklı salata",
+      "baseCalories": 540,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day13_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Zeytinyağlı sebze tabağı",
+      "baseCalories": 505,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day14_breakfast",
+      "dietPlanId": "mind",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Yoğurtlu granola kasesi",
+      "baseCalories": 380,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day14_snack",
+      "dietPlanId": "mind",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Armut ve fındık",
+      "baseCalories": 205,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day14_lunch",
+      "dietPlanId": "mind",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu kinoa kasesi",
+      "baseCalories": 530,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "mind_day14_dinner",
+      "dietPlanId": "mind",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve salata dengesi",
+      "baseCalories": 510,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day1_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day1_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day1_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day1_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day2_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 210,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day2_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day2_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 415,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day2_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day3_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 200,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day3_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day3_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 365,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day3_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day4_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day4_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day4_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day4_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day5_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 210,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day5_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day5_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 415,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day5_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day6_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 200,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day6_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day6_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 365,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day6_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 490,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day7_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 315,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day7_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day7_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day7_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day8_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 325,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day8_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day8_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 505,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day8_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 360,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day9_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 215,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day9_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day9_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day9_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day10_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 205,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day10_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day10_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 380,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day10_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 505,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day11_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 325,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day11_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day11_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 505,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day11_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 360,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day12_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 215,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day12_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day12_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 430,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day12_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day13_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 205,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day13_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day13_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 380,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day13_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 505,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day14_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 325,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day14_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day14_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 505,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day14_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 360,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day15_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 15,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 335,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day15_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 15,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day15_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 15,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 525,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day15_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 15,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day16_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 16,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 225,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day16_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 16,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day16_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 16,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day16_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 16,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 425,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day17_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 17,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 210,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day17_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 17,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day17_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 17,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 395,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day17_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 17,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 525,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day18_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 18,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 335,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day18_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 18,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day18_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 18,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 525,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day18_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 18,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day19_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 19,
+      "mealType": "breakfast",
+      "titleTr": "Patatesli sade tabak",
+      "baseCalories": 225,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day19_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 19,
+      "mealType": "snack",
+      "titleTr": "Armut",
+      "baseCalories": 90,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day19_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 19,
+      "mealType": "lunch",
+      "titleTr": "Balık ve pirinç",
+      "baseCalories": 445,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day19_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 19,
+      "mealType": "dinner",
+      "titleTr": "Tavuk çorbası sade",
+      "baseCalories": 425,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day20_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 20,
+      "mealType": "breakfast",
+      "titleTr": "Pirinç patlağı ve armut",
+      "baseCalories": 210,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day20_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 20,
+      "mealType": "snack",
+      "titleTr": "Salatalık",
+      "baseCalories": 20,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day20_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 20,
+      "mealType": "lunch",
+      "titleTr": "Hindi patates",
+      "baseCalories": 395,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day20_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 20,
+      "mealType": "dinner",
+      "titleTr": "Tavuk pirinç",
+      "baseCalories": 525,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day21_breakfast",
+      "dietPlanId": "elimination",
+      "dayNumber": 21,
+      "mealType": "breakfast",
+      "titleTr": "Sade pirinç lapası",
+      "baseCalories": 335,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day21_snack",
+      "dietPlanId": "elimination",
+      "dayNumber": 21,
+      "mealType": "snack",
+      "titleTr": "Elma",
+      "baseCalories": 80,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day21_lunch",
+      "dietPlanId": "elimination",
+      "dayNumber": 21,
+      "mealType": "lunch",
+      "titleTr": "Tavuk ve pirinç",
+      "baseCalories": 525,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "elimination_day21_dinner",
+      "dietPlanId": "elimination",
+      "dayNumber": 21,
+      "mealType": "dinner",
+      "titleTr": "Hindi ve kabak",
+      "baseCalories": 375,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day1_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve fıstık ezmesi",
+      "baseCalories": 385,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day1_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day1_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Nohutlu kinoa",
+      "baseCalories": 530,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day1_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Mercimekli kase",
+      "baseCalories": 380,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day2_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Tofulu kahvaltı",
+      "baseCalories": 325,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day2_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Humus ve havuç",
+      "baseCalories": 170,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day2_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Fasulye bowl",
+      "baseCalories": 380,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day2_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Sebzeli makarna",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day3_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Muzlu yulaf smoothie",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day3_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 140,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day3_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası ve salata",
+      "baseCalories": 400,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day3_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 455,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day4_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 435,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day4_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day4_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 490,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day4_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 395,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day5_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve fıstık ezmesi",
+      "baseCalories": 385,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day5_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 180,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day5_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Nohutlu kinoa",
+      "baseCalories": 530,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day5_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Mercimekli kase",
+      "baseCalories": 380,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day6_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Tofulu kahvaltı",
+      "baseCalories": 325,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day6_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Humus ve havuç",
+      "baseCalories": 170,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day6_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Fasulye bowl",
+      "baseCalories": 380,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day6_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Sebzeli makarna",
+      "baseCalories": 350,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day7_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Muzlu yulaf smoothie",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day7_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 140,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day7_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası ve salata",
+      "baseCalories": 400,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day7_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 455,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day8_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve fıstık ezmesi",
+      "baseCalories": 405,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day8_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day8_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Nohutlu kinoa",
+      "baseCalories": 550,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day8_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Mercimekli kase",
+      "baseCalories": 390,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day9_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Tofulu kahvaltı",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day9_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Humus ve havuç",
+      "baseCalories": 175,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day9_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Fasulye bowl",
+      "baseCalories": 395,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day9_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Sebzeli makarna",
+      "baseCalories": 365,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day10_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Muzlu yulaf smoothie",
+      "baseCalories": 355,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day10_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 145,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day10_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası ve salata",
+      "baseCalories": 415,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day10_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 475,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day11_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Yulaflı Akdeniz kahvaltısı",
+      "baseCalories": 455,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day11_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day11_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu bulgur salatası",
+      "baseCalories": 510,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day11_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Levrek ve yeşillik",
+      "baseCalories": 410,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day12_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf ve fıstık ezmesi",
+      "baseCalories": 405,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day12_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Elma ve badem",
+      "baseCalories": 185,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day12_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Nohutlu kinoa",
+      "baseCalories": 550,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day12_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Mercimekli kase",
+      "baseCalories": 390,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day13_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Tofulu kahvaltı",
+      "baseCalories": 340,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day13_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Humus ve havuç",
+      "baseCalories": 175,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day13_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Fasulye bowl",
+      "baseCalories": 395,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day13_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Sebzeli makarna",
+      "baseCalories": 365,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day14_breakfast",
+      "dietPlanId": "plant_based",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Muzlu yulaf smoothie",
+      "baseCalories": 355,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day14_snack",
+      "dietPlanId": "plant_based",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Fındık",
+      "baseCalories": 145,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day14_lunch",
+      "dietPlanId": "plant_based",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Mercimek çorbası ve salata",
+      "baseCalories": 415,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "plant_based_day14_dinner",
+      "dietPlanId": "plant_based",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Nohutlu sebze",
+      "baseCalories": 475,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day1_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 1,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 645,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day1_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 1,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 430,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day1_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 1,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 710,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day1_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 1,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 710,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day2_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 2,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 530,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day2_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 2,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 340,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day2_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 2,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 780,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day2_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 2,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 620,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day3_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 3,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 485,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day3_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 3,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 335,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day3_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 3,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 545,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day3_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 3,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 585,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day4_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 4,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 645,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day4_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 4,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 430,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day4_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 4,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 710,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day4_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 4,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 710,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day5_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 5,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 530,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day5_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 5,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 340,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day5_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 5,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 780,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day5_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 5,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 620,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day6_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 6,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 485,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day6_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 6,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 335,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day6_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 6,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 545,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day6_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 6,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 585,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day7_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 7,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 645,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day7_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 7,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 430,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day7_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 7,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 710,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day7_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 7,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 710,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day8_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 8,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 670,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day8_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 8,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 450,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day8_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 8,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 740,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day8_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 8,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 735,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day9_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 9,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 550,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day9_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 9,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 355,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day9_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 9,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 810,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day9_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 9,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 645,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day10_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 10,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 505,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day10_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 10,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 345,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day10_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 10,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 565,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day10_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 10,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 605,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day11_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 11,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 670,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day11_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 11,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 450,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day11_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 11,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 740,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day11_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 11,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 735,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day12_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 12,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 550,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day12_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 12,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 355,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day12_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 12,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 810,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day12_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 12,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 645,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day13_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 13,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 505,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day13_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 13,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 345,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day13_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 13,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 565,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day13_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 13,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 605,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day14_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 14,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 670,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day14_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 14,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 450,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day14_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 14,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 740,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day14_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 14,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 735,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day15_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 15,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 695,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day15_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 15,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 465,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day15_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 15,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 765,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day15_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 15,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 765,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day16_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 16,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 570,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day16_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 16,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 370,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day16_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 16,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 840,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day16_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 16,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 670,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day17_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 17,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 525,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day17_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 17,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 360,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day17_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 17,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 585,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day17_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 17,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 630,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day18_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 18,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 695,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day18_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 18,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 465,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day18_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 18,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 765,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day18_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 18,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 765,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day19_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 19,
+      "mealType": "breakfast",
+      "titleTr": "Peynirli omlet",
+      "baseCalories": 570,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day19_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 19,
+      "mealType": "snack",
+      "titleTr": "Yoğurt ve granola",
+      "baseCalories": 370,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day19_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 19,
+      "mealType": "lunch",
+      "titleTr": "Etli pilav",
+      "baseCalories": 840,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day19_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 19,
+      "mealType": "dinner",
+      "titleTr": "Somon ve patates",
+      "baseCalories": 670,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day20_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 20,
+      "mealType": "breakfast",
+      "titleTr": "Avokadolu tost",
+      "baseCalories": 525,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day20_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 20,
+      "mealType": "snack",
+      "titleTr": "Kuruyemiş ve kuru üzüm",
+      "baseCalories": 360,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day20_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 20,
+      "mealType": "lunch",
+      "titleTr": "Hindi sandviç tabağı",
+      "baseCalories": 585,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day20_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 20,
+      "mealType": "dinner",
+      "titleTr": "Tavuklu bulgur",
+      "baseCalories": 630,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day21_breakfast",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 21,
+      "mealType": "breakfast",
+      "titleTr": "Yulaf güç kasesi",
+      "baseCalories": 695,
+      "orderIndex": 1,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day21_snack",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 21,
+      "mealType": "snack",
+      "titleTr": "Muzlu smoothie",
+      "baseCalories": 465,
+      "orderIndex": 2,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day21_lunch",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 21,
+      "mealType": "lunch",
+      "titleTr": "Tavuklu makarna",
+      "baseCalories": 765,
+      "orderIndex": 3,
+      "createdForSeedVersion": 1
+    },
+    {
+      "id": "weight_gain_day21_dinner",
+      "dietPlanId": "weight_gain",
+      "dayNumber": 21,
+      "mealType": "dinner",
+      "titleTr": "Köfte ve bulgur",
+      "baseCalories": 765,
+      "orderIndex": 4,
+      "createdForSeedVersion": 1
+    }
+  ]
+}

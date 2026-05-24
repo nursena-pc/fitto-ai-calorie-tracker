@@ -1,0 +1,1518 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="28dp">
+
+            <!-- Top Bar -->
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <ImageButton
+                        android:id="@+id/backButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/back"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/fitto_text_dark" />
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+            </LinearLayout>
+
+            <!-- Hero Card -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="220dp">
+
+                        <ImageView
+                                android:id="@+id/heroCoverImage"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:contentDescription="@string/diet_plan_detail_title_mediterranean"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/akdeniz_detay_header" />
+
+                        <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@drawable/bg_detail_header_scrim" />
+
+                        <TextView
+                                android:id="@+id/heroTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="top|start"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginTop="16dp"
+                                android:text="@string/diet_plan_detail_title_mediterranean"
+                                android:textColor="@android:color/white"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+                    </FrameLayout>
+
+                    <!-- Info Chips -->
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:scrollbars="none"
+                            android:overScrollMode="never">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:paddingStart="12dp"
+                                android:paddingTop="12dp"
+                                android:paddingEnd="12dp">
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp">
+
+                                <TextView
+                                        android:id="@+id/badge1Text"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:paddingStart="12dp"
+                                        android:paddingTop="8dp"
+                                        android:paddingEnd="12dp"
+                                        android:paddingBottom="8dp"
+                                        android:text="@string/diet_plan_detail_badge_calorie"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp" />
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp">
+
+                                <TextView
+                                        android:id="@+id/badge2Text"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:paddingStart="12dp"
+                                        android:paddingTop="8dp"
+                                        android:paddingEnd="12dp"
+                                        android:paddingBottom="8dp"
+                                        android:text="@string/diet_plan_detail_badge_duration"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp" />
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp">
+
+                                <TextView
+                                        android:id="@+id/badge3Text"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:paddingStart="12dp"
+                                        android:paddingTop="8dp"
+                                        android:paddingEnd="12dp"
+                                        android:paddingBottom="8dp"
+                                        android:text="@string/diet_plan_detail_badge_heart"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp" />
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp">
+
+                                <TextView
+                                        android:id="@+id/badge4Text"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:paddingStart="12dp"
+                                        android:paddingTop="8dp"
+                                        android:paddingEnd="12dp"
+                                        android:paddingBottom="8dp"
+                                        android:text="@string/diet_plan_detail_badge_balanced"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="12sp" />
+                            </com.google.android.material.card.MaterialCardView>
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Action Buttons -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="14dp">
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/applyPlanButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_plan_detail_apply_plan"
+                                android:textAllCaps="false"
+                                android:textColor="@android:color/white"
+                                android:textStyle="bold"
+                                app:backgroundTint="@color/fitto_green"
+                                app:cornerRadius="16dp"
+                                app:icon="@null" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/savePlanButton"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="48dp"
+                                android:layout_marginStart="10dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_plan_detail_save_plan"
+                                android:textAllCaps="false"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textStyle="bold"
+                                app:cornerRadius="16dp"
+                                app:icon="@null"
+                                app:strokeColor="@color/fitto_divider_soft" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Haftalık Plan Önizlemesi -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/diet_plan_detail_weekly_preview_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/diet_plan_detail_see_all"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_1"
+                                    android:textColor="@color/fitto_green"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_2"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_3"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_4"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_5"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_6"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:layout_width="70dp"
+                                    android:layout_height="86dp"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:gravity="center"
+                                    android:text="@string/diet_plan_detail_day_7"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Makro Dağılımı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:id="@+id/macroTitleText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_plan_detail_macro_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <!-- Karbonhidrat -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/macroCarbText"
+                                android:layout_width="104dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/diet_plan_detail_macro_carb"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <ProgressBar
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:max="100"
+                                android:progress="50"
+                                android:progressTint="@color/fitto_green"
+                                android:progressBackgroundTint="@color/fitto_divider_soft" />
+
+                        <TextView
+                                android:layout_width="72dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="@string/diet_plan_detail_macro_carb_value"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <!-- Protein -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/macroProteinText"
+                                android:layout_width="104dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/diet_plan_detail_macro_protein"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <ProgressBar
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:max="100"
+                                android:progress="25"
+                                android:progressTint="@color/fitto_orange"
+                                android:progressBackgroundTint="@color/fitto_divider_soft" />
+
+                        <TextView
+                                android:layout_width="72dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="@string/diet_plan_detail_macro_protein_value"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <!-- Yağ -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/macroFatText"
+                                android:layout_width="104dp"
+                                android:layout_height="wrap_content"
+                                android:text="@string/diet_plan_detail_macro_fat"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                        <ProgressBar
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="0dp"
+                                android:layout_height="8dp"
+                                android:layout_weight="1"
+                                android:max="100"
+                                android:progress="25"
+                                android:progressTint="@color/fitto_yellow"
+                                android:progressBackgroundTint="@color/fitto_divider_soft" />
+
+                        <TextView
+                                android:layout_width="72dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="@string/diet_plan_detail_macro_fat_value"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Dikkat Edilmesi Gerekenler -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:id="@+id/attentionTitleIconText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⚠️"
+                                    android:textSize="18sp" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="@string/diet_plan_detail_attention_title"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/attention1Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:text="@string/diet_plan_detail_attention_1"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <TextView
+                            android:id="@+id/attention2Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/diet_plan_detail_attention_2"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <TextView
+                            android:id="@+id/attention3Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/diet_plan_detail_attention_3"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Plan Hakkında -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:id="@+id/aboutTitleIconText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🍃"
+                                    android:textSize="18sp" />
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:text="@string/diet_plan_detail_about_title"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/aboutDescText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/diet_plan_detail_about_desc"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="14sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Faydaları -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_plan_detail_benefits_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <!-- Kart 1 -->
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="132dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:id="@+id/benefit1IconText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="❤️"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit1TitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_1_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit1DescText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_1_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Kart 2 -->
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="132dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:id="@+id/benefit2IconText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🥬"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit2TitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_2_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit2DescText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_2_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Kart 3 -->
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="132dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="16dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:padding="10dp">
+
+                                <TextView
+                                        android:id="@+id/benefit3IconText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="⚖️"
+                                        android:textSize="24sp" />
+
+                                <TextView
+                                        android:id="@+id/benefit3TitleText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_3_title"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/benefit3DescText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:gravity="center"
+                                        android:text="@string/diet_plan_detail_benefit_3_desc"
+                                        android:textColor="@color/fitto_text_secondary"
+                                        android:textSize="11sp" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Kimler için uygun -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_plan_detail_suitable_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="72dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="14dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:paddingStart="6dp"
+                                    android:paddingEnd="6dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🌱"
+                                        android:textSize="18sp" />
+
+                                <TextView
+                                        android:id="@+id/forWhom1Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:text="@string/diet_plan_detail_suitable_beginner"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="72dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="14dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:paddingStart="6dp"
+                                    android:paddingEnd="6dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="🍃"
+                                        android:textSize="18sp" />
+
+                                <TextView
+                                        android:id="@+id/forWhom2Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:text="@string/diet_plan_detail_suitable_sustainable"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="72dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                app:cardBackgroundColor="@color/fitto_background_light"
+                                app:cardCornerRadius="14dp"
+                                app:cardElevation="0dp"
+                                app:strokeColor="@color/fitto_divider_soft"
+                                app:strokeWidth="1dp">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:gravity="center"
+                                    android:orientation="vertical"
+                                    android:paddingStart="6dp"
+                                    android:paddingEnd="6dp">
+
+                                <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="⚡"
+                                        android:textSize="18sp" />
+
+                                <TextView
+                                        android:id="@+id/forWhom3Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:ellipsize="end"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:text="@string/diet_plan_detail_suitable_balance"
+                                        android:textColor="@color/fitto_text_dark"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Örnek Gün -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_plan_detail_example_day_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:orientation="vertical">
+
+                            <!-- Öğün 1 -->
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="64dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                <TextView
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:gravity="center"
+                                        android:text="🥣"
+                                        android:textSize="24sp" />
+
+                                <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal1TitleText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_breakfast_title"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal1DescText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_breakfast_desc"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="12sp" />
+                                </LinearLayout>
+
+                                <TextView
+                                        android:id="@+id/sampleMeal1KcalText"
+                                        android:layout_width="72dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="end"
+                                        android:text="@string/diet_plan_detail_meal_breakfast_kcal"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Öğün 2 -->
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="64dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                <TextView
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:gravity="center"
+                                        android:text="🥗"
+                                        android:textSize="24sp" />
+
+                                <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal2TitleText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_lunch_title"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal2DescText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_lunch_desc"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="12sp" />
+                                </LinearLayout>
+
+                                <TextView
+                                        android:id="@+id/sampleMeal2KcalText"
+                                        android:layout_width="72dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="end"
+                                        android:text="@string/diet_plan_detail_meal_lunch_kcal"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Öğün 3 -->
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="64dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                <TextView
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:gravity="center"
+                                        android:text="🥜"
+                                        android:textSize="24sp" />
+
+                                <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal3TitleText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_snack_title"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal3DescText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_snack_desc"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="12sp" />
+                                </LinearLayout>
+
+                                <TextView
+                                        android:id="@+id/sampleMeal3KcalText"
+                                        android:layout_width="72dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="end"
+                                        android:text="@string/diet_plan_detail_meal_snack_kcal"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Öğün 4 -->
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="64dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                <TextView
+                                        android:layout_width="40dp"
+                                        android:layout_height="40dp"
+                                        android:gravity="center"
+                                        android:text="🍽️"
+                                        android:textSize="24sp" />
+
+                                <LinearLayout
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:layout_weight="1"
+                                        android:orientation="vertical">
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal4TitleText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_dinner_title"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="13sp"
+                                            android:textStyle="bold" />
+
+                                    <TextView
+                                            android:id="@+id/sampleMeal4DescText"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:text="@string/diet_plan_detail_meal_dinner_desc"
+                                            android:textColor="@color/fitto_text_secondary"
+                                            android:textSize="12sp" />
+                                </LinearLayout>
+
+                                <TextView
+                                        android:id="@+id/sampleMeal4KcalText"
+                                        android:layout_width="72dp"
+                                        android:layout_height="wrap_content"
+                                        android:gravity="end"
+                                        android:text="@string/diet_plan_detail_meal_dinner_kcal"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+            <!-- Öne Çıkan Besinler -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_plan_detail_featured_foods_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <!-- Besin 1 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood1IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🫒"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood1Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_olive_oil"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Besin 2 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood2IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🥬"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood2Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_vegetables"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Besin 3 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood3IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🐟"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood3Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_fish"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Besin 4 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:layout_marginEnd="8dp"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood4IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🌾"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood4Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_whole_grain"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Besin 5 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/featuredFood5Card"
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:visibility="gone"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood5IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🫒"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood5Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_olive_oil"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <!-- Besin 6 -->
+                            <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/featuredFood6Card"
+                                    android:layout_width="88dp"
+                                    android:layout_height="84dp"
+                                    android:visibility="gone"
+                                    app:cardBackgroundColor="@color/fitto_background_light"
+                                    app:cardCornerRadius="14dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/fitto_divider_soft"
+                                    app:strokeWidth="1dp">
+
+                                <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:gravity="center"
+                                        android:orientation="vertical"
+                                        android:paddingStart="6dp"
+                                        android:paddingEnd="6dp">
+
+                                    <TextView
+                                            android:id="@+id/featuredFood6IconText"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="🥜"
+                                            android:textSize="24sp" />
+
+                                    <TextView
+                                            android:id="@+id/featuredFood6Text"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="6dp"
+                                            android:ellipsize="end"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:text="@string/diet_plan_detail_food_nuts"
+                                            android:textColor="@color/fitto_text_dark"
+                                            android:textSize="11sp"
+                                            android:textStyle="bold" />
+                                </LinearLayout>
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.button.MaterialButton
+                    android:id="@+id/bottomApplyPlanButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="16dp"
+                    android:backgroundTint="@color/fitto_green"
+                    android:text="@string/diet_plan_detail_apply_plan"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="18dp"
+                    app:icon="@null" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</FrameLayout>

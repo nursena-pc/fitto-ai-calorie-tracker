@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/activityCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="1dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="8dp">
+
+        <TextView
+                android:id="@+id/activityIconText"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_fitto_chip"
+                android:gravity="center"
+                android:textSize="22sp"
+                tools:text="🏃" />
+
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+            <TextView
+                    android:id="@+id/activityTitleText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="Bisiklet • Orta tempo" />
+
+            <TextView
+                    android:id="@+id/activityDescriptionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="Kardiyo • Yüksek tempo" />
+
+            <TextView
+                    android:id="@+id/activityMetaText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="30 dk · 180 kcal" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/activitySelectButton"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:text="+"
+                android:textSize="17sp"
+                app:cornerRadius="17dp" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

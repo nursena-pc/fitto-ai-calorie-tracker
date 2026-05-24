@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <LinearLayout
+            android:id="@+id/sharedContentTopBar"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="20dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+                android:id="@+id/sharedContentBackButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_back"
+                android:padding="12dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/fitto_text_dark" />
+
+        <TextView
+                android:id="@+id/sharedContentTitleText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/group_media_links_files"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+    </LinearLayout>
+
+    <com.google.android.material.chip.ChipGroup
+            android:id="@+id/sharedContentChipGroup"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="20dp"
+            app:chipSpacingHorizontal="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sharedContentTopBar"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+                android:id="@+id/mediaChip"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="@string/group_shared_media"
+                android:textColor="@color/message_filter_chip_text"
+                app:checkedIconVisible="false"
+                app:chipBackgroundColor="@color/message_filter_chip_bg"
+                app:chipStrokeColor="@color/message_filter_chip_stroke"
+                app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+                android:id="@+id/linksChip"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:checked="true"
+                android:text="@string/group_shared_links"
+                android:textColor="@color/message_filter_chip_text"
+                app:checkedIconVisible="false"
+                app:chipBackgroundColor="@color/message_filter_chip_bg"
+                app:chipStrokeColor="@color/message_filter_chip_stroke"
+                app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+                android:id="@+id/filesChip"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="@string/group_shared_files"
+                android:textColor="@color/message_filter_chip_text"
+                app:checkedIconVisible="false"
+                app:chipBackgroundColor="@color/message_filter_chip_bg"
+                app:chipStrokeColor="@color/message_filter_chip_stroke"
+                app:chipStrokeWidth="1dp" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/sharedContentRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingStart="20dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sharedContentChipGroup" />
+
+    <TextView
+            android:id="@+id/sharedContentEmptyText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="32dp"
+            android:text="@string/group_shared_links_empty"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/sharedContentChipGroup" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

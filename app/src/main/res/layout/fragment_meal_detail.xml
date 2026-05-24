@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="18dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <ImageButton
+                    android:id="@+id/backButton"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/back"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/fitto_text_dark" />
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/mealDetailTitleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        tools:text="Bugünkü Kahvaltı" />
+
+                <TextView
+                        android:id="@+id/mealDetailSubtitleText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="12sp"
+                        tools:text="Eklediğin besinler otomatik kaydedilir" />
+            </LinearLayout>
+
+            <Space
+                    android:layout_width="44dp"
+                    android:layout_height="44dp" />
+        </LinearLayout>
+
+        <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="@color/fitto_surface"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                app:strokeColor="@color/fitto_divider_soft"
+                app:strokeWidth="1dp">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="18dp">
+
+                <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_chip"
+                        android:gravity="center"
+                        android:text="🍽️"
+                        android:textSize="24sp" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/mealDetailCaloriesText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="23sp"
+                            android:textStyle="bold"
+                            tools:text="420 kcal" />
+
+                    <TextView
+                            android:id="@+id/mealDetailMacrosText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp"
+                            tools:text="P 24.0 g · K 48.0 g · Y 12.0 g" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/addFoodButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="42dp"
+                        android:minWidth="0dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:text="@string/meal_detail_add_food"
+                        android:textAllCaps="false"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        app:backgroundTint="@color/fitto_green"
+                        app:cornerRadius="16dp"
+                        app:icon="@drawable/ic_add"
+                        app:iconGravity="textStart"
+                        app:iconTint="@color/white" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/meal_detail_entries_title"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="17sp"
+                android:textStyle="bold" />
+
+        <TextView
+                android:id="@+id/emptyMealText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_add_meal_selected_card"
+                android:gravity="center"
+                android:padding="22dp"
+                android:text="@string/meal_detail_empty"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/mealEntriesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="10dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:paddingBottom="10dp"
+                tools:itemCount="3"
+                tools:listitem="@layout/item_meal_entry_detail" />
+    </LinearLayout>
+</FrameLayout>

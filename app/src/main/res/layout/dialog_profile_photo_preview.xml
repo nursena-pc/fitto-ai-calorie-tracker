@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/fitto_surface"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+    <ImageView
+            android:id="@+id/imageProfilePhotoPreview"
+            android:layout_width="match_parent"
+            android:layout_height="360dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/profile_album_photo_preview"
+            android:scaleType="fitCenter" />
+
+    <TextView
+            android:id="@+id/textProfilePhotoPreviewTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textColor="@color/profile_text"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+    <TextView
+            android:id="@+id/textProfilePhotoPreviewDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/profile_subtext"
+            android:textSize="13sp" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonProfilePhotoPreviewClose"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/action_close"
+                android:textColor="@color/fitto_green" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonProfilePhotoPreviewDownload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/profile_album_download"
+                android:textColor="@color/white"
+                app:backgroundTint="@color/fitto_green"
+                app:icon="@drawable/ic_arrow_downward"
+                app:iconTint="@color/white" />
+
+    </LinearLayout>
+
+</LinearLayout>

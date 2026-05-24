@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="22dp"
+        android:background="@color/fitto_surface">
+
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/create_post_add_tag_title"
+            android:textColor="@color/fitto_text_dark"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/create_post_add_tag_desc"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="14sp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/addTagInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:hint="@string/create_post_add_tag_hint"
+            app:boxCornerRadiusBottomEnd="18dp"
+            app:boxCornerRadiusBottomStart="18dp"
+            app:boxCornerRadiusTopEnd="18dp"
+            app:boxCornerRadiusTopStart="18dp"
+            app:startIconDrawable="@drawable/ic_bookmark_border"
+            app:startIconTint="@color/fitto_green">
+
+        <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/addTagEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLength="20"
+                android:singleLine="true"
+                android:textColor="@color/fitto_text_dark" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</LinearLayout>

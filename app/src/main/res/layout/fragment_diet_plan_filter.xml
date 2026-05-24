@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <LinearLayout
+            android:id="@+id/filterTopBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingTop="18dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+                android:id="@+id/backButton"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:contentDescription="@string/common_back"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/fitto_text_dark" />
+        <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+        <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:contentDescription="@string/diet_filter_title"
+                android:src="@drawable/ic_filter_list"
+                app:tint="@color/fitto_text_dark" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/filterScrollView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:paddingBottom="18dp"
+            app:layout_constraintBottom_toTopOf="@id/filterBottomBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/filterTopBar">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/diet_filter_title_leaf"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+
+            <!-- 1. Hedef -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_filter_goal_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/goalWeightLossButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_goal_weight_loss"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/goalWeightGainButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_goal_weight_gain"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/goalMuscleButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_goal_muscle"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/goalBalancedButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:text="@string/diet_filter_goal_balanced"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 2. Süre -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_filter_duration_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/duration7Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_filter_duration_7"
+                                android:textAllCaps="false"
+                                app:cornerRadius="14dp"
+                                app:icon="@null" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/duration14Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_filter_duration_14"
+                                android:textAllCaps="false"
+                                app:cornerRadius="14dp"
+                                app:icon="@null" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/duration21Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_marginHorizontal="6dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_filter_duration_21"
+                                android:textAllCaps="false"
+                                app:cornerRadius="14dp"
+                                app:icon="@null" />
+
+                        <com.google.android.material.button.MaterialButton
+                                android:id="@+id/duration30Button"
+                                style="@style/Widget.Material3.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="42dp"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:text="@string/diet_filter_duration_30"
+                                android:textAllCaps="false"
+                                app:cornerRadius="14dp"
+                                app:icon="@null" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 3. Diyet Türü -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_filter_type_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/typeMediterraneanButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_plan_mediterranean_title"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/typeDashButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_plan_dash_title"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/typeFastingButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_plan_if_title"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/typeKetoButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_plan_keto_title"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/typePlantBasedButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:text="@string/diet_plan_plant_based_title"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 4. Özellikler -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_filter_features_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:overScrollMode="never"
+                            android:scrollbars="none">
+
+                        <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/featureHeartButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_feature_heart"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/featureLowSodiumButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_feature_low_sodium"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/featureHighProteinButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:text="@string/diet_filter_feature_high_protein"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/featureEasyButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="42dp"
+                                    android:text="@string/diet_filter_feature_easy"
+                                    android:textAllCaps="false"
+                                    app:cornerRadius="14dp"
+                                    app:icon="@null" />
+                        </LinearLayout>
+                    </HorizontalScrollView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Kalori aralığı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:layout_marginBottom="20dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="1dp"
+                    app:strokeColor="@color/fitto_green"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/diet_filter_calorie_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/minCalorieText"
+                                android:layout_width="0dp"
+                                android:layout_height="56dp"
+                                android:layout_marginEnd="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="@string/diet_filter_min_calorie_mock"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/maxCalorieText"
+                                android:layout_width="0dp"
+                                android:layout_height="56dp"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="@string/diet_filter_max_calorie_mock"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.RangeSlider
+                            android:id="@+id/calorieRangeSlider"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="14dp" />
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/diet_filter_calorie_min_limit"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp" />
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="end"
+                                android:text="@string/diet_filter_calorie_max_limit"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+            android:id="@+id/filterBottomBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@color/fitto_background_light"
+            android:orientation="horizontal"
+            android:paddingStart="18dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="18dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/resetButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/diet_filter_reset"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="18dp"
+                app:icon="@null"
+                app:strokeColor="@color/fitto_green"
+                app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/applyFilterButton"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/diet_filter_apply"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="18dp"
+                app:icon="@null" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

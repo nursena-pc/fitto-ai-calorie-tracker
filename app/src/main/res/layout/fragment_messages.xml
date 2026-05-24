@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <!-- Üst Alan -->
+    <LinearLayout
+            android:id="@+id/messagesHeaderRow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="20dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+                android:id="@+id/messagesBackButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/common_back"
+                android:padding="12dp"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/fitto_text_dark" />
+
+        <TextView
+                android:id="@+id/messagesTitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="@string/social_messages"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Arama Alanı -->
+    <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/messagesSearchInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginEnd="20dp"
+            app:boxBackgroundColor="@color/fitto_surface"
+            app:boxCornerRadiusBottomEnd="20dp"
+            app:boxCornerRadiusBottomStart="20dp"
+            app:boxCornerRadiusTopEnd="20dp"
+            app:boxCornerRadiusTopStart="20dp"
+            app:boxStrokeColor="@color/fitto_green"
+            app:hintEnabled="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/messagesHeaderRow"
+            app:startIconDrawable="@drawable/ic_search"
+            app:startIconTint="@color/fitto_text_dark">
+
+        <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/messagesSearchEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/messages_search_placeholder"
+                android:inputType="text"
+                android:maxLines="1"
+                android:minHeight="56dp"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="16sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+        <HorizontalScrollView
+                android:id="@+id/messagesFilterScrollView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:clipToPadding="false"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:scrollbars="none"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/messagesSearchInputLayout">
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/messagesTabGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipSpacingHorizontal="10dp"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                        android:id="@+id/friendsTabButton"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:checked="true"
+                        android:text="Tümü"
+                        android:textColor="@color/message_filter_chip_text"
+                        android:textSize="14sp"
+                        app:chipBackgroundColor="@color/message_filter_chip_bg"
+                        app:chipStrokeColor="@color/message_filter_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        app:checkedIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
+                        android:id="@+id/unreadTabButton"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Okunmamış"
+                        android:textColor="@color/message_filter_chip_text"
+                        android:textSize="14sp"
+                        app:chipBackgroundColor="@color/message_filter_chip_bg"
+                        app:chipStrokeColor="@color/message_filter_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        app:checkedIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
+                        android:id="@+id/aiAssistantTabButton"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="AI Asistan"
+                        android:textColor="@color/message_filter_chip_text"
+                        android:textSize="14sp"
+                        app:chipBackgroundColor="@color/message_filter_chip_bg"
+                        app:chipStrokeColor="@color/message_filter_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        app:checkedIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
+                        android:id="@+id/groupsTabButton"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:text="Gruplar"
+                        android:textColor="@color/message_filter_chip_text"
+                        android:textSize="14sp"
+                        app:chipBackgroundColor="@color/message_filter_chip_bg"
+                        app:chipStrokeColor="@color/message_filter_chip_stroke"
+                        app:chipStrokeWidth="1dp"
+                        app:checkedIconVisible="false" />
+
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+    <!-- Boş Durum -->
+    <TextView
+            android:id="@+id/messagesEmptyText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="32dp"
+            android:text="@string/messages_empty_state"
+            android:textColor="@color/fitto_text_secondary"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/messagesFilterScrollView" />
+
+    <!-- Liste -->
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/messagesRecyclerView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="120dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/messagesFilterScrollView" />
+
+    <!-- Yeni sohbet FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/messagesNewChatButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="22dp"
+            android:src="@drawable/ic_add"
+            app:backgroundTint="@color/fitto_green"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:tint="@color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

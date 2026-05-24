@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="74dp"
+    android:layout_height="102dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginBottom="8dp"
+    app:cardBackgroundColor="@color/fitto_surface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/fitto_divider_soft"
+    app:strokeWidth="1dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:padding="6dp">
+        <TextView android:layout_width="match_parent" android:layout_height="34dp" android:gravity="center" android:text="🥚" android:textSize="26sp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="Yumurta" android:textColor="@color/fitto_text_dark" android:textSize="10sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="26dp" android:layout_marginTop="4dp" android:background="@drawable/bg_recipe_amount_pill" android:gravity="center" android:text="6 adet" android:textColor="@color/fitto_text_secondary" android:textSize="10sp" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

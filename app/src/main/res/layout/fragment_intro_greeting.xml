@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/introGreetingRoot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light"
+        android:paddingStart="18dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="0dp">
+
+    <!-- Progress -->
+    <include
+            android:id="@+id/onboardingProgressContainer"
+            layout="@layout/view_onboarding_progress"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Back -->
+    <ImageButton
+            android:id="@+id/introGreetingBackButton"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_fitto_circle_white"
+            android:contentDescription="@string/back"
+            android:elevation="5dp"
+            android:padding="20dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="@color/fitto_green"
+            app:layout_constraintTop_toBottomOf="@id/onboardingProgressContainer"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Hero illustration area -->
+    <FrameLayout
+            android:id="@+id/introHeroContainer"
+            android:layout_width="0dp"
+            android:layout_height="315dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@id/introGreetingBackButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <View
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="start|top"
+                android:layout_marginStart="36dp"
+                android:layout_marginTop="66dp"
+                android:background="@drawable/bg_intro_small_circle" />
+
+        <View
+                android:id="@+id/introBlob"
+                android:layout_width="match_parent"
+                android:layout_height="304dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginStart="36dp"
+                android:layout_marginEnd="36dp"
+                android:background="@drawable/bg_intro_blob_v2" />
+
+        <View
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="end|top"
+                android:layout_marginTop="48dp"
+                android:layout_marginEnd="90dp"
+                android:background="@drawable/bg_intro_small_circle" />
+
+        <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="end|top"
+                android:layout_marginTop="112dp"
+                android:layout_marginEnd="46dp"
+                android:rotation="-20"
+                android:src="@drawable/ic_leaf" />
+
+        <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="90dp"
+                android:layout_marginBottom="78dp"
+                android:alpha="0.28"
+                android:rotation="-18"
+                android:src="@drawable/ic_leaf" />
+
+        <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="68dp"
+                android:layout_marginBottom="54dp"
+                android:alpha="0.22"
+                android:rotation="-46"
+                android:src="@drawable/ic_leaf" />
+
+        <ImageView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="start|bottom"
+                android:layout_marginStart="44dp"
+                android:layout_marginBottom="28dp"
+                android:alpha="0.22"
+                android:rotation="-72"
+                android:src="@drawable/ic_leaf" />
+
+        <FrameLayout
+                android:layout_width="51dp"
+                android:layout_height="59dp"
+                android:layout_gravity="end|bottom"
+                android:layout_marginEnd="28dp"
+                android:layout_marginBottom="86dp"
+                android:background="@drawable/bg_intro_heart_ring">
+
+            <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_favorite" />
+
+        </FrameLayout>
+
+        <ImageView
+                android:id="@+id/introGreetingMascotImage"
+                android:layout_width="287dp"
+                android:layout_height="276dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="4dp"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/app_name"
+                android:scaleType="fitCenter"
+                android:src="@drawable/fitto_mascot" />
+
+    </FrameLayout>
+
+    <!-- Text card -->
+    <LinearLayout
+            android:id="@+id/introCardContainer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="-10dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_intro_card_v2"
+            android:elevation="5dp"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="26dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/introHeroContainer"
+            app:layout_constraintBottom_toTopOf="@id/introGreetingButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+                android:id="@+id/introGreetingTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#17392E"
+                android:textSize="25sp"
+                android:textStyle="bold" />
+
+        <View
+                android:layout_width="54dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_onboarding_progress_active" />
+
+        <TextView
+                android:id="@+id/introGreetingDescOneText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/intro_greeting_desc_1"
+                android:textColor="#5E6163"
+                android:textSize="16sp" />
+
+        <TextView
+                android:id="@+id/introGreetingDescTwoText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:lineSpacingExtra="4dp"
+                android:text="@string/intro_greeting_desc_2"
+                android:textColor="#5E6163"
+                android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <!-- Start button -->
+    <LinearLayout
+            android:id="@+id/introGreetingButton"
+            android:layout_width="0dp"
+            android:layout_height="66dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_intro_start_button"
+            android:clickable="true"
+            android:elevation="8dp"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="18dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+        <FrameLayout
+                android:layout_width="54dp"
+                android:layout_height="54dp"
+                android:background="@drawable/bg_fitto_circle_white">
+
+            <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_leaf"
+                    app:tint="@color/fitto_green" />
+
+        </FrameLayout>
+
+        <TextView
+                android:id="@+id/introGreetingButtonText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/intro_greeting_button"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+        <ImageView
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/white" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

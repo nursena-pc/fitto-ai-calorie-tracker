@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/fitto_background_light">
+
+    <androidx.core.widget.NestedScrollView
+            android:id="@+id/addExerciseScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:fillViewport="true"
+            android:paddingBottom="112dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="20dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="132dp">
+
+            <!-- Üst bar -->
+            <LinearLayout
+                    android:id="@+id/exerciseTopBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <ImageButton
+                        android:id="@+id/backButton"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/common_back"
+                        android:padding="9dp"
+                        android:src="@drawable/ic_arrow_back"
+                        app:tint="@color/fitto_text_dark" />
+
+                <Space
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+            </LinearLayout>
+
+            <!-- Hero -->
+            <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="188dp"
+                    android:layout_marginTop="2dp"
+                    android:clipToPadding="false">
+
+                <LinearLayout
+                        android:layout_width="250dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/exercise_add_title"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="28sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/exercise_add_subtitle"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="15sp" />
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:lineSpacingExtra="2dp"
+                            android:text="@string/exercise_add_motivation_title"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:lineSpacingExtra="3dp"
+                            android:maxLines="3"
+                            android:text="@string/exercise_add_motivation_body"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+                </LinearLayout>
+
+                <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="144dp"
+                        android:layout_gravity="end|top"
+                        android:layout_marginTop="25dp"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/sporcu_mascot" />
+            </FrameLayout>
+
+            <!-- Ana kategoriler -->
+            <HorizontalScrollView
+                    android:id="@+id/categoryScrollView"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="8dp"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/categoryToggleGroup"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:paddingEnd="8dp"
+                        app:checkedChip="@id/cardioCategoryButton"
+                        app:selectionRequired="true"
+                        app:singleLine="true"
+                        app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                            android:id="@+id/cardioCategoryButton"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            android:checkable="true"
+                            android:checked="true"
+                            android:minWidth="96dp"
+                            android:text="@string/exercise_category_cardio"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:chipBackgroundColor="@color/fitto_primary_soft"
+                            app:chipCornerRadius="18dp"
+                            app:chipStrokeColor="@color/fitto_green"
+                            app:chipStrokeWidth="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                            android:id="@+id/strengthCategoryButton"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            android:checkable="true"
+                            android:minWidth="96dp"
+                            android:text="@string/exercise_category_strength"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:chipBackgroundColor="@color/fitto_surface"
+                            app:chipCornerRadius="18dp"
+                            app:chipStrokeColor="@color/fitto_divider_soft"
+                            app:chipStrokeWidth="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                            android:id="@+id/stretchingCategoryButton"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:layout_marginEnd="8dp"
+                            android:checkable="true"
+                            android:minWidth="104dp"
+                            android:text="@string/exercise_category_stretching"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:chipBackgroundColor="@color/fitto_surface"
+                            app:chipCornerRadius="18dp"
+                            app:chipStrokeColor="@color/fitto_divider_soft"
+                            app:chipStrokeWidth="1dp" />
+
+                    <com.google.android.material.chip.Chip
+                            android:id="@+id/lifestyleCategoryButton"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="42dp"
+                            android:checkable="true"
+                            android:minWidth="122dp"
+                            android:text="@string/exercise_category_lifestyle"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            app:chipBackgroundColor="@color/fitto_surface"
+                            app:chipCornerRadius="18dp"
+                            app:chipStrokeColor="@color/fitto_divider_soft"
+                            app:chipStrokeWidth="1dp" />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+            <!-- Arama -->
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/exerciseSearchLayout"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="10dp"
+                        android:layout_weight="1"
+                        android:hint="@string/exercise_search_hint"
+                        app:boxBackgroundColor="@color/fitto_surface"
+                        app:boxCornerRadiusBottomEnd="18dp"
+                        app:boxCornerRadiusBottomStart="18dp"
+                        app:boxCornerRadiusTopEnd="18dp"
+                        app:boxCornerRadiusTopStart="18dp"
+                        app:startIconDrawable="@drawable/ic_search"
+                        app:startIconTint="@color/fitto_text_secondary">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/exerciseSearchInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:singleLine="true"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <ImageButton
+                        android:id="@+id/filterButton"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:background="@drawable/bg_fitto_chip"
+                        android:contentDescription="@string/exercise_filter"
+                        android:padding="14dp"
+                        android:src="@drawable/ic_filter_list"
+                        app:tint="@color/fitto_text_dark" />
+            </LinearLayout>
+            <TextView
+                    android:id="@+id/userWeightChipText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_fitto_chip"
+                    android:paddingStart="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="7dp"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="Kilo: 70 kg" />
+
+            <TextView
+                    android:id="@+id/exerciseWeightEstimateNoteText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:text="@string/exercise_weight_estimate_note"
+                    android:textColor="@color/fitto_text_secondary"
+                    android:textSize="12sp" />
+            <!-- Aktivite listesi -->
+            <FrameLayout
+                    android:id="@+id/activitiesFrame"
+                    android:layout_width="match_parent"
+                    android:layout_height="500dp"
+                    android:layout_marginTop="14dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/activitiesRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:clipToPadding="false"
+                        android:nestedScrollingEnabled="true"
+                        android:overScrollMode="never"
+                        android:paddingBottom="8dp"
+                        tools:listitem="@layout/item_exercise_activity" />
+
+                <TextView
+                        android:id="@+id/exerciseEmptyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="@string/exercise_empty"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- Seçim paneli -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/selectedExerciseCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_green"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:id="@+id/selectedExerciseIconText"
+                                android:layout_width="50dp"
+                                android:layout_height="50dp"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:gravity="center"
+                                android:text="🚶"
+                                android:textSize="26sp" />
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:id="@+id/selectedExerciseTitleText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:maxLines="2"
+                                    android:textSize="15sp"
+                                    android:text="@string/exercise_walking_title"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textStyle="bold" />
+
+                            <TextView
+                                    android:id="@+id/selectedExerciseDescText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:ellipsize="end"
+                                    android:maxLines="2"
+                                    android:text="@string/exercise_walking_desc"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Süre kontrolü geniş alanda -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:layout_marginTop="14dp"
+                            android:background="@drawable/bg_daily_meal_recommendation"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp">
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/exercise_duration"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/durationText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="19sp"
+                                    android:textStyle="bold"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    tools:text="30 dk" />
+                        </LinearLayout>
+
+                        <ImageButton
+                                android:id="@+id/decreaseDurationButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:contentDescription="@string/create_diet_plan_minus"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_remove"
+                                app:tint="@color/fitto_green" />
+
+                        <ImageButton
+                                android:id="@+id/increaseDurationButton"
+                                android:layout_width="38dp"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="10dp"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:contentDescription="@string/create_diet_plan_plus"
+                                android:padding="10dp"
+                                android:src="@drawable/ic_add"
+                                app:tint="@color/fitto_green" />
+                    </LinearLayout>
+
+                    <!-- Yoğunluk ve kalori iki ayrı okunaklı kutuda -->
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="72dp"
+                            android:layout_marginTop="10dp"
+                            android:orientation="horizontal">
+
+                        <LinearLayout
+                                android:id="@+id/intensityContainer"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_marginEnd="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_daily_meal_recommendation"
+                                android:clickable="true"
+                                android:focusable="true"
+                                android:gravity="center_vertical"
+                                android:orientation="vertical"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/exercise_intensity"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/intensityText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="@string/exercise_intensity_moderate"
+                                    android:textColor="@color/fitto_text_dark"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_daily_meal_recommendation"
+                                android:gravity="center_vertical"
+                                android:orientation="vertical"
+                                android:paddingStart="14dp"
+                                android:paddingEnd="14dp">
+
+                            <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/exercise_estimated_kcal"
+                                    android:textColor="@color/fitto_text_secondary"
+                                    android:textSize="12sp" />
+
+                            <TextView
+                                    android:id="@+id/estimatedKcalText"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:textColor="@color/fitto_orange"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold"
+                                    tools:text="151 kcal" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+            <!-- Bugünün eklenen aktiviteleri -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/todayExerciseLogsCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    app:cardBackgroundColor="@color/fitto_surface"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_divider_soft"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                    <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                        <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/exercise_today_logs_title"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                        <TextView
+                                android:id="@+id/todayExerciseSummaryText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/bg_fitto_chip"
+                                android:paddingStart="10dp"
+                                android:paddingTop="5dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="5dp"
+                                android:textColor="@color/fitto_green"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                tools:text="2 aktivite • 45 dk • 220 kcal" />
+                    </LinearLayout>
+
+                    <TextView
+                            android:id="@+id/todayExerciseEmptyText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:gravity="center"
+                            android:paddingTop="12dp"
+                            android:paddingBottom="12dp"
+                            android:text="@string/exercise_today_logs_empty"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="13sp" />
+
+                    <LinearLayout
+                            android:id="@+id/todayExerciseLogsContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Alt bar -->
+    <LinearLayout
+            android:id="@+id/exerciseBottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_gravity="bottom"
+            android:background="@color/fitto_surface"
+            android:elevation="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/exercise_cancel"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/fitto_green" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/addExerciseButton"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1.55"
+                android:backgroundTint="@color/fitto_green"
+                android:text="@string/exercise_add_button"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/ic_add"
+                app:iconGravity="textEnd"
+                app:iconTint="@color/white" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/postCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:backgroundTint="@color/fitto_surface"
+        app:cardBackgroundColor="@color/fitto_surface"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="6dp"
+        app:strokeColor="@color/fitto_divider_soft"
+        app:strokeWidth="0dp">
+
+    <LinearLayout
+            android:id="@+id/postContentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/fitto_surface"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+        <LinearLayout
+                android:id="@+id/postHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <FrameLayout
+                    android:id="@+id/avatarContainer"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:background="@drawable/bg_circle_primary_soft">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/avatarImage"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Fitto.Circle" />
+
+                <TextView
+                        android:id="@+id/avatarInitialText"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+            </FrameLayout>
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:id="@+id/userNameText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/timeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="13sp" />
+            </LinearLayout>
+
+            <FrameLayout
+                    android:id="@+id/moreButtonContainer"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:foreground="?attr/selectableItemBackgroundBorderless">
+
+                <ImageButton
+                        android:id="@+id/moreButton"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:background="@android:color/transparent"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_more_horiz"
+                        app:tint="@color/fitto_text_dark" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <TextView
+                android:id="@+id/contentText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:ellipsize="end"
+                android:maxLines="5"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="16sp"
+                android:lineSpacingExtra="2dp"
+                android:visibility="gone" />
+
+        <TextView
+                android:id="@+id/contentMoreText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Daha fazla gör"
+                android:textColor="@color/fitto_green"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+        <FrameLayout
+                android:id="@+id/postImageContainer"
+                android:layout_width="match_parent"
+                android:layout_height="320dp"
+                android:layout_marginTop="16dp"
+                android:background="@color/fitto_surface"
+                android:visibility="gone">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/postImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/ShapeAppearance.Fitto.PostImage" />
+
+            <TextView
+                    android:id="@+id/imageCalorieBadgeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="12dp"
+                    android:background="@drawable/bg_calorie_badge"
+                    android:paddingStart="12dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="8dp"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+        </FrameLayout>
+
+        <LinearLayout
+                android:id="@+id/postMetaContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="vertical">
+
+            <LinearLayout
+                    android:id="@+id/postMealAndCalorieRow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="start|center_vertical"
+                    android:orientation="horizontal">
+
+                <TextView
+                        android:id="@+id/standaloneCalorieBadgeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_calorie_badge"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                <TextView
+                        android:id="@+id/mealInfoText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_chip_meal"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+            </LinearLayout>
+
+            <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/postTagsChipGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:singleLine="false"
+                    app:chipSpacingHorizontal="8dp"
+                    app:chipSpacingVertical="8dp" />
+
+        </LinearLayout>
+
+
+
+        <com.google.android.material.card.MaterialCardView
+                android:id="@+id/recipePreviewCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:visibility="gone"
+                app:cardBackgroundColor="@color/fitto_surface"
+                app:cardCornerRadius="22dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/fitto_primary_soft"
+                app:strokeWidth="1dp">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/recipePreviewImage"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:scaleType="centerCrop"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearance.Fitto.PostImage" />
+
+                <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                    <TextView
+                            android:id="@+id/recipePreviewBadgeText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_recipe_category_badge"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="5dp"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/recipePreviewTitleText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="7dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/fitto_text_dark"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                    <TextView
+                            android:id="@+id/recipePreviewMetaText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/fitto_text_secondary"
+                            android:textSize="12sp" />
+                </LinearLayout>
+
+                <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="6dp"
+                        android:contentDescription="@string/recipe_post_card_open"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/fitto_green" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+                android:id="@+id/actionPanelCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardBackgroundColor="@color/fitto_primary_soft"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+            <LinearLayout
+                    android:id="@+id/actionPanel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="10dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/likeButton"
+                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="0"
+                        app:icon="@drawable/ic_favorite_border" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/commentButton"
+                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="0"
+                        app:icon="@drawable/ic_comment" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/shareButton"
+                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        app:icon="@drawable/ic_share" />
+
+                <com.google.android.material.button.MaterialButton
+                        android:id="@+id/saveButton"
+                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        app:icon="@drawable/ic_bookmark_border" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

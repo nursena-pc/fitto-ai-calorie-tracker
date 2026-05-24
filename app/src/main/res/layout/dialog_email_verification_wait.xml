@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/fitto_surface"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="22dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="18dp">
+
+    <TextView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_number_picker_icon"
+            android:gravity="center"
+            android:text="✉️"
+            android:textSize="25sp" />
+
+    <TextView
+            android:id="@+id/verificationTitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/register_verify_email_title"
+            android:textColor="@color/fitto_text_dark"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+    <TextView
+            android:id="@+id/verificationMessageText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:lineSpacingExtra="2dp"
+            android:text="@string/register_verify_email_message_auto"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="14sp" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_number_picker_input"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/verificationProgress"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:indeterminate="true"
+                app:indicatorColor="@color/fitto_green"
+                app:trackColor="@color/fitto_primary_soft"
+                app:trackThickness="4dp" />
+
+        <TextView
+                android:id="@+id/verificationStatusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="@string/register_verify_email_checking"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/verificationResendButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="@string/register_verify_email_resend"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textStyle="bold"
+                app:cornerRadius="18dp"
+                app:strokeColor="@color/fitto_green" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/verificationCloseButton"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/common_cancel"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="18dp" />
+    </LinearLayout>
+</LinearLayout>

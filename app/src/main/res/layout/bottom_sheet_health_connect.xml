@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/fitto_surface"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="24dp">
+
+    <com.google.android.material.bottomsheet.BottomSheetDragHandleView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    <TextView
+            android:id="@+id/healthConnectIconText"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_fitto_chip"
+            android:gravity="center"
+            android:text="🏃"
+            android:textSize="28sp" />
+
+    <TextView
+            android:id="@+id/healthConnectTitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:text="@string/health_connect_title"
+            android:textColor="@color/fitto_text_dark"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+    <TextView
+            android:id="@+id/healthConnectSubtitleText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/health_connect_subtitle"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="14sp" />
+
+    <TextView
+            android:id="@+id/healthConnectStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/bg_fitto_chip"
+            android:gravity="center"
+            android:padding="14dp"
+            android:textColor="@color/fitto_green"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="Bağlantı hazır" />
+
+    <TextView
+            android:id="@+id/healthConnectNoteText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/health_connect_info_note"
+            android:textColor="@color/fitto_text_secondary"
+            android:textSize="12sp" />
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/connectHealthButton"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/fitto_green"
+            android:text="@string/health_connect_connect"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:cornerRadius="18dp" />
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/laterButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/health_connect_later"
+            android:textAllCaps="false"
+            android:textColor="@color/fitto_green"
+            app:cornerRadius="18dp"
+            app:strokeColor="@color/fitto_green" />
+</LinearLayout>

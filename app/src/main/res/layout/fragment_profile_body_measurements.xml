@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/profile_screen_background">
+
+    <com.example.fitto.feature_home.presentation.profile.view.FittoBottomDecorationView
+            android:id="@+id/fittoBottomDecorationMeasurements"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_gravity="bottom" />
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbarBodyMeasurements"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:background="@android:color/transparent"
+                android:paddingStart="8dp"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:title="@string/profile_body_measurements_title"
+                app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                app:titleTextColor="@color/profile_text" />
+
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+            <androidx.core.widget.NestedScrollView
+                    android:id="@+id/scrollMainMeasurements"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="130dp">
+
+                <LinearLayout
+                        android:id="@+id/layoutMainMeasurementsContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="4dp">
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardBodyMeasurementsDiagram"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="4dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="28dp"
+                            app:cardElevation="2dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical">
+
+                            <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:paddingHorizontal="18dp"
+                                    android:paddingTop="14dp"
+                                    android:paddingBottom="2dp">
+
+                                <TextView
+                                        android:id="@+id/textBodyMeasurementsMode"
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="12sp"
+                                        android:visibility="invisible" />
+
+                                <TextView
+                                        android:id="@+id/textBodyMeasurementsLastUpdate"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:text="@string/profile_body_measurements_last_update_compact_empty"
+                                        android:textColor="@color/profile_subtext"
+                                        android:textSize="10sp" />
+                            </LinearLayout>
+
+                            <FrameLayout
+                                    android:id="@+id/frameBodyMeasurementsDiagram"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="318dp"
+                                    android:clipChildren="false"
+                                    android:clipToPadding="false">
+
+                                <com.example.fitto.feature_home.presentation.profile.view.BodyMeasurementsDiagramView
+                                        android:id="@+id/bodyMeasurementsDiagramView"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:paddingStart="8dp"
+                                        android:paddingTop="0dp"
+                                        android:paddingEnd="8dp"
+                                        android:paddingBottom="2dp" />
+                            </FrameLayout>
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/buttonSaveBodyMeasurements"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="52dp"
+                                    android:layout_marginHorizontal="18dp"
+                                    android:layout_marginTop="4dp"
+                                    android:layout_marginBottom="14dp"
+                                    android:text="@string/profile_body_measurements_save_snapshot"
+                                    android:textAllCaps="false"
+                                    android:textStyle="bold"
+                                    app:backgroundTint="@color/fitto_green"
+                                    app:cornerRadius="18dp"
+                                    app:icon="@drawable/ic_swipe_edit"
+                                    app:iconGravity="textStart"
+                                    app:iconPadding="8dp"
+                                    app:iconTint="@android:color/white" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/buttonReturnCurrentMeasurements"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="52dp"
+                                    android:layout_marginHorizontal="18dp"
+                                    android:layout_marginTop="-4dp"
+                                    android:layout_marginBottom="14dp"
+                                    android:text="@string/profile_body_measurements_return_current"
+                                    android:textAllCaps="false"
+                                    android:textStyle="bold"
+                                    android:visibility="gone"
+                                    app:cornerRadius="18dp"
+                                    app:icon="@drawable/ic_history"
+                                    app:iconPadding="8dp" />
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                            android:id="@+id/textMeasurementsChartTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="22dp"
+                            android:layout_marginTop="22dp"
+                            android:text="@string/profile_body_measurements_chart_title"
+                            android:textColor="@color/profile_text"
+                            android:textSize="21sp"
+                            android:textStyle="bold" />
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/cardMeasurementFilters"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="10dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="24dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="14dp">
+
+                            <LinearLayout
+                                    android:id="@+id/layoutChartPickerHeader"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_body_measurements_soft_card"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:paddingHorizontal="14dp">
+
+                                <TextView
+                                        android:layout_width="0dp"
+                                        android:layout_height="wrap_content"
+                                        android:layout_weight="1"
+                                        android:text="@string/profile_body_measurements_chart_filter_title"
+                                        android:textColor="@color/profile_text"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold" />
+
+                                <TextView
+                                        android:id="@+id/textSelectedChartField"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="10dp"
+                                        android:textColor="@color/fitto_green"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold" />
+
+                                <ImageView
+                                        android:id="@+id/imageChartPickerArrow"
+                                        android:layout_width="24dp"
+                                        android:layout_height="24dp"
+                                        android:layout_marginStart="8dp"
+                                        android:src="@drawable/ic_keyboard_arrow_down"
+                                        app:tint="@color/profile_subtext" />
+                            </LinearLayout>
+
+                            <GridLayout
+                                    android:id="@+id/gridMeasurementFilters"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:columnCount="2"
+                                    android:rowCount="5"
+                                    android:visibility="gone" />
+
+                            <LinearLayout
+                                    android:id="@+id/layoutChartRangeFilters"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="12dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="12dp"
+                            app:cardBackgroundColor="@color/profile_card_background"
+                            app:cardCornerRadius="24dp"
+                            app:cardElevation="1dp"
+                            app:strokeColor="@color/profile_stroke"
+                            app:strokeWidth="1dp">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:paddingBottom="12dp">
+
+                            <com.example.fitto.feature_home.presentation.profile.view.BodyMeasurementsTrendChartView
+                                    android:id="@+id/bodyMeasurementsTrendChartView"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="214dp"
+                                    android:padding="16dp" />
+
+                            <LinearLayout
+                                    android:id="@+id/layoutChartSummary"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="14dp"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
+                                    android:visibility="gone">
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginEnd="6dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_first_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textChartFirstValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/profile_text"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginHorizontal="3dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_last_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textChartLastValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/fitto_green"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+
+                                <com.google.android.material.card.MaterialCardView
+                                        android:layout_width="0dp"
+                                        android:layout_height="74dp"
+                                        android:layout_marginStart="6dp"
+                                        android:layout_weight="1"
+                                        app:cardBackgroundColor="@color/profile_screen_background"
+                                        app:cardCornerRadius="18dp"
+                                        app:cardElevation="0dp"
+                                        app:strokeColor="@color/profile_stroke"
+                                        app:strokeWidth="1dp">
+
+                                    <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:gravity="center"
+                                            android:orientation="vertical"
+                                            android:paddingHorizontal="8dp">
+
+                                        <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="@string/profile_body_measurements_chart_summary_change_label"
+                                                android:textColor="@color/profile_subtext"
+                                                android:textSize="10.5sp"
+                                                android:textStyle="bold" />
+
+                                        <TextView
+                                                android:id="@+id/textChartChangeValue"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_marginTop="5dp"
+                                                android:textColor="@color/fitto_green"
+                                                android:textSize="14sp"
+                                                android:textStyle="bold" />
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+                            </LinearLayout>                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+            <androidx.core.widget.NestedScrollView
+                    android:id="@+id/scrollMeasurementsHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:paddingBottom="130dp"
+                    android:visibility="gone">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="6dp">
+
+                    <LinearLayout
+                            android:id="@+id/layoutMeasurementsHistory"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="16dp"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+
+        </FrameLayout>
+    </LinearLayout>
+</FrameLayout>
