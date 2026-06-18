@@ -6,11 +6,11 @@ import com.example.fitto.data.local.entity.FoodEntity
 import com.example.fitto.data.local.session.UserSessionDataGuard
 import kotlinx.coroutines.flow.Flow
 import com.example.fitto.data.local.entity.FavoriteFoodEntity
-import java.util.UUID
 import com.example.fitto.data.remote.usda.UsdaFoodDataCentralClient
 import com.example.fitto.data.remote.usda.UsdaFoodTranslationDictionary
 import com.example.fitto.BuildConfig
 import com.example.fitto.data.remote.logmeal.LogMealFoodCandidate
+import java.util.UUID
 
 class FoodRepository(context: Context) {
 
@@ -18,7 +18,7 @@ class FoodRepository(context: Context) {
     private val usdaClient = UsdaFoodDataCentralClient(BuildConfig.USDA_API_KEY)
     private val database = FittoDatabaseProvider.getDatabase(appContext)
     private val mealDao = database.mealDao()
-    private val foodDao = FittoDatabaseProvider.getDatabase(appContext).foodDao()
+    private val foodDao = database.foodDao()
     private val favoriteFoodDao = database.favoriteFoodDao()
 
     private fun currentUserId(): String {
@@ -32,10 +32,11 @@ class FoodRepository(context: Context) {
     }
 
     suspend fun getFavoriteFoods(limit: Int = 50): List<FoodEntity> {
-        val favoriteIds = favoriteFoodDao.getFavoriteFoodIds(currentUserId(), limit)
+        val userId = currentUserId()
+        val favoriteIds = favoriteFoodDao.getFavoriteFoodIds(userId, limit)
         if (favoriteIds.isEmpty()) return emptyList()
 
-        val foods = foodDao.getFoodsByIds(currentUserId(), favoriteIds)
+        val foods = foodDao.getFoodsByIds(userId, favoriteIds)
         val foodsById = foods.associateBy { it.id }
 
         return favoriteIds.mapNotNull { foodId ->
@@ -58,7 +59,7 @@ class FoodRepository(context: Context) {
         val userId = currentUserId()
 
         val food = FoodEntity(
-            id = "logmeal_${now}_${java.util.UUID.randomUUID()}",
+            id = "logmeal_${now}_${UUID.randomUUID()}",
             nameTr = candidate.name.trim().ifBlank { "Kamera ile tanınan besin" },
             nameEn = candidate.name.trim().ifBlank { "Camera recognized food" },
             category = "camera_food",
@@ -113,14 +114,16 @@ class FoodRepository(context: Context) {
         limit: Int = 40
     ): List<FoodEntity> {
         val trimmedQuery = query.trim()
-        return if (trimmedQuery.isBlank()) {
-            if (mealType.isNullOrBlank()) {
-                foodDao.searchFoods(userId = currentUserId(), query = "", limit = limit)
-            } else {
-                foodDao.getFoodsByMealType(userId = currentUserId(), mealType = mealType, limit = limit)
-            }
+        val userId = currentUserId()
+
+        if (trimmedQuery.isNotBlank()) {
+            return foodDao.searchFoods(userId = userId, query = trimmedQuery, limit = limit)
+        }
+
+        return if (mealType.isNullOrBlank()) {
+            foodDao.searchFoods(userId = userId, query = "", limit = limit)
         } else {
-            foodDao.searchFoods(userId = currentUserId(), query = trimmedQuery, limit = limit)
+            foodDao.getFoodsByMealType(userId = userId, mealType = mealType, limit = limit)
         }
     }
     suspend fun createCustomFood(
@@ -164,10 +167,11 @@ class FoodRepository(context: Context) {
         return food
     }
     suspend fun getRecentFoods(limit: Int = 12): List<FoodEntity> {
-        val recentFoodIds = mealDao.getRecentFoodIds(currentUserId(), limit)
+        val userId = currentUserId()
+        val recentFoodIds = mealDao.getRecentFoodIds(userId, limit)
         if (recentFoodIds.isEmpty()) return emptyList()
 
-        val foods = foodDao.getFoodsByIds(currentUserId(), recentFoodIds)
+        val foods = foodDao.getFoodsByIds(userId, recentFoodIds)
         val foodsById = foods.associateBy { it.id }
 
         return recentFoodIds.mapNotNull { foodId ->

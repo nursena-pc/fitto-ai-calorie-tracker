@@ -2,48 +2,30 @@ package com.example.fitto.feature_home.presentation
 
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.View
-import android.widget.FrameLayout
-import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
-import com.example.fitto.databinding.FragmentHomeBinding
 import com.example.fitto.data.local.repository.ProfileCacheRepository
-import com.example.fitto.feature_dietplans.DietPlanFilterFragment
-import com.example.fitto.feature_dietplans.DietPlanSearchFragment
-import com.example.fitto.feature_dietplans.DietPlansFragment
-import com.example.fitto.feature_dietplans.IntermittentFastingDetailFragment
-import com.example.fitto.feature_exercise.AddExerciseFragment
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.example.fitto.databinding.FragmentHomeBinding
 import com.example.fitto.feature_daily.DailyFragment
 import com.example.fitto.feature_home.presentation.profile.PendingHomeRestore
+import com.example.fitto.feature_home.presentation.profile.ProfileBodyMeasurementsFragment
 import com.example.fitto.feature_home.presentation.profile.ProfileDetailFragment
 import com.example.fitto.feature_home.presentation.profile.ProfileFragment
 import com.example.fitto.feature_home.presentation.profile.ProfileMenuId
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.example.fitto.feature_home.presentation.profile.ProfileScreenNavigator
-import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
 import com.example.fitto.feature_home.presentation.profile.ProfileWeightFragment
+import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
 import com.example.fitto.feature_home.presentation.social.SocialFragment
-import com.example.fitto.feature_dietplans.CreateDietPlanFragment
-import com.example.fitto.feature_dietplans.DietPlanDetailFragment
-import com.example.fitto.feature_home.presentation.profile.ProfileBodyMeasurementsFragment
-import com.example.fitto.feature_meal.AddMealFragment
-import com.example.fitto.feature_recipes.RecipesFragment
-import com.example.fitto.feature_recipes.RecipeDetailFragment
-import com.example.fitto.feature_recipes.RecipeAddFragment
-import com.example.fitto.feature_recipes.MyRecipesFragment
-import com.example.fitto.feature_recipes.FridgeInventoryFragment
-import com.example.fitto.feature_recipes.SavedRecipesFragment
-import com.example.fitto.feature_recipes.ShoppingListFragment
-import com.example.fitto.feature_recipes.RecipeCookingModeFragment
 import com.example.fitto.feature_reports.ReportsFragment
+import com.example.fitto.feature_recipes.RecipesFragment
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
 
     private var _binding: FragmentHomeBinding? = null
@@ -92,25 +74,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
 
             true
         }
-        binding.bottomNavigation.visibility = when (currentVisibleHomeFragment()) {
-            is CreateDietPlanFragment,
-            is DietPlanDetailFragment,
-            is DietPlansFragment,
-            is DietPlanSearchFragment,
-            is DietPlanFilterFragment,
-            is IntermittentFastingDetailFragment,
-            is AddMealFragment,
-            is AddExerciseFragment,
-            is RecipeDetailFragment,
-            is RecipeAddFragment,
-            is RecipeCookingModeFragment,
-            is FridgeInventoryFragment,
-            is SavedRecipesFragment,
-            is ShoppingListFragment,
-            is MyRecipesFragment -> View.GONE
-
-            else -> View.VISIBLE
-        }
+        updateBottomBarVisibility()
 
         binding.bottomNavigation.setOnItemReselectedListener {
             // Aynı sekmeye tekrar basınca fragment yeniden kurulmasın.
@@ -390,32 +354,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
         return targetFragment
     }
 
-    private fun showPlaceholder(title: String) {
-        hideVisibleHomeFragments()
-        removePlaceholderViews()
-
-        val textView = TextView(requireContext()).apply {
-            tag = TAG_PLACEHOLDER_VIEW
-            text = title
-            textSize = 24f
-            gravity = Gravity.CENTER
-            setTextColor(
-                ContextCompat.getColor(
-                    requireContext(),
-                    R.color.fitto_text_dark
-                )
-            )
-        }
-
-        binding.homeTabContainer.addView(
-            textView,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-        )
-    }
-
     private fun restoreProfileScreenIfNeeded(restore: PendingHomeRestore?) {
         if (restore?.tabId != R.id.nav_profile) {
             return
@@ -565,30 +503,12 @@ class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
     }
 
     private fun updateBottomBarVisibility() {
-        val currentFragment = currentVisibleHomeFragment()
-
-        binding.bottomNavigation.visibility = when (currentFragment) {
-            is ProfileDetailFragment,
-            is ProfileWeightFragment,
-            is ProfileBodyMeasurementsFragment,
-            is CreateDietPlanFragment,
-            is DietPlanDetailFragment,
-            is DietPlansFragment,
-            is DietPlanSearchFragment,
-            is DietPlanFilterFragment,
-            is IntermittentFastingDetailFragment,
-            is AddMealFragment,
-            is AddExerciseFragment,
-            is RecipeDetailFragment,
-            is RecipeAddFragment,
-            is RecipeCookingModeFragment,
-            is FridgeInventoryFragment,
-            is SavedRecipesFragment,
-            is ShoppingListFragment,
-            is MyRecipesFragment -> View.GONE
-
-            else -> View.VISIBLE
-        }
+        binding.bottomNavigation.visibility =
+            if (HomeBottomBarVisibilityPolicy.shouldHideFor(currentVisibleHomeFragment())) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
     }
 
     private fun removePlaceholderViews() {
