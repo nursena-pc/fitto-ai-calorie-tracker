@@ -257,19 +257,16 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun renderDailyAiDefaultState() = with(binding) {
-        applyDailyAiStatusStyle(AiDailyStatusLevel.GREEN)
-        dailyAiProgressIndicator.isVisible = false
-        dailyAiTitleText.text = getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = getString(R.string.daily_ai_default_message)
-        dailyAiSubtitleText.text = getString(R.string.daily_ai_default_subtitle)
+    private fun dailyAiCardRenderer(): DailyAiCardRenderer {
+        return DailyAiCardRenderer(binding, requireContext())
     }
 
-    private fun renderDailyAiPreparingState() = with(binding) {
-        dailyAiProgressIndicator.isVisible = true
-        dailyAiTitleText.text = getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = getString(R.string.daily_ai_preparing)
-        dailyAiSubtitleText.text = getString(R.string.daily_ai_default_subtitle)
+    private fun renderDailyAiDefaultState() {
+        dailyAiCardRenderer().renderDefaultState()
+    }
+
+    private fun renderDailyAiPreparingState() {
+        dailyAiCardRenderer().renderPreparingState()
     }
 
     private fun renderDailyAiState(snapshot: DailyAiSnapshot?) {
@@ -321,25 +318,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun renderDailyAiLoading() = with(binding) {
+    private fun renderDailyAiLoading() {
         val status = currentDailyAiSnapshot?.localStatus() ?: AiDailyStatusLevel.GREEN
-        applyDailyAiStatusStyle(status)
-        dailyAiProgressIndicator.isVisible = true
-        dailyAiTitleText.text = getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = getString(R.string.daily_ai_loading)
-        dailyAiSubtitleText.text = getString(R.string.daily_ai_default_subtitle)
+        dailyAiCardRenderer().renderLoading(status)
     }
 
     private fun renderDailyAiMessage(
         message: String,
         subtitle: String = getString(R.string.daily_ai_default_subtitle),
         status: AiDailyStatusLevel = currentDailyAiSnapshot?.localStatus() ?: AiDailyStatusLevel.GREEN
-    ) = with(binding) {
-        applyDailyAiStatusStyle(status)
-        dailyAiProgressIndicator.isVisible = false
-        dailyAiTitleText.text = getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = message
-        dailyAiSubtitleText.text = subtitle
+    ) {
+        dailyAiCardRenderer().renderMessage(
+            message = message,
+            subtitle = subtitle,
+            status = status
+        )
     }
 
     private fun renderDailyAiStructuredResult(
@@ -347,104 +340,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         snapshot: DailyAiSnapshot,
         subtitle: String = getString(R.string.daily_ai_result_subtitle)
     ) {
-        val status = snapshot.localStatus()
-        val message = buildDailyAiStructuredMessage(
-            mealComments = analysis.mealComments,
-            waterComment = analysis.waterComment,
-            exerciseComment = analysis.exerciseComment,
-            generalComment = analysis.generalComment,
-            suggestion = analysis.suggestion,
-            plainText = analysis.plainText
-        ).ifBlank { localDailyAiMessage(snapshot) }
-
-        renderDailyAiMessage(
-            message = message,
+        dailyAiCardRenderer().renderStructuredResult(
+            analysis = analysis,
+            fallbackMessage = localDailyAiMessage(snapshot),
             subtitle = subtitle,
-            status = status
+            status = snapshot.localStatus()
         )
-    }
-
-    private fun buildDailyAiStructuredMessage(
-        mealComments: List<com.example.fitto.feature_daily.ai.AiDailyMealComment>,
-        waterComment: String,
-        exerciseComment: String,
-        generalComment: String,
-        suggestion: String,
-        plainText: String? = null
-    ): String {
-        plainText
-            ?.trim()
-            ?.takeIf { it.isNotBlank() }
-            ?.let { return it }
-
-        val builder = StringBuilder()
-
-        val usefulMealComments = mealComments.filter { it.comment.isNotBlank() }
-        if (usefulMealComments.isNotEmpty()) {
-            builder.append(getString(R.string.daily_ai_meal_comments_label)).append('\n')
-            usefulMealComments.forEach { meal ->
-                val name = meal.mealName.trim().ifBlank { getString(R.string.daily_ai_entry_unknown) }
-                builder.append("• ")
-                    .append(name)
-                    .append(": ")
-                    .append(meal.comment.trim())
-                    .append('\n')
-            }
-        }
-
-        waterComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(getString(R.string.daily_ai_water_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        exerciseComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(getString(R.string.daily_ai_exercise_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        generalComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(getString(R.string.daily_ai_general_comment_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        suggestion.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(getString(R.string.daily_ai_suggestion_label)).append('\n')
-            builder.append(comment)
-        }
-
-        return builder.toString().trim()
-    }
-
-    private fun applyDailyAiStatusStyle(status: AiDailyStatusLevel) = with(binding) {
-        val bgColorRes: Int
-        val textColorRes: Int
-        when (status) {
-            AiDailyStatusLevel.GREEN -> {
-                bgColorRes = R.color.ai_status_green_bg
-                textColorRes = R.color.ai_status_green_text
-            }
-            AiDailyStatusLevel.YELLOW -> {
-                bgColorRes = R.color.ai_status_yellow_bg
-                textColorRes = R.color.ai_status_yellow_text
-            }
-            AiDailyStatusLevel.RED -> {
-                bgColorRes = R.color.ai_status_red_bg
-                textColorRes = R.color.ai_status_red_text
-            }
-        }
-
-        val bgColor = ContextCompat.getColor(requireContext(), bgColorRes)
-        val textColor = ContextCompat.getColor(requireContext(), textColorRes)
-        dailyAiCard.setCardBackgroundColor(bgColor)
-        dailyAiCard.strokeColor = textColor
-        dailyAiTitleText.setTextColor(textColor)
-        dailyAiMessageText.setTextColor(textColor)
-        dailyAiSubtitleText.setTextColor(textColor)
-        dailyAiProgressIndicator.setIndicatorColor(textColor)
     }
 
     private fun requestDailyAiAnalysis(
@@ -543,14 +444,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             result.onSuccess { analysis ->
                 Log.d(FITTO_AI_LOG_TAG, "Daily AI request succeeded. localStatus=${snapshot.localStatus().name}, aiStatus=${analysis.status.name}")
 
-                val message = buildDailyAiStructuredMessage(
-                    mealComments = analysis.mealComments,
-                    waterComment = analysis.waterComment,
-                    exerciseComment = analysis.exerciseComment,
-                    generalComment = analysis.generalComment,
-                    suggestion = analysis.suggestion,
-                    plainText = analysis.plainText
-                ).ifBlank { localDailyAiMessage(snapshot) }
+                val message = dailyAiCardRenderer()
+                    .buildStructuredMessage(analysis)
+                    .ifBlank { localDailyAiMessage(snapshot) }
 
                 dailyAiCache.save(
                     dateIso = snapshot.dateIso,
