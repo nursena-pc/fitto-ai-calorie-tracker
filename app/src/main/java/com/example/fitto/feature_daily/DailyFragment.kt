@@ -61,7 +61,6 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import com.example.fitto.feature_exercise.AddExerciseFragment
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
@@ -87,12 +86,10 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.TextStyle
 import com.example.fitto.feature_meal.CameraFoodEntryFragment
 import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
+
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private lateinit var healthConnectManager: HealthConnectManager
@@ -815,21 +812,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             .replace("-", "_")
     }
 
-    private fun calculateStepCalories(
-        steps: Long,
-        weightKg: Double
-    ): Int {
-        val kcalPerStep = when {
-            weightKg < 55 -> 0.032
-            weightKg < 70 -> 0.038
-            weightKg < 85 -> 0.044
-            else -> 0.050
-        }
-
-        return (steps * kcalPerStep).roundToInt().coerceAtLeast(0)
-    }
-
-        private fun showSleepTimeDialog() {
+    private fun showSleepTimeDialog() {
         val dialog = Dialog(requireContext())
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_sleep_time, null, false)
@@ -859,24 +842,24 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         var wakeMinute = currentLog?.wakeMinute ?: 0
 
         fun refreshPreview() {
-            bedtimeValueText.text = formatHourMinute(bedtimeHour, bedtimeMinute)
-            wakeTimeValueText.text = formatHourMinute(wakeHour, wakeMinute)
+            bedtimeValueText.text = DailyValueFormatter.formatHourMinute(bedtimeHour, bedtimeMinute)
+            wakeTimeValueText.text = DailyValueFormatter.formatHourMinute(wakeHour, wakeMinute)
 
-            val durationMinutes = calculateSleepDurationMinutes(
+            val durationMinutes = DailyMetricCalculator.calculateSleepDurationMinutes(
                 bedtimeHour = bedtimeHour,
                 bedtimeMinute = bedtimeMinute,
                 wakeHour = wakeHour,
                 wakeMinute = wakeMinute
             )
 
-            val calories = calculateSleepCalories(
+            val calories = DailyMetricCalculator.calculateSleepCalories(
                 durationMinutes = durationMinutes,
                 weightKg = currentWeightKg
             )
 
             durationResultText.text = getString(
                 R.string.sleep_duration_result,
-                formatDuration(durationMinutes)
+                DailyValueFormatter.formatDuration(durationMinutes)
             )
 
             caloriesResultText.text = getString(
@@ -914,14 +897,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
 
         saveButton.setOnClickListener {
-            val durationMinutes = calculateSleepDurationMinutes(
+            val durationMinutes = DailyMetricCalculator.calculateSleepDurationMinutes(
                 bedtimeHour = bedtimeHour,
                 bedtimeMinute = bedtimeMinute,
                 wakeHour = wakeHour,
                 wakeMinute = wakeMinute
             )
 
-            val calories = calculateSleepCalories(
+            val calories = DailyMetricCalculator.calculateSleepCalories(
                 durationMinutes = durationMinutes,
                 weightKg = currentWeightKg
             )
@@ -984,11 +967,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             return
         }
 
-        binding.sleepValueText.text = formatDuration(log.durationMinutes)
+        binding.sleepValueText.text = DailyValueFormatter.formatDuration(log.durationMinutes)
         binding.sleepStatusText.text = getString(
             R.string.sleep_time_range_format,
-            formatHourMinute(log.bedtimeHour, log.bedtimeMinute),
-            formatHourMinute(log.wakeHour, log.wakeMinute)
+            DailyValueFormatter.formatHourMinute(log.bedtimeHour, log.bedtimeMinute),
+            DailyValueFormatter.formatHourMinute(log.wakeHour, log.wakeMinute)
         )
     }
 
@@ -1109,54 +1092,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
         }
     }
-    private fun calculateSleepDurationMinutes(
-        bedtimeHour: Int,
-        bedtimeMinute: Int,
-        wakeHour: Int,
-        wakeMinute: Int
-    ): Int {
-        val today = LocalDate.now()
-        val bedtime = LocalDateTime.of(
-            today,
-            LocalTime.of(bedtimeHour, bedtimeMinute)
-        )
-
-        var wake = LocalDateTime.of(
-            today,
-            LocalTime.of(wakeHour, wakeMinute)
-        )
-
-        if (!wake.isAfter(bedtime)) {
-            wake = wake.plusDays(1)
-        }
-
-        return Duration.between(bedtime, wake).toMinutes().toInt().coerceAtLeast(0)
-    }
-
-    private fun calculateSleepCalories(
-        durationMinutes: Int,
-        weightKg: Double
-    ): Int {
-        val hours = durationMinutes / 60.0
-        val sleepMet = 0.95
-        return (sleepMet * weightKg * hours).roundToInt().coerceAtLeast(0)
-    }
-
-    private fun formatHourMinute(hour: Int, minute: Int): String {
-        return String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-    }
-
-    private fun formatDuration(durationMinutes: Int): String {
-        val hours = durationMinutes / 60
-        val minutes = durationMinutes % 60
-
-        return if (Locale.getDefault().language.equals("tr", ignoreCase = true)) {
-            "${hours}sa ${minutes}dk"
-        } else {
-            "${hours}h ${minutes}m"
-        }
-    }
-
     private fun renderSleepWeightSummary() {
         if (_binding == null) return
 
@@ -1170,19 +1105,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         } else {
             binding.weightValueText.text = getString(
                 R.string.daily_weight_value_format,
-                formatWeightValue(weightKg)
+                DailyValueFormatter.formatWeightValue(weightKg)
             )
             binding.weightStatusText.text = getString(R.string.daily_weight_from_profile)
         }
     }
 
-    private fun formatWeightValue(value: Double): String {
-        return if (value % 1.0 == 0.0) {
-            value.toInt().toString()
-        } else {
-            String.format(java.util.Locale.getDefault(), "%.1f", value)
-        }
-    }
     private fun loadWaterGoalAndRender() {
         viewLifecycleOwner.lifecycleScope.launch {
             val profile = withContext(Dispatchers.IO) {
@@ -1230,10 +1158,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun Int.roundUpToBottle(): Int {
-        val size = WaterTrackingStore.BOTTLE_SIZE_ML
-        return ((this + size - 1) / size) * size
-    }
     private fun resolveWaterGoalMl(profile: UserProfileEntity?): Int {
         val explicitGoal = listOf(
             "waterGoalMl",
@@ -1245,14 +1169,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
 
         if (explicitGoal != null && explicitGoal > 0) {
-            return explicitGoal.roundUpToBottle()
+            return DailyMetricCalculator.roundUpToBottleSize(explicitGoal)
         }
 
         val weightKg = resolveProfileWeightKg(profile) ?: 70.0
         val calculated = (weightKg * 35.0).toInt()
             .coerceIn(1500, 4500)
 
-        return calculated.roundUpToBottle()
+        return DailyMetricCalculator.roundUpToBottleSize(calculated)
     }
 
     private fun renderWaterTracking(
@@ -1264,7 +1188,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
 
         val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
-        val currentWaterMl = normalizeWaterToBottleSize(rawWaterMl)
+        val currentWaterMl = DailyMetricCalculator.normalizeWaterToBottleSize(rawWaterMl)
         this.currentWaterMl = currentWaterMl
 
         if (currentWaterMl != rawWaterMl) {
@@ -1435,7 +1359,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
     private fun toggleWaterBottle(isFilled: Boolean) {
         val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
-        val currentWaterMl = normalizeWaterToBottleSize(
+        val currentWaterMl = DailyMetricCalculator.normalizeWaterToBottleSize(
             waterTrackingStore.getWaterMl(selectedDate)
         )
 
@@ -1453,12 +1377,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         )
 
         renderWaterTracking()
-    }
-
-    private fun normalizeWaterToBottleSize(valueMl: Int): Int {
-        val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
-
-        return (valueMl.coerceAtLeast(0) / bottleSizeMl) * bottleSizeMl
     }
 
     private fun startLocalStepCounterIfNeeded() {
@@ -1520,7 +1438,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun renderActivityStepsOnly() {
         if (_binding == null) return
 
-        binding.activityStepCountText.text = formatStepCount(
+        binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(
             resolvedDisplaySteps()
         )
     }
@@ -1859,7 +1777,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             finishFastingManually()
         }
 
-        binding.fastingCountdownText.text = formatRemainingTime(remainingMillis)
+        binding.fastingCountdownText.text = DailyValueFormatter.formatRemainingTime(remainingMillis)
         updateFastingAnalysis(planId, remainingMillis)
 
         startHourglassAnimation()
@@ -1868,7 +1786,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             override fun onTick(millisUntilFinished: Long) {
                 if (_binding == null) return
 
-                binding.fastingCountdownText.text = formatRemainingTime(millisUntilFinished)
+                binding.fastingCountdownText.text = DailyValueFormatter.formatRemainingTime(millisUntilFinished)
                 updateFastingAnalysis(planId, millisUntilFinished)
             }
 
@@ -2005,13 +1923,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         binding.fastingHourglassText.alpha = 1f
     }
 
-    private fun formatRemainingTime(millis: Long): String {
-        val hours = TimeUnit.MILLISECONDS.toHours(millis)
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis) % 60
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60
-
-        return "%02d:%02d:%02d".format(hours, minutes, seconds)
-    }
     private fun getFastingMealSuggestion(fastingHours: Int): String {
         return when {
             fastingHours >= 16 -> getString(R.string.daily_fasting_meal_suggestion_long)
@@ -2380,7 +2291,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             val stepCalories = if (healthActiveCalories > 0) {
                 0
             } else {
-                calculateStepCalories(
+                DailyMetricCalculator.calculateStepCalories(
                     steps = displaySteps,
                     weightKg = currentWeightKg
                 )
@@ -2414,7 +2325,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 manualExerciseCalories = manualExerciseCalories
             )
 
-            binding.activityStepCountText.text = formatStepCount(displaySteps)
+            binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(displaySteps)
 
             val manualExerciseDurationMinutes = exerciseSummary.totalDurationMinutes.coerceAtLeast(0)
 
@@ -2428,39 +2339,39 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 remainingCalories
             )
 
-            binding.dailyCalorieProgress.progress = progressPercent(
+            binding.dailyCalorieProgress.progress = DailyMetricCalculator.progressPercent(
                 current = eatenCalories.toDouble(),
                 target = targetCalories.toDouble()
             )
             binding.dailyCarbValueText.text = getString(
                 R.string.daily_macro_value,
-                formatGram(nutritionSummary.totalCarbs),
+                DailyValueFormatter.formatGram(nutritionSummary.totalCarbs),
                 targetCarbs
             )
 
             binding.dailyProteinValueText.text = getString(
                 R.string.daily_macro_value,
-                formatGram(nutritionSummary.totalProtein),
+                DailyValueFormatter.formatGram(nutritionSummary.totalProtein),
                 targetProtein
             )
 
             binding.dailyFatValueText.text = getString(
                 R.string.daily_macro_value,
-                formatGram(nutritionSummary.totalFat),
+                DailyValueFormatter.formatGram(nutritionSummary.totalFat),
                 targetFat
             )
 
-            binding.dailyCarbProgress.progress = progressPercent(
+            binding.dailyCarbProgress.progress = DailyMetricCalculator.progressPercent(
                 current = nutritionSummary.totalCarbs,
                 target = targetCarbs.toDouble()
             )
 
-            binding.dailyProteinProgress.progress = progressPercent(
+            binding.dailyProteinProgress.progress = DailyMetricCalculator.progressPercent(
                 current = nutritionSummary.totalProtein,
                 target = targetProtein.toDouble()
             )
 
-            binding.dailyFatProgress.progress = progressPercent(
+            binding.dailyFatProgress.progress = DailyMetricCalculator.progressPercent(
                 current = nutritionSummary.totalFat,
                 target = targetFat.toDouble()
             )
@@ -2660,12 +2571,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         renderDailyAiState(updatedSnapshot)
     }
 
-    private fun formatStepCount(steps: Long): String {
-        return java.text.NumberFormat
-            .getIntegerInstance(java.util.Locale.getDefault())
-            .format(steps.coerceAtLeast(0L))
-    }
-
     private fun getActiveCustomPlanOrNull(): CustomDietPlanLocalModel? {
         val activePlanId = dietPlanStore.getActivePlanId() ?: return null
 
@@ -2720,23 +2625,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             ?: DEFAULT_FAT_TARGET_GRAMS
     }
 
-    private fun progressPercent(
-        current: Double,
-        target: Double
-    ): Int {
-        if (target <= 0.0) return 0
-
-        return ((current / target) * 100.0)
-            .roundToInt()
-            .coerceIn(0, 100)
-    }
-    private fun formatGram(value: Double): String {
-        return if (value % 1.0 == 0.0) {
-            value.roundToInt().toString()
-        } else {
-            String.format("%.1f", value)
-        }
-    }
     private fun setupClicks() = with(binding) {
         dailyQuickAddFab.setOnClickListener {
             DailyQuickAddBottomSheet().show(
