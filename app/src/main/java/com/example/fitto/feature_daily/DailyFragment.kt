@@ -42,10 +42,7 @@ import android.animation.ObjectAnimator
 import android.view.animation.LinearInterpolator
 import com.example.fitto.feature_daily.data.FastingSessionStore
 import com.example.fitto.feature_daily.ai.AiDailyAnalysisCache
-import com.example.fitto.feature_daily.ai.AiDailyExerciseInfo
-import com.example.fitto.feature_daily.ai.AiDailyMealInfo
 import com.example.fitto.feature_daily.ai.AiDailyPromptBuilder
-import com.example.fitto.feature_daily.ai.AiDailyPromptData
 import com.example.fitto.feature_daily.ai.AiDailyTriggerType
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import com.example.fitto.feature_daily.ai.CachedDailyAiMessage
@@ -313,20 +310,24 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             subtitle = getString(R.string.daily_ai_default_subtitle)
         )
 
-        if (snapshot.shouldAutoRequestAi() && !dailyAiCache.hasAutoAttempted(snapshot.dateIso, snapshot.triggerType)) {
+        if (shouldAutoRequestDailyAi(snapshot) && !dailyAiCache.hasAutoAttempted(snapshot.dateIso, snapshot.triggerType)) {
             requestDailyAiAnalysis(snapshot, isAuto = true)
         }
     }
 
     private fun renderDailyAiLoading() {
-        val status = currentDailyAiSnapshot?.localStatus() ?: AiDailyStatusLevel.GREEN
+        val status = currentDailyAiSnapshot?.let { snapshot ->
+            DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
+        } ?: AiDailyStatusLevel.GREEN
         dailyAiCardRenderer().renderLoading(status)
     }
 
     private fun renderDailyAiMessage(
         message: String,
         subtitle: String = getString(R.string.daily_ai_default_subtitle),
-        status: AiDailyStatusLevel = currentDailyAiSnapshot?.localStatus() ?: AiDailyStatusLevel.GREEN
+        status: AiDailyStatusLevel = currentDailyAiSnapshot?.let { snapshot ->
+            DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
+        } ?: AiDailyStatusLevel.GREEN
     ) {
         dailyAiCardRenderer().renderMessage(
             message = message,
@@ -344,7 +345,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             analysis = analysis,
             fallbackMessage = localDailyAiMessage(snapshot),
             subtitle = subtitle,
-            status = snapshot.localStatus()
+            status = DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
         )
     }
 
@@ -431,7 +432,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         viewLifecycleOwner.lifecycleScope.launch {
             val result = runCatching {
                 val language = currentAppLanguage()
-                val prompt = AiDailyPromptBuilder.build(snapshot.toPromptData(language))
+                val prompt = AiDailyPromptBuilder.build(toPromptData(snapshot, language))
                 dailyAiRepository.requestDailyAnalysis(prompt, language)
             }
 
@@ -442,7 +443,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
 
             result.onSuccess { analysis ->
-                Log.d(FITTO_AI_LOG_TAG, "Daily AI request succeeded. localStatus=${snapshot.localStatus().name}, aiStatus=${analysis.status.name}")
+                Log.d(
+                    FITTO_AI_LOG_TAG,
+                    "Daily AI request succeeded. localStatus=${DailyAiPromptDataMapper.localStatus(snapshot.triggerType).name}, aiStatus=${analysis.status.name}"
+                )
 
                 val message = dailyAiCardRenderer()
                     .buildStructuredMessage(analysis)
@@ -545,65 +549,23 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun DailyAiSnapshot.localStatus(): AiDailyStatusLevel {
-        return when (triggerType) {
-            AiDailyTriggerType.CALORIE_EXCEEDED -> AiDailyStatusLevel.RED
-            AiDailyTriggerType.CALORIE_REACHED,
-            AiDailyTriggerType.LOW_WATER,
-            AiDailyTriggerType.LOW_PROTEIN,
-            AiDailyTriggerType.LOW_DAILY_PROTEIN,
-            AiDailyTriggerType.LOW_MEAL_PROTEIN,
-            AiDailyTriggerType.INSUFFICIENT_MEAL,
-            AiDailyTriggerType.NO_EXERCISE,
-            AiDailyTriggerType.NO_MEAL -> AiDailyStatusLevel.YELLOW
-            AiDailyTriggerType.NORMAL -> AiDailyStatusLevel.GREEN
-        }
-    }
-
-    private fun DailyAiSnapshot.shouldAutoRequestAi(): Boolean {
-        return selectedDate == LocalDate.now() && triggerType == AiDailyTriggerType.CALORIE_EXCEEDED
-    }
-
-    private fun DailyAiSnapshot.toPromptData(appLanguage: String): AiDailyPromptData {
-        return AiDailyPromptData(
-            appLanguage = appLanguage,
-            userName = userName,
-            dateIso = dateIso,
-            goalLabel = resolveDailyAiGoalLabel(goalType, appLanguage),
-            goalGuidance = resolveDailyAiGoalGuidance(goalType, appLanguage),
-            dailyCalorieTarget = dailyCalorieTarget,
-            totalCalories = totalCalories,
-            proteinGrams = proteinGrams,
-            proteinTargetGrams = proteinTargetGrams,
-            carbGrams = carbGrams,
-            fatGrams = fatGrams,
-            waterMl = waterMl,
-            waterGoalMl = waterGoalMl,
-            triggerType = triggerType,
-            localStatus = localStatus(),
-            meals = meals.map { meal ->
-                AiDailyMealInfo(
-                    mealName = meal.mealTypeLabel,
-                    totalCalories = meal.totalCalories,
-                    proteinGrams = meal.proteinGrams,
-                    carbGrams = meal.carbGrams,
-                    fatGrams = meal.fatGrams,
-                    entryCount = meal.entryCount,
-                    foodSummary = meal.foodSummary
-                )
-            },
-            exerciseSummary = AiDailyExerciseInfo(
-                hasExercise = exerciseLogCount > 0,
-                summary = exerciseSummaryText,
-                totalDurationMinutes = exerciseDurationMinutes,
-                totalCalories = exerciseCalories
-            ),
-            dietPreferences = dietPreferences,
-            allergies = allergies,
-            dislikedFoods = dislikedFoods,
-            mealRoutine = mealRoutine
+    private fun shouldAutoRequestDailyAi(snapshot: DailyAiSnapshot): Boolean {
+        return DailyAiPromptDataMapper.shouldAutoRequestAi(
+            snapshot = snapshot,
+            selectedDate = selectedDate,
+            today = LocalDate.now()
         )
     }
+
+    private fun toPromptData(
+        snapshot: DailyAiSnapshot,
+        appLanguage: String
+    ) = DailyAiPromptDataMapper.toPromptData(
+        snapshot = snapshot,
+        appLanguage = appLanguage,
+        goalLabel = resolveDailyAiGoalLabel(snapshot.goalType, appLanguage),
+        goalGuidance = resolveDailyAiGoalGuidance(snapshot.goalType, appLanguage)
+    )
 
     private fun resolveDailyAiGoalLabel(goalTypeValue: String, appLanguage: String): String {
         val normalized = normalizeGoalTypeName(goalTypeValue)
