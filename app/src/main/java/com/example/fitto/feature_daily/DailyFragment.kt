@@ -49,6 +49,7 @@ import com.example.fitto.feature_daily.ai.AiDailyPromptBuilder
 import com.example.fitto.feature_daily.ai.AiDailyPromptData
 import com.example.fitto.feature_daily.ai.AiDailyTriggerType
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
+import com.example.fitto.feature_daily.ai.CachedDailyAiMessage
 import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
 import com.example.fitto.feature_auth.register.GoalType
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
@@ -402,7 +403,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             return
         }
 
-        val requestKey = snapshot.requestKey()
+        val requestKey = DailyAiCachePolicy.requestKey(snapshot)
         if (dailyAiLoading) {
             Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: already loading.")
             renderDailyAiLoading()
@@ -456,8 +457,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     mealCount = snapshot.meals.size,
                     waterMl = snapshot.waterMl,
                     proteinGrams = snapshot.proteinGrams,
-                    exerciseSignature = snapshot.exerciseSignature(),
-                    nutritionPreferenceSignature = snapshot.nutritionPreferenceSignature()
+                    exerciseSignature = DailyAiCachePolicy.exerciseSignature(snapshot),
+                    nutritionPreferenceSignature = DailyAiCachePolicy.nutritionPreferenceSignature(snapshot)
                 )
 
                 renderDailyAiStructuredResult(
@@ -508,21 +509,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun isUsableDailyAiCachedMessage(
-        cachedMessage: com.example.fitto.feature_daily.ai.CachedDailyAiMessage,
+        cachedMessage: CachedDailyAiMessage,
         snapshot: DailyAiSnapshot
     ): Boolean {
-        if (cachedMessage.source != AiDailyAnalysisCache.CACHE_SOURCE) return false
-
-        if (!cachedMessage.matchesSnapshot(snapshot)) {
+        if (!DailyAiCachePolicy.matchesSnapshot(cachedMessage, snapshot)) {
             Log.d(
                 FITTO_AI_LOG_TAG,
-                "Daily AI cache data mismatch. cached=${cachedMessage.dataDebugText()}, current=${snapshot.dataDebugText()}"
+                "Daily AI cache data mismatch. cached=${DailyAiCachePolicy.cachedMessageDebugText(cachedMessage)}, current=${DailyAiCachePolicy.snapshotDebugText(snapshot)}"
             )
-            return false
         }
-
-        val normalizedMessage = cachedMessage.aiMessage.normalizedDailyAiCacheText()
-        if (normalizedMessage.isBlank()) return false
 
         val localTexts = listOf(
             getString(R.string.daily_ai_default_message),
@@ -533,17 +528,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             getString(R.string.daily_ai_error_network),
             getString(R.string.daily_ai_error_rate_limited),
             localDailyAiMessage(snapshot)
-        ).map { it.normalizedDailyAiCacheText() }
+        )
 
-        return localTexts.none { localText ->
-            localText.isNotBlank() && normalizedMessage == localText
-        }
-    }
-
-    private fun String.normalizedDailyAiCacheText(): String {
-        return trim()
-            .replace(Regex("\\s+"), " ")
-            .lowercase(Locale.ROOT)
+        return DailyAiCachePolicy.isUsableCachedMessage(
+            cachedMessage = cachedMessage,
+            snapshot = snapshot,
+            localMessages = localTexts
+        )
     }
 
     private fun currentAppLanguage(): String {
@@ -572,41 +563,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private fun DailyAiSnapshot.shouldAutoRequestAi(): Boolean {
         return selectedDate == LocalDate.now() && triggerType == AiDailyTriggerType.CALORIE_EXCEEDED
-    }
-
-    private fun DailyAiSnapshot.requestKey(): String {
-        return "$dateIso-${triggerType.name}-${dataSignature()}"
-    }
-
-    private fun DailyAiSnapshot.dataSignature(): String {
-        return "cal=$totalCalories|meals=${meals.size}|water=$waterMl|protein=${proteinGrams.roundToInt()}|exercise=${exerciseSignature()}|prefs=${nutritionPreferenceSignature()}"
-    }
-
-    private fun DailyAiSnapshot.exerciseSignature(): String {
-        return "count=$exerciseLogCount|min=$exerciseDurationMinutes|cal=$exerciseCalories|summary=${exerciseSummaryText.normalizedDailyAiCacheText()}"
-    }
-
-    private fun DailyAiSnapshot.nutritionPreferenceSignature(): String {
-        return "diet=${dietPreferences.normalizedDailyAiCacheText()}|allergy=${allergies.normalizedDailyAiCacheText()}|dislike=${dislikedFoods.normalizedDailyAiCacheText()}|routine=${mealRoutine.normalizedDailyAiCacheText()}"
-    }
-
-    private fun DailyAiSnapshot.dataDebugText(): String {
-        return dataSignature()
-    }
-
-    private fun com.example.fitto.feature_daily.ai.CachedDailyAiMessage.matchesSnapshot(
-        snapshot: DailyAiSnapshot
-    ): Boolean {
-        return totalCalories == snapshot.totalCalories &&
-            mealCount == snapshot.meals.size &&
-            waterMl == snapshot.waterMl &&
-            proteinGrams.roundToInt() == snapshot.proteinGrams.roundToInt() &&
-            exerciseSignature == snapshot.exerciseSignature() &&
-            nutritionPreferenceSignature == snapshot.nutritionPreferenceSignature()
-    }
-
-    private fun com.example.fitto.feature_daily.ai.CachedDailyAiMessage.dataDebugText(): String {
-        return "cal=$totalCalories|meals=$mealCount|water=$waterMl|protein=${proteinGrams.roundToInt()}|exercise=$exerciseSignature|prefs=$nutritionPreferenceSignature"
     }
 
     private fun DailyAiSnapshot.toPromptData(appLanguage: String): AiDailyPromptData {
@@ -2853,40 +2809,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         super.onDestroyView()
         _binding = null
     }
-    private data class DailyAiSnapshot(
-        val dateIso: String,
-        val userName: String,
-        val goalType: String,
-        val dailyCalorieTarget: Int,
-        val totalCalories: Int,
-        val proteinGrams: Double,
-        val proteinTargetGrams: Int,
-        val carbGrams: Double,
-        val fatGrams: Double,
-        val waterMl: Int,
-        val waterGoalMl: Int,
-        val triggerType: AiDailyTriggerType,
-        val meals: List<DailyAiMealSnapshot>,
-        val exerciseLogCount: Int,
-        val exerciseDurationMinutes: Int,
-        val exerciseCalories: Int,
-        val exerciseSummaryText: String,
-        val dietPreferences: String,
-        val allergies: String,
-        val dislikedFoods: String,
-        val mealRoutine: String
-    )
-
-    private data class DailyAiMealSnapshot(
-        val mealTypeLabel: String,
-        val totalCalories: Int,
-        val proteinGrams: Double,
-        val carbGrams: Double,
-        val fatGrams: Double,
-        val entryCount: Int,
-        val foodSummary: String
-    )
-
     companion object {
         private const val DEFAULT_DAILY_CALORIE_TARGET = 1800
         private const val DEFAULT_PROTEIN_TARGET_GRAMS = 120
