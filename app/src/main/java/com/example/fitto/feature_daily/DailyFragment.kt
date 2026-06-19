@@ -1181,20 +1181,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun resolvedDisplaySteps(): Long {
-        val healthSteps = if (
-            healthConnectSummary.isAvailable &&
-            healthConnectSummary.hasPermission
-        ) {
-            healthConnectSummary.steps.coerceAtLeast(0L)
-        } else {
-            0L
-        }
-
-        return if (healthSteps > 0L) {
-            healthSteps
-        } else {
-            localStepCount.coerceAtLeast(0L)
-        }
+        return DailyActivityPolicy.resolveDisplaySteps(
+            isHealthConnectAvailable = healthConnectSummary.isAvailable,
+            hasHealthConnectPermission = healthConnectSummary.hasPermission,
+            healthSteps = healthConnectSummary.steps,
+            localSteps = localStepCount
+        )
     }
 
     private fun renderActivityStepsOnly() {
@@ -1238,7 +1230,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         healthActiveCalories: Int,
         manualExerciseCalories: Int
     ): Int {
-        return maxOf(healthActiveCalories, manualExerciseCalories)
+        return DailyActivityPolicy.resolveBurnedCalories(
+            healthActiveCalories = healthActiveCalories,
+            manualExerciseCalories = manualExerciseCalories
+        )
     }
      private fun currentDailyLocalDate(): LocalDate {
         return selectedDate
@@ -2647,21 +2642,20 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         healthActiveCalories: Int,
         manualExerciseCalories: Int
     ) = with(binding) {
-        val hasHealthPermission =
-            healthConnectSummary.isAvailable && healthConnectSummary.hasPermission
+        val source = DailyActivityPolicy.resolveActivitySource(
+            isHealthConnectAvailable = healthConnectSummary.isAvailable,
+            hasHealthConnectPermission = healthConnectSummary.hasPermission,
+            healthSteps = healthConnectSummary.steps,
+            healthActiveCalories = healthActiveCalories,
+            localSteps = localStepCount,
+            manualExerciseCalories = manualExerciseCalories
+        )
 
-        val hasHealthData =
-            hasHealthPermission &&
-                    (healthConnectSummary.steps > 0L || healthActiveCalories > 0)
-
-        val hasLocalSteps = localStepCount > 0L
-        val hasManualExercise = manualExerciseCalories > 0
-
-        val textRes = when {
-            hasHealthData -> R.string.daily_activity_source_health_connect
-            hasLocalSteps -> R.string.daily_activity_source_fitto_counter
-            hasManualExercise -> R.string.daily_activity_source_manual_only
-            else -> R.string.daily_activity_source_connect
+        val textRes = when (source) {
+            DailyActivityPolicy.Source.HEALTH_CONNECT -> R.string.daily_activity_source_health_connect
+            DailyActivityPolicy.Source.FITTO_COUNTER -> R.string.daily_activity_source_fitto_counter
+            DailyActivityPolicy.Source.MANUAL_ONLY -> R.string.daily_activity_source_manual_only
+            DailyActivityPolicy.Source.CONNECT -> R.string.daily_activity_source_connect
         }
 
         activitySyncStatusText.text = getString(textRes)
