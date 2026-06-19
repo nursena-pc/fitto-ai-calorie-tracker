@@ -476,7 +476,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
                 renderDailyAiMessage(
                     message = localDailyAiMessage(snapshot),
-                    subtitle = getString(resolveDailyAiErrorStringRes(throwable))
+                    subtitle = getString(DailyAiMessageTextResolver.resolveErrorMessageRes(throwable))
                 )
             }
 
@@ -485,28 +485,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun resolveDailyAiErrorStringRes(throwable: Throwable): Int {
-        val message = throwable.message.orEmpty()
-        return when {
-            message.contains(GeminiDailyAiRepository.ERROR_NETWORK) -> R.string.daily_ai_error_network
-            message.contains(GeminiDailyAiRepository.ERROR_RATE_LIMIT) || message.contains("429") -> R.string.daily_ai_error_rate_limited
-            else -> R.string.daily_ai_error_general
-        }
-    }
-
     private fun localDailyAiMessage(snapshot: DailyAiSnapshot): String {
-        return when (snapshot.triggerType) {
-            AiDailyTriggerType.NO_MEAL -> getString(R.string.daily_ai_no_meal_local)
-            AiDailyTriggerType.CALORIE_EXCEEDED -> getString(R.string.daily_ai_calorie_exceeded_local)
-            AiDailyTriggerType.CALORIE_REACHED -> getString(R.string.daily_ai_calorie_reached_local)
-            AiDailyTriggerType.LOW_WATER -> getString(R.string.daily_ai_low_water_local)
-            AiDailyTriggerType.LOW_PROTEIN,
-            AiDailyTriggerType.LOW_DAILY_PROTEIN -> getString(R.string.daily_ai_low_protein_local)
-            AiDailyTriggerType.LOW_MEAL_PROTEIN -> getString(R.string.daily_ai_low_meal_protein_local)
-            AiDailyTriggerType.INSUFFICIENT_MEAL -> getString(R.string.daily_ai_insufficient_meal_local)
-            AiDailyTriggerType.NO_EXERCISE -> getString(R.string.daily_ai_no_exercise_local)
-            AiDailyTriggerType.NORMAL -> getString(R.string.daily_ai_default_message)
-        }
+        return getString(DailyAiMessageTextResolver.resolveLocalMessageRes(snapshot.triggerType))
     }
 
     private fun isUsableDailyAiCachedMessage(
