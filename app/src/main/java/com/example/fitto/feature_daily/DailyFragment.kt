@@ -881,52 +881,30 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 binding.weekValue7
             )
 
-            val daysWithFood = dailyCalories.count { it > 0 }
+            val weeklyProgress = DailyWeeklyCalorieProgressCalculator.calculate(
+                dailyCalories = dailyCalories,
+                targetCalories = targetCalories,
+                minHeightPx = 18.dp,
+                maxHeightPx = 90.dp
+            )
 
-            val averageProgress = if (daysWithFood > 0) {
-                dailyCalories
-                    .filter { it > 0 }
-                    .map { calories ->
-                        ((calories.toDouble() / targetCalories.toDouble()) * 100.0)
-                            .coerceIn(0.0, 150.0)
-                    }
-                    .average()
-                    .roundToInt()
-            } else {
-                0
-            }
-
-            binding.weeklyProgressDescriptionText.text = if (daysWithFood == 0) {
+            binding.weeklyProgressDescriptionText.text = if (weeklyProgress.daysWithFood == 0) {
                 getString(R.string.daily_no_weekly_data)
             } else {
                 getString(
                     R.string.daily_weekly_calorie_summary,
-                    daysWithFood,
-                    averageProgress
+                    weeklyProgress.daysWithFood,
+                    weeklyProgress.averageProgress
                 )
             }
 
-            binding.weeklyWaterProgress.progress = averageProgress.coerceIn(0, 100)
+            binding.weeklyWaterProgress.progress = weeklyProgress.progressBarPercent
 
             days.forEachIndexed { index, date ->
-                val calories = dailyCalories[index]
-                val progressPercent = ((calories.toDouble() / targetCalories.toDouble()) * 100.0)
-                    .roundToInt()
-                    .coerceIn(0, 150)
-
-                val visualProgress = progressPercent.coerceIn(0, 100)
-
-                val minHeight = 18.dp
-                val maxHeight = 90.dp
-
-                val targetHeight = if (calories > 0) {
-                    minHeight + (((maxHeight - minHeight) * visualProgress) / 100)
-                } else {
-                    minHeight
-                }
+                val dayProgress = weeklyProgress.days[index]
 
                 val params = barViews[index].layoutParams
-                params.height = targetHeight
+                params.height = dayProgress.heightPx
                 barViews[index].layoutParams = params
 
                 dayTexts[index].text = date.dayOfWeek.getDisplayName(
@@ -934,13 +912,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     Locale.getDefault()
                 )
 
-                valueTexts[index].text = if (calories > 0) {
-                    getString(R.string.daily_weekly_calorie_percent, progressPercent)
+                valueTexts[index].text = if (dayProgress.hasFood) {
+                    getString(R.string.daily_weekly_calorie_percent, dayProgress.progressPercent)
                 } else {
                     "—"
                 }
 
-                barViews[index].alpha = if (calories > 0) 1f else 0.25f
+                barViews[index].alpha = dayProgress.alpha
             }
         }
     }
