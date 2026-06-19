@@ -33,7 +33,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import kotlin.math.roundToInt
 import com.example.fitto.data.local.entity.UserProfileEntity
 import com.example.fitto.data.local.repository.ProfileCacheRepository
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
@@ -954,59 +953,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun resolveProfileWeightKg(profile: UserProfileEntity?): Double? {
-        if (profile == null) return null
-
-        val candidateNames = listOf(
-            "weightKg",
-            "currentWeightKg",
-            "weight",
-            "currentWeight",
-            "initialWeightKg",
-            "initialWeight"
-        )
-
-        candidateNames.forEach { name ->
-            profile.readNumberProperty(name)
-                ?.takeIf { it in 25.0..300.0 }
-                ?.let { return it }
-        }
-
-        return null
-    }
-
-    private fun Any.readNumberProperty(name: String): Double? {
-        val fieldValue = runCatching {
-            javaClass.getDeclaredField(name).apply {
-                isAccessible = true
-            }.get(this)
-        }.getOrNull()
-
-        return when (fieldValue) {
-            is Number -> fieldValue.toDouble()
-            is String -> fieldValue.replace(",", ".").toDoubleOrNull()
-            else -> null
-        }
+        return DailyProfileMetricsResolver.resolveWeightKg(profile)
     }
 
     private fun resolveWaterGoalMl(profile: UserProfileEntity?): Int {
-        val explicitGoal = listOf(
-            "waterGoalMl",
-            "dailyWaterGoalMl",
-            "waterTargetMl",
-            "waterIntakeGoalMl"
-        ).firstNotNullOfOrNull { fieldName ->
-            profile?.readNumberProperty(fieldName)?.toInt()
-        }
-
-        if (explicitGoal != null && explicitGoal > 0) {
-            return DailyMetricCalculator.roundUpToBottleSize(explicitGoal)
-        }
-
-        val weightKg = resolveProfileWeightKg(profile) ?: 70.0
-        val calculated = (weightKg * 35.0).toInt()
-            .coerceIn(1500, 4500)
-
-        return DailyMetricCalculator.roundUpToBottleSize(calculated)
+        return DailyProfileMetricsResolver.resolveWaterGoalMl(profile)
     }
 
     private fun renderWaterTracking(
