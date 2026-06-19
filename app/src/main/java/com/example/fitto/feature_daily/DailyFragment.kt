@@ -2461,47 +2461,48 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun resolveDailyCalorieTarget(
         profile: UserProfileEntity?
     ): Int {
-        val activeCustomPlanCalories = getActiveCustomPlanOrNull()
-            ?.dailyCalories
-            ?.takeIf { it > 0 }
-
-        return activeCustomPlanCalories
-            ?: profile?.dailyCalorieTarget?.takeIf { it > 0 }
-            ?: nutritionTargetStore.getDailyTargetCalories().takeIf { it > 0 }
-            ?: DEFAULT_DAILY_CALORIE_TARGET
+        return DailyNutritionTargetResolver.resolveDailyCalories(
+            activeCustomPlanCalories = activeCustomPlanCalories(),
+            profileDailyCalories = profile?.dailyCalorieTarget,
+            storedDailyCalories = nutritionTargetStore.getDailyTargetCalories(),
+            defaultDailyCalories = DEFAULT_DAILY_CALORIE_TARGET
+        )
     }
 
     private fun resolveProteinTarget(
         profile: UserProfileEntity?
     ): Int {
-        val activeCustomCalories = getActiveCustomPlanOrNull()?.dailyCalories
-
-        return activeCustomCalories
-            ?.let { calories -> ((calories * 0.25) / 4.0).roundToInt().coerceAtLeast(40) }
-            ?: profile?.proteinTargetGrams?.takeIf { it > 0 }
-            ?: DEFAULT_PROTEIN_TARGET_GRAMS
+        return DailyNutritionTargetResolver.resolveProteinGrams(
+            activeCustomPlanCalories = activeCustomPlanCalories(),
+            profileProteinGrams = profile?.proteinTargetGrams,
+            defaultProteinGrams = DEFAULT_PROTEIN_TARGET_GRAMS
+        )
     }
 
     private fun resolveCarbTarget(
         profile: UserProfileEntity?
     ): Int {
-        val activeCustomCalories = getActiveCustomPlanOrNull()?.dailyCalories
-
-        return activeCustomCalories
-            ?.let { calories -> ((calories * 0.45) / 4.0).roundToInt().coerceAtLeast(80) }
-            ?: profile?.carbTargetGrams?.takeIf { it > 0 }
-            ?: DEFAULT_CARB_TARGET_GRAMS
+        return DailyNutritionTargetResolver.resolveCarbGrams(
+            activeCustomPlanCalories = activeCustomPlanCalories(),
+            profileCarbGrams = profile?.carbTargetGrams,
+            defaultCarbGrams = DEFAULT_CARB_TARGET_GRAMS
+        )
     }
 
     private fun resolveFatTarget(
         profile: UserProfileEntity?
     ): Int {
-        val activeCustomCalories = getActiveCustomPlanOrNull()?.dailyCalories
+        return DailyNutritionTargetResolver.resolveFatGrams(
+            activeCustomPlanCalories = activeCustomPlanCalories(),
+            profileFatGrams = profile?.fatTargetGrams,
+            defaultFatGrams = DEFAULT_FAT_TARGET_GRAMS
+        )
+    }
 
-        return activeCustomCalories
-            ?.let { calories -> ((calories * 0.30) / 9.0).roundToInt().coerceAtLeast(25) }
-            ?: profile?.fatTargetGrams?.takeIf { it > 0 }
-            ?: DEFAULT_FAT_TARGET_GRAMS
+    private fun activeCustomPlanCalories(): Int? {
+        return getActiveCustomPlanOrNull()
+            ?.dailyCalories
+            ?.takeIf { it > 0 }
     }
 
     private fun setupClicks() = with(binding) {
