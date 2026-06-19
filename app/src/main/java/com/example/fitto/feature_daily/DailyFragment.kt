@@ -2129,45 +2129,20 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         mealSummariesByType: Map<String, com.example.fitto.data.local.model.DailyMealSummary>,
         mealDetailsByType: Map<MealType, List<MealEntryDetailUiModel>>
     ): List<DailyAiMealSnapshot> {
-        return MealType.entries.mapNotNull { mealType ->
-            val mealTypeLabel = getString(mealType.titleRes)
-            val details = mealDetailsByType[mealType].orEmpty()
-            val summary = mealSummariesByType[mealType.argumentValue]
-
-            val totalCalories = details.sumOf { it.totalCalories }
-                .takeIf { it > 0 }
-                ?: (summary?.totalCalories ?: 0)
-            if (totalCalories <= 0) return@mapNotNull null
-
-            val protein = details.sumOf { it.totalProtein }
-                .takeIf { details.isNotEmpty() }
-                ?: (summary?.totalProtein ?: 0.0)
-            val carbs = details.sumOf { it.totalCarbs }
-                .takeIf { details.isNotEmpty() }
-                ?: (summary?.totalCarbs ?: 0.0)
-            val fat = details.sumOf { it.totalFat }
-                .takeIf { details.isNotEmpty() }
-                ?: (summary?.totalFat ?: 0.0)
-
-            val foodSummary = details
-                .sortedBy { it.createdAt }
-                .joinToString(separator = "; ") { detail ->
-                    val title = detail.title.ifBlank { detail.foodSummary.ifBlank { mealTypeLabel } }
-                    val foods = detail.foodSummary.ifBlank { getString(R.string.daily_ai_entry_details_unavailable) }
-                    "$title: $foods"
-                }
-                .take(DAILY_AI_MEAL_SUMMARY_MAX_CHARS)
-
-            DailyAiMealSnapshot(
-                mealTypeLabel = mealTypeLabel,
-                totalCalories = totalCalories,
-                proteinGrams = protein,
-                carbGrams = carbs,
-                fatGrams = fat,
-                entryCount = details.size.coerceAtLeast(1),
-                foodSummary = foodSummary
-            )
-        }
+        return DailyAiMealSnapshotMapper.buildMeals(
+            mealDefinitions = MealType.entries.map { mealType ->
+                DailyAiMealSnapshotMapper.MealDefinition(
+                    key = mealType.argumentValue,
+                    label = getString(mealType.titleRes)
+                )
+            },
+            mealSummariesByType = mealSummariesByType,
+            mealDetailsByType = mealDetailsByType.mapKeys { (mealType, _) ->
+                mealType.argumentValue
+            },
+            unavailableDetailsText = getString(R.string.daily_ai_entry_details_unavailable),
+            maxFoodSummaryChars = DAILY_AI_MEAL_SUMMARY_MAX_CHARS
+        )
     }
 
     private fun buildDailyAiExerciseSummary(
