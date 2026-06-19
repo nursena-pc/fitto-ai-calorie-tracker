@@ -2149,25 +2149,31 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         logs: List<ExerciseLogLocalModel>,
         syncedActivityCalories: Int
     ): String {
-        val manualSummary = logs
-            .take(3)
-            .joinToString(separator = ", ") { log ->
+        return DailyAiExerciseSummaryBuilder.build(
+            logs = logs.map { log ->
+                DailyAiExerciseSummaryBuilder.ExerciseLog(
+                    title = log.exerciseTitle,
+                    categoryName = log.categoryName,
+                    durationMinutes = log.durationMinutes,
+                    calories = log.calories
+                )
+            },
+            syncedActivityCalories = syncedActivityCalories,
+            itemText = { title, durationMinutes, calories ->
                 getString(
                     R.string.daily_ai_exercise_summary_item,
-                    log.exerciseTitle.ifBlank { log.categoryName },
-                    log.durationMinutes,
-                    log.calories
+                    title,
+                    durationMinutes,
+                    calories
                 )
+            },
+            withSyncedText = { manualSummary, syncedCalories ->
+                getString(R.string.daily_ai_exercise_summary_with_steps, manualSummary, syncedCalories)
+            },
+            syncedOnlyText = { syncedCalories ->
+                getString(R.string.daily_ai_exercise_summary_synced, syncedCalories)
             }
-
-        return when {
-            manualSummary.isNotBlank() && syncedActivityCalories > 0 -> {
-                getString(R.string.daily_ai_exercise_summary_with_steps, manualSummary, syncedActivityCalories)
-            }
-            manualSummary.isNotBlank() -> manualSummary
-            syncedActivityCalories > 0 -> getString(R.string.daily_ai_exercise_summary_synced, syncedActivityCalories)
-            else -> ""
-        }
+        )
     }
 
     private fun resolveDailyAiTriggerType(
