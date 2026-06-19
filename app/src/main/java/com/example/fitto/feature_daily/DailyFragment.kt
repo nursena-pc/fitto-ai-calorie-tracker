@@ -1981,13 +1981,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 byMealType[MealType.DINNER.argumentValue]?.totalCalories ?: 0
             )
 
-            val eatenCalories = nutritionSummary.totalCalories.coerceAtLeast(0)
-
             val resolvedWeight = resolveProfileWeightKg(profile)
             currentProfileWeightKg = resolvedWeight
             currentWeightKg = resolvedWeight ?: currentWeightKg
-
-            val manualExerciseCalories = exerciseSummary.totalCalories.coerceAtLeast(0)
 
             val healthActiveCalories = if (
                 healthConnectSummary.isAvailable &&
@@ -2000,41 +1996,31 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             val displaySteps = resolvedDisplaySteps()
 
-            val stepCalories = if (healthActiveCalories > 0) {
-                0
-            } else {
-                DailyMetricCalculator.calculateStepCalories(
-                    steps = displaySteps,
-                    weightKg = currentWeightKg
-                )
-            }
-
-            val syncedActivityCalories = maxOf(
-                healthActiveCalories,
-                stepCalories
+            val energyBalance = DailyEnergyBalanceCalculator.calculate(
+                targetCalories = targetCalories,
+                eatenCalories = nutritionSummary.totalCalories,
+                manualExerciseCalories = exerciseSummary.totalCalories,
+                healthActiveCalories = healthActiveCalories,
+                displaySteps = displaySteps,
+                weightKg = currentWeightKg
             )
 
-            val burnedCalories = manualExerciseCalories + syncedActivityCalories
-
-            val remainingCalories = (targetCalories - eatenCalories + burnedCalories)
-                .coerceAtLeast(0)
-
-            binding.remainingCaloriesText.text = remainingCalories.toString()
+            binding.remainingCaloriesText.text = energyBalance.remainingCalories.toString()
 
             binding.dailyIntakeText.text = getString(
                 R.string.daily_summary_intake_value,
-                eatenCalories
+                energyBalance.eatenCalories
             )
 
             binding.dailyBurnedText.text = getString(
                 R.string.daily_summary_burned_value,
-                burnedCalories
+                energyBalance.burnedCalories
             )
-            binding.activityBurnedCaloriesText.text = burnedCalories.toString()
+            binding.activityBurnedCaloriesText.text = energyBalance.burnedCalories.toString()
 
             renderActivitySourceStatus(
-                healthActiveCalories = syncedActivityCalories,
-                manualExerciseCalories = manualExerciseCalories
+                healthActiveCalories = energyBalance.syncedActivityCalories,
+                manualExerciseCalories = energyBalance.manualExerciseCalories
             )
 
             binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(displaySteps)
@@ -2048,11 +2034,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             binding.dailyRemainingText.text = getString(
                 R.string.daily_summary_remaining_value,
-                remainingCalories
+                energyBalance.remainingCalories
             )
 
             binding.dailyCalorieProgress.progress = DailyMetricCalculator.progressPercent(
-                current = eatenCalories.toDouble(),
+                current = energyBalance.eatenCalories.toDouble(),
                 target = targetCalories.toDouble()
             )
             binding.dailyCarbValueText.text = getString(
@@ -2094,7 +2080,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
 
             val dailyAiTriggerType = resolveDailyAiTriggerType(
-                totalCalories = eatenCalories,
+                totalCalories = energyBalance.eatenCalories,
                 targetCalories = targetCalories,
                 waterMl = currentWaterMl,
                 waterGoalMl = waterGoalMl,
@@ -2109,7 +2095,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 userName = resolveDailyAiUserName(profile),
                 goalType = profile?.goalType.orEmpty(),
                 dailyCalorieTarget = targetCalories,
-                totalCalories = eatenCalories,
+                totalCalories = energyBalance.eatenCalories,
                 proteinGrams = nutritionSummary.totalProtein,
                 proteinTargetGrams = targetProtein,
                 carbGrams = nutritionSummary.totalCarbs,
@@ -2120,8 +2106,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 meals = dailyAiMeals,
                 exerciseLogCount = exerciseSummary.logCount,
                 exerciseDurationMinutes = exerciseSummary.totalDurationMinutes.coerceAtLeast(0),
-                exerciseCalories = burnedCalories,
-                exerciseSummaryText = buildDailyAiExerciseSummary(exerciseLogs, syncedActivityCalories),
+                exerciseCalories = energyBalance.burnedCalories,
+                exerciseSummaryText = buildDailyAiExerciseSummary(
+                    exerciseLogs,
+                    energyBalance.syncedActivityCalories
+                ),
                 dietPreferences = ProfilePreferenceStore.nutritionDietPreferencesText(requireContext()),
                 allergies = ProfilePreferenceStore.getNutritionAllergies(requireContext()),
                 dislikedFoods = ProfilePreferenceStore.getNutritionDislikedFoods(requireContext()),
