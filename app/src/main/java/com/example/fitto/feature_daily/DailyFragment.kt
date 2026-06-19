@@ -47,7 +47,6 @@ import com.example.fitto.feature_daily.ai.AiDailyTriggerType
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import com.example.fitto.feature_daily.ai.CachedDailyAiMessage
 import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
-import com.example.fitto.feature_auth.register.GoalType
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.example.fitto.feature_meal.model.MealEntryDetailUiModel
 import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
@@ -562,67 +561,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     ) = DailyAiPromptDataMapper.toPromptData(
         snapshot = snapshot,
         appLanguage = appLanguage,
-        goalLabel = resolveDailyAiGoalLabel(snapshot.goalType, appLanguage),
-        goalGuidance = resolveDailyAiGoalGuidance(snapshot.goalType, appLanguage)
+        goalLabel = getString(DailyAiGoalTextResolver.resolveLabelRes(snapshot.goalType)),
+        goalGuidance = DailyAiGoalTextResolver.resolveGuidance(snapshot.goalType, appLanguage)
     )
-
-    private fun resolveDailyAiGoalLabel(goalTypeValue: String, appLanguage: String): String {
-        val normalized = normalizeGoalTypeName(goalTypeValue)
-        return when (normalized) {
-            GoalType.LOSE_WEIGHT.name -> getString(R.string.daily_ai_goal_label_lose_weight)
-            GoalType.GAIN_WEIGHT.name -> getString(R.string.daily_ai_goal_label_gain_weight)
-            GoalType.MAINTAIN_WEIGHT.name -> getString(R.string.daily_ai_goal_label_maintain_weight)
-            GoalType.LEARN_NUTRITION.name -> getString(R.string.daily_ai_goal_label_learn_nutrition)
-            GoalType.EAT_HEALTHY.name -> getString(R.string.daily_ai_goal_label_eat_healthy)
-            else -> getString(R.string.daily_ai_goal_label_not_specified)
-        }
-    }
-
-    private fun resolveDailyAiGoalGuidance(goalTypeValue: String, appLanguage: String): String {
-        val normalized = normalizeGoalTypeName(goalTypeValue)
-        val isEnglish = appLanguage.startsWith("en", ignoreCase = true)
-        return when (normalized) {
-            GoalType.LOSE_WEIGHT.name -> if (isEnglish) {
-                "Gently mention calorie excess, also notice overly low or insufficient meals, and suggest filling balanced choices."
-            } else {
-                "Kalori aşımını nazikçe belirt, çok düşük veya yetersiz öğünleri de fark et, tok tutan ve dengeli seçimler öner."
-            }
-            GoalType.GAIN_WEIGHT.name -> if (isEnglish) {
-                "Notice low-energy meals more clearly and suggest supportive energy and protein sources without strict dieting language."
-            } else {
-                "Düşük enerjili öğünleri daha net fark et, enerji ve protein desteği öner, kesin diyet dili kullanma."
-            }
-            GoalType.MAINTAIN_WEIGHT.name -> if (isEnglish) {
-                "Emphasize balance and sustainable habits; gently mention very low or very high days."
-            } else {
-                "Denge ve sürdürülebilir alışkanlıkları vurgula; aşırı düşük veya aşırı yüksek günleri nazikçe belirt."
-            }
-            GoalType.LEARN_NUTRITION.name -> if (isEnglish) {
-                "Use a more educational tone and briefly explain the stronger and weaker sides of meals to build nutrition awareness."
-            } else {
-                "Daha öğretici konuş; öğünlerin güçlü ve zayıf tarafını kısa açıklayarak beslenme farkındalığı kazandır."
-            }
-            GoalType.EAT_HEALTHY.name -> if (isEnglish) {
-                "Focus on variety, balance, water, movement, and sustainable choices without over-focusing on calories."
-            } else {
-                "Kaloriye fazla takılmadan çeşitlilik, denge, su, hareket ve sürdürülebilir seçimleri vurgula."
-            }
-            else -> if (isEnglish) {
-                "Do not assume a special goal; comment on the visible daily balance safely and briefly."
-            } else {
-                "Özel hedef varsayma; görünen günlük dengeyi güvenli ve kısa yorumla."
-            }
-        }
-    }
-
-    private fun normalizeGoalTypeName(goalTypeValue: String): String {
-        val raw = goalTypeValue.trim()
-        GoalType.entries.firstOrNull { it.name.equals(raw, ignoreCase = true) }?.let { return it.name }
-        return raw
-            .uppercase(Locale.ROOT)
-            .replace(" ", "_")
-            .replace("-", "_")
-    }
 
     private fun showSleepTimeDialog() {
         val dialog = Dialog(requireContext())
