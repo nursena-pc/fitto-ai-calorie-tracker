@@ -85,7 +85,6 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import java.time.format.TextStyle
 import com.example.fitto.feature_meal.CameraFoodEntryFragment
-import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
 
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
@@ -2511,30 +2510,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         categoryName: String?,
         reminderId: String?
     ) {
-        val category = runCatching {
-            ReminderCategory.valueOf(categoryName.orEmpty())
-        }.getOrNull()
-
-        when (category) {
-            ReminderCategory.MEAL -> openAddMeal(mealTypeForReminder(reminderId))
-            ReminderCategory.WATER -> {
+        when (val target = DailyReminderTargetResolver.resolve(categoryName, reminderId)) {
+            is DailyReminderTargetResolver.Target.Meal -> openAddMeal(target.mealType)
+            DailyReminderTargetResolver.Target.Water -> {
                 scrollToDailyCard(binding.waterTrackingCard)
                 Toast.makeText(requireContext(), R.string.daily_reminder_water_focus_message, Toast.LENGTH_SHORT).show()
             }
-            ReminderCategory.EXERCISE -> {
+            DailyReminderTargetResolver.Target.Exercise -> {
                 scrollToDailyCard(binding.activitySummaryCard)
                 Toast.makeText(requireContext(), R.string.daily_reminder_exercise_focus_message, Toast.LENGTH_SHORT).show()
             }
-            else -> scrollToDailyCard(binding.dailySummaryCard)
-        }
-    }
-
-    private fun mealTypeForReminder(reminderId: String?): MealType {
-        return when (reminderId) {
-            "lunch" -> MealType.LUNCH
-            "dinner" -> MealType.DINNER
-            "snack" -> MealType.SNACK
-            else -> MealType.BREAKFAST
+            DailyReminderTargetResolver.Target.DailySummary -> scrollToDailyCard(binding.dailySummaryCard)
         }
     }
 
