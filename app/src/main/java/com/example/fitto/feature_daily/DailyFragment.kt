@@ -966,38 +966,26 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     ) {
         if (_binding == null || !::waterTrackingStore.isInitialized) return
 
-        val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
-
         val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
-        val currentWaterMl = DailyMetricCalculator.normalizeWaterToBottleSize(rawWaterMl)
-        this.currentWaterMl = currentWaterMl
-
-        if (currentWaterMl != rawWaterMl) {
-            waterTrackingStore.setWaterMl(selectedDate, currentWaterMl)
-        }
-
-        val filledBottleCount = currentWaterMl / bottleSizeMl
-
-        val defaultBottleCount = (waterGoalMl / bottleSizeMl)
-            .coerceAtLeast(WaterTrackingStore.MIN_BOTTLE_COUNT)
-            .coerceAtMost(WaterTrackingStore.MAX_BOTTLE_COUNT)
-
+        val defaultBottleCount = DailyWaterTrackingCalculator.defaultBottleCount(waterGoalMl)
         val visibleBottleCount = waterTrackingStore.getVisibleBottleCount(
             date = selectedDate,
             defaultCount = defaultBottleCount
         )
-
-        val totalBottleCount = maxOf(
-            visibleBottleCount,
-            filledBottleCount.coerceAtMost(WaterTrackingStore.MAX_BOTTLE_COUNT)
-        ).coerceIn(
-            WaterTrackingStore.MIN_BOTTLE_COUNT,
-            WaterTrackingStore.MAX_BOTTLE_COUNT
+        val waterState = DailyWaterTrackingCalculator.calculateState(
+            rawWaterMl = rawWaterMl,
+            waterGoalMl = waterGoalMl,
+            visibleBottleCount = visibleBottleCount
         )
+        this.currentWaterMl = waterState.normalizedWaterMl
+
+        if (waterState.normalizedWaterMl != rawWaterMl) {
+            waterTrackingStore.setWaterMl(selectedDate, waterState.normalizedWaterMl)
+        }
 
         binding.waterAmountText.text = getString(
             R.string.daily_water_value_format,
-            currentWaterMl / 1000.0,
+            waterState.normalizedWaterMl / 1000.0,
             waterGoalMl / 1000.0
         )
 
@@ -1005,13 +993,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         binding.waterBottleContainer.addView(
             createRemoveBottleView(
-                defaultBottleCount = defaultBottleCount,
-                visibleBottleCount = totalBottleCount
+                defaultBottleCount = waterState.defaultBottleCount,
+                visibleBottleCount = waterState.totalBottleCount
             )
         )
 
-        repeat(totalBottleCount) { index ->
-            val isFilled = index < filledBottleCount
+        repeat(waterState.totalBottleCount) { index ->
+            val isFilled = index < waterState.filledBottleCount
 
             binding.waterBottleContainer.addView(
                 createBottleView(
@@ -1072,13 +1060,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             setOnClickListener {
                 if (visibleBottleCount <= WaterTrackingStore.MIN_BOTTLE_COUNT) return@setOnClickListener
 
-                val filledBottleCount = waterTrackingStore
-                    .getWaterMl(selectedDate) / WaterTrackingStore.BOTTLE_SIZE_ML
+                val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
 
                 // Dolu şişe sayısından daha az görünür şişeye düşürmeyelim.
-                val minAllowedByFilled = filledBottleCount.coerceAtLeast(WaterTrackingStore.MIN_BOTTLE_COUNT)
+                val canRemoveBottle = DailyWaterTrackingCalculator.canRemoveVisibleBottle(
+                    visibleBottleCount = visibleBottleCount,
+                    rawWaterMl = rawWaterMl
+                )
 
-                if (visibleBottleCount <= minAllowedByFilled) return@setOnClickListener
+                if (!canRemoveBottle) return@setOnClickListener
 
                 waterTrackingStore.decreaseVisibleBottleCount(
                     date = selectedDate,
@@ -1126,8 +1116,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun addWater(amountMl: Int) {
-        val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
-        val normalizedAmount = (amountMl / bottleSizeMl) * bottleSizeMl
+        val normalizedAmount = DailyWaterTrackingCalculator.normalizeAddAmount(amountMl)
 
         if (normalizedAmount <= 0) return
 
@@ -1139,18 +1128,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         renderWaterTracking()
     }
     private fun toggleWaterBottle(isFilled: Boolean) {
-        val bottleSizeMl = WaterTrackingStore.BOTTLE_SIZE_ML
-        val currentWaterMl = DailyMetricCalculator.normalizeWaterToBottleSize(
-            waterTrackingStore.getWaterMl(selectedDate)
+        val updatedWaterMl = DailyWaterTrackingCalculator.toggleBottleWaterMl(
+            rawWaterMl = waterTrackingStore.getWaterMl(selectedDate),
+            isFilled = isFilled
         )
-
-        val maxWaterMl = WaterTrackingStore.MAX_BOTTLE_COUNT * bottleSizeMl
-
-        val updatedWaterMl = if (isFilled) {
-            (currentWaterMl - bottleSizeMl).coerceAtLeast(0)
-        } else {
-            (currentWaterMl + bottleSizeMl).coerceAtMost(maxWaterMl)
-        }
 
         waterTrackingStore.setWaterMl(
             date = selectedDate,
@@ -2452,9 +2433,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             addWater(WaterTrackingStore.BOTTLE_SIZE_ML * 2)
         }
         addWaterBottleSlotButton.setOnClickListener {
-            val defaultBottleCount = (waterGoalMl / WaterTrackingStore.BOTTLE_SIZE_ML)
-                .coerceAtLeast(WaterTrackingStore.MIN_BOTTLE_COUNT)
-                .coerceAtMost(WaterTrackingStore.MAX_BOTTLE_COUNT)
+            val defaultBottleCount = DailyWaterTrackingCalculator.defaultBottleCount(waterGoalMl)
 
             waterTrackingStore.increaseVisibleBottleCount(
                 date = selectedDate,
