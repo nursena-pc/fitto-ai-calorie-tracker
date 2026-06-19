@@ -2400,40 +2400,23 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         meals: List<DailyAiMealSnapshot>,
         exerciseLogCount: Int
     ): AiDailyTriggerType {
-        if (meals.isEmpty()) return AiDailyTriggerType.NO_MEAL
-
-        if (targetCalories > 0) {
-            val redThreshold = (targetCalories * 1.2).roundToInt()
-            val yellowThreshold = (targetCalories * 0.9).roundToInt()
-            if (totalCalories >= redThreshold) return AiDailyTriggerType.CALORIE_EXCEEDED
-            if (totalCalories >= yellowThreshold) return AiDailyTriggerType.CALORIE_REACHED
-        }
-
-        val hasInsufficientMainMeal = meals.any { meal ->
-            val isMainMeal = !meal.mealTypeLabel.equals(getString(R.string.daily_snack), ignoreCase = true)
-            isMainMeal && meal.totalCalories in 1..180
-        }
-        if (hasInsufficientMainMeal) return AiDailyTriggerType.INSUFFICIENT_MEAL
-
-        val hasLowMealProtein = meals.any { meal ->
-            val isMainMeal = !meal.mealTypeLabel.equals(getString(R.string.daily_snack), ignoreCase = true)
-            isMainMeal && meal.proteinGrams < 8.0 && meal.totalCalories > 0
-        }
-        if (hasLowMealProtein) return AiDailyTriggerType.LOW_MEAL_PROTEIN
-
-        if (waterGoalMl > 0 && waterMl < (waterGoalMl * 0.5).roundToInt()) {
-            return AiDailyTriggerType.LOW_WATER
-        }
-
-        if (proteinTargetGrams > 0 && proteinGrams < proteinTargetGrams * 0.55) {
-            return AiDailyTriggerType.LOW_DAILY_PROTEIN
-        }
-
-        if (exerciseLogCount == 0) {
-            return AiDailyTriggerType.NO_EXERCISE
-        }
-
-        return AiDailyTriggerType.NORMAL
+        return DailyAiTriggerPolicy.resolve(
+            totalCalories = totalCalories,
+            targetCalories = targetCalories,
+            waterMl = waterMl,
+            waterGoalMl = waterGoalMl,
+            proteinGrams = proteinGrams,
+            proteinTargetGrams = proteinTargetGrams,
+            meals = meals.map { meal ->
+                DailyAiTriggerPolicy.Meal(
+                    mealTypeLabel = meal.mealTypeLabel,
+                    totalCalories = meal.totalCalories,
+                    proteinGrams = meal.proteinGrams
+                )
+            },
+            exerciseLogCount = exerciseLogCount,
+            snackMealLabel = getString(R.string.daily_snack)
+        )
     }
 
     private fun resolveDailyAiUserName(profile: UserProfileEntity?): String {
