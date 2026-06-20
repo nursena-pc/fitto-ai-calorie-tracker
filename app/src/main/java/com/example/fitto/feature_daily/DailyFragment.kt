@@ -1970,7 +1970,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             currentDailyAiSnapshot = DailyAiSnapshot(
                 dateIso = selectedDateIso,
-                userName = resolveDailyAiUserName(profile),
+                userName = DailyAiUserNameResolver.resolve(
+                    displayName = profile?.displayName,
+                    userName = profile?.userName,
+                    fallbackName = getString(R.string.app_name)
+                ),
                 goalType = profile?.goalType.orEmpty(),
                 dailyCalorieTarget = targetCalories,
                 totalCalories = energyBalance.eatenCalories,
@@ -2081,14 +2085,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             exerciseLogCount = exerciseLogCount,
             snackMealLabel = getString(R.string.daily_snack)
         )
-    }
-
-    private fun resolveDailyAiUserName(profile: UserProfileEntity?): String {
-        return listOf(
-            profile?.displayName,
-            profile?.userName,
-            getString(R.string.app_name)
-        ).firstOrNull { !it.isNullOrBlank() }?.trim().orEmpty()
     }
 
     private fun refreshDailyAiSnapshotForWater() {
