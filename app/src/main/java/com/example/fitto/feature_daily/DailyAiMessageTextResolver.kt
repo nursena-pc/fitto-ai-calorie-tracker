@@ -7,6 +7,19 @@ import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
 
 object DailyAiMessageTextResolver {
 
+    fun resolveCacheLocalMessageResList(triggerType: AiDailyTriggerType): List<Int> {
+        return listOf(
+            R.string.daily_ai_default_message,
+            R.string.daily_ai_default_subtitle,
+            R.string.daily_ai_loading,
+            R.string.daily_ai_preparing,
+            R.string.daily_ai_error_general,
+            R.string.daily_ai_error_network,
+            R.string.daily_ai_error_rate_limited,
+            resolveLocalMessageRes(triggerType)
+        )
+    }
+
     @StringRes
     fun resolveLocalMessageRes(triggerType: AiDailyTriggerType): Int {
         return when (triggerType) {

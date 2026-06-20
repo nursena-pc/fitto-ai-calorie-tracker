@@ -44,7 +44,6 @@ import android.view.animation.LinearInterpolator
 import com.example.fitto.feature_daily.data.FastingSessionStore
 import com.example.fitto.feature_daily.ai.AiDailyAnalysisCache
 import com.example.fitto.feature_daily.ai.AiDailyPromptBuilder
-import com.example.fitto.feature_daily.ai.AiDailyTriggerType
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import com.example.fitto.feature_daily.ai.CachedDailyAiMessage
 import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
@@ -387,32 +386,41 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
         }
 
-        val now = System.currentTimeMillis()
-        val cooldownUntil = dailyAiCache.getCooldownUntil()
-        if (cooldownUntil > now) {
-            val remainingSeconds = ((cooldownUntil - now) / 1000L).coerceAtLeast(1L)
-            Log.d(
-                FITTO_AI_LOG_TAG,
-                "Daily AI request blocked by cooldown. remaining=${remainingSeconds}s"
-            )
-            renderDailyAiMessage(
-                message = getString(R.string.daily_ai_error_rate_limited),
-                subtitle = localDailyAiMessage(snapshot)
-            )
-            return
-        }
-
         val requestKey = DailyAiCachePolicy.requestKey(snapshot)
-        if (dailyAiLoading) {
-            Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: already loading.")
-            renderDailyAiLoading()
-            return
-        }
+        when (
+            val decision = DailyAiRequestPolicy.resolve(
+                cooldownUntilMillis = dailyAiCache.getCooldownUntil(),
+                nowMillis = System.currentTimeMillis(),
+                isLoading = dailyAiLoading,
+                inFlightRequestKey = dailyAiRequestInFlightKey,
+                requestKey = requestKey
+            )
+        ) {
+            is DailyAiRequestPolicy.Decision.BlockedByCooldown -> {
+                Log.d(
+                    FITTO_AI_LOG_TAG,
+                    "Daily AI request blocked by cooldown. remaining=${decision.remainingSeconds}s"
+                )
+                renderDailyAiMessage(
+                    message = getString(R.string.daily_ai_error_rate_limited),
+                    subtitle = localDailyAiMessage(snapshot)
+                )
+                return
+            }
 
-        if (dailyAiRequestInFlightKey == requestKey) {
-            Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: same request is already in flight.")
-            renderDailyAiLoading()
-            return
+            DailyAiRequestPolicy.Decision.AlreadyLoading -> {
+                Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: already loading.")
+                renderDailyAiLoading()
+                return
+            }
+
+            DailyAiRequestPolicy.Decision.SameRequestInFlight -> {
+                Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: same request is already in flight.")
+                renderDailyAiLoading()
+                return
+            }
+
+            DailyAiRequestPolicy.Decision.Start -> Unit
         }
 
         if (isAuto) {
@@ -501,16 +509,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
         }
 
-        val localTexts = listOf(
-            getString(R.string.daily_ai_default_message),
-            getString(R.string.daily_ai_default_subtitle),
-            getString(R.string.daily_ai_loading),
-            getString(R.string.daily_ai_preparing),
-            getString(R.string.daily_ai_error_general),
-            getString(R.string.daily_ai_error_network),
-            getString(R.string.daily_ai_error_rate_limited),
-            localDailyAiMessage(snapshot)
-        )
+        val localTexts = DailyAiMessageTextResolver
+            .resolveCacheLocalMessageResList(snapshot.triggerType)
+            .map(::getString)
 
         return DailyAiCachePolicy.isUsableCachedMessage(
             cachedMessage = cachedMessage,
@@ -1994,10 +1995,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         mealDetailsByType: Map<MealType, List<MealEntryDetailUiModel>>
     ): List<DailyAiMealSnapshot> {
         return DailyAiMealSnapshotMapper.buildMeals(
-            mealDefinitions = MealType.entries.map { mealType ->
+            mealDefinitions = DailyAiMealDefinitionResolver.resolveMealDefinitions().map { definition ->
                 DailyAiMealSnapshotMapper.MealDefinition(
-                    key = mealType.argumentValue,
-                    label = getString(mealType.titleRes)
+                    key = definition.key,
+                    label = getString(definition.labelRes)
                 )
             },
             mealSummariesByType = mealSummariesByType,
@@ -2014,14 +2015,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         syncedActivityCalories: Int
     ): String {
         return DailyAiExerciseSummaryBuilder.build(
-            logs = logs.map { log ->
-                DailyAiExerciseSummaryBuilder.ExerciseLog(
-                    title = log.exerciseTitle,
-                    categoryName = log.categoryName,
-                    durationMinutes = log.durationMinutes,
-                    calories = log.calories
-                )
-            },
+            logs = DailyAiExerciseLogMapper.toExerciseLogs(logs),
             syncedActivityCalories = syncedActivityCalories,
             itemText = { title, durationMinutes, calories ->
                 getString(

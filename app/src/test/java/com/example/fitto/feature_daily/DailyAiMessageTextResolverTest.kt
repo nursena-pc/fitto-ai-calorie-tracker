@@ -8,6 +8,25 @@ import org.junit.Test
 class DailyAiMessageTextResolverTest {
 
     @Test
+    fun resolveCacheLocalMessageResList_containsStaticMessagesAndTriggerMessage() {
+        assertEquals(
+            listOf(
+                R.string.daily_ai_default_message,
+                R.string.daily_ai_default_subtitle,
+                R.string.daily_ai_loading,
+                R.string.daily_ai_preparing,
+                R.string.daily_ai_error_general,
+                R.string.daily_ai_error_network,
+                R.string.daily_ai_error_rate_limited,
+                R.string.daily_ai_low_water_local
+            ),
+            DailyAiMessageTextResolver.resolveCacheLocalMessageResList(
+                AiDailyTriggerType.LOW_WATER
+            )
+        )
+    }
+
+    @Test
     fun resolveLocalMessageRes_mapsTriggerTypesToMessageResources() {
         assertEquals(
             R.string.daily_ai_default_message,
