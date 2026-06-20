@@ -718,7 +718,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
             }
 
-            val targetCalories = resolveDailyCalorieTarget(profile).coerceAtLeast(1)
+            val targetCalories = resolveDailyNutritionTargets(profile)
+                .dailyCalories
+                .coerceAtLeast(1)
 
             val days = (6 downTo 0).map { offset ->
                 selectedDate.minusDays(offset.toLong())
@@ -1803,10 +1805,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
             if (_binding == null) return@launch
 
-            val targetCalories = resolveDailyCalorieTarget(profile)
-            val targetProtein = resolveProteinTarget(profile)
-            val targetCarbs = resolveCarbTarget(profile)
-            val targetFat = resolveFatTarget(profile)
+            val nutritionTargets = resolveDailyNutritionTargets(profile)
+            val targetCalories = nutritionTargets.dailyCalories
+            val targetProtein = nutritionTargets.proteinGrams
+            val targetCarbs = nutritionTargets.carbGrams
+            val targetFat = nutritionTargets.fatGrams
 
             val oldTargetCalories = currentDailyTargetCalories
 
@@ -2096,42 +2099,18 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             ?.let { customDietPlanStore.getPlan(it) }
     }
 
-    private fun resolveDailyCalorieTarget(
+    private fun resolveDailyNutritionTargets(
         profile: UserProfileEntity?
-    ): Int {
-        return DailyNutritionTargetResolver.resolveDailyCalories(
+    ): DailyNutritionTargetResolver.Targets {
+        return DailyNutritionTargetResolver.resolveTargets(
             activeCustomPlanCalories = activeCustomPlanCalories(),
             profileDailyCalories = profile?.dailyCalorieTarget,
             storedDailyCalories = nutritionTargetStore.getDailyTargetCalories(),
-            defaultDailyCalories = DEFAULT_DAILY_CALORIE_TARGET
-        )
-    }
-
-    private fun resolveProteinTarget(
-        profile: UserProfileEntity?
-    ): Int {
-        return DailyNutritionTargetResolver.resolveProteinGrams(
-            activeCustomPlanCalories = activeCustomPlanCalories(),
+            defaultDailyCalories = DEFAULT_DAILY_CALORIE_TARGET,
             profileProteinGrams = profile?.proteinTargetGrams,
-            defaultProteinGrams = DEFAULT_PROTEIN_TARGET_GRAMS
-        )
-    }
-
-    private fun resolveCarbTarget(
-        profile: UserProfileEntity?
-    ): Int {
-        return DailyNutritionTargetResolver.resolveCarbGrams(
-            activeCustomPlanCalories = activeCustomPlanCalories(),
+            defaultProteinGrams = DEFAULT_PROTEIN_TARGET_GRAMS,
             profileCarbGrams = profile?.carbTargetGrams,
-            defaultCarbGrams = DEFAULT_CARB_TARGET_GRAMS
-        )
-    }
-
-    private fun resolveFatTarget(
-        profile: UserProfileEntity?
-    ): Int {
-        return DailyNutritionTargetResolver.resolveFatGrams(
-            activeCustomPlanCalories = activeCustomPlanCalories(),
+            defaultCarbGrams = DEFAULT_CARB_TARGET_GRAMS,
             profileFatGrams = profile?.fatTargetGrams,
             defaultFatGrams = DEFAULT_FAT_TARGET_GRAMS
         )

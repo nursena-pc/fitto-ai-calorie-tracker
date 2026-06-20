@@ -6,6 +6,32 @@ import org.junit.Test
 class DailyNutritionTargetResolverTest {
 
     @Test
+    fun resolveTargets_returnsAllDailyNutritionTargets() {
+        val targets = DailyNutritionTargetResolver.resolveTargets(
+            activeCustomPlanCalories = 2000,
+            profileDailyCalories = 1800,
+            storedDailyCalories = 1700,
+            defaultDailyCalories = 1600,
+            profileProteinGrams = 90,
+            defaultProteinGrams = 75,
+            profileCarbGrams = 220,
+            defaultCarbGrams = 200,
+            profileFatGrams = 70,
+            defaultFatGrams = 60
+        )
+
+        assertEquals(
+            DailyNutritionTargetResolver.Targets(
+                dailyCalories = 2000,
+                proteinGrams = 125,
+                carbGrams = 225,
+                fatGrams = 67
+            ),
+            targets
+        )
+    }
+
+    @Test
     fun resolveDailyCalories_prioritizesActiveCustomPlan() {
         val target = DailyNutritionTargetResolver.resolveDailyCalories(
             activeCustomPlanCalories = 1800,

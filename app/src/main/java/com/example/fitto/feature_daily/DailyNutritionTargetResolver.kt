@@ -4,6 +4,50 @@ import kotlin.math.roundToInt
 
 object DailyNutritionTargetResolver {
 
+    data class Targets(
+        val dailyCalories: Int,
+        val proteinGrams: Int,
+        val carbGrams: Int,
+        val fatGrams: Int
+    )
+
+    fun resolveTargets(
+        activeCustomPlanCalories: Int?,
+        profileDailyCalories: Int?,
+        storedDailyCalories: Int,
+        defaultDailyCalories: Int,
+        profileProteinGrams: Int?,
+        defaultProteinGrams: Int,
+        profileCarbGrams: Int?,
+        defaultCarbGrams: Int,
+        profileFatGrams: Int?,
+        defaultFatGrams: Int
+    ): Targets {
+        return Targets(
+            dailyCalories = resolveDailyCalories(
+                activeCustomPlanCalories = activeCustomPlanCalories,
+                profileDailyCalories = profileDailyCalories,
+                storedDailyCalories = storedDailyCalories,
+                defaultDailyCalories = defaultDailyCalories
+            ),
+            proteinGrams = resolveProteinGrams(
+                activeCustomPlanCalories = activeCustomPlanCalories,
+                profileProteinGrams = profileProteinGrams,
+                defaultProteinGrams = defaultProteinGrams
+            ),
+            carbGrams = resolveCarbGrams(
+                activeCustomPlanCalories = activeCustomPlanCalories,
+                profileCarbGrams = profileCarbGrams,
+                defaultCarbGrams = defaultCarbGrams
+            ),
+            fatGrams = resolveFatGrams(
+                activeCustomPlanCalories = activeCustomPlanCalories,
+                profileFatGrams = profileFatGrams,
+                defaultFatGrams = defaultFatGrams
+            )
+        )
+    }
+
     fun resolveDailyCalories(
         activeCustomPlanCalories: Int?,
         profileDailyCalories: Int?,
