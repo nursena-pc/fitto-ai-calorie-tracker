@@ -42,7 +42,10 @@ class CustomDietMealPlanGenerator(
             allFoods = allFoods,
             dayNumber = normalizedDay
         )
-        val nextMeal = meals.firstOrNull { it.id !in completedMealIds }
+        val nextMeal = PlannedMealProgressResolver.nextMeal(
+            meals = meals,
+            completedMealIds = completedMealIds
+        )
 
         return DailyPlannedMealsUiModel(
             planId = plan.id,

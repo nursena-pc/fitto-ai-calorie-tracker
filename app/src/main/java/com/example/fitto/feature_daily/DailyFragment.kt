@@ -26,6 +26,7 @@ import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
 import com.example.fitto.feature_dietplans.planning.DailyPlannedMealsUiModel
 import com.example.fitto.feature_dietplans.planning.DietMealPlanCatalog
+import com.example.fitto.feature_dietplans.planning.PlannedMealProgressResolver
 import com.example.fitto.feature_meal.AddMealFragment
 import com.example.fitto.feature_meal.MealDetailFragment
 import com.example.fitto.feature_meal.model.MealType
@@ -1595,7 +1596,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             dayNumber
         )
 
-        val nextMeal = plannedMeals.firstOrNull { it.id !in completedMealIds }
+        val nextMeal = PlannedMealProgressResolver.nextMeal(
+            meals = plannedMeals,
+            completedMealIds = completedMealIds
+        )
 
         return DailyPlannedMealsUiModel(
             planId = activePlan.id,
@@ -1627,7 +1631,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             dayNumber
         )
 
-        val nextMeal = plannedMeals.firstOrNull { it.id !in completedMealIds }
+        val nextMeal = PlannedMealProgressResolver.nextMeal(
+            meals = plannedMeals,
+            completedMealIds = completedMealIds
+        )
 
         return DailyPlannedMealsUiModel(
             planId = activePlan.id,
