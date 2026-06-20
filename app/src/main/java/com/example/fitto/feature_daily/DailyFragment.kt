@@ -1307,11 +1307,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
         }
 
-        currentActivePlan = activePlan.takeIf { it.id != "none" }
+        currentActivePlan = activePlan.takeUnless { plan ->
+            DailyActivePlanPolicy.isEmptyPlan(plan.id)
+        }
 
-        if (activePlan.id == "none" ||
-            activePlan.id == DietPlanCatalog.PLAN_INTERMITTENT_FASTING
-        ) {
+        if (DailyActivePlanPolicy.shouldUseBasicPlanRenderer(activePlan.id)) {
             currentDailyMealPlan = null
             renderBasicActivePlan(activePlan)
             return
@@ -1342,11 +1342,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderFastingActionsIfNeeded(planId: String) = with(binding) {
-        val isFastingPlan = planId == DietPlanCatalog.PLAN_INTERMITTENT_FASTING ||
-                planId.contains("fasting", ignoreCase = true) ||
-                planId.contains("if", ignoreCase = true)
-
-        if (!isFastingPlan) {
+        if (!DailyActivePlanPolicy.isFastingPlan(planId)) {
             fastingActionContainer.visibility = View.GONE
             fastingAnalysisContainer.visibility = View.GONE
             stopFastingTimer()
@@ -1654,11 +1650,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         activePlanTitleText.text = activePlan.title
         activePlanBadgeText.text = activePlan.badge
 
-        val isFastingPlan = activePlan.id == DietPlanCatalog.PLAN_INTERMITTENT_FASTING ||
-                activePlan.id.contains("fasting", ignoreCase = true) ||
-                activePlan.id.contains("if", ignoreCase = true)
-
-        if (isFastingPlan) {
+        if (DailyActivePlanPolicy.isFastingPlan(activePlan.id)) {
             activePlanMetricsContainer.isVisible = false
             fastingActionContainer.isVisible = true
             fastingAnalysisContainer.isVisible = true
@@ -2368,7 +2360,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun openActivePlanDetail(planId: String) {
-        if (planId.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) {
+        if (DailyActivePlanPolicy.isCustomPlan(planId)) {
             openDietPlans()
             return
         }
