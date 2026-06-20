@@ -217,7 +217,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
             }
 
-            val resolvedWeight = resolveProfileWeightKg(profile)
+            val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
 
             currentProfileWeightKg = resolvedWeight
             currentWeightKg = resolvedWeight ?: 70.0
@@ -830,17 +830,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
             }
 
-            waterGoalMl = resolveWaterGoalMl(profile)
+            waterGoalMl = DailyProfileMetricsResolver.resolveWaterGoalMl(profile)
             renderWaterTracking()
         }
-    }
-
-    private fun resolveProfileWeightKg(profile: UserProfileEntity?): Double? {
-        return DailyProfileMetricsResolver.resolveWeightKg(profile)
-    }
-
-    private fun resolveWaterGoalMl(profile: UserProfileEntity?): Int {
-        return DailyProfileMetricsResolver.resolveWaterGoalMl(profile)
     }
 
     private fun renderWaterTracking(
@@ -1287,7 +1279,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         if (_binding == null || !::dietPlanStore.isInitialized) return
 
         val activePlanId = dietPlanStore.getActivePlanId()
-        if (activePlanId?.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX) == true) {
+        if (activePlanId?.let(DailyActivePlanPolicy::isCustomPlan) == true) {
             val customPlan = customDietPlanStore.getPlan(activePlanId)
 
             if (customPlan != null) {
@@ -1859,7 +1851,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 byMealType[MealType.DINNER.argumentValue]?.totalCalories ?: 0
             )
 
-            val resolvedWeight = resolveProfileWeightKg(profile)
+            val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
             currentProfileWeightKg = resolvedWeight
             currentWeightKg = resolvedWeight ?: currentWeightKg
 
@@ -2114,7 +2106,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val activePlanId = dietPlanStore.getActivePlanId() ?: return null
 
         return activePlanId
-            .takeIf { it.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX) }
+            .takeIf(DailyActivePlanPolicy::isCustomPlan)
             ?.let { customDietPlanStore.getPlan(it) }
     }
 
