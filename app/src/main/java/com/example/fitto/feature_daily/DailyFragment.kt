@@ -1442,43 +1442,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
         }.start()
     }
-    private data class FastingBodyAnalysisUiModel(
-        val rangeTitle: String,
-        val bodyText: String
-    )
-    private fun getFastingBodyAnalysis(
-        range: DailyFastingPolicy.AnalysisRange
-    ): FastingBodyAnalysisUiModel {
-        return when (range) {
-            DailyFastingPolicy.AnalysisRange.HOURS_0_TO_4 -> {
-                FastingBodyAnalysisUiModel(
-                    rangeTitle = getString(R.string.daily_fasting_elapsed_range_0_4),
-                    bodyText = getString(R.string.daily_fasting_elapsed_body_0_4)
-                )
-            }
-
-            DailyFastingPolicy.AnalysisRange.HOURS_4_TO_8 -> {
-                FastingBodyAnalysisUiModel(
-                    rangeTitle = getString(R.string.daily_fasting_elapsed_range_4_8),
-                    bodyText = getString(R.string.daily_fasting_elapsed_body_4_8)
-                )
-            }
-
-            DailyFastingPolicy.AnalysisRange.HOURS_8_TO_12 -> {
-                FastingBodyAnalysisUiModel(
-                    rangeTitle = getString(R.string.daily_fasting_elapsed_range_8_12),
-                    bodyText = getString(R.string.daily_fasting_elapsed_body_8_12)
-                )
-            }
-
-            DailyFastingPolicy.AnalysisRange.HOURS_12_PLUS -> {
-                FastingBodyAnalysisUiModel(
-                    rangeTitle = getString(R.string.daily_fasting_elapsed_range_12_16),
-                    bodyText = getString(R.string.daily_fasting_elapsed_body_12_16)
-                )
-            }
-        }
-    }
     private fun finishFastingManually() {
         stopFastingTimer()
         stopHourglassAnimation()
@@ -1524,12 +1487,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             remainingMillis = remainingMillis
         )
 
-        val analysis = getFastingBodyAnalysis(
+        val analysisTextRes = DailyFastingTextResolver.resolveAnalysisTextRes(
             DailyFastingPolicy.resolveAnalysisRange(elapsedHours)
         )
 
-        fastingAnalysisRangeText.text = analysis.rangeTitle
-        fastingAnalysisBodyText.text = analysis.bodyText
+        fastingAnalysisRangeText.text = getString(analysisTextRes.rangeTitleRes)
+        fastingAnalysisBodyText.text = getString(analysisTextRes.bodyTextRes)
     }
     private fun startHourglassAnimation() {
         if (hourglassAnimator?.isRunning == true) return
@@ -1568,11 +1531,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun getFastingMealSuggestion(fastingHours: Int): String {
-        return when (DailyFastingPolicy.resolveMealSuggestion(fastingHours)) {
-            DailyFastingPolicy.MealSuggestion.LONG -> getString(R.string.daily_fasting_meal_suggestion_long)
-            DailyFastingPolicy.MealSuggestion.MEDIUM -> getString(R.string.daily_fasting_meal_suggestion_medium)
-            DailyFastingPolicy.MealSuggestion.SHORT -> getString(R.string.daily_fasting_meal_suggestion_short)
-        }
+        return getString(DailyFastingTextResolver.resolveMealSuggestionRes(fastingHours))
     }
 
     private fun resolveSelectedFastingHours(): Int {
