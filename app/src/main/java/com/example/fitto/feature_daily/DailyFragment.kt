@@ -1938,7 +1938,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 mealDetailsByType = mealDetailsByType
             )
 
-            val dailyAiTriggerType = resolveDailyAiTriggerType(
+            val dailyAiTriggerType = DailyAiTriggerResolver.resolve(
                 totalCalories = energyBalance.eatenCalories,
                 targetCalories = targetCalories,
                 waterMl = currentWaterMl,
@@ -1946,7 +1946,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 proteinGrams = nutritionSummary.totalProtein,
                 proteinTargetGrams = targetProtein,
                 meals = dailyAiMeals,
-                exerciseLogCount = exerciseSummary.logCount
+                exerciseLogCount = exerciseSummary.logCount,
+                snackMealLabel = getString(R.string.daily_snack)
             )
 
             currentDailyAiSnapshot = DailyAiSnapshot(
@@ -2039,38 +2040,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         )
     }
 
-    private fun resolveDailyAiTriggerType(
-        totalCalories: Int,
-        targetCalories: Int,
-        waterMl: Int,
-        waterGoalMl: Int,
-        proteinGrams: Double,
-        proteinTargetGrams: Int,
-        meals: List<DailyAiMealSnapshot>,
-        exerciseLogCount: Int
-    ): AiDailyTriggerType {
-        return DailyAiTriggerPolicy.resolve(
-            totalCalories = totalCalories,
-            targetCalories = targetCalories,
-            waterMl = waterMl,
-            waterGoalMl = waterGoalMl,
-            proteinGrams = proteinGrams,
-            proteinTargetGrams = proteinTargetGrams,
-            meals = meals.map { meal ->
-                DailyAiTriggerPolicy.Meal(
-                    mealTypeLabel = meal.mealTypeLabel,
-                    totalCalories = meal.totalCalories,
-                    proteinGrams = meal.proteinGrams
-                )
-            },
-            exerciseLogCount = exerciseLogCount,
-            snackMealLabel = getString(R.string.daily_snack)
-        )
-    }
-
     private fun refreshDailyAiSnapshotForWater() {
         val currentSnapshot = currentDailyAiSnapshot ?: return
-        val updatedTrigger = resolveDailyAiTriggerType(
+        val updatedTrigger = DailyAiTriggerResolver.resolve(
             totalCalories = currentSnapshot.totalCalories,
             targetCalories = currentSnapshot.dailyCalorieTarget,
             waterMl = currentWaterMl,
@@ -2078,7 +2050,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             proteinGrams = currentSnapshot.proteinGrams,
             proteinTargetGrams = currentSnapshot.proteinTargetGrams,
             meals = currentSnapshot.meals,
-            exerciseLogCount = currentSnapshot.exerciseLogCount
+            exerciseLogCount = currentSnapshot.exerciseLogCount,
+            snackMealLabel = getString(R.string.daily_snack)
         )
 
         val updatedSnapshot = currentSnapshot.copy(
