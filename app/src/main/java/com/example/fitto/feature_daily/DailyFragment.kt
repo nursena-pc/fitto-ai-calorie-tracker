@@ -851,21 +851,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         binding.waterBottleContainer.removeAllViews()
 
+        val waterBottleUiState = DailyWaterBottleUiStateResolver.resolve(waterState)
+
         binding.waterBottleContainer.addView(
-            createRemoveBottleView(
-                defaultBottleCount = waterState.defaultBottleCount,
-                visibleBottleCount = waterState.totalBottleCount
-            )
+            createRemoveBottleView(waterBottleUiState.removeBottle)
         )
 
-        repeat(waterState.totalBottleCount) { index ->
-            val isFilled = index < waterState.filledBottleCount
-
+        waterBottleUiState.bottles.forEach { bottleState ->
             binding.waterBottleContainer.addView(
-                createBottleView(
-                    index = index,
-                    isFilled = isFilled
-                )
+                createBottleView(bottleState)
             )
         }
 
@@ -885,8 +879,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun createRemoveBottleView(
-        defaultBottleCount: Int,
-        visibleBottleCount: Int
+        state: DailyWaterBottleUiStateResolver.RemoveBottleState
     ): ImageView {
         val context = requireContext()
 
@@ -905,26 +898,22 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
                     context,
-                    if (visibleBottleCount > WaterTrackingStore.MIN_BOTTLE_COUNT) {
-                        R.color.fitto_orange
-                    } else {
-                        R.color.fitto_text_secondary
-                    }
+                    state.tintColorRes
                 )
             )
 
-            alpha = if (visibleBottleCount > WaterTrackingStore.MIN_BOTTLE_COUNT) 1f else 0.35f
+            alpha = state.alpha
 
-            contentDescription = getString(R.string.daily_remove_bottle)
+            contentDescription = getString(state.contentDescriptionRes)
 
             setOnClickListener {
-                if (visibleBottleCount <= WaterTrackingStore.MIN_BOTTLE_COUNT) return@setOnClickListener
+                if (!state.isEnabled) return@setOnClickListener
 
                 val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
 
                 // Dolu şişe sayısından daha az görünür şişeye düşürmeyelim.
                 val canRemoveBottle = DailyWaterTrackingCalculator.canRemoveVisibleBottle(
-                    visibleBottleCount = visibleBottleCount,
+                    visibleBottleCount = state.visibleBottleCount,
                     rawWaterMl = rawWaterMl
                 )
 
@@ -932,7 +921,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
                 waterTrackingStore.decreaseVisibleBottleCount(
                     date = selectedDate,
-                    defaultCount = defaultBottleCount,
+                    defaultCount = state.defaultBottleCount,
                     amount = 1
                 )
 
@@ -942,8 +931,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun createBottleView(
-        index: Int,
-        isFilled: Boolean
+        state: DailyWaterBottleUiStateResolver.BottleState
     ): ImageView {
         val context = requireContext()
 
@@ -957,20 +945,16 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             imageTintList = ColorStateList.valueOf(
                 ContextCompat.getColor(
                     context,
-                    if (isFilled) R.color.fitto_water_blue else R.color.fitto_divider_soft
+                    state.tintColorRes
                 )
             )
 
-            alpha = if (isFilled) 1f else 0.45f
+            alpha = state.alpha
 
-            contentDescription = if (isFilled) {
-                getString(R.string.daily_water_bottle_filled_cd, index + 1)
-            } else {
-                getString(R.string.daily_water_bottle_empty_cd, index + 1)
-            }
+            contentDescription = getString(state.contentDescriptionRes, state.number)
 
             setOnClickListener {
-                toggleWaterBottle(isFilled)
+                toggleWaterBottle(state.isFilled)
             }
         }
     }
