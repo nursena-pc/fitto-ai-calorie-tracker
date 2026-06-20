@@ -76,7 +76,6 @@ import android.app.Dialog
 import android.view.LayoutInflater
 import android.view.WindowManager
 import android.widget.TextView
-import com.example.fitto.feature_sleep.data.SleepLogLocalModel
 import com.example.fitto.feature_sleep.data.SleepLogStore
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -571,26 +570,20 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val currentDate = currentEntryDate()
         val currentLog = sleepLogStore.getLogForDate(currentDate)
 
-        var bedtimeHour = currentLog?.bedtimeHour ?: 23
-        var bedtimeMinute = currentLog?.bedtimeMinute ?: 0
-        var wakeHour = currentLog?.wakeHour ?: 7
-        var wakeMinute = currentLog?.wakeMinute ?: 0
+        var sleepSelection = DailySleepTimeSelection.from(currentLog)
 
         fun refreshPreview() {
-            bedtimeValueText.text = DailyValueFormatter.formatHourMinute(bedtimeHour, bedtimeMinute)
-            wakeTimeValueText.text = DailyValueFormatter.formatHourMinute(wakeHour, wakeMinute)
-
-            val durationMinutes = DailyMetricCalculator.calculateSleepDurationMinutes(
-                bedtimeHour = bedtimeHour,
-                bedtimeMinute = bedtimeMinute,
-                wakeHour = wakeHour,
-                wakeMinute = wakeMinute
+            bedtimeValueText.text = DailyValueFormatter.formatHourMinute(
+                sleepSelection.bedtimeHour,
+                sleepSelection.bedtimeMinute
+            )
+            wakeTimeValueText.text = DailyValueFormatter.formatHourMinute(
+                sleepSelection.wakeHour,
+                sleepSelection.wakeMinute
             )
 
-            val calories = DailyMetricCalculator.calculateSleepCalories(
-                durationMinutes = durationMinutes,
-                weightKg = currentWeightKg
-            )
+            val durationMinutes = sleepSelection.durationMinutes()
+            val calories = sleepSelection.calories(currentWeightKg)
 
             durationResultText.text = getString(
                 R.string.sleep_duration_result,
@@ -606,11 +599,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         bedtimeCard.setOnClickListener {
             showTimePicker(
                 title = getString(R.string.sleep_time_picker_title_bed),
-                initialHour = bedtimeHour,
-                initialMinute = bedtimeMinute
+                initialHour = sleepSelection.bedtimeHour,
+                initialMinute = sleepSelection.bedtimeMinute
             ) { hour, minute ->
-                bedtimeHour = hour
-                bedtimeMinute = minute
+                sleepSelection = sleepSelection.withBedtime(hour, minute)
                 refreshPreview()
             }
         }
@@ -618,11 +610,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         wakeTimeCard.setOnClickListener {
             showTimePicker(
                 title = getString(R.string.sleep_time_picker_title_wake),
-                initialHour = wakeHour,
-                initialMinute = wakeMinute
+                initialHour = sleepSelection.wakeHour,
+                initialMinute = sleepSelection.wakeMinute
             ) { hour, minute ->
-                wakeHour = hour
-                wakeMinute = minute
+                sleepSelection = sleepSelection.withWakeTime(hour, minute)
                 refreshPreview()
             }
         }
@@ -632,29 +623,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
 
         saveButton.setOnClickListener {
-            val durationMinutes = DailyMetricCalculator.calculateSleepDurationMinutes(
-                bedtimeHour = bedtimeHour,
-                bedtimeMinute = bedtimeMinute,
-                wakeHour = wakeHour,
-                wakeMinute = wakeMinute
-            )
-
-            val calories = DailyMetricCalculator.calculateSleepCalories(
-                durationMinutes = durationMinutes,
-                weightKg = currentWeightKg
-            )
-
-            val log = SleepLogLocalModel(
-                date = currentDate,
-                bedtimeHour = bedtimeHour,
-                bedtimeMinute = bedtimeMinute,
-                wakeHour = wakeHour,
-                wakeMinute = wakeMinute,
-                durationMinutes = durationMinutes,
-                caloriesBurned = calories
-            )
-
-            sleepLogStore.saveLog(log)
+            sleepLogStore.saveLog(sleepSelection.toLog(currentDate, currentWeightKg))
             renderSleepCard()
             dialog.dismiss()
 
@@ -694,20 +663,33 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun renderSleepCard() {
         if (_binding == null || !::sleepLogStore.isInitialized) return
 
-        val log = sleepLogStore.getLogForDate(currentEntryDate())
-
-        if (log == null) {
-            binding.sleepValueText.text = getString(R.string.daily_no_sleep_data_short)
-            binding.sleepStatusText.text = getString(R.string.daily_no_sleep_data_desc)
-            return
-        }
-
-        binding.sleepValueText.text = DailyValueFormatter.formatDuration(log.durationMinutes)
-        binding.sleepStatusText.text = getString(
-            R.string.sleep_time_range_format,
-            DailyValueFormatter.formatHourMinute(log.bedtimeHour, log.bedtimeMinute),
-            DailyValueFormatter.formatHourMinute(log.wakeHour, log.wakeMinute)
+        val sleepCardState = DailySleepCardStateResolver.resolve(
+            sleepLogStore.getLogForDate(currentEntryDate())
         )
+
+        when (sleepCardState) {
+            DailySleepCardStateResolver.State.Empty -> {
+                binding.sleepValueText.text = getString(R.string.daily_no_sleep_data_short)
+                binding.sleepStatusText.text = getString(R.string.daily_no_sleep_data_desc)
+            }
+
+            is DailySleepCardStateResolver.State.Logged -> {
+                binding.sleepValueText.text = DailyValueFormatter.formatDuration(
+                    sleepCardState.durationMinutes
+                )
+                binding.sleepStatusText.text = getString(
+                    R.string.sleep_time_range_format,
+                    DailyValueFormatter.formatHourMinute(
+                        sleepCardState.selection.bedtimeHour,
+                        sleepCardState.selection.bedtimeMinute
+                    ),
+                    DailyValueFormatter.formatHourMinute(
+                        sleepCardState.selection.wakeHour,
+                        sleepCardState.selection.wakeMinute
+                    )
+                )
+            }
+        }
     }
 
     private fun renderWeeklyCalorieProgress() {
