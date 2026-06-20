@@ -1088,9 +1088,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private fun loadHealthConnectSummary() {
         viewLifecycleOwner.lifecycleScope.launch {
-            val date = currentDailyLocalDate()
-
-            healthConnectSummary = healthConnectManager.readDailySummary(date)
+            healthConnectSummary = healthConnectManager.readDailySummary(selectedDate)
 
             renderHealthConnectSummary()
         }
@@ -1101,18 +1099,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         renderMealTotals()
     }
 
-    private fun calculateSafeBurnedCalories(
-        healthActiveCalories: Int,
-        manualExerciseCalories: Int
-    ): Int {
-        return DailyActivityPolicy.resolveBurnedCalories(
-            healthActiveCalories = healthActiveCalories,
-            manualExerciseCalories = manualExerciseCalories
-        )
-    }
-     private fun currentDailyLocalDate(): LocalDate {
-        return selectedDate
-    }
     private fun setupExerciseAddedResultListener() {
         parentFragmentManager.setFragmentResultListener(
             AddExerciseFragment.REQUEST_EXERCISE_ADDED,
