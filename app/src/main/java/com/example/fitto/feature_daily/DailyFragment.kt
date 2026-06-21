@@ -2181,8 +2181,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun applyNextPlannedMeal() {
-        val dailyPlan = currentDailyMealPlan ?: return
-        val nextMeal = dailyPlan.nextMeal ?: return
+        val applyRequest = DailyPlannedMealActionResolver.resolveApplyRequest(
+            currentDailyMealPlan
+        ) ?: return
 
         binding.applyPlannedMealButton.isEnabled = false
 
@@ -2190,28 +2191,24 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             runCatching {
                 withContext(Dispatchers.IO) {
                     mealRepository.addPlannedMealEntry(
-                        mealType = nextMeal.mealType,
-                        title = nextMeal.title,
-                        targetCalories = dailyPlan.targetCalories,
-                        plannedMealCalories = nextMeal.scaledCalories(dailyPlan.targetCalories),
-                        suggestedFoodNames = nextMeal.foods,
-                        planId = dailyPlan.planId,
-                        plannedMealId = nextMeal.id,
+                        mealType = applyRequest.mealType,
+                        title = applyRequest.title,
+                        targetCalories = applyRequest.targetCalories,
+                        plannedMealCalories = applyRequest.plannedMealCalories,
+                        suggestedFoodNames = applyRequest.suggestedFoodNames,
+                        planId = applyRequest.planId,
+                        plannedMealId = applyRequest.plannedMealId,
                         entryDate = selectedDateIso
                     )
                 }
             }.onSuccess {
-                dietPlanStore.markPlannedMealCompleted(
-                    planId = dailyPlan.planId,
-                    dayNumber = dailyPlan.dayNumber,
-                    plannedMealId = nextMeal.id
-                )
+                markPlannedMealCompleted(applyRequest.completion)
 
                 Toast.makeText(
                     requireContext(),
                     getString(
                         R.string.daily_planned_meal_applied_message,
-                        getString(nextMeal.mealType.titleRes)
+                        getString(applyRequest.mealTypeTitleRes)
                     ),
                     Toast.LENGTH_SHORT
                 ).show()
@@ -2233,16 +2230,23 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun markNextPlannedMealCompletedIfMatches(mealType: MealType) {
-        val dailyPlan = currentDailyMealPlan ?: return
-        val nextMeal = dailyPlan.nextMeal ?: return
-        if (nextMeal.mealType != mealType) return
+        val completion = DailyPlannedMealActionResolver.resolveCompletionForMealType(
+            dailyPlan = currentDailyMealPlan,
+            mealType = mealType
+        ) ?: return
 
-        dietPlanStore.markPlannedMealCompleted(
-            planId = dailyPlan.planId,
-            dayNumber = dailyPlan.dayNumber,
-            plannedMealId = nextMeal.id
-        )
+        markPlannedMealCompleted(completion)
         renderActivePlan()
+    }
+
+    private fun markPlannedMealCompleted(
+        completion: DailyPlannedMealActionResolver.Completion
+    ) {
+        dietPlanStore.markPlannedMealCompleted(
+            planId = completion.planId,
+            dayNumber = completion.dayNumber,
+            plannedMealId = completion.plannedMealId
+        )
     }
 
     fun openDietPlans() {
