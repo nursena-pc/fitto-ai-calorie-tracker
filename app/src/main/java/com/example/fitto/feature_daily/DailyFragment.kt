@@ -1598,37 +1598,43 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderBasicActivePlan(activePlan: ActiveDietPlanUiModel) = with(binding) {
-        activePlanTitleText.text = activePlan.title
-        activePlanBadgeText.text = activePlan.badge
+        val planState = DailyBasicActivePlanUiStateResolver.resolve(activePlan)
 
-        if (DailyActivePlanPolicy.isFastingPlan(activePlan.id)) {
-            activePlanMetricsContainer.isVisible = false
-            fastingActionContainer.isVisible = true
-            fastingAnalysisContainer.isVisible = true
+        activePlanTitleText.text = planState.title
+        activePlanBadgeText.text = planState.badge
 
-            renderFastingActionsIfNeeded(activePlan.id)
-            updateFastingAnalysis(activePlan.id)
-        } else {
-            activePlanMetricsContainer.isVisible = true
-            fastingActionContainer.isVisible = false
-            fastingAnalysisContainer.isVisible = false
+        when (val content = planState.content) {
+            DailyBasicActivePlanUiStateResolver.Content.Fasting -> {
+                activePlanMetricsContainer.isVisible = false
+                fastingActionContainer.isVisible = true
+                fastingAnalysisContainer.isVisible = true
 
-            activePlanIconText.isVisible = true
-            activePlanDivider.isVisible = true
-            activePlanMetricOneLabelText.isVisible = true
-            activePlanMetricOneValueText.isVisible = true
-            activePlanMetricTwoLabelText.isVisible = true
-            activePlanMetricTwoValueText.isVisible = true
+                renderFastingActionsIfNeeded(planState.planId)
+                updateFastingAnalysis(planState.planId)
+            }
 
-            activePlanMetricOneLabelText.text = activePlan.primaryLabel
-            activePlanMetricOneValueText.text = activePlan.primaryValue
-            activePlanMetricTwoLabelText.text = activePlan.secondaryLabel
-            activePlanMetricTwoValueText.text = activePlan.secondaryValue
+            is DailyBasicActivePlanUiStateResolver.Content.Metrics -> {
+                activePlanMetricsContainer.isVisible = true
+                fastingActionContainer.isVisible = false
+                fastingAnalysisContainer.isVisible = false
+
+                activePlanIconText.isVisible = true
+                activePlanDivider.isVisible = true
+                activePlanMetricOneLabelText.isVisible = true
+                activePlanMetricOneValueText.isVisible = true
+                activePlanMetricTwoLabelText.isVisible = true
+                activePlanMetricTwoValueText.isVisible = true
+
+                activePlanMetricOneLabelText.text = content.primaryLabel
+                activePlanMetricOneValueText.text = content.primaryValue
+                activePlanMetricTwoLabelText.text = content.secondaryLabel
+                activePlanMetricTwoValueText.text = content.secondaryValue
+            }
         }
 
         plannedMealFoodsText.isVisible = false
         applyPlannedMealButton.isVisible = false
-        fastingProgress.progress = activePlan.progress
+        fastingProgress.progress = planState.progress
     }
 
     private fun renderDailyMealPlan(plan: DailyPlannedMealsUiModel) = with(binding) {
