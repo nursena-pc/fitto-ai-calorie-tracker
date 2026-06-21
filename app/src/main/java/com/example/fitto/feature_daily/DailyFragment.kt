@@ -2346,14 +2346,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             manualExerciseCalories = manualExerciseCalories
         )
 
-        val textRes = when (source) {
-            DailyActivityPolicy.Source.HEALTH_CONNECT -> R.string.daily_activity_source_health_connect
-            DailyActivityPolicy.Source.FITTO_COUNTER -> R.string.daily_activity_source_fitto_counter
-            DailyActivityPolicy.Source.MANUAL_ONLY -> R.string.daily_activity_source_manual_only
-            DailyActivityPolicy.Source.CONNECT -> R.string.daily_activity_source_connect
-        }
-
-        activitySyncStatusText.text = getString(textRes)
+        activitySyncStatusText.text = getString(
+            DailyActivitySourceTextResolver.resolveStatusTextRes(source)
+        )
 
         activitySyncStatusText.setOnClickListener {
             showHealthConnectBottomSheet()
