@@ -1318,26 +1318,23 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         if (remainingMillis > 0L) {
             startFastingCountdown(planId)
         } else {
-            fastingCountdownTitleText.text = getString(R.string.daily_fasting_countdown_title)
-            fastingCountdownText.text = getString(R.string.daily_fasting_not_started)
-            startFastingButton.isEnabled = true
-            startFastingButton.text = getString(R.string.daily_fasting_start_button)
-            stopHourglassAnimation()
+            renderFastingCountdownState(
+                state = DailyFastingUiStateResolver.resolveIdleCountdownState(),
+                onStartClick = {
+                    fastingSessionStore.startFasting(
+                        planId = planId,
+                        fastingHours = fastingHours
+                    )
 
-            startFastingButton.setOnClickListener {
-                fastingSessionStore.startFasting(
-                    planId = planId,
-                    fastingHours = fastingHours
-                )
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.daily_fasting_started_message),
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.daily_fasting_started_message),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                startFastingCountdown(planId)
-            }
+                    startFastingCountdown(planId)
+                }
+            )
         }
     }
     private fun startFastingCountdown(planId: String) {
@@ -1346,24 +1343,18 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val remainingMillis = fastingSessionStore.getRemainingMillis(planId)
 
         if (remainingMillis <= 0L) {
-            binding.fastingCountdownText.text = getString(R.string.daily_fasting_completed)
-            binding.startFastingButton.isEnabled = true
-            binding.startFastingButton.text = getString(R.string.daily_fasting_start_button)
+            renderFastingCountdownState(
+                DailyFastingUiStateResolver.resolveCompletedCountdownState()
+            )
             updateFastingAnalysis(planId)
-            stopHourglassAnimation()
             return
         }
 
-        binding.startFastingButton.isEnabled = true
-        binding.startFastingButton.text = getString(R.string.daily_fasting_finish_button)
-        binding.startFastingButton.setOnClickListener {
-            finishFastingManually()
-        }
-
-        binding.fastingCountdownText.text = DailyValueFormatter.formatRemainingTime(remainingMillis)
+        renderFastingCountdownState(
+            state = DailyFastingUiStateResolver.resolveRunningCountdownState(remainingMillis),
+            onFinishClick = ::finishFastingManually
+        )
         updateFastingAnalysis(planId, remainingMillis)
-
-        startHourglassAnimation()
 
         fastingTimer = object : android.os.CountDownTimer(remainingMillis, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
@@ -1376,25 +1367,22 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             override fun onFinish() {
                 if (_binding == null) return
 
-                binding.fastingCountdownText.text = getString(R.string.daily_fasting_completed)
-                binding.startFastingButton.isEnabled = true
-                binding.startFastingButton.text = getString(R.string.daily_fasting_start_button)
+                renderFastingCountdownState(
+                    DailyFastingUiStateResolver.resolveCompletedCountdownState()
+                )
 
                 fastingSessionStore.clear()
-                stopHourglassAnimation()
                 renderActivePlan()
             }
         }.start()
     }
     private fun finishFastingManually() {
         stopFastingTimer()
-        stopHourglassAnimation()
         fastingSessionStore.clear()
 
-        binding.fastingCountdownTitleText.text = getString(R.string.daily_fasting_countdown_title)
-        binding.fastingCountdownText.text = getString(R.string.daily_fasting_not_started)
-        binding.startFastingButton.isEnabled = true
-        binding.startFastingButton.text = getString(R.string.daily_fasting_start_button)
+        renderFastingCountdownState(
+            DailyFastingUiStateResolver.resolveIdleCountdownState()
+        )
 
         Toast.makeText(
             requireContext(),
@@ -1410,33 +1398,49 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         fastingTimer = null
     }
 
+    private fun renderFastingCountdownState(
+        state: DailyFastingUiStateResolver.CountdownState,
+        onStartClick: (() -> Unit)? = null,
+        onFinishClick: (() -> Unit)? = null
+    ) = with(binding) {
+        fastingCountdownTitleText.text = getString(state.titleRes)
+        fastingCountdownText.text = state.messageRes?.let(::getString)
+            ?: state.remainingMillis?.let(DailyValueFormatter::formatRemainingTime)
+            .orEmpty()
+        startFastingButton.isEnabled = state.isButtonEnabled
+        startFastingButton.text = getString(state.buttonTextRes)
+
+        val clickAction = when (state.buttonAction) {
+            DailyFastingUiStateResolver.ButtonAction.START -> onStartClick
+            DailyFastingUiStateResolver.ButtonAction.FINISH -> onFinishClick
+            DailyFastingUiStateResolver.ButtonAction.NONE -> null
+        }
+
+        startFastingButton.setOnClickListener {
+            clickAction?.invoke()
+        }
+
+        if (state.shouldAnimateHourglass) {
+            startHourglassAnimation()
+        } else {
+            stopHourglassAnimation()
+        }
+    }
+
     private fun updateFastingAnalysis(
         planId: String,
         remainingMillisOverride: Long? = null
     ) = with(binding) {
         val remainingMillis = remainingMillisOverride
             ?: fastingSessionStore.getRemainingMillis(planId)
-
-        fastingAnalysisTitleText.text = getString(R.string.daily_fasting_analysis_title)
-
-        if (remainingMillis <= 0L) {
-            fastingAnalysisRangeText.text = getString(R.string.daily_fasting_analysis_not_started_title)
-            fastingAnalysisBodyText.text = getString(R.string.daily_fasting_analysis_not_started_body)
-            return@with
-        }
-
-        val fastingHours = resolveSelectedFastingHours()
-        val elapsedHours = DailyFastingPolicy.calculateElapsedHours(
-            fastingHours = fastingHours,
+        val analysisState = DailyFastingUiStateResolver.resolveAnalysisState(
+            fastingHours = resolveSelectedFastingHours(),
             remainingMillis = remainingMillis
         )
 
-        val analysisTextRes = DailyFastingTextResolver.resolveAnalysisTextRes(
-            DailyFastingPolicy.resolveAnalysisRange(elapsedHours)
-        )
-
-        fastingAnalysisRangeText.text = getString(analysisTextRes.rangeTitleRes)
-        fastingAnalysisBodyText.text = getString(analysisTextRes.bodyTextRes)
+        fastingAnalysisTitleText.text = getString(analysisState.titleRes)
+        fastingAnalysisRangeText.text = getString(analysisState.rangeTitleRes)
+        fastingAnalysisBodyText.text = getString(analysisState.bodyTextRes)
     }
     private fun startHourglassAnimation() {
         if (hourglassAnimator?.isRunning == true) return
