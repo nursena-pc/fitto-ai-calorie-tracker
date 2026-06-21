@@ -1645,52 +1645,50 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         activePlanMetricTwoLabelText.isVisible = true
         activePlanMetricTwoValueText.isVisible = true
 
-        val nextMeal = plan.nextMeal
+        val planState = DailyPlannedMealUiStateResolver.resolve(plan)
 
-        // devamı sende olduğu gibi kalacak
-
-        activePlanTitleText.text = plan.planTitle
+        activePlanTitleText.text = planState.planTitle
 
         activePlanBadgeText.text = getString(
             R.string.daily_active_plan_day_badge,
-            plan.dayNumber,
-            plan.durationDays,
-            plan.targetCalories
+            planState.dayNumber,
+            planState.durationDays,
+            planState.targetCalories
         )
 
-        activePlanIconText.text = plan.planIcon
+        activePlanIconText.text = planState.planIcon
         activePlanMetricOneLabelText.text = getString(R.string.daily_next_planned_meal_label)
         activePlanMetricTwoLabelText.text = getString(R.string.daily_plan_status_label)
         activePlanMetricTwoValueText.text = getString(
             R.string.daily_plan_status_value,
-            plan.completedMealIds.size,
-            plan.meals.size
+            planState.completedMealCount,
+            planState.totalMealCount
         )
-        fastingProgress.progress = plan.progressPercent
+        fastingProgress.progress = planState.progressPercent
 
-        if (nextMeal == null) {
-            activePlanMetricOneValueText.text = getString(R.string.daily_plan_completed_value)
-            plannedMealFoodsText.text = getString(R.string.daily_plan_completed_description)
-            plannedMealFoodsText.isVisible = true
-            applyPlannedMealButton.isVisible = false
-        } else {
-            val mealName = getString(nextMeal.mealType.titleRes)
-            val calories = nextMeal.scaledCalories(plan.targetCalories)
-            val foodSummary = nextMeal.scaledFoodSummary(plan.targetCalories)
+        when (val nextMealState = planState.nextMealState) {
+            DailyPlannedMealUiStateResolver.NextMealState.Completed -> {
+                activePlanMetricOneValueText.text = getString(R.string.daily_plan_completed_value)
+                plannedMealFoodsText.text = getString(R.string.daily_plan_completed_description)
+                plannedMealFoodsText.isVisible = true
+                applyPlannedMealButton.isVisible = false
+            }
 
-            activePlanMetricOneValueText.text = getString(
-                R.string.daily_next_planned_meal_value,
-                mealName,
-                calories
-            )
+            is DailyPlannedMealUiStateResolver.NextMealState.Available -> {
+                activePlanMetricOneValueText.text = getString(
+                    R.string.daily_next_planned_meal_value,
+                    getString(nextMealState.mealTypeTitleRes),
+                    nextMealState.calories
+                )
 
-            plannedMealFoodsText.text = buildRecommendationText(
-                mealTitle = nextMeal.title,
-                foodSummary = foodSummary
-            )
+                plannedMealFoodsText.text = buildRecommendationText(
+                    mealTitle = nextMealState.mealTitle,
+                    foodSummary = nextMealState.foodSummary
+                )
 
-            plannedMealFoodsText.isVisible = true
-            applyPlannedMealButton.isVisible = true
+                plannedMealFoodsText.isVisible = true
+                applyPlannedMealButton.isVisible = true
+            }
         }
     }
 
