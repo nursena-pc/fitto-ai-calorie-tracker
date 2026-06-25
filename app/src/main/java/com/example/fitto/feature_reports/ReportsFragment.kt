@@ -26,7 +26,6 @@ import com.example.fitto.data.local.FittoDatabaseProvider
 import com.example.fitto.data.local.session.UserSessionDataGuard
 import com.example.fitto.feature_home.presentation.profile.ProfileRepository
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
-import com.example.fitto.feature_home.presentation.profile.health.WeightChartPoint
 import com.example.fitto.feature_home.presentation.social.NotificationsFragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
@@ -614,29 +613,37 @@ class ReportsFragment : Fragment() {
     private fun renderCaloriePage() {
         if (!::caloriePage.isInitialized || nutritionDays.isEmpty()) return
 
-        val targetCalories = healthData.dailyTargetCalories
-            .takeIf { it > 0 }
-            ?: resources.getInteger(R.integer.reports_default_daily_calorie_target)
+        val calorieState = ReportCalorieSummaryResolver.resolve(
+            days = nutritionDays,
+            profileTargetCalories = healthData.dailyTargetCalories,
+            defaultTargetCalories = resources.getInteger(
+                R.integer.reports_default_daily_calorie_target
+            )
+        )
 
-        val todayCalories = nutritionDays.lastOrNull()?.calories ?: 0
-        val averageCalories = nutritionDays
-            .map { it.calories }
-            .average()
-            .takeIf { !it.isNaN() }
-            ?.roundToInt()
-            ?: 0
-
-        caloriePage.valueText.text = getString(R.string.reports_format_kcal, todayCalories)
+        caloriePage.valueText.text = getString(
+            R.string.reports_format_kcal,
+            calorieState.todayCalories
+        )
         caloriePage.infoText.text = getString(R.string.reports_calorie_info_selected_date)
-        caloriePage.todayStat.text = getString(R.string.reports_format_kcal, todayCalories)
-        caloriePage.averageStat.text = getString(R.string.reports_format_kcal, averageCalories)
-        caloriePage.targetStat.text = getString(R.string.reports_format_kcal, targetCalories)
+        caloriePage.todayStat.text = getString(
+            R.string.reports_format_kcal,
+            calorieState.todayCalories
+        )
+        caloriePage.averageStat.text = getString(
+            R.string.reports_format_kcal,
+            calorieState.averageCalories
+        )
+        caloriePage.targetStat.text = getString(
+            R.string.reports_format_kcal,
+            calorieState.targetCalories
+        )
 
-        val entries = nutritionDays.mapIndexed { index, day ->
+        val entries = calorieState.days.mapIndexed { index, day ->
             Entry(index.toFloat(), day.calories.toFloat())
         }
 
-        val labels = nutritionDays.map { it.label }
+        val labels = calorieState.days.map { it.label }
 
         val dataSet = LineDataSet(entries, getString(R.string.reports_calorie_title)).apply {
             color = color(R.color.reports_calorie_line)
@@ -657,7 +664,7 @@ class ReportsFragment : Fragment() {
 
         caloriePage.chart.axisLeft.addLimitLine(
             LimitLine(
-                targetCalories.toFloat(),
+                calorieState.targetCalories.toFloat(),
                 getString(R.string.reports_chart_target_label)
             ).apply {
                 lineColor = color(R.color.reports_target_line)
@@ -672,7 +679,6 @@ class ReportsFragment : Fragment() {
             }
         )
 
-        val maxCalorie = nutritionDays.maxOfOrNull { it.calories } ?: 0
         val axisMultiplier = resources.getFraction(
             R.fraction.reports_axis_max_padding_multiplier,
             1,
@@ -681,8 +687,8 @@ class ReportsFragment : Fragment() {
 
         caloriePage.chart.axisLeft.axisMinimum = 0f
         caloriePage.chart.axisLeft.axisMaximum = maxOf(
-            targetCalories.toFloat(),
-            maxCalorie.toFloat(),
+            calorieState.targetCalories.toFloat(),
+            calorieState.maxCalories.toFloat(),
             resources.getInteger(R.integer.reports_chart_min_axis_max).toFloat()
         ) * axisMultiplier
 
@@ -690,7 +696,7 @@ class ReportsFragment : Fragment() {
         caloriePage.chart.invalidate()
 
         caloriePage.detailsContainer.removeAllViews()
-        nutritionDays.forEach { day ->
+        calorieState.days.forEach { day ->
             caloriePage.detailsContainer.addView(
                 detailRow(
                     title = day.date.displayDate(),
@@ -709,37 +715,37 @@ class ReportsFragment : Fragment() {
     private fun renderMacroPage() {
         if (!::macroPage.isInitialized) return
 
-        val selectedDay = nutritionDays.lastOrNull()
-        val protein = selectedDay?.protein ?: 0.0
-        val carbs = selectedDay?.carbs ?: 0.0
-        val fat = selectedDay?.fat ?: 0.0
-        val total = protein + carbs + fat
+        val macroState = ReportMacroSummaryResolver.resolve(nutritionDays)
 
-        macroPage.valueText.text = getString(R.string.reports_format_gram, total.roundToInt())
+        macroPage.valueText.text = getString(
+            R.string.reports_format_gram,
+            macroState.total.roundToInt()
+        )
         macroPage.infoText.text = getString(R.string.reports_macro_info_from_meals)
-        macroPage.proteinStat.text = getString(R.string.reports_format_gram, protein.roundToInt())
-        macroPage.carbStat.text = getString(R.string.reports_format_gram, carbs.roundToInt())
-        macroPage.fatStat.text = getString(R.string.reports_format_gram, fat.roundToInt())
+        macroPage.proteinStat.text = getString(
+            R.string.reports_format_gram,
+            macroState.protein.roundToInt()
+        )
+        macroPage.carbStat.text = getString(
+            R.string.reports_format_gram,
+            macroState.carbs.roundToInt()
+        )
+        macroPage.fatStat.text = getString(
+            R.string.reports_format_gram,
+            macroState.fat.roundToInt()
+        )
 
         macroPage.detailsContainer.removeAllViews()
 
-        if (total <= 0.0) {
+        if (!macroState.hasData) {
             macroPage.chart.clear()
             macroPage.chart.invalidate()
             macroPage.detailsContainer.addView(emptyDetailRow())
             return
         }
 
-        val entries = mutableListOf<PieEntry>()
-
-        if (protein > 0.0) {
-            entries.add(PieEntry(protein.toFloat(), getString(R.string.reports_stat_protein)))
-        }
-        if (carbs > 0.0) {
-            entries.add(PieEntry(carbs.toFloat(), getString(R.string.reports_stat_carbs)))
-        }
-        if (fat > 0.0) {
-            entries.add(PieEntry(fat.toFloat(), getString(R.string.reports_stat_fat)))
+        val entries = macroState.chartEntries.map { entry ->
+            PieEntry(entry.grams.toFloat(), macroLabel(entry.type))
         }
 
         val dataSet = PieDataSet(entries, getString(R.string.reports_macro_title)).apply {
@@ -762,7 +768,7 @@ class ReportsFragment : Fragment() {
         macroPage.chart.data = data
         macroPage.chart.invalidate()
 
-        nutritionDays.forEach { day ->
+        macroState.days.forEach { day ->
             val dayTotal = day.protein + day.carbs + day.fat
 
             macroPage.detailsContainer.addView(
@@ -783,14 +789,20 @@ class ReportsFragment : Fragment() {
     private fun renderWeightPage() {
         if (!::weightPage.isInitialized) return
 
-        val points = resolveWeightPoints()
+        val weightState = ReportWeightSummaryResolver.resolve(
+            healthData = healthData,
+            visibleCount = resources.getInteger(R.integer.reports_weight_visible_point_count),
+            axisPaddingKg = resources.getInteger(
+                R.integer.reports_weight_axis_padding_kg
+            ).toDouble()
+        )
 
-        if (points.isEmpty()) {
+        if (!weightState.hasData) {
             weightPage.valueText.text = getString(R.string.reports_value_empty)
             weightPage.infoText.text = getString(R.string.reports_weight_missing)
             weightPage.startStat.text = getString(R.string.reports_value_empty)
             weightPage.currentStat.text = getString(R.string.reports_value_empty)
-            weightPage.targetStat.text = formatWeightOrDash(healthData.targetWeightKg)
+            weightPage.targetStat.text = formatWeightOrDash(weightState.targetWeight)
             weightPage.detailsContainer.removeAllViews()
             weightPage.detailsContainer.addView(emptyDetailRow())
 
@@ -799,29 +811,21 @@ class ReportsFragment : Fragment() {
             return
         }
 
-        val visibleCount = resources.getInteger(R.integer.reports_weight_visible_point_count)
-        val visiblePoints = points.takeLast(visibleCount)
-
-        val firstWeight = points.firstOrNull()?.weightKg ?: 0.0
-        val currentWeight = points.lastOrNull()?.weightKg ?: 0.0
-
-        val targetWeight = healthData.targetWeightKg
-
-        weightPage.valueText.text = formatWeightOrDash(currentWeight)
-        weightPage.infoText.text = if (targetWeight > 0.0) {
+        weightPage.valueText.text = formatWeightOrDash(weightState.currentWeight)
+        weightPage.infoText.text = if (weightState.targetWeight > 0.0) {
             getString(R.string.reports_weight_goal_info)
         } else {
             getString(R.string.reports_weight_subtitle)
         }
-        weightPage.startStat.text = formatWeightOrDash(firstWeight)
-        weightPage.currentStat.text = formatWeightOrDash(currentWeight)
-        weightPage.targetStat.text = formatWeightOrDash(targetWeight)
+        weightPage.startStat.text = formatWeightOrDash(weightState.firstWeight)
+        weightPage.currentStat.text = formatWeightOrDash(weightState.currentWeight)
+        weightPage.targetStat.text = formatWeightOrDash(weightState.targetWeight)
 
-        val entries = visiblePoints.mapIndexed { index, point ->
+        val entries = weightState.visiblePoints.mapIndexed { index, point ->
             Entry(index.toFloat(), point.weightKg.toFloat())
         }
 
-        val labels = visiblePoints.map { point ->
+        val labels = weightState.visiblePoints.map { point ->
             point.label.ifBlank { getString(R.string.reports_value_empty) }
         }
 
@@ -839,21 +843,15 @@ class ReportsFragment : Fragment() {
             fillAlpha = resources.getInteger(R.integer.reports_chart_fill_alpha)
         }
 
-        val minWeight = visiblePoints.minOfOrNull { it.weightKg } ?: currentWeight
-        val maxWeight = visiblePoints.maxOfOrNull { it.weightKg } ?: currentWeight
-        val axisPadding = resources.getInteger(R.integer.reports_weight_axis_padding_kg).toDouble()
-
         weightPage.chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        weightPage.chart.axisLeft.axisMinimum = (minWeight - axisPadding)
-            .coerceAtLeast(0.0)
-            .toFloat()
-        weightPage.chart.axisLeft.axisMaximum = (maxWeight + axisPadding).toFloat()
+        weightPage.chart.axisLeft.axisMinimum = weightState.axisMin
+        weightPage.chart.axisLeft.axisMaximum = weightState.axisMax
 
         weightPage.chart.data = LineData(dataSet)
         weightPage.chart.invalidate()
 
         weightPage.detailsContainer.removeAllViews()
-        visiblePoints.reversed().forEach { point ->
+        weightState.visiblePoints.reversed().forEach { point ->
             weightPage.detailsContainer.addView(
                 detailRow(
                     title = point.label,
@@ -864,12 +862,18 @@ class ReportsFragment : Fragment() {
         }
     }
 
-    private fun resolveWeightPoints(): List<WeightChartPoint> {
-        val profilePoints = healthData.chartPoints
-            .filter { it.weightKg > 0.0 }
-            .sortedBy { it.timestamp }
-
-        return profilePoints
+    private fun macroLabel(type: ReportMacroSummaryResolver.MacroType): String {
+        return when (type) {
+            ReportMacroSummaryResolver.MacroType.PROTEIN -> {
+                getString(R.string.reports_stat_protein)
+            }
+            ReportMacroSummaryResolver.MacroType.CARBS -> {
+                getString(R.string.reports_stat_carbs)
+            }
+            ReportMacroSummaryResolver.MacroType.FAT -> {
+                getString(R.string.reports_stat_fat)
+            }
+        }
     }
 
     private fun pageScroll(context: Context): NestedScrollView {
@@ -1206,17 +1210,9 @@ class ReportsFragment : Fragment() {
     }
 
     private fun chartSp(@DimenRes dimenResId: Int): Float {
-        return resources.getDimension(dimenResId) / resources.displayMetrics.scaledDensity
+        val scaledDensity = resources.displayMetrics.density * resources.configuration.fontScale
+        return resources.getDimension(dimenResId) / scaledDensity
     }
-
-    private data class ReportDay(
-        val date: LocalDate,
-        val label: String,
-        val calories: Int,
-        val protein: Double,
-        val carbs: Double,
-        val fat: Double
-    )
 
     private data class SmallStatRefs(
         val root: View,
