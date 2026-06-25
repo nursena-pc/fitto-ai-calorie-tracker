@@ -1,38 +1,39 @@
 package com.example.fitto.feature_dietplans
 
+import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
+import android.view.LayoutInflater
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.data.local.repository.ProfileCacheRepository
+import com.example.fitto.databinding.DialogPlanNumberPickerBinding
 import com.example.fitto.databinding.FragmentCreateDietPlanBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
+import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
+import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
+import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
+import com.example.fitto.feature_home.presentation.social.SocialRepository
+import com.example.fitto.feature_meal.model.MealType
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
-import android.view.Window
-import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
-import com.example.fitto.feature_home.presentation.social.SocialRepository
-import com.example.fitto.feature_meal.model.MealType
-import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
-import androidx.core.view.isVisible
-import android.view.LayoutInflater
-import android.app.Dialog
-import android.view.WindowManager
-import com.example.fitto.databinding.DialogPlanNumberPickerBinding
+
 class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
     private var _binding: FragmentCreateDietPlanBinding? = null
@@ -244,17 +245,9 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
             if (_binding == null) return@launch
 
-            dailyCalories = profile?.dailyCalorieTarget
-                ?.takeIf { it > 0 }
-                ?: 1800
-
-            selectedGoal = when (profile?.goalType.orEmpty().uppercase()) {
-                "GAIN_WEIGHT" -> CreatePlanGoal.WEIGHT_GAIN
-                "MUSCLE", "MUSCLE_GAIN" -> CreatePlanGoal.MUSCLE
-                "MAINTAIN_WEIGHT" -> CreatePlanGoal.MAINTAIN
-                "EAT_HEALTHY", "LEARN_NUTRITION" -> CreatePlanGoal.BALANCED
-                else -> CreatePlanGoal.WEIGHT_LOSS
-            }
+            val defaults = CreateDietPlanDefaultResolver.resolve(profile)
+            dailyCalories = defaults.dailyCalories
+            selectedGoal = defaults.goal
 
             renderState()
         }
@@ -746,36 +739,10 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     }
 
     private fun buildPreviewMeals(): Map<MealType, PreviewMealUiModel> {
-        val selectedMeals = selectedMealTypes.toList()
-        val totalRatio = selectedMeals.sumOf { meal -> mealBaseRatio(meal) }
-
-        return selectedMeals.associateWith { mealType ->
-            val ratio = mealBaseRatio(mealType) / totalRatio.coerceAtLeast(0.01)
-            PreviewMealUiModel(
-                mealType = mealType,
-                icon = mealIcon(mealType),
-                percent = (ratio * 100).toInt(),
-                calories = (dailyCalories * ratio).toInt()
-            )
-        }
-    }
-
-    private fun mealBaseRatio(mealType: MealType): Double {
-        return when (mealType) {
-            MealType.BREAKFAST -> 0.25
-            MealType.SNACK -> 0.15
-            MealType.LUNCH -> 0.35
-            MealType.DINNER -> 0.25
-        }
-    }
-
-    private fun mealIcon(mealType: MealType): String {
-        return when (mealType) {
-            MealType.BREAKFAST -> "☀️"
-            MealType.SNACK -> "🥜"
-            MealType.LUNCH -> "🍽️"
-            MealType.DINNER -> "🌙"
-        }
+        return CreateDietPlanPreviewResolver.buildPreviewMeals(
+            selectedMealTypes = selectedMealTypes,
+            dailyCalories = dailyCalories
+        )
     }
     private fun savePlan(isDraft: Boolean) = with(binding) {
         val planName = planNameInput.text?.toString()?.trim().orEmpty()
@@ -902,38 +869,11 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         return selectedMealTypes.map { mealType -> mealType.argumentValue }
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
     }
 
-    private enum class CreatePlanGoal(
-        val titleRes: Int
-    ) {
-        WEIGHT_LOSS(R.string.create_diet_plan_goal_weight_loss),
-        WEIGHT_GAIN(R.string.create_diet_plan_goal_weight_gain),
-        MUSCLE(R.string.create_diet_plan_goal_muscle),
-        MAINTAIN(R.string.create_diet_plan_goal_maintain),
-        BALANCED(R.string.create_diet_plan_goal_balanced)
-    }
-
-    private enum class CreatePlanPrivacy(
-        val titleRes: Int
-    ) {
-        PRIVATE(R.string.create_diet_plan_private),
-        PUBLIC(R.string.create_diet_plan_public)
-    }
-
-    private data class PreviewMealUiModel(
-        val mealType: MealType,
-        val icon: String,
-        val percent: Int,
-        val calories: Int
-    )
     companion object {
         private const val ARG_EDIT_DRAFT_PLAN_ID = "arg_edit_draft_plan_id"
 
