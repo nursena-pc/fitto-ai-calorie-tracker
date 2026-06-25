@@ -782,7 +782,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 valueTexts[index].text = if (dayProgress.hasFood) {
                     getString(R.string.daily_weekly_calorie_percent, dayProgress.progressPercent)
                 } else {
-                    "—"
+                    "-"
                 }
 
                 barViews[index].alpha = dayProgress.alpha
@@ -911,7 +911,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
                 val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
 
-                // Dolu şişe sayısından daha az görünür şişeye düşürmeyelim.
+                // Keep visible bottles at or above the filled bottle count.
                 val canRemoveBottle = DailyWaterTrackingCalculator.canRemoveVisibleBottle(
                     visibleBottleCount = state.visibleBottleCount,
                     rawWaterMl = rawWaterMl
@@ -1301,7 +1301,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         fastingAnalysisContainer.visibility = View.VISIBLE
 
         fastingActionContainer.setOnClickListener {
-            // Oruç kontrol alanına basınca aktif plan detayına gitmesin.
+            // Keep taps in the fasting control area from opening plan details.
         }
 
         val fastingHours = resolveSelectedFastingHours()
@@ -1782,62 +1782,57 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             val nutritionTargets = resolveDailyNutritionTargets(profile)
             val targetCalories = nutritionTargets.dailyCalories
-            val targetProtein = nutritionTargets.proteinGrams
-            val targetCarbs = nutritionTargets.carbGrams
-            val targetFat = nutritionTargets.fatGrams
 
             val oldTargetCalories = currentDailyTargetCalories
 
             currentDailyTargetCalories = targetCalories
-            currentProteinTargetGrams = targetProtein
-            currentCarbTargetGrams = targetCarbs
-            currentFatTargetGrams = targetFat
+            currentProteinTargetGrams = nutritionTargets.proteinGrams
+            currentCarbTargetGrams = nutritionTargets.carbGrams
+            currentFatTargetGrams = nutritionTargets.fatGrams
 
             val byMealType = mealSummaries.associateBy { it.mealType }
+            val mealCalories = DailyMealCaloriesResolver.resolve(mealSummaries)
 
             binding.breakfastCaloriesText.text = getString(
                 R.string.daily_meal_calories_value,
-                byMealType[MealType.BREAKFAST.argumentValue]?.totalCalories ?: 0
+                mealCalories.breakfast
             )
 
             binding.snackCaloriesText.text = getString(
                 R.string.daily_meal_calories_value,
-                byMealType[MealType.SNACK.argumentValue]?.totalCalories ?: 0
+                mealCalories.snack
             )
 
             binding.lunchCaloriesText.text = getString(
                 R.string.daily_meal_calories_value,
-                byMealType[MealType.LUNCH.argumentValue]?.totalCalories ?: 0
+                mealCalories.lunch
             )
 
             binding.dinnerCaloriesText.text = getString(
                 R.string.daily_meal_calories_value,
-                byMealType[MealType.DINNER.argumentValue]?.totalCalories ?: 0
+                mealCalories.dinner
             )
 
             val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
             currentProfileWeightKg = resolvedWeight
             currentWeightKg = resolvedWeight ?: currentWeightKg
 
-            val healthActiveCalories = if (
-                healthConnectSummary.isAvailable &&
-                healthConnectSummary.hasPermission
-            ) {
-                healthConnectSummary.activeCaloriesKcal.coerceAtLeast(0)
-            } else {
-                0
-            }
+            val healthActiveCalories = DailyHealthActiveCaloriesResolver.resolve(
+                isAvailable = healthConnectSummary.isAvailable,
+                hasPermission = healthConnectSummary.hasPermission,
+                activeCaloriesKcal = healthConnectSummary.activeCaloriesKcal
+            )
 
             val displaySteps = resolvedDisplaySteps()
-
-            val energyBalance = DailyEnergyBalanceCalculator.calculate(
-                targetCalories = targetCalories,
-                eatenCalories = nutritionSummary.totalCalories,
-                manualExerciseCalories = exerciseSummary.totalCalories,
+            val summaryState = DailySummaryUiStateResolver.resolve(
+                nutritionSummary = nutritionSummary,
+                nutritionTargets = nutritionTargets,
+                exerciseSummary = exerciseSummary,
                 healthActiveCalories = healthActiveCalories,
                 displaySteps = displaySteps,
                 weightKg = currentWeightKg
             )
+            val energyBalance = summaryState.energyBalance
 
             binding.remainingCaloriesText.text = energyBalance.remainingCalories.toString()
 
@@ -1857,13 +1852,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 manualExerciseCalories = energyBalance.manualExerciseCalories
             )
 
-            binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(displaySteps)
-
-            val manualExerciseDurationMinutes = exerciseSummary.totalDurationMinutes.coerceAtLeast(0)
+            binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(
+                summaryState.displaySteps
+            )
 
             binding.activityDurationText.text = getString(
                 R.string.exercise_duration_value,
-                manualExerciseDurationMinutes
+                summaryState.activityDurationMinutes
             )
 
             binding.dailyRemainingText.text = getString(
@@ -1871,61 +1866,35 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 energyBalance.remainingCalories
             )
 
-            binding.dailyCalorieProgress.progress = DailyMetricCalculator.progressPercent(
-                current = energyBalance.eatenCalories.toDouble(),
-                target = targetCalories.toDouble()
-            )
+            binding.dailyCalorieProgress.progress = summaryState.calorieProgressPercent
             binding.dailyCarbValueText.text = getString(
                 R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(nutritionSummary.totalCarbs),
-                targetCarbs
+                DailyValueFormatter.formatGram(summaryState.carbs.currentGrams),
+                summaryState.carbs.targetGrams
             )
 
             binding.dailyProteinValueText.text = getString(
                 R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(nutritionSummary.totalProtein),
-                targetProtein
+                DailyValueFormatter.formatGram(summaryState.protein.currentGrams),
+                summaryState.protein.targetGrams
             )
 
             binding.dailyFatValueText.text = getString(
                 R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(nutritionSummary.totalFat),
-                targetFat
+                DailyValueFormatter.formatGram(summaryState.fat.currentGrams),
+                summaryState.fat.targetGrams
             )
 
-            binding.dailyCarbProgress.progress = DailyMetricCalculator.progressPercent(
-                current = nutritionSummary.totalCarbs,
-                target = targetCarbs.toDouble()
-            )
-
-            binding.dailyProteinProgress.progress = DailyMetricCalculator.progressPercent(
-                current = nutritionSummary.totalProtein,
-                target = targetProtein.toDouble()
-            )
-
-            binding.dailyFatProgress.progress = DailyMetricCalculator.progressPercent(
-                current = nutritionSummary.totalFat,
-                target = targetFat.toDouble()
-            )
+            binding.dailyCarbProgress.progress = summaryState.carbs.progressPercent
+            binding.dailyProteinProgress.progress = summaryState.protein.progressPercent
+            binding.dailyFatProgress.progress = summaryState.fat.progressPercent
 
             val dailyAiMeals = buildDailyAiMeals(
                 mealSummariesByType = byMealType,
                 mealDetailsByType = mealDetailsByType
             )
 
-            val dailyAiTriggerType = DailyAiTriggerResolver.resolve(
-                totalCalories = energyBalance.eatenCalories,
-                targetCalories = targetCalories,
-                waterMl = currentWaterMl,
-                waterGoalMl = waterGoalMl,
-                proteinGrams = nutritionSummary.totalProtein,
-                proteinTargetGrams = targetProtein,
-                meals = dailyAiMeals,
-                exerciseLogCount = exerciseSummary.logCount,
-                snackMealLabel = getString(R.string.daily_snack)
-            )
-
-            currentDailyAiSnapshot = DailyAiSnapshot(
+            currentDailyAiSnapshot = DailyAiSnapshotResolver.resolve(
                 dateIso = selectedDateIso,
                 userName = DailyAiUserNameResolver.resolve(
                     displayName = profile?.displayName,
@@ -1933,27 +1902,25 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     fallbackName = getString(R.string.app_name)
                 ),
                 goalType = profile?.goalType.orEmpty(),
-                dailyCalorieTarget = targetCalories,
-                totalCalories = energyBalance.eatenCalories,
-                proteinGrams = nutritionSummary.totalProtein,
-                proteinTargetGrams = targetProtein,
-                carbGrams = nutritionSummary.totalCarbs,
-                fatGrams = nutritionSummary.totalFat,
+                nutritionTargets = nutritionTargets,
+                summaryState = summaryState,
                 waterMl = currentWaterMl,
                 waterGoalMl = waterGoalMl,
-                triggerType = dailyAiTriggerType,
                 meals = dailyAiMeals,
                 exerciseLogCount = exerciseSummary.logCount,
-                exerciseDurationMinutes = exerciseSummary.totalDurationMinutes.coerceAtLeast(0),
-                exerciseCalories = energyBalance.burnedCalories,
                 exerciseSummaryText = buildDailyAiExerciseSummary(
                     exerciseLogs,
                     energyBalance.syncedActivityCalories
                 ),
-                dietPreferences = ProfilePreferenceStore.nutritionDietPreferencesText(requireContext()),
+                dietPreferences = ProfilePreferenceStore.nutritionDietPreferencesText(
+                    requireContext()
+                ),
                 allergies = ProfilePreferenceStore.getNutritionAllergies(requireContext()),
                 dislikedFoods = ProfilePreferenceStore.getNutritionDislikedFoods(requireContext()),
-                mealRoutine = ProfilePreferenceStore.nutritionMealRoutineText(requireContext())
+                mealRoutine = ProfilePreferenceStore.nutritionMealRoutineText(
+                    requireContext()
+                ),
+                snackMealLabel = getString(R.string.daily_snack)
             )
 
             renderDailyAiState(currentDailyAiSnapshot)
