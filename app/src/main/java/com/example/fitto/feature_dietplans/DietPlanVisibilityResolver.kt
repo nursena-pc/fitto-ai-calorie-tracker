@@ -80,41 +80,42 @@ object DietPlanVisibilityResolver {
 
     private fun DietPlanUiModel.planTypeKey(): String {
         return when (id) {
-            DietPlanDetailFragment.PLAN_MEDITERRANEAN -> "mediterranean"
-            DietPlanDetailFragment.PLAN_DASH -> "dash"
-            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> "intermittent_fasting"
-            DietPlanDetailFragment.PLAN_KETOGENIC -> "ketogenic"
-            DietPlanDetailFragment.PLAN_PLANT_BASED -> "plant_based"
-            else -> if (isCustomPlan(id)) "custom" else id
+            DietPlanDetailFragment.PLAN_MEDITERRANEAN -> DietPlanFilterOptions.TYPE_MEDITERRANEAN
+            DietPlanDetailFragment.PLAN_DASH -> DietPlanFilterOptions.TYPE_DASH
+            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> DietPlanFilterOptions.TYPE_INTERMITTENT_FASTING
+            DietPlanDetailFragment.PLAN_KETOGENIC -> DietPlanFilterOptions.TYPE_KETOGENIC
+            DietPlanDetailFragment.PLAN_PLANT_BASED -> DietPlanFilterOptions.TYPE_PLANT_BASED
+            else -> if (isCustomPlan(id)) DietPlanFilterOptions.TYPE_CUSTOM else id
         }
     }
 
     private fun DietPlanUiModel.matchesGoal(goal: String): Boolean {
         return when (goal) {
-            "weight_loss" -> id != DietPlanDetailFragment.PLAN_WEIGHT_GAIN
-            "weight_gain" -> id == DietPlanDetailFragment.PLAN_WEIGHT_GAIN || isCustomPlan(id)
-            "muscle_gain" -> id == DietPlanDetailFragment.PLAN_WEIGHT_GAIN ||
+            DietPlanFilterOptions.GOAL_WEIGHT_LOSS -> id != DietPlanDetailFragment.PLAN_WEIGHT_GAIN
+            DietPlanFilterOptions.GOAL_WEIGHT_GAIN -> id == DietPlanDetailFragment.PLAN_WEIGHT_GAIN ||
+                isCustomPlan(id)
+            DietPlanFilterOptions.GOAL_MUSCLE_GAIN -> id == DietPlanDetailFragment.PLAN_WEIGHT_GAIN ||
                 id == DietPlanDetailFragment.PLAN_KETOGENIC ||
                 isCustomPlan(id)
-            "balanced" -> true
+            DietPlanFilterOptions.GOAL_BALANCED -> true
             else -> true
         }
     }
 
     private fun DietPlanUiModel.matchesFeature(feature: String): Boolean {
         return when (feature) {
-            "heart_friendly" -> id == DietPlanDetailFragment.PLAN_MEDITERRANEAN ||
+            DietPlanFilterOptions.FEATURE_HEART_FRIENDLY -> id == DietPlanDetailFragment.PLAN_MEDITERRANEAN ||
                 id == DietPlanDetailFragment.PLAN_DASH ||
                 id == DietPlanDetailFragment.PLAN_MIND ||
                 id == DietPlanDetailFragment.PLAN_PLANT_BASED
 
-            "low_sodium" -> id == DietPlanDetailFragment.PLAN_DASH
+            DietPlanFilterOptions.FEATURE_LOW_SODIUM -> id == DietPlanDetailFragment.PLAN_DASH
 
-            "high_protein" -> id == DietPlanDetailFragment.PLAN_KETOGENIC ||
+            DietPlanFilterOptions.FEATURE_HIGH_PROTEIN -> id == DietPlanDetailFragment.PLAN_KETOGENIC ||
                 id == DietPlanDetailFragment.PLAN_WEIGHT_GAIN ||
                 isCustomPlan(id)
 
-            "easy" -> durationDays <= 14 ||
+            DietPlanFilterOptions.FEATURE_EASY -> durationDays <= 14 ||
                 id == DietPlanDetailFragment.PLAN_MEDITERRANEAN
 
             else -> true

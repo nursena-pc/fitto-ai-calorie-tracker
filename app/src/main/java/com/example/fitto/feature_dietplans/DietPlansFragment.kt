@@ -373,9 +373,11 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun titleTextForPlan(plan: DietPlanUiModel): String {
-        return plan.titleText
-            ?: plan.titleRes?.let { titleRes -> getString(titleRes) }
-            ?: getString(R.string.app_name)
+        return DietPlanTextResolver.title(
+            plan = plan,
+            stringProvider = ::getString,
+            fallback = getString(R.string.app_name)
+        )
     }
 
     private fun confirmDeleteCustomPlan(plan: DietPlanUiModel) {

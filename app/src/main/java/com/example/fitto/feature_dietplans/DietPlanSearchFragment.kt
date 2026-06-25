@@ -1,10 +1,16 @@
 package com.example.fitto.feature_dietplans
 
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
@@ -13,14 +19,8 @@ import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
-import java.util.Locale
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import android.graphics.Typeface
-import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
+
 class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
     private var _binding: FragmentDietPlanSearchBinding? = null
@@ -79,7 +79,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             .setMessage(
                 getString(
                     R.string.diet_plans_delete_custom_plan_message,
-                    plan.displayTitle()
+                    titleTextForPlan(plan)
                 )
             )
             .setNegativeButton(getString(R.string.common_cancel), null)
@@ -223,18 +223,14 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun filterPlans(query: String) {
-        val normalizedQuery = query.trim().lowercase(Locale.ROOT)
-
-        val filteredPlans = if (normalizedQuery.isBlank()) {
-            allPlans
-        } else {
-            allPlans.filter { plan ->
-                plan.displayTitle().lowercase(Locale.ROOT).contains(normalizedQuery) ||
-                        plan.displayDescription().lowercase(Locale.ROOT).contains(normalizedQuery)
-            }
-        }
-
-        adapter.submitList(filteredPlans)
+        adapter.submitList(
+            DietPlanSearchResolver.filter(
+                plans = allPlans,
+                query = query,
+                titleTextForPlan = ::titleTextForPlan,
+                descriptionTextForPlan = ::descriptionTextForPlan
+            )
+        )
     }
 
     private fun openPlanDetail(plan: DietPlanUiModel) {
@@ -289,7 +285,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             requireContext(),
             getString(
                 R.string.diet_plans_apply_success_message,
-                plan.displayTitle()
+                titleTextForPlan(plan)
             ),
             Toast.LENGTH_SHORT
         ).show()
@@ -309,7 +305,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
         Toast.makeText(
             requireContext(),
-            getString(messageRes, plan.displayTitle()),
+            getString(messageRes, titleTextForPlan(plan)),
             Toast.LENGTH_SHORT
         ).show()
 
@@ -344,16 +340,20 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
         return customPlans + readyPlans
     }
 
-    private fun DietPlanUiModel.displayTitle(): String {
-        return titleText
-            ?: titleRes?.let { getString(it) }
-            ?: getString(R.string.app_name)
+    private fun titleTextForPlan(plan: DietPlanUiModel): String {
+        return DietPlanTextResolver.title(
+            plan = plan,
+            stringProvider = ::getString,
+            fallback = getString(R.string.app_name)
+        )
     }
 
-    private fun DietPlanUiModel.displayDescription(): String {
-        return descriptionText
-            ?: descriptionRes?.let { getString(it) }
-            ?: getString(R.string.diet_plan_custom_default_desc)
+    private fun descriptionTextForPlan(plan: DietPlanUiModel): String {
+        return DietPlanTextResolver.description(
+            plan = plan,
+            stringProvider = ::getString,
+            fallback = getString(R.string.diet_plan_custom_default_desc)
+        )
     }
 
     override fun onDestroyView() {

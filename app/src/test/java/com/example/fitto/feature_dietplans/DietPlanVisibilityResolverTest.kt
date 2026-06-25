@@ -109,10 +109,13 @@ class DietPlanVisibilityResolverTest {
             ),
             selectedTab = DietPlanTab.READY,
             filter = DietPlanFilterState(
-                goal = "weight_loss",
+                goal = DietPlanFilterOptions.GOAL_WEIGHT_LOSS,
                 duration = 14,
-                type = "dash",
-                features = setOf("heart_friendly", "low_sodium"),
+                type = DietPlanFilterOptions.TYPE_DASH,
+                features = setOf(
+                    DietPlanFilterOptions.FEATURE_HEART_FRIENDLY,
+                    DietPlanFilterOptions.FEATURE_LOW_SODIUM
+                ),
                 minCalories = 1600,
                 maxCalories = 1800
             )
