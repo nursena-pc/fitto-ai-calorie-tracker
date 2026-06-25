@@ -37,8 +37,6 @@ import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Locale
-import kotlin.math.roundToInt
 
 class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
@@ -59,8 +57,8 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     private var cookModeEnabled: Boolean = false
     private var servingMultiplier: Int = 1
     private val selectedShoppingIndexes: MutableSet<Int> = linkedSetOf()
-    private val detailIngredients: MutableList<DetailIngredient> = mutableListOf()
-    private var editModeSnapshot: List<DetailIngredient> = emptyList()
+    private val detailIngredients: MutableList<RecipeDetailIngredient> = mutableListOf()
+    private var editModeSnapshot: List<RecipeDetailIngredient> = emptyList()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -93,7 +91,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
             currentRecipe = recipe
             detailIngredients.clear()
-            detailIngredients.addAll(recipe.ingredients.mapIndexed { index, line -> line.toDetailIngredient(index) })
+            detailIngredients.addAll(
+                recipe.ingredients.mapIndexed { index, line ->
+                    RecipeDetailIngredientMapper.fromDisplayLine(line, index)
+                }
+            )
             servingMultiplier = 1
             bindRecipe(recipe)
             showTab(DetailTab.OVERVIEW)
@@ -217,7 +219,9 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
                     recipeCategory = recipe.mainCategoryKey,
                     recipeSourceTag = RecipeRepository.RECIPE_SOURCE_TAG_COMMUNITY,
                     recipeDescription = recipe.description,
-                    recipeIngredients = detailIngredients.map { ingredient -> ingredient.toDisplayLine() },
+                    recipeIngredients = detailIngredients.map(
+                        RecipeDetailIngredientMapper::toDisplayLine
+                    ),
                     recipeSteps = recipe.steps
                 )
             }
@@ -440,7 +444,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
             append(recipe.description).append('\n')
             if (detailIngredients.isNotEmpty()) {
                 append('\n').append(getString(R.string.recipes_detail_ingredients)).append(':').append('\n')
-                append(detailIngredients.joinToString(separator = "\n") { ingredient -> "• ${ingredient.toDisplayLine()}" })
+                append(
+                    detailIngredients.joinToString(separator = "\n") { ingredient ->
+                        "• ${RecipeDetailIngredientMapper.toDisplayLine(ingredient)}"
+                    }
+                )
             }
         }
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -454,7 +462,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     private fun shareRecipeToSocial(recipe: RecipeUiModel, comment: String = "") {
         viewLifecycleOwner.lifecycleScope.launch {
             val postId = withContext(Dispatchers.IO) {
-                repository.shareRecipeToCommunity(recipe.id, detailIngredients.map { ingredient -> ingredient.toDisplayLine() }, comment)
+                repository.shareRecipeToCommunity(
+                    recipe.id,
+                    detailIngredients.map(RecipeDetailIngredientMapper::toDisplayLine),
+                    comment
+                )
             }
             if (_binding == null) return@launch
             val message = if (postId != null) {
@@ -568,7 +580,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
     }
 
-    private fun createIngredientRow(index: Int, ingredient: DetailIngredient, compact: Boolean): View {
+    private fun createIngredientRow(
+        index: Int,
+        ingredient: RecipeDetailIngredient,
+        compact: Boolean
+    ): View {
         val context = requireContext()
         val row = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -612,7 +628,9 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
             }
         }
 
-        val (amountOnly, unitOnly) = ingredient.amountUnit.splitAmountAndUnit()
+        val (amountOnly, unitOnly) = RecipeDetailIngredientMapper.splitAmountAndUnit(
+            ingredient.amountUnit
+        )
         val amountView: View = if (editMode && !compact) {
             EditText(context).apply {
                 setText(amountOnly)
@@ -629,14 +647,16 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
                 doAfterTextChanged { editable ->
                     if (index in detailIngredients.indices) {
                         val newAmount = editable?.toString().orEmpty().trim()
-                        val newAmountUnit = listOf(newAmount, unitOnly).filter { it.isNotBlank() }.joinToString(" ")
-                        val current = detailIngredients[index]
-                        val updatedCalories = estimateCalories(current.name, newAmountUnit)
-                        detailIngredients[index] = current.copy(
-                            amountUnit = newAmountUnit,
-                            estimatedCalories = updatedCalories
+                        val updatedIngredient = RecipeDetailIngredientMapper.withUpdatedAmount(
+                            ingredient = detailIngredients[index],
+                            amount = newAmount,
+                            unit = unitOnly
                         )
-                        kcalText.text = getString(R.string.recipes_detail_ingredient_kcal, updatedCalories)
+                        detailIngredients[index] = updatedIngredient
+                        kcalText.text = getString(
+                            R.string.recipes_detail_ingredient_kcal,
+                            updatedIngredient.estimatedCalories
+                        )
                         renderPortionAndNutrition()
                     }
                 }
@@ -703,11 +723,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun renderPortionAndNutrition(): Unit = with(binding) {
-        val baseServings = baseServingCount()
-        val activeServings = activeServingCount()
-        val perServingCalories = calculatedCaloriesPerServing()
-        val activeTotalCalories = perServingCalories * activeServings
-        val macros = calculatedMacros(activeTotalCalories)
+        val nutritionState = resolvePortionNutritionState()
+        val activeServings = nutritionState.activeServings
+        val perServingCalories = nutritionState.perServingCalories
+        val activeTotalCalories = nutritionState.activeTotalCalories
+        val macros = nutritionState.macros
 
         portionValueText.text = activeServings.toString()
         perServingKcalText.text = getString(R.string.recipes_detail_metric_kcal, perServingCalories)
@@ -717,60 +737,30 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         overviewTotalLabelText.text = totalLabel
         overviewTotalKcalText.text = getString(R.string.recipes_detail_total_kcal, activeTotalCalories)
 
-        val macroPercent = macroPercentages(macros)
+        val macroPercent = nutritionState.macroPercent
         overviewCarbText.text = getString(R.string.recipes_detail_macro_carb_percent, macros.carbs, macroPercent.carbs)
         overviewProteinText.text = getString(R.string.recipes_detail_macro_protein_percent, macros.protein, macroPercent.protein)
         overviewFatText.text = getString(R.string.recipes_detail_macro_fat_percent, macros.fat, macroPercent.fat)
         macroDonutView.setNutrition(activeTotalCalories, macros.carbs, macros.protein, macros.fat)
     }
 
-    private fun baseServingCount(): Int {
-        return currentRecipe?.servings?.coerceAtLeast(1) ?: 1
-    }
-
-    private fun activeServingCount(): Int {
-        return baseServingCount() * servingMultiplier
-    }
-
     private fun calculatedCaloriesPerServing(): Int {
-        val recipe = currentRecipe
-        val fromRecipe = recipe?.calories ?: 0
-        val estimatedTotal = detailIngredients.sumOf { ingredient -> ingredient.estimatedCalories }
-        val estimatedPerServing = (estimatedTotal / baseServingCount().toDouble()).roundToInt()
-        return maxOf(fromRecipe, estimatedPerServing, 0)
+        return resolvePortionNutritionState().perServingCalories
     }
 
-    private fun calculatedMacros(totalCalories: Int): MacroSummary {
+    private fun resolvePortionNutritionState(): RecipePortionNutritionResolver.State {
         val recipe = currentRecipe
-        val scale = activeServingCount().toDouble() / baseServingCount().toDouble()
-        val sourceProtein = recipe?.proteinGrams ?: 0
-        val sourceCarbs = recipe?.carbGrams ?: 0
-        val sourceFat = recipe?.fatGrams ?: 0
 
-        if (sourceProtein > 0 || sourceCarbs > 0 || sourceFat > 0) {
-            return MacroSummary(
-                protein = (sourceProtein * scale).roundToInt().coerceAtLeast(0),
-                carbs = (sourceCarbs * scale).roundToInt().coerceAtLeast(0),
-                fat = (sourceFat * scale).roundToInt().coerceAtLeast(0)
-            )
-        }
-
-        return MacroSummary(
-            protein = (totalCalories * 0.15 / 4).roundToInt().coerceAtLeast(0),
-            carbs = (totalCalories * 0.55 / 4).roundToInt().coerceAtLeast(0),
-            fat = (totalCalories * 0.30 / 9).roundToInt().coerceAtLeast(0)
-        )
-    }
-
-    private fun macroPercentages(macros: MacroSummary): MacroPercentSummary {
-        val proteinCalories = macros.protein * 4
-        val carbCalories = macros.carbs * 4
-        val fatCalories = macros.fat * 9
-        val total = (proteinCalories + carbCalories + fatCalories).coerceAtLeast(1)
-        return MacroPercentSummary(
-            protein = ((proteinCalories * 100.0) / total).roundToInt().coerceIn(0, 100),
-            carbs = ((carbCalories * 100.0) / total).roundToInt().coerceIn(0, 100),
-            fat = ((fatCalories * 100.0) / total).roundToInt().coerceIn(0, 100)
+        return RecipePortionNutritionResolver.resolve(
+            recipeCalories = recipe?.calories ?: 0,
+            recipeServings = recipe?.servings ?: 1,
+            servingMultiplier = servingMultiplier,
+            ingredientCalories = detailIngredients.map { ingredient ->
+                ingredient.estimatedCalories
+            },
+            proteinGrams = recipe?.proteinGrams ?: 0,
+            carbGrams = recipe?.carbGrams ?: 0,
+            fatGrams = recipe?.fatGrams ?: 0
         )
     }
 
@@ -831,7 +821,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     private fun addBlankIngredient() {
         enableEditMode()
         val nextIndex = detailIngredients.size
-        val ingredient = DetailIngredient(
+        val ingredient = RecipeDetailIngredient(
             id = "ingredient_added_${System.currentTimeMillis()}",
             icon = "🥄",
             name = getString(R.string.recipes_detail_new_ingredient),
@@ -862,7 +852,8 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
             return
         }
         val selectedLines = selectedShoppingIndexes.sorted().mapNotNull { index ->
-            detailIngredients.getOrNull(index)?.toDisplayLine()
+            detailIngredients.getOrNull(index)
+                ?.let(RecipeDetailIngredientMapper::toDisplayLine)
         }
         val prefs = UserSessionDataGuard.scopedSharedPreferences(requireContext(), SHOPPING_PREFS)
         val current = prefs.getStringSet(SHOPPING_ITEMS_KEY, emptySet()).orEmpty().toMutableSet()
@@ -878,7 +869,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
     private fun saveRecipeToBook(useEditedVersion: Boolean) {
         val recipe = currentRecipe ?: return
-        val editedLines: List<String>? = if (useEditedVersion) detailIngredients.map { it.toDisplayLine() } else null
+        val editedLines: List<String>? = if (useEditedVersion) {
+            detailIngredients.map(RecipeDetailIngredientMapper::toDisplayLine)
+        } else {
+            null
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             val copiedRecipeId = withContext(Dispatchers.IO) {
@@ -903,182 +898,6 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
     }
 
-    private fun String.splitAmountAndUnit(): Pair<String, String> {
-        val parts = trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-        if (parts.isEmpty()) return "" to ""
-        return if (parts.first().looksLikeAmount()) {
-            parts.first() to parts.drop(1).joinToString(" ")
-        } else {
-            "" to parts.joinToString(" ")
-        }
-    }
-
-    private fun DetailIngredient.toDisplayLine(): String {
-        return listOf(amountUnit, name)
-            .map { value -> value.trim() }
-            .filter { value -> value.isNotBlank() && value != "—" }
-            .joinToString(" ")
-            .ifBlank { name }
-    }
-
-    private fun String.toDetailIngredient(index: Int): DetailIngredient {
-        val raw = trim()
-        val tokens = raw.split(Regex("\\s+")).filter { it.isNotBlank() }
-        val amountParts = mutableListOf<String>()
-        var nameStart = 0
-        if (tokens.isNotEmpty() && tokens.first().looksLikeAmount()) {
-            amountParts.add(tokens.first())
-            nameStart = 1
-            while (nameStart < tokens.size && tokens[nameStart].lowercase(TURKISH_LOCALE) in UNIT_WORDS && amountParts.size < 5) {
-                amountParts.add(tokens[nameStart])
-                nameStart++
-            }
-        }
-        val name = tokens.drop(nameStart).joinToString(" ").ifBlank { raw }
-        val amount = amountParts.joinToString(" ")
-        val displayName = name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(TURKISH_LOCALE) else it.toString() }
-        return DetailIngredient(
-            id = "ingredient_${index}_${raw.hashCode()}",
-            icon = iconForIngredient(displayName),
-            name = displayName,
-            amountUnit = amount,
-            estimatedCalories = estimateCalories(displayName, amount)
-        )
-    }
-
-    private fun String.looksLikeAmount(): Boolean {
-        return any { it.isDigit() } || contains("/")
-    }
-
-    private fun iconForIngredient(name: String): String {
-        val normalized = name.lowercase(TURKISH_LOCALE)
-        return when {
-            "lahana" in normalized || "marul" in normalized || "ıspanak" in normalized -> "🥬"
-            "havuç" in normalized -> "🥕"
-            "patates" in normalized -> "🥔"
-            "soğan" in normalized -> "🧅"
-            "domates" in normalized -> "🍅"
-            "biber" in normalized -> "🫑"
-            "tavuk" in normalized -> "🍗"
-            "et" in normalized || "kıyma" in normalized -> "🥩"
-            "balık" in normalized -> "🐟"
-            "yumurta" in normalized -> "🥚"
-            "süt" in normalized || "yoğurt" in normalized || "peynir" in normalized -> "🥛"
-            "zeytinya" in normalized || "yağ" in normalized -> "🫒"
-            "muz" in normalized -> "🍌"
-            "elma" in normalized -> "🍎"
-            "mercimek" in normalized || "nohut" in normalized || "fasulye" in normalized -> "🫘"
-            "un" in normalized || "yulaf" in normalized || "pirinç" in normalized || "bulgur" in normalized -> "🌾"
-            else -> "🥄"
-        }
-    }
-
-    private fun estimateCalories(name: String, amountUnit: String): Int {
-        val normalizedName = name.lowercase(TURKISH_LOCALE)
-        val normalizedAmount = amountUnit.lowercase(TURKISH_LOCALE)
-        val amount = normalizedAmount.extractAmountValue()
-        val kcalPer100 = kcalPer100Gram(normalizedName)
-        val grams = approximateGrams(normalizedName, normalizedAmount, amount)
-
-        if (grams != null) {
-            return ((grams / 100.0) * kcalPer100).roundToInt().coerceAtLeast(0)
-        }
-
-        return fallbackIngredientCalories(normalizedName)
-    }
-
-    private fun String.extractAmountValue(): Double? {
-        val token = split(Regex("\\s+")).firstOrNull { part -> part.any { char -> char.isDigit() } } ?: return null
-        val normalized = token.replace(',', '.')
-        if ("/" in normalized) {
-            val parts = normalized.split("/")
-            val numerator = parts.getOrNull(0)?.toDoubleOrNull()
-            val denominator = parts.getOrNull(1)?.toDoubleOrNull()
-            if (numerator != null && denominator != null && denominator != 0.0) return numerator / denominator
-        }
-        return normalized.toDoubleOrNull()
-    }
-
-    private fun approximateGrams(name: String, amountUnit: String, amount: Double?): Double? {
-        if (amount == null) return null
-        return when {
-            "kg" in amountUnit -> amount * 1000.0
-            "g" in amountUnit || "gr" in amountUnit || "gram" in amountUnit -> amount
-            "lt" in amountUnit || "litre" in amountUnit -> amount * 1000.0
-            "ml" in amountUnit -> amount
-            "su barda" in amountUnit -> amount * 200.0
-            "çay barda" in amountUnit -> amount * 100.0
-            "yemek kaşı" in amountUnit -> amount * 15.0
-            "tatlı kaşı" in amountUnit -> amount * 10.0
-            "çay kaşı" in amountUnit -> amount * 5.0
-            "dilim" in amountUnit -> amount * 30.0
-            "demet" in amountUnit -> amount * 50.0
-            "diş" in amountUnit -> amount * 3.0
-            "adet" in amountUnit -> amount * approximateItemGrams(name)
-            else -> null
-        }
-    }
-
-    private fun approximateItemGrams(name: String): Double {
-        return when {
-            "yumurta" in name -> 55.0
-            "soğan" in name -> 90.0
-            "patates" in name -> 150.0
-            "havuç" in name -> 70.0
-            "domates" in name -> 110.0
-            "biber" in name -> 60.0
-            "muz" in name -> 120.0
-            "elma" in name -> 160.0
-            "tavuk but" in name -> 150.0
-            "tavuk" in name -> 120.0
-            else -> 80.0
-        }
-    }
-
-    private fun kcalPer100Gram(name: String): Int {
-        return when {
-            "zeytinya" in name || "sıvı yağ" in name || "tereya" in name || "yağ" in name -> 884
-            "şeker" in name || "bal" in name || "pekmez" in name -> 310
-            "fıstık" in name || "ceviz" in name || "badem" in name || "fındık" in name -> 600
-            "kıyma" in name || "dana" in name || "kuzu" in name || "et" in name -> 250
-            "tavuk" in name || "hindi" in name -> 165
-            "balık" in name -> 160
-            "yumurta" in name -> 143
-            "peynir" in name -> 260
-            "yoğurt" in name -> 60
-            "süt" in name -> 50
-            "pirinç" in name || "bulgur" in name || "makarna" in name || "erişte" in name -> 350
-            "un" in name || "galeta" in name || "yulaf" in name -> 360
-            "nohut" in name || "fasulye" in name || "mercimek" in name -> 165
-            "patates" in name -> 77
-            "muz" in name -> 89
-            "elma" in name -> 52
-            "havuç" in name -> 41
-            "soğan" in name -> 40
-            "domates" in name -> 18
-            "biber" in name -> 25
-            "lahana" in name || "kabak" in name || "salatalık" in name -> 24
-            "tuz" in name || "karabiber" in name || "kimyon" in name || "nane" in name || "pul biber" in name -> 0
-            else -> 60
-        }
-    }
-
-    private fun fallbackIngredientCalories(name: String): Int {
-        return when {
-            "yağ" in name -> 120
-            "fıstık" in name || "ceviz" in name || "badem" in name -> 110
-            "tavuk" in name || "et" in name || "kıyma" in name -> 95
-            "patates" in name -> 80
-            "yumurta" in name -> 70
-            "peynir" in name -> 65
-            "süt" in name || "yoğurt" in name -> 55
-            "pirinç" in name || "bulgur" in name || "makarna" in name || "yulaf" in name -> 90
-            "muz" in name -> 90
-            "havuç" in name || "soğan" in name || "domates" in name || "biber" in name -> 35
-            else -> 40
-        }
-    }
-
     private val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
 
@@ -1090,26 +909,6 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
     private enum class DetailTab { OVERVIEW, INGREDIENTS, STEPS }
 
-    private data class DetailIngredient(
-        val id: String,
-        val icon: String,
-        val name: String,
-        val amountUnit: String,
-        val estimatedCalories: Int
-    )
-
-    private data class MacroSummary(
-        val protein: Int,
-        val carbs: Int,
-        val fat: Int
-    )
-
-    private data class MacroPercentSummary(
-        val protein: Int,
-        val carbs: Int,
-        val fat: Int
-    )
-
     companion object {
         private const val ARG_RECIPE_ID = "arg_recipe_id"
         private const val ARG_FROM_COMMUNITY = "arg_from_community"
@@ -1119,13 +918,6 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         private const val SHOPPING_PREFS = "fitto_recipe_shopping_list"
         private const val SHOPPING_ITEMS_KEY = "items"
         private const val TAG_RECIPE_COOKING = "recipe_cooking_mode"
-        private val TURKISH_LOCALE = Locale("tr", "TR")
-        private val UNIT_WORDS = setOf(
-            "adet", "g", "gr", "gram", "kg", "ml", "lt", "litre", "su", "bardağı", "bardak",
-            "küçük", "yemek", "tatlı", "çay", "kaşığı", "kaşık", "dilim", "demet", "tutam",
-            "avuç", "paket", "kase", "diş"
-        )
-
         fun newInstance(
             recipeId: String,
             fromCommunity: Boolean = false,
