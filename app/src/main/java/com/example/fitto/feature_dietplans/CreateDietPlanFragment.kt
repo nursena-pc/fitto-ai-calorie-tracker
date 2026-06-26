@@ -34,6 +34,7 @@ class CreateDietPlanFragment :
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
+    private val completionAction = CreateDietPlanCompletionAction()
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var uiRenderer: CreateDietPlanUiRenderer? = null
     private var interactionBinder: CreateDietPlanInteractionBinder? = null
@@ -177,23 +178,7 @@ class CreateDietPlanFragment :
     private fun deleteEditingDraft(draft: CustomDietPlanLocalModel) {
         when (customPlanDeletionAction.delete(draft.id)) {
             is CustomDietPlanDeletionResult.Deleted -> {
-                parentFragmentManager.setFragmentResult(
-                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                    Bundle().apply {
-                        putString(
-                            DietPlansFragment.BUNDLE_SELECT_TAB,
-                            DietPlansFragment.TAB_DRAFTS
-                        )
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.create_diet_plan_delete_draft_success),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                parentFragmentManager.popBackStack()
+                handleCompletionEffect(completionAction.draftDeleted())
             }
 
             is CustomDietPlanDeletionResult.Failed -> {
@@ -325,30 +310,7 @@ class CreateDietPlanFragment :
 
     private fun handleDraftSaved(result: CreateDietPlanSaveResult.DraftSaved) {
         editingDraftPlan = result.plan
-
-        parentFragmentManager.setFragmentResult(
-            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(
-                    DietPlansFragment.BUNDLE_SELECT_TAB,
-                    DietPlansFragment.TAB_DRAFTS
-                )
-            }
-        )
-
-        Toast.makeText(
-            requireContext(),
-            getString(
-                if (result.wasUpdate) {
-                    R.string.create_diet_plan_draft_updated
-                } else {
-                    R.string.create_diet_plan_saved
-                }
-            ),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        parentFragmentManager.popBackStack()
+        handleCompletionEffect(completionAction.draftSaved(result.wasUpdate))
     }
 
     private suspend fun handlePlanCreated(result: CreateDietPlanSaveResult.PlanCreated) {
@@ -357,25 +319,43 @@ class CreateDietPlanFragment :
             text = socialShareTextFor(result.goal, result.plan)
         )
 
-        parentFragmentManager.setFragmentResult(
-            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(
-                    DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    result.applyResult.activePlanId
-                )
-                putString(DietPlansFragment.BUNDLE_SELECT_TAB, DietPlansFragment.TAB_MY)
-            }
-        )
+        handleCompletionEffect(completionAction.planCreated(result.applyResult.activePlanId))
+    }
+
+    private fun handleCompletionEffect(effect: CreateDietPlanCompletionEffect) {
+        publishDietPlanChanged(effect.result)
 
         Toast.makeText(
             requireContext(),
-            getString(R.string.create_diet_plan_created),
+            getString(effect.message.stringRes),
             Toast.LENGTH_SHORT
         ).show()
 
-        parentFragmentManager.popBackStack()
+        if (effect.closeScreen) {
+            parentFragmentManager.popBackStack()
+        }
     }
+
+    private fun publishDietPlanChanged(result: CreateDietPlanChangeResult) {
+        parentFragmentManager.setFragmentResult(
+            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+            Bundle().apply {
+                result.activePlanId?.let { activePlanId ->
+                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, activePlanId)
+                }
+
+                putString(DietPlansFragment.BUNDLE_SELECT_TAB, result.selectedTab)
+            }
+        )
+    }
+
+    private val CreateDietPlanCompletionMessage.stringRes: Int
+        get() = when (this) {
+            CreateDietPlanCompletionMessage.DRAFT_SAVED -> R.string.create_diet_plan_saved
+            CreateDietPlanCompletionMessage.DRAFT_UPDATED -> R.string.create_diet_plan_draft_updated
+            CreateDietPlanCompletionMessage.DRAFT_DELETED -> R.string.create_diet_plan_delete_draft_success
+            CreateDietPlanCompletionMessage.PLAN_CREATED -> R.string.create_diet_plan_created
+        }
 
     private fun socialShareTextFor(
         goal: CreatePlanGoal,
