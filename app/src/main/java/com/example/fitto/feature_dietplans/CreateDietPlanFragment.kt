@@ -44,6 +44,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -73,6 +74,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             customPlanStore = customDietPlanStore,
             preferenceStore = dietPlanStore
         )
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
 
         val hasEditingDraft = loadEditingDraftIfNeeded()
 
@@ -834,8 +836,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
                 return@launch
             }
 
-            dietPlanStore.saveActivePlan(plan.id)
-            dietPlanStore.applyActivePlanToday()
+            val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
             if (plan.isPublic) {
                 shareCustomPlanToSocial(
                     plan = plan,
@@ -846,7 +847,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             parentFragmentManager.setFragmentResult(
                 DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
                 Bundle().apply {
-                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, plan.id)
+                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
                     putString(DietPlansFragment.BUNDLE_SELECT_TAB, DietPlansFragment.TAB_MY)
                 }
             )

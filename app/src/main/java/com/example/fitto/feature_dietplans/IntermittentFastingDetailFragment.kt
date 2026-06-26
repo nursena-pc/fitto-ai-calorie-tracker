@@ -24,6 +24,7 @@ class IntermittentFastingDetailFragment :
     private val binding get() = _binding!!
 
     private lateinit var preferenceStore: DietPlanPreferenceStore
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private var selectedPlanType: FastingPlanType = FastingPlanType.PLAN_16_8
     private var customFastingHours: Int? = null
 
@@ -193,6 +194,7 @@ class IntermittentFastingDetailFragment :
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentIntermittentFastingDetailBinding.bind(view)
         preferenceStore = DietPlanPreferenceStore(requireContext())
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
 
         setupClicks()
         setupFaqAccordion()
@@ -202,14 +204,16 @@ class IntermittentFastingDetailFragment :
         setupCustomPlanResult()
     }
     private fun toggleSaveFastingPlan() {
-        val isSavedNow = preferenceStore.toggleFavorite(DietPlanCatalog.PLAN_INTERMITTENT_FASTING)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(
+            DietPlanCatalog.PLAN_INTERMITTENT_FASTING
+        )
 
         renderSaveState()
 
         Toast.makeText(
             requireContext(),
             getString(
-                if (isSavedNow) {
+                if (favoriteResult.isFavorite) {
                     R.string.diet_plans_favorite_added_message
                 } else {
                     R.string.diet_plans_favorite_removed_message
@@ -224,7 +228,7 @@ class IntermittentFastingDetailFragment :
             Bundle().apply {
                 putString(
                     DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    preferenceStore.getActivePlanId()
+                    favoriteResult.activePlanId
                 )
             }
         )
@@ -532,19 +536,18 @@ class IntermittentFastingDetailFragment :
 
 
     private fun applySelectedFastingPlan() {
-        preferenceStore.saveActivePlan(
+        val applyResult = dietPlanPreferenceAction.applyPlan(
             planId = DietPlanCatalog.PLAN_INTERMITTENT_FASTING,
             fastingType = selectedPlanType,
             customFastingHours = customFastingHours
         )
-        preferenceStore.applyActivePlanToday()
 
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
                 putString(
                     DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    DietPlanCatalog.PLAN_INTERMITTENT_FASTING
+                    applyResult.activePlanId
                 )
             }
         )

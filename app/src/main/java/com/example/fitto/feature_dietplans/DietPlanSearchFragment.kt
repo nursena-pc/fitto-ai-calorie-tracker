@@ -29,6 +29,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     private lateinit var preferenceStore: DietPlanPreferenceStore
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var dietPlanListLoader: DietPlanListLoader
 
     private var allPlans: List<DietPlanUiModel> = emptyList()
@@ -43,6 +44,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             customPlanStore = customDietPlanStore,
             preferenceStore = preferenceStore
         )
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
         dietPlanListLoader = DietPlanListLoader.from(
             customPlanStore = customDietPlanStore,
             preferenceStore = preferenceStore
@@ -284,13 +286,12 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
     private fun applyPlan(plan: DietPlanUiModel) {
         rememberCurrentSearchIfNeeded()
-        preferenceStore.saveActivePlan(plan.id)
-        preferenceStore.applyActivePlanToday()
+        val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
 
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, plan.id)
+                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
             }
         )
 
@@ -308,9 +309,9 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun toggleFavorite(plan: DietPlanUiModel) {
-        val isFavoriteNow = preferenceStore.toggleFavorite(plan.id)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
 
-        val messageRes = if (isFavoriteNow) {
+        val messageRes = if (favoriteResult.isFavorite) {
             R.string.diet_plans_favorite_added_message
         } else {
             R.string.diet_plans_favorite_removed_message

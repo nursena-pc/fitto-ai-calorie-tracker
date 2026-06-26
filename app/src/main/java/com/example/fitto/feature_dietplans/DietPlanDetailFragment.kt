@@ -14,12 +14,14 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
     private val binding get() = _binding!!
 
     private lateinit var preferenceStore: DietPlanPreferenceStore
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private var currentPlanId: String = PLAN_MEDITERRANEAN
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDietPlanDetailBinding.bind(view)
         preferenceStore = DietPlanPreferenceStore(requireContext())
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
 
         currentPlanId = arguments?.getString(ARG_PLAN_ID) ?: PLAN_MEDITERRANEAN
         setupClicks()
@@ -28,14 +30,14 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
     }
     private fun toggleSaveCurrentPlan() {
         val detail = DietPlanDetailCatalog.get(currentPlanId) ?: return
-        val isSavedNow = preferenceStore.toggleFavorite(currentPlanId)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(currentPlanId)
 
         renderSaveState()
 
         Toast.makeText(
             requireContext(),
             getString(
-                if (isSavedNow) {
+                if (favoriteResult.isFavorite) {
                     R.string.diet_plans_favorite_added_message
                 } else {
                     R.string.diet_plans_favorite_removed_message
@@ -48,7 +50,7 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, preferenceStore.getActivePlanId())
+                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, favoriteResult.activePlanId)
             }
         )
     }
@@ -164,12 +166,12 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
 
     private fun applyCurrentPlan() {
         val detail = DietPlanDetailCatalog.get(currentPlanId) ?: return
-        preferenceStore.saveActivePlan(currentPlanId)
-        preferenceStore.applyActivePlanToday()
+        val applyResult = dietPlanPreferenceAction.applyPlan(currentPlanId)
+
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, currentPlanId)
+                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
             }
         )
 

@@ -20,6 +20,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var preferenceStore: DietPlanPreferenceStore
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
 
     private val planId: String by lazy {
         requireArguments().getString(ARG_PLAN_ID).orEmpty()
@@ -37,6 +38,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
             customPlanStore = customDietPlanStore,
             preferenceStore = preferenceStore
         )
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
 
         currentPlan = customDietPlanStore.getPlan(planId)
 
@@ -134,14 +136,14 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
 
     private fun toggleSavePlan() {
         val plan = currentPlan ?: return
-        val isSavedNow = preferenceStore.toggleFavorite(plan.id)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
 
         renderSaveState()
 
         Toast.makeText(
             requireContext(),
             getString(
-                if (isSavedNow) {
+                if (favoriteResult.isFavorite) {
                     R.string.diet_plans_favorite_added_message
                 } else {
                     R.string.diet_plans_favorite_removed_message
@@ -151,14 +153,13 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
             Toast.LENGTH_SHORT
         ).show()
 
-        notifyDietPlanChanged()
+        notifyDietPlanChanged(activePlanId = favoriteResult.activePlanId)
     }
 
     private fun applyPlan() {
         val plan = currentPlan ?: return
 
-        preferenceStore.saveActivePlan(plan.id)
-        preferenceStore.applyActivePlanToday()
+        val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
 
         Toast.makeText(
             requireContext(),
@@ -166,7 +167,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
             Toast.LENGTH_SHORT
         ).show()
 
-        notifyDietPlanChanged()
+        notifyDietPlanChanged(activePlanId = applyResult.activePlanId)
         renderApplyState()
     }
 

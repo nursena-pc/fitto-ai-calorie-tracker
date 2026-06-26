@@ -29,6 +29,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var dietPlanListLoader: DietPlanListLoader
     private var currentPlans: List<DietPlanUiModel> = emptyList()
     private var currentRecommendation: PersonalizedDietRecommendation? = null
@@ -43,6 +44,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             customPlanStore = customDietPlanStore,
             preferenceStore = dietPlanStore
         )
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
         dietPlanListLoader = DietPlanListLoader.from(
             customPlanStore = customDietPlanStore,
             preferenceStore = dietPlanStore
@@ -78,7 +80,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 }
             },
             onFavoriteClick = { plan ->
-                val isSavedNow = dietPlanStore.toggleFavorite(plan.id)
+                val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
 
                 val planTitle = plan.titleText
                     ?: plan.titleRes?.let { getString(it) }
@@ -87,7 +89,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 Toast.makeText(
                     requireContext(),
                     getString(
-                        if (isSavedNow) {
+                        if (favoriteResult.isFavorite) {
                             R.string.diet_plans_favorite_added_message
                         } else {
                             R.string.diet_plans_favorite_removed_message
@@ -406,13 +408,12 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
         planId: String,
         planTitle: String
     ) {
-        dietPlanStore.saveActivePlan(planId)
-        dietPlanStore.applyActivePlanToday()
+        val applyResult = dietPlanPreferenceAction.applyPlan(planId)
 
         parentFragmentManager.setFragmentResult(
             REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
-                putString(BUNDLE_ACTIVE_PLAN_ID, planId)
+                putString(BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
             }
         )
 
