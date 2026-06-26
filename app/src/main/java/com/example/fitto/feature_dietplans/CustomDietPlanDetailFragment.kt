@@ -19,6 +19,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
 
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var preferenceStore: DietPlanPreferenceStore
+    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
 
     private val planId: String by lazy {
         requireArguments().getString(ARG_PLAN_ID).orEmpty()
@@ -32,6 +33,10 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
 
         customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
         preferenceStore = DietPlanPreferenceStore(requireContext())
+        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = preferenceStore
+        )
 
         currentPlan = customDietPlanStore.getPlan(planId)
 
@@ -182,26 +187,28 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
     }
 
     private fun deletePlan(plan: CustomDietPlanLocalModel) {
-        runCatching {
-            customDietPlanStore.deletePlan(plan.id)
-            preferenceStore.removeFavorite(plan.id)
-            preferenceStore.clearActivePlanIf(plan.id)
-        }.onSuccess {
-            notifyDietPlanChanged()
+        when (val result = customPlanDeletionAction.delete(plan.id)) {
+            is CustomDietPlanDeletionResult.Deleted -> {
+                notifyDietPlanChanged(activePlanId = result.activePlanId)
 
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_success),
-                Toast.LENGTH_SHORT
-            ).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_success),
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            parentFragmentManager.popBackStack()
-        }.onFailure {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_error),
-                Toast.LENGTH_SHORT
-            ).show()
+                parentFragmentManager.popBackStack()
+            }
+
+            is CustomDietPlanDeletionResult.Failed -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
         }
     }
 
@@ -234,13 +241,15 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         applyPlanButton.alpha = if (isActive) 0.72f else 1f
     }
 
-    private fun notifyDietPlanChanged() {
+    private fun notifyDietPlanChanged(
+        activePlanId: String? = preferenceStore.getActivePlanId()
+    ) {
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
                 putString(
                     DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    preferenceStore.getActivePlanId()
+                    activePlanId
                 )
             }
         )

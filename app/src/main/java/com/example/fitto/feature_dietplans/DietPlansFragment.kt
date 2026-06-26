@@ -31,6 +31,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var nutritionTargetStore: UserNutritionTargetStore
+    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private var currentPlans: List<DietPlanUiModel> = emptyList()
     private var currentRecommendation: PersonalizedDietRecommendation? = null
 
@@ -41,6 +42,10 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
         dietPlanStore = DietPlanPreferenceStore(requireContext())
         profileCacheRepository = ProfileCacheRepository(requireContext().applicationContext)
         nutritionTargetStore = UserNutritionTargetStore(requireContext())
+        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = dietPlanStore
+        )
 
         setupRecyclerView()
         setupClicks()
@@ -381,7 +386,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun confirmDeleteCustomPlan(plan: DietPlanUiModel) {
-        if (!plan.id.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) return
+        if (!CustomDietPlanDeletionAction.isCustomPlanId(plan.id)) return
 
         val planTitle = plan.titleText
             ?: plan.titleRes?.let { getString(it) }
@@ -401,32 +406,34 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun deleteCustomPlan(plan: DietPlanUiModel) {
-        runCatching {
-            customDietPlanStore.deletePlan(plan.id)
-            dietPlanStore.removeFavorite(plan.id)
-            dietPlanStore.clearActivePlanIf(plan.id)
-        }.onSuccess {
-            parentFragmentManager.setFragmentResult(
-                REQUEST_DIET_PLAN_CHANGED,
-                Bundle().apply {
-                    putString(BUNDLE_ACTIVE_PLAN_ID, dietPlanStore.getActivePlanId())
-                }
-            )
+        when (val result = customPlanDeletionAction.delete(plan.id)) {
+            is CustomDietPlanDeletionResult.Deleted -> {
+                parentFragmentManager.setFragmentResult(
+                    REQUEST_DIET_PLAN_CHANGED,
+                    Bundle().apply {
+                        putString(BUNDLE_ACTIVE_PLAN_ID, result.activePlanId)
+                    }
+                )
 
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_success),
-                Toast.LENGTH_SHORT
-            ).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_success),
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            loadDietPlans()
-            setupPersonalizedRecommendation()
-        }.onFailure {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_error),
-                Toast.LENGTH_SHORT
-            ).show()
+                loadDietPlans()
+                setupPersonalizedRecommendation()
+            }
+
+            is CustomDietPlanDeletionResult.Failed -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
         }
     }
     private fun applyDietPlan(

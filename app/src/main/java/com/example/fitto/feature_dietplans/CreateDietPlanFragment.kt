@@ -43,6 +43,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
+    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -68,6 +69,10 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         customDietPlanStore = CustomDietPlanStore(appContext)
         dietPlanStore = DietPlanPreferenceStore(requireContext())
         profileCacheRepository = ProfileCacheRepository(appContext)
+        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = dietPlanStore
+        )
 
         val hasEditingDraft = loadEditingDraftIfNeeded()
 
@@ -424,34 +429,36 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     }
 
     private fun deleteEditingDraft(draft: CustomDietPlanLocalModel) {
-        runCatching {
-            customDietPlanStore.deletePlan(draft.id)
-            dietPlanStore.removeFavorite(draft.id)
-            dietPlanStore.clearActivePlanIf(draft.id)
-        }.onSuccess {
-            parentFragmentManager.setFragmentResult(
-                DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                Bundle().apply {
-                    putString(
-                        DietPlansFragment.BUNDLE_SELECT_TAB,
-                        DietPlansFragment.TAB_DRAFTS
-                    )
-                }
-            )
+        when (customPlanDeletionAction.delete(draft.id)) {
+            is CustomDietPlanDeletionResult.Deleted -> {
+                parentFragmentManager.setFragmentResult(
+                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+                    Bundle().apply {
+                        putString(
+                            DietPlansFragment.BUNDLE_SELECT_TAB,
+                            DietPlansFragment.TAB_DRAFTS
+                        )
+                    }
+                )
 
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.create_diet_plan_delete_draft_success),
-                Toast.LENGTH_SHORT
-            ).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.create_diet_plan_delete_draft_success),
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            parentFragmentManager.popBackStack()
-        }.onFailure {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.create_diet_plan_delete_draft_error),
-                Toast.LENGTH_SHORT
-            ).show()
+                parentFragmentManager.popBackStack()
+            }
+
+            is CustomDietPlanDeletionResult.Failed -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.create_diet_plan_delete_draft_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
         }
     }
 
