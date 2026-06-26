@@ -37,6 +37,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
+    private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
@@ -68,6 +69,10 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             preferenceStore = dietPlanStore
         )
         dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
+        createDietPlanSaveAction = CreateDietPlanSaveAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceAction = dietPlanPreferenceAction
+        )
         exclusionController = CreateDietPlanExclusionController(
             context = requireContext(),
             chipGroup = binding.exclusionsChipGroup,
@@ -572,97 +577,106 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         val formState = currentFormState()
         val existingPlan = editingDraftPlan
 
-        val validation = CreateDietPlanSaveValidator.validate(
-            planName = formState.planName,
-            hasDuplicateTitle = formState.planName.isNotBlank() &&
-                customDietPlanStore.hasPlanWithTitle(
-                    title = formState.planName,
-                    excludingPlanId = existingPlan?.id
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                createDietPlanSaveAction.save(
+                    formState = formState,
+                    existingPlan = existingPlan,
+                    isDraft = isDraft
                 )
-        )
+            }
 
+            if (_binding == null) return@launch
+            handleSaveResult(result)
+        }
+    }
+
+    private suspend fun handleSaveResult(result: CreateDietPlanSaveResult) {
+        when (result) {
+            is CreateDietPlanSaveResult.ValidationFailed -> {
+                handleSaveValidation(result.validation)
+            }
+
+            is CreateDietPlanSaveResult.DraftSaved -> {
+                handleDraftSaved(result)
+            }
+
+            is CreateDietPlanSaveResult.PlanCreated -> {
+                handlePlanCreated(result)
+            }
+        }
+    }
+
+    private fun handleSaveValidation(validation: CreateDietPlanSaveValidation) = with(binding) {
         when (validation) {
             CreateDietPlanSaveValidation.MISSING_NAME -> {
                 planNameInput.error = getString(R.string.create_diet_plan_name_required)
                 planNameInput.requestFocus()
-                return@with
             }
 
             CreateDietPlanSaveValidation.DUPLICATE_NAME -> {
                 planNameInput.error = getString(R.string.create_diet_plan_name_duplicate)
                 planNameInput.requestFocus()
-                return@with
             }
 
             CreateDietPlanSaveValidation.VALID -> Unit
         }
+    }
 
-        val now = System.currentTimeMillis()
-        val plan = CreateDietPlanModelFactory.create(
-            formState = formState,
-            existingPlan = existingPlan,
-            isDraft = isDraft,
-            now = now
+    private fun handleDraftSaved(result: CreateDietPlanSaveResult.DraftSaved) {
+        editingDraftPlan = result.plan
+
+        parentFragmentManager.setFragmentResult(
+            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+            Bundle().apply {
+                putString(
+                    DietPlansFragment.BUNDLE_SELECT_TAB,
+                    DietPlansFragment.TAB_DRAFTS
+                )
+            }
         )
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                customDietPlanStore.savePlan(plan)
-            }
-
-            if (isDraft) {
-                editingDraftPlan = plan
-
-                parentFragmentManager.setFragmentResult(
-                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                    Bundle().apply {
-                        putString(
-                            DietPlansFragment.BUNDLE_SELECT_TAB,
-                            DietPlansFragment.TAB_DRAFTS
-                        )
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(
-                        if (existingPlan != null) {
-                            R.string.create_diet_plan_draft_updated
-                        } else {
-                            R.string.create_diet_plan_saved
-                        }
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                parentFragmentManager.popBackStack()
-                return@launch
-            }
-
-            val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
-            if (plan.isPublic) {
-                shareCustomPlanToSocial(
-                    plan = plan,
-                    goal = formState.goal
-                )
-            }
-
-            parentFragmentManager.setFragmentResult(
-                DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                Bundle().apply {
-                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
-                    putString(DietPlansFragment.BUNDLE_SELECT_TAB, DietPlansFragment.TAB_MY)
+        Toast.makeText(
+            requireContext(),
+            getString(
+                if (result.wasUpdate) {
+                    R.string.create_diet_plan_draft_updated
+                } else {
+                    R.string.create_diet_plan_saved
                 }
+            ),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        parentFragmentManager.popBackStack()
+    }
+
+    private suspend fun handlePlanCreated(result: CreateDietPlanSaveResult.PlanCreated) {
+        if (result.plan.isPublic) {
+            shareCustomPlanToSocial(
+                plan = result.plan,
+                goal = result.goal
             )
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.create_diet_plan_created),
-                Toast.LENGTH_SHORT
-            ).show()
-
-            parentFragmentManager.popBackStack()
         }
+
+        parentFragmentManager.setFragmentResult(
+            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+            Bundle().apply {
+                putString(
+                    DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
+                    result.applyResult.activePlanId
+                )
+                putString(DietPlansFragment.BUNDLE_SELECT_TAB, DietPlansFragment.TAB_MY)
+            }
+        )
+
+        Toast.makeText(
+            requireContext(),
+            getString(R.string.create_diet_plan_created),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        parentFragmentManager.popBackStack()
     }
 
     private suspend fun shareCustomPlanToSocial(
