@@ -30,6 +30,16 @@ class CreateDietPlanCompletionActionTest {
     }
 
     @Test
+    fun draftDeleted_returnsDraftTabAndDeletedMessage() {
+        val effect = action.draftDeleted()
+
+        assertNull(effect.result.activePlanId)
+        assertEquals(DietPlansFragment.TAB_DRAFTS, effect.result.selectedTab)
+        assertEquals(CreateDietPlanCompletionMessage.DRAFT_DELETED, effect.message)
+        assertTrue(effect.closeScreen)
+    }
+
+    @Test
     fun planCreated_returnsMyPlansTabAndActivePlan() {
         val effect = action.planCreated(activePlanId = "custom_plan_42")
 

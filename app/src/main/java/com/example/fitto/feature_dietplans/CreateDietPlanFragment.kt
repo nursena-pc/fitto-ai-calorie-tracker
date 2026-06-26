@@ -178,23 +178,7 @@ class CreateDietPlanFragment :
     private fun deleteEditingDraft(draft: CustomDietPlanLocalModel) {
         when (customPlanDeletionAction.delete(draft.id)) {
             is CustomDietPlanDeletionResult.Deleted -> {
-                parentFragmentManager.setFragmentResult(
-                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                    Bundle().apply {
-                        putString(
-                            DietPlansFragment.BUNDLE_SELECT_TAB,
-                            DietPlansFragment.TAB_DRAFTS
-                        )
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.create_diet_plan_delete_draft_success),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                parentFragmentManager.popBackStack()
+                handleCompletionEffect(completionAction.draftDeleted())
             }
 
             is CustomDietPlanDeletionResult.Failed -> {
@@ -369,6 +353,7 @@ class CreateDietPlanFragment :
         get() = when (this) {
             CreateDietPlanCompletionMessage.DRAFT_SAVED -> R.string.create_diet_plan_saved
             CreateDietPlanCompletionMessage.DRAFT_UPDATED -> R.string.create_diet_plan_draft_updated
+            CreateDietPlanCompletionMessage.DRAFT_DELETED -> R.string.create_diet_plan_delete_draft_success
             CreateDietPlanCompletionMessage.PLAN_CREATED -> R.string.create_diet_plan_created
         }
 

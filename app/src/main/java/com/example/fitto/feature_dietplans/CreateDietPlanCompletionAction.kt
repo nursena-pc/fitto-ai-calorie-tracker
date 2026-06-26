@@ -14,6 +14,14 @@ class CreateDietPlanCompletionAction {
         )
     }
 
+    fun draftDeleted(): CreateDietPlanCompletionEffect {
+        return CreateDietPlanCompletionEffect(
+            result = CreateDietPlanChangeResult(selectedTab = DietPlansFragment.TAB_DRAFTS),
+            message = CreateDietPlanCompletionMessage.DRAFT_DELETED,
+            closeScreen = true
+        )
+    }
+
     fun planCreated(activePlanId: String): CreateDietPlanCompletionEffect {
         return CreateDietPlanCompletionEffect(
             result = CreateDietPlanChangeResult(
@@ -40,5 +48,6 @@ data class CreateDietPlanChangeResult(
 enum class CreateDietPlanCompletionMessage {
     DRAFT_SAVED,
     DRAFT_UPDATED,
+    DRAFT_DELETED,
     PLAN_CREATED
 }
