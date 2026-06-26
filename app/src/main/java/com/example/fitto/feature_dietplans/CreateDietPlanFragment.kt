@@ -12,7 +12,6 @@ import com.example.fitto.databinding.FragmentCreateDietPlanBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
-import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_meal.model.MealType
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -51,7 +50,9 @@ class CreateDietPlanFragment :
     )
 
     private val selectedPreferences = mutableSetOf<String>()
-    private val socialRepository by lazy { SocialRepository() }
+    private val socialShareAction by lazy {
+        CreateDietPlanSocialShareAction.from(SocialRepository())
+    }
     private val activeExclusionController: CreateDietPlanExclusionController
         get() = requireNotNull(exclusionController)
     private val activeUiRenderer: CreateDietPlanUiRenderer
@@ -351,12 +352,10 @@ class CreateDietPlanFragment :
     }
 
     private suspend fun handlePlanCreated(result: CreateDietPlanSaveResult.PlanCreated) {
-        if (result.plan.isPublic) {
-            shareCustomPlanToSocial(
-                plan = result.plan,
-                goal = result.goal
-            )
-        }
+        socialShareAction.share(
+            plan = result.plan,
+            text = socialShareTextFor(result.goal, result.plan)
+        )
 
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
@@ -378,30 +377,23 @@ class CreateDietPlanFragment :
         parentFragmentManager.popBackStack()
     }
 
-    private suspend fun shareCustomPlanToSocial(
-        plan: CustomDietPlanLocalModel,
-        goal: CreatePlanGoal
-    ) {
-        runCatching {
-            socialRepository.createPost(
-                content = getString(
-                    R.string.create_diet_plan_social_share_content,
-                    getString(goal.titleRes),
-                    plan.dailyCalories,
-                    plan.durationDays
-                ),
-                imageUri = null,
-                mealInfo = getString(R.string.create_diet_plan_social_share_meal_info),
-                calories = plan.dailyCalories,
-                allowComments = true,
-                visibility = POST_VISIBILITY_COMMUNITY,
-                tags = listOf(
-                    getString(R.string.diet_plan_tag_custom),
-                    getString(goal.titleRes)
-                ),
-                isDraft = false
-            )
-        }
+    private fun socialShareTextFor(
+        goal: CreatePlanGoal,
+        plan: CustomDietPlanLocalModel
+    ): CreateDietPlanSocialShareText {
+        val goalTitle = getString(goal.titleRes)
+
+        return CreateDietPlanSocialShareText(
+            content = getString(
+                R.string.create_diet_plan_social_share_content,
+                goalTitle,
+                plan.dailyCalories,
+                plan.durationDays
+            ),
+            mealInfo = getString(R.string.create_diet_plan_social_share_meal_info),
+            customTag = getString(R.string.diet_plan_tag_custom),
+            goalTag = goalTitle
+        )
     }
 
     override fun onPlanNameChanged() = with(binding) {
