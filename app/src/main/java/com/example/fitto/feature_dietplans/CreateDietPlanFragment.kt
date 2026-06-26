@@ -259,7 +259,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             renderState()
         }
     }
-    private fun loadEditingDraftIfNeeded(): Boolean = with(binding) {
+    private fun loadEditingDraftIfNeeded(): Boolean {
         val planId = arguments?.getString(ARG_EDIT_DRAFT_PLAN_ID).orEmpty()
         if (planId.isBlank()) return false
 
@@ -268,46 +268,24 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             ?: return false
 
         editingDraftPlan = draft
+        applyEditableState(CreateDietPlanDraftMapper.toEditableState(draft))
 
-        planNameInput.setText(draft.title)
-        planDescriptionInput.setText(draft.description)
+        return true
+    }
 
-        selectedGoal = runCatching {
-            CreatePlanGoal.valueOf(draft.goalType)
-        }.getOrDefault(CreatePlanGoal.BALANCED)
+    private fun applyEditableState(state: CreateDietPlanEditableState) = with(binding) {
+        planNameInput.setText(state.planName)
+        planDescriptionInput.setText(state.description)
 
-        selectedPrivacy = if (draft.isPublic) {
-            CreatePlanPrivacy.PUBLIC
-        } else {
-            CreatePlanPrivacy.PRIVATE
-        }
+        selectedGoal = state.goal
+        selectedPrivacy = state.privacy
+        dailyCalories = state.dailyCalories
+        durationDays = state.durationDays
 
-        dailyCalories = draft.dailyCalories
-        durationDays = draft.durationDays
-
-        selectedPreferences.clear()
-        selectedPreferences.addAll(draft.preferences)
-
+        updateSelectedPreferences(state.preferences)
         exclusions.clear()
-        exclusions.addAll(draft.exclusions)
-
-        selectedMealTypes.clear()
-        val draftMeals = draft.mealOrder.mapNotNull { mealKey ->
-            MealType.entries.firstOrNull { it.argumentValue == mealKey }
-        }
-
-        selectedMealTypes.addAll(
-            draftMeals.ifEmpty {
-                listOf(
-                    MealType.BREAKFAST,
-                    MealType.SNACK,
-                    MealType.LUNCH,
-                    MealType.DINNER
-                )
-            }
-        )
-
-        true
+        exclusions.addAll(state.exclusions)
+        updateSelectedMealTypes(state.mealTypes)
     }
 
     private fun renderDraftEditMode() = with(binding) {
