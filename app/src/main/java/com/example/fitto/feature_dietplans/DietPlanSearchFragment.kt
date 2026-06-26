@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDietPlanSearchBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
-import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -30,6 +29,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     private lateinit var preferenceStore: DietPlanPreferenceStore
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanListLoader: DietPlanListLoader
 
     private var allPlans: List<DietPlanUiModel> = emptyList()
 
@@ -43,8 +43,12 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             customPlanStore = customDietPlanStore,
             preferenceStore = preferenceStore
         )
+        dietPlanListLoader = DietPlanListLoader.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = preferenceStore
+        )
 
-        allPlans = createSearchPlans()
+        allPlans = dietPlanListLoader.load(includeDrafts = false).allPlans
 
         setupRecyclerView()
         setupClicks()
@@ -323,30 +327,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun refreshPlans() {
-        allPlans = createSearchPlans()
-    }
-
-    private fun createSearchPlans(): List<DietPlanUiModel> {
-        val favoriteIds = preferenceStore.getFavoriteIds()
-        val activePlanId = preferenceStore.getActivePlanId()
-
-        val readyPlans = DietPlanCatalog.getReadyPlans(
-            favoriteIds = favoriteIds,
-            activePlanId = activePlanId
-        )
-
-        val customPlans = customDietPlanStore
-            .getPlans(includeDrafts = false)
-            .map { customPlan ->
-                customDietPlanStore.toDietPlanUiModel(
-                    plan = customPlan,
-                    isFavorite = customPlan.id in favoriteIds
-                ).copy(
-                    isApplied = customPlan.id == activePlanId
-                )
-            }
-
-        return customPlans + readyPlans
+        allPlans = dietPlanListLoader.load(includeDrafts = false).allPlans
     }
 
     private fun titleTextForPlan(plan: DietPlanUiModel): String {

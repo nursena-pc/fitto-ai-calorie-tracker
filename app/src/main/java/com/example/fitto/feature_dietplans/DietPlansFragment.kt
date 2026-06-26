@@ -12,9 +12,7 @@ import com.example.fitto.data.local.entity.UserProfileEntity
 import com.example.fitto.data.local.repository.ProfileCacheRepository
 import com.example.fitto.databinding.FragmentDietPlansBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
-import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
-import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -30,8 +28,8 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private lateinit var adapter: DietPlansAdapter
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
-    private lateinit var nutritionTargetStore: UserNutritionTargetStore
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanListLoader: DietPlanListLoader
     private var currentPlans: List<DietPlanUiModel> = emptyList()
     private var currentRecommendation: PersonalizedDietRecommendation? = null
 
@@ -41,8 +39,11 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
         customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
         dietPlanStore = DietPlanPreferenceStore(requireContext())
         profileCacheRepository = ProfileCacheRepository(requireContext().applicationContext)
-        nutritionTargetStore = UserNutritionTargetStore(requireContext())
         customPlanDeletionAction = CustomDietPlanDeletionAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = dietPlanStore
+        )
+        dietPlanListLoader = DietPlanListLoader.from(
             customPlanStore = customDietPlanStore,
             preferenceStore = dietPlanStore
         )
@@ -199,26 +200,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun loadDietPlans() {
-        val favoriteIds = dietPlanStore.getFavoriteIds()
-        val activePlanId = dietPlanStore.getActivePlanId()
-
-        val defaultPlans = createDietPlanItems(
-            favoriteIds = favoriteIds,
-            activePlanId = activePlanId
-        )
-
-        val customPlans = customDietPlanStore
-            .getPlans(includeDrafts = true)
-            .map { customPlan ->
-                customDietPlanStore.toDietPlanUiModel(
-                    plan = customPlan,
-                    isFavorite = customPlan.id in favoriteIds
-                ).copy(
-                    isApplied = customPlan.id == activePlanId
-                )
-            }
-
-        currentPlans = customPlans + defaultPlans
+        currentPlans = dietPlanListLoader.load(includeDrafts = true).allPlans
         applyVisiblePlans()
     }
     private fun setupDietPlanChangeListener() {
@@ -304,10 +286,8 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             val recommendation = buildBestRecommendation(
                 profile = profile,
                 plans = currentPlans.ifEmpty {
-                    createDietPlanItems(
-                        favoriteIds = dietPlanStore.getFavoriteIds(),
-                        activePlanId = dietPlanStore.getActivePlanId()
-                    )                }
+                    dietPlanListLoader.loadReadyPlans()
+                }
             )
 
             currentRecommendation = recommendation
@@ -354,7 +334,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             DietPlanRecommendationResolver.resolve(
                 profile = profile,
                 plans = plans,
-                fallbackPlans = createDietPlanItems(
+                fallbackPlans = dietPlanListLoader.loadReadyPlans(
                     favoriteIds = emptySet(),
                     activePlanId = dietPlanStore.getActivePlanId()
                 ),
@@ -490,102 +470,6 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 ).show()
             }
         }
-    }
-
-    private fun createDietPlanItems(
-        favoriteIds: Set<String>,
-        activePlanId: String? = dietPlanStore.getActivePlanId()
-    ): List<DietPlanUiModel> {
-        return listOf(
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_MEDITERRANEAN,
-                titleRes = R.string.diet_plan_mediterranean_title,
-                descriptionRes = R.string.diet_plan_mediterranean_desc,
-                kcalPerDay = 1800,
-                durationDays = 7,
-                isFavorite = DietPlanDetailFragment.PLAN_MEDITERRANEAN in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_MEDITERRANEAN,
-                tagRes = R.string.diet_tag_popular,
-                imageResId = R.drawable.akdeniz_detay_header
-            ),
-            DietPlanUiModel(
-                id = DietPlanCatalog.PLAN_INTERMITTENT_FASTING,
-                titleRes = R.string.diet_plan_if_title,
-                descriptionRes = R.string.diet_plan_if_desc,
-                kcalPerDay = 1600,
-                durationDays = 14,
-                isFavorite = DietPlanCatalog.PLAN_INTERMITTENT_FASTING in favoriteIds,
-                isApplied = activePlanId == DietPlanCatalog.PLAN_INTERMITTENT_FASTING,
-                tagRes = R.string.diet_tag_fasting,
-                imageResId = R.drawable.intermittent_fasting_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_KETOGENIC,
-                titleRes = R.string.diet_plan_keto_title,
-                descriptionRes = R.string.diet_plan_keto_desc,
-                kcalPerDay = 1700,
-                durationDays = 7,
-                isFavorite = DietPlanDetailFragment.PLAN_KETOGENIC in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_KETOGENIC,
-                tagRes = R.string.diet_tag_low_carb,
-                imageResId = R.drawable.ketogenic_diet_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_DASH,
-                titleRes = R.string.diet_plan_dash_title,
-                descriptionRes = R.string.diet_plan_dash_desc,
-                kcalPerDay = 1700,
-                durationDays = 14,
-                isFavorite = DietPlanDetailFragment.PLAN_DASH in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_DASH,
-                tagRes = R.string.dash_detail_benefit_2_title,
-                imageResId = R.drawable.dash_diet_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_MIND,
-                titleRes = R.string.diet_plan_mind_title,
-                descriptionRes = R.string.diet_plan_mind_desc,
-                kcalPerDay = 1700,
-                durationDays = 14,
-                isFavorite = DietPlanDetailFragment.PLAN_MIND in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_MIND,
-                tagRes = R.string.diet_plan_tag_brain_friendly,
-                imageResId = R.drawable.mind_diet_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_ELIMINATION,
-                titleRes = R.string.diet_plan_elimination_title,
-                descriptionRes = R.string.diet_plan_elimination_desc,
-                kcalPerDay = 1600,
-                durationDays = 21,
-                isFavorite = DietPlanDetailFragment.PLAN_ELIMINATION in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_ELIMINATION,
-                tagRes = R.string.diet_plan_tag_sensitivity_tracking,
-                imageResId = R.drawable.elimination_diet_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_PLANT_BASED,
-                titleRes = R.string.diet_plan_plant_based_title,
-                descriptionRes = R.string.diet_plan_plant_based_desc,
-                kcalPerDay = 1600,
-                durationDays = 14,
-                isFavorite = DietPlanDetailFragment.PLAN_PLANT_BASED in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_PLANT_BASED,
-                tagRes = R.string.diet_plan_tag_plant_focused,
-                imageResId = R.drawable.plant_based_diet_cover
-            ),
-            DietPlanUiModel(
-                id = DietPlanDetailFragment.PLAN_WEIGHT_GAIN,
-                titleRes = R.string.diet_plan_weight_gain_title,
-                descriptionRes = R.string.diet_plan_weight_gain_desc,
-                kcalPerDay = 2200,
-                durationDays = 21,
-                isFavorite = DietPlanDetailFragment.PLAN_WEIGHT_GAIN in favoriteIds,
-                isApplied = activePlanId == DietPlanDetailFragment.PLAN_WEIGHT_GAIN,
-                tagRes = R.string.diet_plan_tag_energy_focused,
-                imageResId = R.drawable.weight_gain_diet_cover
-            )
-        )
     }
 
     override fun onDestroyView() {
