@@ -119,33 +119,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             renderState()
         }
     }
-    private fun showNumberInputDialog(
-        icon: String,
-        title: String,
-        helperText: String,
-        unitText: String,
-        initialValue: Int,
-        validRange: IntRange,
-        step: Int,
-        errorText: String,
-        onValueSaved: (Int) -> Unit
-    ) {
-        CreateDietPlanNumberInputDialog(requireContext()).show(
-            config = CreateDietPlanNumberInputConfig(
-                icon = icon,
-                title = title,
-                helperText = helperText,
-                unitText = unitText,
-                initialValue = initialValue,
-                validRange = validRange,
-                step = step,
-                rangeText = "${validRange.first} - ${validRange.last} $unitText aralığında olmalı",
-                errorText = errorText
-            ),
-            onValueSaved = onValueSaved
-        )
-    }
-
     private fun bindPreferenceChip(chip: Chip, preferenceKey: String) {
         chip.setOnCheckedChangeListener { _, isChecked ->
             if (isRenderingState) return@setOnCheckedChangeListener
@@ -283,24 +256,24 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         }
 
         calorieMinusButton.setOnClickListener {
-            dailyCalories = (dailyCalories - 50).coerceAtLeast(800)
+            dailyCalories = CreateDietPlanNumberRules.decreaseCalories(dailyCalories)
             renderState()
         }
 
         caloriePlusButton.setOnClickListener {
-            dailyCalories = (dailyCalories + 50).coerceAtMost(5000)
+            dailyCalories = CreateDietPlanNumberRules.increaseCalories(dailyCalories)
             renderState()
         }
         calorieValueText.setOnClickListener {
             showCalorieInputDialog()
         }
         durationMinusButton.setOnClickListener {
-            durationDays = (durationDays - 1).coerceAtLeast(1)
+            durationDays = CreateDietPlanNumberRules.decreaseDuration(durationDays)
             renderState()
         }
 
         durationPlusButton.setOnClickListener {
-            durationDays = (durationDays + 1).coerceAtMost(365)
+            durationDays = CreateDietPlanNumberRules.increaseDuration(durationDays)
             renderState()
         }
 
@@ -377,15 +350,8 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         )
     }
     private fun showCalorieInputDialog() {
-        showNumberInputDialog(
-            icon = "🔥",
-            title = getString(R.string.create_diet_plan_calorie_dialog_title),
-            helperText = "Günlük hedefini hızlıca ayarla. Bu değer planın öğün dağılımını belirler.",
-            unitText = "kcal",
-            initialValue = dailyCalories,
-            validRange = 800..5000,
-            step = 50,
-            errorText = getString(R.string.create_diet_plan_calorie_dialog_error)
+        CreateDietPlanNumberInputDialog(requireContext()).show(
+            config = CreateDietPlanNumberInputConfigs.calories(dailyCalories)
         ) { value ->
             dailyCalories = value
             renderState()
@@ -393,15 +359,8 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     }
 
     private fun showDurationInputDialog() {
-        showNumberInputDialog(
-            icon = "📅",
-            title = getString(R.string.create_diet_plan_duration_dialog_title),
-            helperText = "Planının kaç gün süreceğini seç. Kısa planlar takibi kolaylaştırır.",
-            unitText = "gün",
-            initialValue = durationDays,
-            validRange = 1..365,
-            step = 1,
-            errorText = getString(R.string.create_diet_plan_duration_dialog_error)
+        CreateDietPlanNumberInputDialog(requireContext()).show(
+            config = CreateDietPlanNumberInputConfigs.duration(durationDays)
         ) { value ->
             durationDays = value
             renderState()

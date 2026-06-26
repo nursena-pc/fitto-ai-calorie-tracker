@@ -5,20 +5,20 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.Window
 import android.view.WindowManager
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import com.example.fitto.R
 import com.example.fitto.databinding.DialogPlanNumberPickerBinding
 
 data class CreateDietPlanNumberInputConfig(
     val icon: String,
-    val title: String,
-    val helperText: String,
-    val unitText: String,
+    @StringRes val titleRes: Int,
+    @StringRes val helperTextRes: Int,
+    @StringRes val unitTextRes: Int,
     val initialValue: Int,
     val validRange: IntRange,
     val step: Int,
-    val rangeText: String,
-    val errorText: String
+    @StringRes val errorTextRes: Int
 )
 
 class CreateDietPlanNumberInputDialog(
@@ -64,10 +64,12 @@ class CreateDietPlanNumberInputDialog(
         config: CreateDietPlanNumberInputConfig,
         onValueSaved: (Int) -> Unit
     ) = with(binding) {
+        val unitText = context.getString(config.unitTextRes)
+
         numberDialogIconText.text = config.icon
-        numberDialogTitleText.text = config.title
-        numberDialogHelperText.text = config.helperText
-        numberDialogUnitText.text = config.unitText
+        numberDialogTitleText.setText(config.titleRes)
+        numberDialogHelperText.setText(config.helperTextRes)
+        numberDialogUnitText.text = unitText
 
         setValue(binding, config, config.initialValue)
 
@@ -98,7 +100,7 @@ class CreateDietPlanNumberInputDialog(
                 ?.toIntOrNull()
 
             if (value == null || value !in config.validRange) {
-                numberDialogRangeText.text = config.errorText
+                numberDialogRangeText.setText(config.errorTextRes)
                 numberDialogRangeText.setTextColor(
                     ContextCompat.getColor(context, R.color.fitto_error)
                 )
@@ -127,10 +129,16 @@ class CreateDietPlanNumberInputDialog(
         value: Int
     ) = with(binding) {
         val safeValue = value.coerceIn(config.validRange)
+        val unitText = context.getString(config.unitTextRes)
 
         numberDialogInput.setText(safeValue.toString())
         numberDialogInput.setSelection(numberDialogInput.text?.length ?: 0)
-        numberDialogRangeText.text = config.rangeText
+        numberDialogRangeText.text = context.getString(
+            R.string.create_diet_plan_number_dialog_range,
+            config.validRange.first,
+            config.validRange.last,
+            unitText
+        )
         numberDialogRangeText.setTextColor(
             ContextCompat.getColor(context, R.color.fitto_text_secondary)
         )
