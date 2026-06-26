@@ -1,11 +1,7 @@
 package com.example.fitto.feature_dietplans
 
-import android.content.DialogInterface
 import android.os.Bundle
-import android.text.InputType
 import android.view.View
-import android.view.Window
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
@@ -41,6 +37,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
+    private var exclusionController: CreateDietPlanExclusionController? = null
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -54,9 +51,9 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     )
 
     private val selectedPreferences = mutableSetOf<String>()
-    private val exclusions = mutableSetOf<String>()
-
     private val socialRepository by lazy { SocialRepository() }
+    private val activeExclusionController: CreateDietPlanExclusionController
+        get() = requireNotNull(exclusionController)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -71,6 +68,11 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             preferenceStore = dietPlanStore
         )
         dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
+        exclusionController = CreateDietPlanExclusionController(
+            context = requireContext(),
+            chipGroup = binding.exclusionsChipGroup,
+            onChanged = ::renderState
+        )
 
         val hasEditingDraft = loadEditingDraftIfNeeded()
 
@@ -80,9 +82,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         setupPreferenceChips()
         setupMealOrderChips()
 
-        if (hasEditingDraft) {
-            renderExclusionChipsFromState()
-        } else {
+        if (!hasEditingDraft) {
             setupDefaultExclusions()
         }
 
@@ -213,24 +213,12 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         durationDays = state.durationDays
 
         updateSelectedPreferences(state.preferences)
-        exclusions.clear()
-        exclusions.addAll(state.exclusions)
+        activeExclusionController.setValues(state.exclusions)
         updateSelectedMealTypes(state.mealTypes)
     }
 
     private fun renderDraftEditMode() = with(binding) {
         deleteDraftButton.isVisible = editingDraftPlan != null
-    }
-
-    private fun renderExclusionChipsFromState() = with(binding) {
-        val currentExclusions = exclusions.toList()
-
-        exclusionsChipGroup.removeAllViews()
-        exclusions.clear()
-
-        currentExclusions.forEach { exclusion ->
-            addExclusionChip(exclusion)
-        }
     }
 
     private fun setupInputs() = with(binding) {
@@ -321,7 +309,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         }
 
         addExcludedFoodButton.setOnClickListener {
-            showAddExclusionDialog()
+            activeExclusionController.showAddDialog()
         }
     }
 
@@ -375,18 +363,18 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         }
     }
 
-    private fun setupDefaultExclusions() = with(binding) {
-        exclusionsChipGroup.removeAllViews()
+    private fun setupDefaultExclusions() {
+        activeExclusionController.setValues(defaultExclusions())
+    }
 
-        listOf(
+    private fun defaultExclusions(): List<String> {
+        return listOf(
             getString(R.string.create_diet_plan_exclusion_broccoli),
             getString(R.string.create_diet_plan_exclusion_mushroom),
             getString(R.string.create_diet_plan_exclusion_milk),
             getString(R.string.create_diet_plan_exclusion_peanut),
             getString(R.string.create_diet_plan_exclusion_seafood)
-        ).forEach { exclusion ->
-            addExclusionChip(exclusion)
-        }
+        )
     }
     private fun showCalorieInputDialog() {
         showNumberInputDialog(
@@ -418,61 +406,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             durationDays = value
             renderState()
         }
-    }
-    private fun showAddExclusionDialog() {
-        val input = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            hint = getString(R.string.create_diet_plan_add_exclusion_hint)
-            setSingleLine(true)
-            setPadding(32, 20, 32, 20)
-        }
-
-        val dialog = MaterialAlertDialogBuilder(
-            requireContext(),
-            R.style.ThemeOverlay_Fitto_WhiteAlertDialog
-        )
-            .setTitle(getString(R.string.create_diet_plan_add_exclusion_title))
-            .setView(input)
-            .setPositiveButton(getString(R.string.create_diet_plan_add_exclusion_positive), null)
-            .setNegativeButton(getString(R.string.create_diet_plan_add_exclusion_negative), null)
-            .create()
-
-        dialog.setOnShowListener {
-            forceWhiteDialog(dialog.window)
-
-            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
-                val value = input.text?.toString()?.trim().orEmpty()
-                if (value.isNotBlank()) {
-                    addExclusionChip(value)
-                    renderState()
-                }
-                dialog.dismiss()
-            }
-        }
-
-        dialog.show()
-    }
-
-    private fun forceWhiteDialog(window: Window?) {
-        window?.setBackgroundDrawableResource(R.drawable.bg_dialog_white)
-    }
-
-    private fun addExclusionChip(value: String) {
-        if (value.isBlank()) return
-
-        exclusions.add(value)
-
-        val chip = Chip(requireContext()).apply {
-            text = value
-            isCloseIconVisible = true
-            setOnCloseIconClickListener {
-                exclusions.remove(value)
-                binding.exclusionsChipGroup.removeView(this)
-                renderState()
-            }
-        }
-
-        binding.exclusionsChipGroup.addView(chip)
     }
     private fun renderState() = with(binding) {
         isRenderingState = true
@@ -672,7 +605,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             durationDays = durationDays,
             mealTypes = selectedMealTypes.toList(),
             preferences = selectedPreferences.toList(),
-            exclusions = exclusions.toList()
+            exclusions = activeExclusionController.values()
         )
     }
 
@@ -800,6 +733,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     }
 
     override fun onDestroyView() {
+        exclusionController = null
         _binding = null
         super.onDestroyView()
     }
