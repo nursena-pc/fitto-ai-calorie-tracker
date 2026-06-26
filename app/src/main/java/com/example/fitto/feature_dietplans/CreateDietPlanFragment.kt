@@ -2,7 +2,6 @@ package com.example.fitto.feature_dietplans
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
@@ -18,7 +17,6 @@ import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
 import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_meal.model.MealType
-import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +37,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
     private var exclusionController: CreateDietPlanExclusionController? = null
+    private var uiRenderer: CreateDietPlanUiRenderer? = null
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -55,6 +54,8 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private val socialRepository by lazy { SocialRepository() }
     private val activeExclusionController: CreateDietPlanExclusionController
         get() = requireNotNull(exclusionController)
+    private val activeUiRenderer: CreateDietPlanUiRenderer
+        get() = requireNotNull(uiRenderer)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -72,6 +73,10 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         createDietPlanSaveAction = CreateDietPlanSaveAction.from(
             customPlanStore = customDietPlanStore,
             preferenceAction = dietPlanPreferenceAction
+        )
+        uiRenderer = CreateDietPlanUiRenderer(
+            context = requireContext(),
+            binding = binding
         )
         exclusionController = CreateDietPlanExclusionController(
             context = requireContext(),
@@ -371,191 +376,24 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             renderState()
         }
     }
-    private fun renderState() = with(binding) {
+    private fun renderState() {
         isRenderingState = true
 
         try {
-            calorieValueText.text = dailyCalories.toString()
-            durationValueText.text = getString(
-                R.string.create_diet_plan_duration_day_value,
-                durationDays
-            )
-
-            selectedMealCountText.text = getString(
-                R.string.create_diet_plan_selected_meal_count,
-                selectedMealTypes.size
-            )
-
-            renderGoalCards()
-            renderPrivacyCards()
-            renderPreferenceChips()
-            renderMealOrderChips()
-            renderPreview()
+            activeUiRenderer.render(currentRenderState())
         } finally {
             isRenderingState = false
         }
     }
-    private fun renderPreferenceChips() = with(binding) {
-        renderPreferenceChip(preferenceVegetarianChip, CustomDietMealPlanGenerator.PREF_VEGETARIAN)
-        renderPreferenceChip(preferenceVeganChip, CustomDietMealPlanGenerator.PREF_VEGAN)
-        renderPreferenceChip(preferenceGlutenFreeChip, CustomDietMealPlanGenerator.PREF_GLUTEN_FREE)
-        renderPreferenceChip(preferenceLactoseFreeChip, CustomDietMealPlanGenerator.PREF_LACTOSE_FREE)
-        renderPreferenceChip(preferenceHighProteinChip, CustomDietMealPlanGenerator.PREF_HIGH_PROTEIN)
-        renderPreferenceChip(preferenceLowCarbChip, CustomDietMealPlanGenerator.PREF_LOW_CARB)
-    }
 
-    private fun renderPreferenceChip(chip: Chip, preferenceKey: String) {
-        val selected = preferenceKey in selectedPreferences
-
-        chip.isChecked = selected
-        chip.setTextColor(
-            requireContext().getColor(
-                if (selected) R.color.fitto_green else R.color.fitto_text_dark
-            )
-        )
-    }
-
-    private fun renderGoalCards() = with(binding) {
-        renderSelectableCard(
-            card = goalWeightLossCard,
-            title = goalWeightLossTitle,
-            selected = selectedGoal == CreatePlanGoal.WEIGHT_LOSS
-        )
-        renderSelectableCard(
-            card = goalWeightGainCard,
-            title = goalWeightGainTitle,
-            selected = selectedGoal == CreatePlanGoal.WEIGHT_GAIN
-        )
-        renderSelectableCard(
-            card = goalMuscleCard,
-            title = goalMuscleTitle,
-            selected = selectedGoal == CreatePlanGoal.MUSCLE
-        )
-        renderSelectableCard(
-            card = goalMaintainCard,
-            title = goalMaintainTitle,
-            selected = selectedGoal == CreatePlanGoal.MAINTAIN
-        )
-        renderSelectableCard(
-            card = goalBalancedCard,
-            title = goalBalancedTitle,
-            selected = selectedGoal == CreatePlanGoal.BALANCED
-        )
-    }
-
-    private fun renderPrivacyCards() = with(binding) {
-        renderSelectableCard(
-            card = privacyPrivateCard,
-            title = privacyPrivateTitle,
-            selected = selectedPrivacy == CreatePlanPrivacy.PRIVATE
-        )
-        renderSelectableCard(
-            card = privacyPublicCard,
-            title = privacyPublicTitle,
-            selected = selectedPrivacy == CreatePlanPrivacy.PUBLIC
-        )
-    }
-
-    private fun renderSelectableCard(
-        card: MaterialCardView,
-        title: TextView,
-        selected: Boolean
-    ) {
-        val selectedColor = requireContext().getColor(R.color.fitto_green)
-        val normalTextColor = requireContext().getColor(R.color.fitto_text_dark)
-
-        card.setCardBackgroundColor(
-            requireContext().getColor(
-                if (selected) R.color.fitto_primary_soft else R.color.fitto_surface
-            )
-        )
-        card.strokeColor = requireContext().getColor(
-            if (selected) R.color.fitto_green else R.color.fitto_divider_soft
-        )
-        card.strokeWidth = if (selected) 2 else 1
-
-        title.setTextColor(
-            if (selected) selectedColor else normalTextColor
-        )
-    }
-    private fun renderMealOrderChips() = with(binding) {
-        renderMealChip(mealBreakfastChip, MealType.BREAKFAST)
-        renderMealChip(mealSnackChip, MealType.SNACK)
-        renderMealChip(mealLunchChip, MealType.LUNCH)
-        renderMealChip(mealDinnerChip, MealType.DINNER)
-    }
-
-    private fun renderMealChip(chip: Chip, mealType: MealType) {
-        val selected = mealType in selectedMealTypes
-
-        chip.isChecked = selected
-        chip.setTextColor(
-            requireContext().getColor(
-                if (selected) R.color.fitto_green else R.color.fitto_text_dark
-            )
-        )
-    }
-    private fun renderPreview() = with(binding) {
-        previewDailyGoalText.text = getString(
-            R.string.create_diet_plan_preview_daily_goal_dynamic,
-            dailyCalories
-        )
-
-        previewMealCountText.text = getString(
-            R.string.create_diet_plan_preview_meal_count_dynamic,
-            selectedMealTypes.size
-        )
-
-        previewDurationText.text = getString(
-            R.string.create_diet_plan_preview_duration_dynamic,
-            durationDays
-        )
-
-        previewGoalText.text = getString(
-            R.string.create_diet_plan_preview_goal_dynamic,
-            getString(selectedGoal.titleRes)
-        )
-
-        previewPrivacyText.text = getString(
-            R.string.create_diet_plan_preview_privacy_dynamic,
-            getString(selectedPrivacy.titleRes)
-        )
-
-        val previewMeals = buildPreviewMeals()
-
-        renderPreviewMealText(previewBreakfastText, previewMeals[MealType.BREAKFAST])
-        renderPreviewMealText(previewSnackText, previewMeals[MealType.SNACK])
-        renderPreviewMealText(previewLunchText, previewMeals[MealType.LUNCH])
-        renderPreviewMealText(previewDinnerText, previewMeals[MealType.DINNER])
-    }
-
-    private fun renderPreviewMealText(
-        textView: TextView,
-        meal: PreviewMealUiModel?
-    ) {
-        if (meal == null) {
-            textView.visibility = View.GONE
-            return
-        }
-
-        textView.visibility = View.VISIBLE
-        textView.text = buildString {
-            append(meal.icon)
-            append('\n')
-            append(getString(meal.mealType.titleRes))
-            append('\n')
-            append(meal.percent)
-            append('%')
-            append('\n')
-            append(meal.calories)
-            append(" kcal")
-        }
-    }
-
-    private fun buildPreviewMeals(): Map<MealType, PreviewMealUiModel> {
-        return CreateDietPlanPreviewResolver.buildPreviewMeals(
-            selectedMealTypes = selectedMealTypes,
-            dailyCalories = dailyCalories
+    private fun currentRenderState(): CreateDietPlanRenderState {
+        return CreateDietPlanRenderState(
+            dailyCalories = dailyCalories,
+            durationDays = durationDays,
+            selectedGoal = selectedGoal,
+            selectedPrivacy = selectedPrivacy,
+            selectedMealTypes = selectedMealTypes.toList(),
+            selectedPreferences = selectedPreferences.toSet()
         )
     }
 
@@ -707,6 +545,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
     override fun onDestroyView() {
         exclusionController = null
+        uiRenderer = null
         _binding = null
         super.onDestroyView()
     }
