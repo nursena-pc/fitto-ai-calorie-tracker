@@ -7,7 +7,6 @@ import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
 import com.example.fitto.feature_meal.model.MealType
 import java.util.Locale
-import kotlin.math.roundToInt
 
 class CustomDietMealPlanGenerator(
     private val context: Context
@@ -35,8 +34,11 @@ class CustomDietMealPlanGenerator(
         dayNumber: Int,
         completedMealIds: Set<String>
     ): DailyPlannedMealsUiModel {
-        val safeDuration = plan.durationDays.coerceAtLeast(1)
-        val normalizedDay = ((dayNumber - 1).floorMod(safeDuration)) + 1
+        val safeDuration = CustomDietPlanScheduleResolver.safeDuration(plan.durationDays)
+        val normalizedDay = CustomDietPlanScheduleResolver.normalizedDay(
+            dayNumber = dayNumber,
+            durationDays = plan.durationDays
+        )
         val meals = buildMealsForDay(
             plan = plan,
             allFoods = allFoods,
@@ -75,8 +77,11 @@ class CustomDietMealPlanGenerator(
             .filterNot { food -> food.isExcludedBy(plan.exclusions) }
 
         val sourceFoods = availableFoods.ifEmpty { fallbackFoods }
-        val mealTypes = mealTypesFor(plan)
-        val ratios = mealRatios(mealTypes)
+        val mealTypes = CustomDietPlanScheduleResolver.mealTypesFor(
+            mealOrder = plan.mealOrder,
+            mealCount = plan.mealCount
+        )
+        val ratios = CustomDietPlanScheduleResolver.mealRatios(mealTypes)
 
         return mealTypes.mapIndexed { index, mealType ->
             val mealFoods = selectFoodsForMeal(
@@ -86,15 +91,14 @@ class CustomDietMealPlanGenerator(
                 dayNumber = dayNumber,
                 mealIndex = index
             )
-            val targetMealCalories = (plan.dailyCalories * ratios.getValue(mealType))
-                .roundToInt()
-                .roundToNearest(5)
-                .coerceAtLeast(60)
-            val baseCalories = ((targetMealCalories.toDouble() / plan.dailyCalories.coerceAtLeast(1)) *
-                    PlannedMealUiModel.BASELINE_CALORIES)
-                .roundToInt()
-                .roundToNearest(5)
-                .coerceAtLeast(60)
+            val targetMealCalories = CustomDietPlanScheduleResolver.targetMealCalories(
+                dailyCalories = plan.dailyCalories,
+                ratio = ratios.getValue(mealType)
+            )
+            val baseCalories = CustomDietPlanScheduleResolver.baseCalories(
+                targetMealCalories = targetMealCalories,
+                dailyCalories = plan.dailyCalories
+            )
 
             PlannedMealUiModel(
                 id = "${plan.id}-day$dayNumber-${mealType.argumentValue}",
@@ -444,51 +448,6 @@ class CustomDietMealPlanGenerator(
         return goalType == GOAL_MUSCLE || goalType == GOAL_WEIGHT_GAIN || dailyCalories >= 2200
     }
 
-    private fun mealTypesFor(plan: CustomDietPlanLocalModel): List<MealType> {
-        val selectedMeals = plan.mealOrder
-            .mapNotNull { value -> value.toMealTypeOrNull() }
-            .distinct()
-
-        if (selectedMeals.isNotEmpty()) {
-            return selectedMeals
-        }
-
-        return when (plan.mealCount.coerceIn(1, 4)) {
-            1 -> listOf(MealType.DINNER)
-            2 -> listOf(MealType.BREAKFAST, MealType.DINNER)
-            3 -> listOf(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER)
-            else -> listOf(MealType.BREAKFAST, MealType.SNACK, MealType.LUNCH, MealType.DINNER)
-        }
-    }
-
-    private fun String.toMealTypeOrNull(): MealType? {
-        return when (trim().lowercase(Locale.ROOT)) {
-            MealType.BREAKFAST.argumentValue, "kahvaltı", "kahvalti", "breakfast" -> MealType.BREAKFAST
-            MealType.SNACK.argumentValue, "ara öğün", "ara ogun", "atıştırmalık", "atistirmalik", "snack" -> MealType.SNACK
-            MealType.LUNCH.argumentValue, "öğle", "ogle", "lunch" -> MealType.LUNCH
-            MealType.DINNER.argumentValue, "akşam", "aksam", "dinner" -> MealType.DINNER
-            else -> null
-        }
-    }
-
-    private fun mealRatios(mealTypes: List<MealType>): Map<MealType, Double> {
-        val total = mealTypes.sumOf { mealType -> baseMealRatio(mealType) }
-            .coerceAtLeast(0.01)
-
-        return mealTypes.associateWith { mealType ->
-            baseMealRatio(mealType) / total
-        }
-    }
-
-    private fun baseMealRatio(mealType: MealType): Double {
-        return when (mealType) {
-            MealType.BREAKFAST -> 0.25
-            MealType.SNACK -> 0.15
-            MealType.LUNCH -> 0.35
-            MealType.DINNER -> 0.25
-        }
-    }
-
     private fun String.normalizeForSearch(): String {
         return trim()
             .lowercase(Locale.ROOT)
@@ -508,10 +467,6 @@ class CustomDietMealPlanGenerator(
 
     private fun Int.floorMod(other: Int): Int {
         return ((this % other) + other) % other
-    }
-
-    private fun Int.roundToNearest(step: Int): Int {
-        return ((this + step / 2) / step) * step
     }
 
     private fun <K, V> Map<K, V>.getValueOrDefault(key: K, defaultValue: V): V {

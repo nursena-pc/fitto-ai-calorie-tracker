@@ -21,7 +21,6 @@ import com.example.fitto.databinding.DialogPlanNumberPickerBinding
 import com.example.fitto.databinding.FragmentCreateDietPlanBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
-import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
 import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
 import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
@@ -44,7 +43,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
-    private lateinit var nutritionTargetStore: UserNutritionTargetStore
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -70,7 +68,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         customDietPlanStore = CustomDietPlanStore(appContext)
         dietPlanStore = DietPlanPreferenceStore(requireContext())
         profileCacheRepository = ProfileCacheRepository(appContext)
-        nutritionTargetStore = UserNutritionTargetStore(requireContext())
 
         val hasEditingDraft = loadEditingDraftIfNeeded()
 
@@ -744,44 +741,56 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             dailyCalories = dailyCalories
         )
     }
-    private fun savePlan(isDraft: Boolean) = with(binding) {
-        val planName = planNameInput.text?.toString()?.trim().orEmpty()
-        val description = planDescriptionInput.text?.toString()?.trim().orEmpty()
 
-        if (planName.isBlank()) {
-            planNameInput.error = getString(R.string.create_diet_plan_name_required)
-            planNameInput.requestFocus()
-            return@with
-        }
-        if (
-            customDietPlanStore.hasPlanWithTitle(
-                title = planName,
-                excludingPlanId = editingDraftPlan?.id
-            )
-        ) {
-            planNameInput.error = getString(R.string.create_diet_plan_name_duplicate)
-            planNameInput.requestFocus()
-            return@with
-        }
-        val now = System.currentTimeMillis()
-        val existingPlan = editingDraftPlan
-        val isPublic = selectedPrivacy == CreatePlanPrivacy.PUBLIC
-
-        val plan = CustomDietPlanLocalModel(
-            id = existingPlan?.id ?: "${CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX}$now",
-            title = planName,
-            description = description,
-            goalType = selectedGoal.name,
+    private fun currentFormState() = with(binding) {
+        CreateDietPlanFormState(
+            planName = planNameInput.text?.toString()?.trim().orEmpty(),
+            description = planDescriptionInput.text?.toString()?.trim().orEmpty(),
+            goal = selectedGoal,
+            privacy = selectedPrivacy,
             dailyCalories = dailyCalories,
-            mealCount = selectedMealTypes.size,
             durationDays = durationDays,
-            isPublic = isPublic,
+            mealTypes = selectedMealTypes.toList(),
             preferences = selectedPreferences.toList(),
-            exclusions = exclusions.toList(),
-            mealOrder = buildMealOrder(),
+            exclusions = exclusions.toList()
+        )
+    }
+
+    private fun savePlan(isDraft: Boolean) = with(binding) {
+        val formState = currentFormState()
+        val existingPlan = editingDraftPlan
+
+        val validation = CreateDietPlanSaveValidator.validate(
+            planName = formState.planName,
+            hasDuplicateTitle = formState.planName.isNotBlank() &&
+                customDietPlanStore.hasPlanWithTitle(
+                    title = formState.planName,
+                    excludingPlanId = existingPlan?.id
+                )
+        )
+
+        when (validation) {
+            CreateDietPlanSaveValidation.MISSING_NAME -> {
+                planNameInput.error = getString(R.string.create_diet_plan_name_required)
+                planNameInput.requestFocus()
+                return@with
+            }
+
+            CreateDietPlanSaveValidation.DUPLICATE_NAME -> {
+                planNameInput.error = getString(R.string.create_diet_plan_name_duplicate)
+                planNameInput.requestFocus()
+                return@with
+            }
+
+            CreateDietPlanSaveValidation.VALID -> Unit
+        }
+
+        val now = System.currentTimeMillis()
+        val plan = CreateDietPlanModelFactory.create(
+            formState = formState,
+            existingPlan = existingPlan,
             isDraft = isDraft,
-            createdAt = existingPlan?.createdAt ?: now,
-            updatedAt = now
+            now = now
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -820,8 +829,11 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
             dietPlanStore.saveActivePlan(plan.id)
             dietPlanStore.applyActivePlanToday()
-            if (isPublic) {
-                shareCustomPlanToSocial(plan)
+            if (plan.isPublic) {
+                shareCustomPlanToSocial(
+                    plan = plan,
+                    goal = formState.goal
+                )
             }
 
             parentFragmentManager.setFragmentResult(
@@ -842,12 +854,15 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         }
     }
 
-    private suspend fun shareCustomPlanToSocial(plan: CustomDietPlanLocalModel) {
+    private suspend fun shareCustomPlanToSocial(
+        plan: CustomDietPlanLocalModel,
+        goal: CreatePlanGoal
+    ) {
         runCatching {
             socialRepository.createPost(
                 content = getString(
                     R.string.create_diet_plan_social_share_content,
-                    getString(selectedGoal.titleRes),
+                    getString(goal.titleRes),
                     plan.dailyCalories,
                     plan.durationDays
                 ),
@@ -858,15 +873,11 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
                 visibility = POST_VISIBILITY_COMMUNITY,
                 tags = listOf(
                     getString(R.string.diet_plan_tag_custom),
-                    getString(selectedGoal.titleRes)
+                    getString(goal.titleRes)
                 ),
                 isDraft = false
             )
         }
-    }
-
-    private fun buildMealOrder(): List<String> {
-        return selectedMealTypes.map { mealType -> mealType.argumentValue }
     }
 
     override fun onDestroyView() {

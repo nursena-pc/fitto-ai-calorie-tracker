@@ -4,6 +4,18 @@ import androidx.annotation.StringRes
 import com.example.fitto.R
 import com.example.fitto.feature_meal.model.MealType
 
+data class CreateDietPlanFormState(
+    val planName: String,
+    val description: String,
+    val goal: CreatePlanGoal,
+    val privacy: CreatePlanPrivacy,
+    val dailyCalories: Int,
+    val durationDays: Int,
+    val mealTypes: List<MealType>,
+    val preferences: List<String>,
+    val exclusions: List<String>
+)
+
 enum class CreatePlanGoal(
     @StringRes val titleRes: Int
 ) {
