@@ -242,20 +242,9 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
     private fun openPlanDetail(plan: DietPlanUiModel) {
         rememberCurrentSearchIfNeeded()
-        if (plan.id.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) {
-            parentFragmentManager.beginTransaction()
-                .setReorderingAllowed(true)
-                .replace(
-                    R.id.homeTabContainer,
-                    CustomDietPlanDetailFragment.newInstance(plan.id)
-                )
-                .addToBackStack("custom_diet_plan_detail")
-                .commit()
-            return
-        }
 
-        when (plan.id) {
-            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> {
+        when (val destination = DietPlanDestinationResolver.resolve(plan.id)) {
+            DietPlanDestination.IntermittentFasting -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.homeTabContainer, IntermittentFastingDetailFragment())
@@ -263,16 +252,29 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
                     .commit()
             }
 
-            else -> {
+            is DietPlanDestination.ReadyDetail -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(
                         R.id.homeTabContainer,
-                        DietPlanDetailFragment.newInstance(plan.id)
+                        DietPlanDetailFragment.newInstance(destination.planId)
                     )
                     .addToBackStack("diet_plan_detail")
                     .commit()
             }
+
+            is DietPlanDestination.CustomDetail -> {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(
+                        R.id.homeTabContainer,
+                        CustomDietPlanDetailFragment.newInstance(destination.planId)
+                    )
+                    .addToBackStack("custom_diet_plan_detail")
+                    .commit()
+            }
+
+            is DietPlanDestination.Unknown -> Unit
         }
     }
 

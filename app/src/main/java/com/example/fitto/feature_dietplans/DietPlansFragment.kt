@@ -168,11 +168,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 .commit()
         }
         planChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            selectedTab = when (checkedIds.firstOrNull()) {
-                R.id.chipMyPlans -> DietPlanTab.MY
-                R.id.chipFavorites -> DietPlanTab.SAVED
-                else -> DietPlanTab.READY
-            }
+            selectedTab = DietPlanTabResolver.fromChipId(checkedIds.firstOrNull())
             applyVisiblePlans()
         }
 
@@ -191,16 +187,6 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                     planTitle = recommendation.titleText
                 )
             }
-        }
-        planChipGroup.setOnCheckedChangeListener { _, checkedId ->
-            selectedTab = when (checkedId) {
-                R.id.chipMyPlans -> DietPlanTab.MY
-                R.id.chipDrafts -> DietPlanTab.DRAFTS
-                R.id.chipFavorites -> DietPlanTab.SAVED
-                else -> DietPlanTab.READY
-            }
-
-            applyVisiblePlans()
         }
 
         createOwnPlanCard.setOnClickListener {
@@ -465,8 +451,8 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun openPlanDetail(planId: String) {
-        when (planId) {
-            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> {
+        when (val destination = DietPlanDestinationResolver.resolve(planId)) {
+            DietPlanDestination.IntermittentFasting -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.homeTabContainer, IntermittentFastingDetailFragment())
@@ -474,40 +460,34 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                     .commit()
             }
 
-            DietPlanDetailFragment.PLAN_MEDITERRANEAN,
-            DietPlanDetailFragment.PLAN_KETOGENIC,
-            DietPlanDetailFragment.PLAN_DASH,
-            DietPlanDetailFragment.PLAN_MIND,
-            DietPlanDetailFragment.PLAN_ELIMINATION,
-            DietPlanDetailFragment.PLAN_PLANT_BASED,
-            DietPlanDetailFragment.PLAN_WEIGHT_GAIN -> {
+            is DietPlanDestination.ReadyDetail -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(
                         R.id.homeTabContainer,
-                        DietPlanDetailFragment.newInstance(planId)
+                        DietPlanDetailFragment.newInstance(destination.planId)
                     )
                     .addToBackStack(BACK_STACK_DIET_PLAN_DETAIL)
                     .commit()
             }
 
-            else -> {
-                if (planId.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) {
-                    parentFragmentManager.beginTransaction()
-                        .setReorderingAllowed(true)
-                        .replace(
-                            R.id.homeTabContainer,
-                            CustomDietPlanDetailFragment.newInstance(planId)
-                        )
-                        .addToBackStack("custom_diet_plan_detail")
-                        .commit()
-                } else {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.diet_plans_detail_coming_soon, planId),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            is DietPlanDestination.CustomDetail -> {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(
+                        R.id.homeTabContainer,
+                        CustomDietPlanDetailFragment.newInstance(destination.planId)
+                    )
+                    .addToBackStack("custom_diet_plan_detail")
+                    .commit()
+            }
+
+            is DietPlanDestination.Unknown -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_detail_coming_soon, destination.planId),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
