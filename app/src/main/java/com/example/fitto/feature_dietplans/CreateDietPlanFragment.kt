@@ -112,16 +112,13 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         chip.setOnCheckedChangeListener { _, isChecked ->
             if (isRenderingState) return@setOnCheckedChangeListener
 
-            if (isChecked) {
-                selectedMealTypes.add(mealType)
-            } else {
-                if (selectedMealTypes.size == 1) {
-                    chip.isChecked = true
-                    return@setOnCheckedChangeListener
-                }
-
-                selectedMealTypes.remove(mealType)
-            }
+            updateSelectedMealTypes(
+                CreateDietPlanSelectionReducer.toggleMealType(
+                    currentMealTypes = selectedMealTypes,
+                    mealType = mealType,
+                    isChecked = isChecked
+                )
+            )
 
             renderState()
         }
@@ -223,20 +220,26 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         chip.setOnCheckedChangeListener { _, isChecked ->
             if (isRenderingState) return@setOnCheckedChangeListener
 
-            if (isChecked) {
-                if (preferenceKey == CustomDietMealPlanGenerator.PREF_VEGAN) {
-                    binding.preferenceVegetarianChip.isChecked = false
-                } else if (preferenceKey == CustomDietMealPlanGenerator.PREF_VEGETARIAN) {
-                    binding.preferenceVeganChip.isChecked = false
-                }
-
-                selectedPreferences.add(preferenceKey)
-            } else {
-                selectedPreferences.remove(preferenceKey)
-            }
+            updateSelectedPreferences(
+                CreateDietPlanSelectionReducer.togglePreference(
+                    currentPreferences = selectedPreferences,
+                    preferenceKey = preferenceKey,
+                    isChecked = isChecked
+                )
+            )
 
             renderState()
         }
+    }
+
+    private fun updateSelectedMealTypes(mealTypes: Collection<MealType>) {
+        selectedMealTypes.clear()
+        selectedMealTypes.addAll(mealTypes)
+    }
+
+    private fun updateSelectedPreferences(preferences: Collection<String>) {
+        selectedPreferences.clear()
+        selectedPreferences.addAll(preferences)
     }
     private fun setupInitialValues(useProfileDefaults: Boolean = true) {
         if (!useProfileDefaults) return
