@@ -38,19 +38,7 @@ class CreateDietPlanFragment :
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var uiRenderer: CreateDietPlanUiRenderer? = null
     private var interactionBinder: CreateDietPlanInteractionBinder? = null
-    private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
-    private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
-    private var dailyCalories: Int = 1800
-    private var durationDays: Int = 30
-
-    private val selectedMealTypes = linkedSetOf(
-        MealType.BREAKFAST,
-        MealType.SNACK,
-        MealType.LUNCH,
-        MealType.DINNER
-    )
-
-    private val selectedPreferences = mutableSetOf<String>()
+    private val planStateStore = CreateDietPlanStateStore()
     private val socialShareAction by lazy {
         CreateDietPlanSocialShareAction.from(SocialRepository())
     }
@@ -100,15 +88,6 @@ class CreateDietPlanFragment :
         renderState()
     }
 
-    private fun updateSelectedMealTypes(mealTypes: Collection<MealType>) {
-        selectedMealTypes.clear()
-        selectedMealTypes.addAll(mealTypes)
-    }
-
-    private fun updateSelectedPreferences(preferences: Collection<String>) {
-        selectedPreferences.clear()
-        selectedPreferences.addAll(preferences)
-    }
     private fun setupInitialValues(useProfileDefaults: Boolean = true) {
         if (!useProfileDefaults) return
 
@@ -120,10 +99,7 @@ class CreateDietPlanFragment :
 
             if (_binding == null) return@launch
 
-            val defaults = CreateDietPlanDefaultResolver.resolve(profile)
-            dailyCalories = defaults.dailyCalories
-            selectedGoal = defaults.goal
-
+            planStateStore.applyDefaults(CreateDietPlanDefaultResolver.resolve(profile))
             renderState()
         }
     }
@@ -145,14 +121,8 @@ class CreateDietPlanFragment :
         planNameInput.setText(state.planName)
         planDescriptionInput.setText(state.description)
 
-        selectedGoal = state.goal
-        selectedPrivacy = state.privacy
-        dailyCalories = state.dailyCalories
-        durationDays = state.durationDays
-
-        updateSelectedPreferences(state.preferences)
+        planStateStore.applyEditableState(state)
         activeExclusionController.setValues(state.exclusions)
-        updateSelectedMealTypes(state.mealTypes)
     }
 
     private fun renderDraftEditMode() = with(binding) {
@@ -208,18 +178,18 @@ class CreateDietPlanFragment :
     }
     private fun showCalorieInputDialog() {
         CreateDietPlanNumberInputDialog(requireContext()).show(
-            config = CreateDietPlanNumberInputConfigs.calories(dailyCalories)
+            config = CreateDietPlanNumberInputConfigs.calories(planStateStore.dailyCalories)
         ) { value ->
-            dailyCalories = value
+            planStateStore.setDailyCalories(value)
             renderState()
         }
     }
 
     private fun showDurationInputDialog() {
         CreateDietPlanNumberInputDialog(requireContext()).show(
-            config = CreateDietPlanNumberInputConfigs.duration(durationDays)
+            config = CreateDietPlanNumberInputConfigs.duration(planStateStore.durationDays)
         ) { value ->
-            durationDays = value
+            planStateStore.setDurationDays(value)
             renderState()
         }
     }
@@ -234,26 +204,13 @@ class CreateDietPlanFragment :
     }
 
     private fun currentRenderState(): CreateDietPlanRenderState {
-        return CreateDietPlanRenderState(
-            dailyCalories = dailyCalories,
-            durationDays = durationDays,
-            selectedGoal = selectedGoal,
-            selectedPrivacy = selectedPrivacy,
-            selectedMealTypes = selectedMealTypes.toList(),
-            selectedPreferences = selectedPreferences.toSet()
-        )
+        return planStateStore.toRenderState()
     }
 
     private fun currentFormState() = with(binding) {
-        CreateDietPlanFormState(
+        planStateStore.toFormState(
             planName = planNameInput.text?.toString()?.trim().orEmpty(),
             description = planDescriptionInput.text?.toString()?.trim().orEmpty(),
-            goal = selectedGoal,
-            privacy = selectedPrivacy,
-            dailyCalories = dailyCalories,
-            durationDays = durationDays,
-            mealTypes = selectedMealTypes.toList(),
-            preferences = selectedPreferences.toList(),
             exclusions = activeExclusionController.values()
         )
     }
@@ -401,22 +358,22 @@ class CreateDietPlanFragment :
     }
 
     override fun onPrivacySelected(privacy: CreatePlanPrivacy) {
-        selectedPrivacy = privacy
+        planStateStore.setPrivacy(privacy)
         renderState()
     }
 
     override fun onGoalSelected(goal: CreatePlanGoal) {
-        selectedGoal = goal
+        planStateStore.setGoal(goal)
         renderState()
     }
 
     override fun onCalorieDecreaseClicked() {
-        dailyCalories = CreateDietPlanNumberRules.decreaseCalories(dailyCalories)
+        planStateStore.decreaseCalories()
         renderState()
     }
 
     override fun onCalorieIncreaseClicked() {
-        dailyCalories = CreateDietPlanNumberRules.increaseCalories(dailyCalories)
+        planStateStore.increaseCalories()
         renderState()
     }
 
@@ -425,12 +382,12 @@ class CreateDietPlanFragment :
     }
 
     override fun onDurationDecreaseClicked() {
-        durationDays = CreateDietPlanNumberRules.decreaseDuration(durationDays)
+        planStateStore.decreaseDuration()
         renderState()
     }
 
     override fun onDurationIncreaseClicked() {
-        durationDays = CreateDietPlanNumberRules.increaseDuration(durationDays)
+        planStateStore.increaseDuration()
         renderState()
     }
 
@@ -445,28 +402,14 @@ class CreateDietPlanFragment :
     override fun onPreferenceToggled(preferenceKey: String, isChecked: Boolean) {
         if (isRenderingState) return
 
-        updateSelectedPreferences(
-            CreateDietPlanSelectionReducer.togglePreference(
-                currentPreferences = selectedPreferences,
-                preferenceKey = preferenceKey,
-                isChecked = isChecked
-            )
-        )
-
+        planStateStore.togglePreference(preferenceKey, isChecked)
         renderState()
     }
 
     override fun onMealTypeToggled(mealType: MealType, isChecked: Boolean) {
         if (isRenderingState) return
 
-        updateSelectedMealTypes(
-            CreateDietPlanSelectionReducer.toggleMealType(
-                currentMealTypes = selectedMealTypes,
-                mealType = mealType,
-                isChecked = isChecked
-            )
-        )
-
+        planStateStore.toggleMealType(mealType, isChecked)
         renderState()
     }
 
