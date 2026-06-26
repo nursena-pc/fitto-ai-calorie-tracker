@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
@@ -13,17 +12,17 @@ import com.example.fitto.databinding.FragmentCreateDietPlanBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
-import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
 import com.example.fitto.feature_home.presentation.social.POST_VISIBILITY_COMMUNITY
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_meal.model.MealType
-import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
+class CreateDietPlanFragment :
+    Fragment(R.layout.fragment_create_diet_plan),
+    CreateDietPlanInteractionBinder.Listener {
 
     private var _binding: FragmentCreateDietPlanBinding? = null
     private val binding get() = _binding!!
@@ -38,6 +37,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
     private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var uiRenderer: CreateDietPlanUiRenderer? = null
+    private var interactionBinder: CreateDietPlanInteractionBinder? = null
     private var selectedGoal: CreatePlanGoal = CreatePlanGoal.WEIGHT_LOSS
     private var selectedPrivacy: CreatePlanPrivacy = CreatePlanPrivacy.PRIVATE
     private var dailyCalories: Int = 1800
@@ -78,6 +78,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
             context = requireContext(),
             binding = binding
         )
+        interactionBinder = CreateDietPlanInteractionBinder(binding)
         exclusionController = CreateDietPlanExclusionController(
             context = requireContext(),
             chipGroup = binding.exclusionsChipGroup,
@@ -87,10 +88,7 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         val hasEditingDraft = loadEditingDraftIfNeeded()
 
         setupInitialValues(useProfileDefaults = !hasEditingDraft)
-        setupInputs()
-        setupClicks()
-        setupPreferenceChips()
-        setupMealOrderChips()
+        interactionBinder?.bind(this)
 
         if (!hasEditingDraft) {
             setupDefaultExclusions()
@@ -98,51 +96,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
         renderDraftEditMode()
         renderState()
-    }
-    private fun setupPreferenceChips() = with(binding) {
-        bindPreferenceChip(preferenceVegetarianChip, CustomDietMealPlanGenerator.PREF_VEGETARIAN)
-        bindPreferenceChip(preferenceVeganChip, CustomDietMealPlanGenerator.PREF_VEGAN)
-        bindPreferenceChip(preferenceGlutenFreeChip, CustomDietMealPlanGenerator.PREF_GLUTEN_FREE)
-        bindPreferenceChip(preferenceLactoseFreeChip, CustomDietMealPlanGenerator.PREF_LACTOSE_FREE)
-        bindPreferenceChip(preferenceHighProteinChip, CustomDietMealPlanGenerator.PREF_HIGH_PROTEIN)
-        bindPreferenceChip(preferenceLowCarbChip, CustomDietMealPlanGenerator.PREF_LOW_CARB)
-    }
-    private fun setupMealOrderChips() = with(binding) {
-        bindMealOrderChip(mealBreakfastChip, MealType.BREAKFAST)
-        bindMealOrderChip(mealSnackChip, MealType.SNACK)
-        bindMealOrderChip(mealLunchChip, MealType.LUNCH)
-        bindMealOrderChip(mealDinnerChip, MealType.DINNER)
-    }
-
-    private fun bindMealOrderChip(chip: Chip, mealType: MealType) {
-        chip.setOnCheckedChangeListener { _, isChecked ->
-            if (isRenderingState) return@setOnCheckedChangeListener
-
-            updateSelectedMealTypes(
-                CreateDietPlanSelectionReducer.toggleMealType(
-                    currentMealTypes = selectedMealTypes,
-                    mealType = mealType,
-                    isChecked = isChecked
-                )
-            )
-
-            renderState()
-        }
-    }
-    private fun bindPreferenceChip(chip: Chip, preferenceKey: String) {
-        chip.setOnCheckedChangeListener { _, isChecked ->
-            if (isRenderingState) return@setOnCheckedChangeListener
-
-            updateSelectedPreferences(
-                CreateDietPlanSelectionReducer.togglePreference(
-                    currentPreferences = selectedPreferences,
-                    preferenceKey = preferenceKey,
-                    isChecked = isChecked
-                )
-            )
-
-            renderState()
-        }
     }
 
     private fun updateSelectedMealTypes(mealTypes: Collection<MealType>) {
@@ -202,98 +155,6 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
 
     private fun renderDraftEditMode() = with(binding) {
         deleteDraftButton.isVisible = editingDraftPlan != null
-    }
-
-    private fun setupInputs() = with(binding) {
-        planNameInput.doAfterTextChanged {
-            planNameInput.error = null
-        }
-
-        planDescriptionInput.doAfterTextChanged {
-            renderState()
-        }
-    }
-
-    private fun setupClicks() = with(binding) {
-        backButton.setOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
-
-        topDraftSaveButton.setOnClickListener {
-            savePlan(isDraft = true)
-        }
-
-        createListButton.setOnClickListener {
-            savePlan(isDraft = false)
-        }
-        deleteDraftButton.setOnClickListener {
-            confirmDeleteEditingDraft()
-        }
-
-        privacyPrivateCard.setOnClickListener {
-            selectedPrivacy = CreatePlanPrivacy.PRIVATE
-            renderState()
-        }
-
-        privacyPublicCard.setOnClickListener {
-            selectedPrivacy = CreatePlanPrivacy.PUBLIC
-            renderState()
-        }
-
-        goalWeightLossCard.setOnClickListener {
-            selectedGoal = CreatePlanGoal.WEIGHT_LOSS
-            renderState()
-        }
-
-        goalWeightGainCard.setOnClickListener {
-            selectedGoal = CreatePlanGoal.WEIGHT_GAIN
-            renderState()
-        }
-
-        goalMuscleCard.setOnClickListener {
-            selectedGoal = CreatePlanGoal.MUSCLE
-            renderState()
-        }
-
-        goalMaintainCard.setOnClickListener {
-            selectedGoal = CreatePlanGoal.MAINTAIN
-            renderState()
-        }
-
-        goalBalancedCard.setOnClickListener {
-            selectedGoal = CreatePlanGoal.BALANCED
-            renderState()
-        }
-
-        calorieMinusButton.setOnClickListener {
-            dailyCalories = CreateDietPlanNumberRules.decreaseCalories(dailyCalories)
-            renderState()
-        }
-
-        caloriePlusButton.setOnClickListener {
-            dailyCalories = CreateDietPlanNumberRules.increaseCalories(dailyCalories)
-            renderState()
-        }
-        calorieValueText.setOnClickListener {
-            showCalorieInputDialog()
-        }
-        durationMinusButton.setOnClickListener {
-            durationDays = CreateDietPlanNumberRules.decreaseDuration(durationDays)
-            renderState()
-        }
-
-        durationPlusButton.setOnClickListener {
-            durationDays = CreateDietPlanNumberRules.increaseDuration(durationDays)
-            renderState()
-        }
-
-        durationValueText.setOnClickListener {
-            showDurationInputDialog()
-        }
-
-        addExcludedFoodButton.setOnClickListener {
-            activeExclusionController.showAddDialog()
-        }
     }
 
     private fun confirmDeleteEditingDraft() {
@@ -543,9 +404,104 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         }
     }
 
+    override fun onPlanNameChanged() = with(binding) {
+        planNameInput.error = null
+    }
+
+    override fun onPlanDescriptionChanged() {
+        renderState()
+    }
+
+    override fun onBackClicked() {
+        parentFragmentManager.popBackStack()
+    }
+
+    override fun onSaveDraftClicked() {
+        savePlan(isDraft = true)
+    }
+
+    override fun onCreatePlanClicked() {
+        savePlan(isDraft = false)
+    }
+
+    override fun onDeleteDraftClicked() {
+        confirmDeleteEditingDraft()
+    }
+
+    override fun onPrivacySelected(privacy: CreatePlanPrivacy) {
+        selectedPrivacy = privacy
+        renderState()
+    }
+
+    override fun onGoalSelected(goal: CreatePlanGoal) {
+        selectedGoal = goal
+        renderState()
+    }
+
+    override fun onCalorieDecreaseClicked() {
+        dailyCalories = CreateDietPlanNumberRules.decreaseCalories(dailyCalories)
+        renderState()
+    }
+
+    override fun onCalorieIncreaseClicked() {
+        dailyCalories = CreateDietPlanNumberRules.increaseCalories(dailyCalories)
+        renderState()
+    }
+
+    override fun onCalorieValueClicked() {
+        showCalorieInputDialog()
+    }
+
+    override fun onDurationDecreaseClicked() {
+        durationDays = CreateDietPlanNumberRules.decreaseDuration(durationDays)
+        renderState()
+    }
+
+    override fun onDurationIncreaseClicked() {
+        durationDays = CreateDietPlanNumberRules.increaseDuration(durationDays)
+        renderState()
+    }
+
+    override fun onDurationValueClicked() {
+        showDurationInputDialog()
+    }
+
+    override fun onAddExclusionClicked() {
+        activeExclusionController.showAddDialog()
+    }
+
+    override fun onPreferenceToggled(preferenceKey: String, isChecked: Boolean) {
+        if (isRenderingState) return
+
+        updateSelectedPreferences(
+            CreateDietPlanSelectionReducer.togglePreference(
+                currentPreferences = selectedPreferences,
+                preferenceKey = preferenceKey,
+                isChecked = isChecked
+            )
+        )
+
+        renderState()
+    }
+
+    override fun onMealTypeToggled(mealType: MealType, isChecked: Boolean) {
+        if (isRenderingState) return
+
+        updateSelectedMealTypes(
+            CreateDietPlanSelectionReducer.toggleMealType(
+                currentMealTypes = selectedMealTypes,
+                mealType = mealType,
+                isChecked = isChecked
+            )
+        )
+
+        renderState()
+    }
+
     override fun onDestroyView() {
         exclusionController = null
         uiRenderer = null
+        interactionBinder = null
         _binding = null
         super.onDestroyView()
     }
