@@ -1,13 +1,10 @@
 package com.example.fitto.feature_dietplans
 
-import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
-import android.view.LayoutInflater
 import android.view.View
 import android.view.Window
-import android.view.WindowManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -17,7 +14,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.data.local.repository.ProfileCacheRepository
-import com.example.fitto.databinding.DialogPlanNumberPickerBinding
 import com.example.fitto.databinding.FragmentCreateDietPlanBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
@@ -134,86 +130,20 @@ class CreateDietPlanFragment : Fragment(R.layout.fragment_create_diet_plan) {
         errorText: String,
         onValueSaved: (Int) -> Unit
     ) {
-        val dialogBinding = DialogPlanNumberPickerBinding.inflate(
-            LayoutInflater.from(requireContext())
+        CreateDietPlanNumberInputDialog(requireContext()).show(
+            config = CreateDietPlanNumberInputConfig(
+                icon = icon,
+                title = title,
+                helperText = helperText,
+                unitText = unitText,
+                initialValue = initialValue,
+                validRange = validRange,
+                step = step,
+                rangeText = "${validRange.first} - ${validRange.last} $unitText aralığında olmalı",
+                errorText = errorText
+            ),
+            onValueSaved = onValueSaved
         )
-
-        fun currentValue(): Int {
-            return dialogBinding.numberDialogInput.text
-                ?.toString()
-                ?.trim()
-                ?.toIntOrNull()
-                ?: initialValue
-        }
-
-        fun setValue(value: Int) {
-            val safeValue = value.coerceIn(validRange)
-            dialogBinding.numberDialogInput.setText(safeValue.toString())
-            dialogBinding.numberDialogInput.setSelection(
-                dialogBinding.numberDialogInput.text?.length ?: 0
-            )
-            dialogBinding.numberDialogRangeText.text = "${validRange.first} - ${validRange.last} $unitText aralığında olmalı"
-            dialogBinding.numberDialogRangeText.setTextColor(
-                requireContext().getColor(R.color.fitto_text_secondary)
-            )
-        }
-
-        val dialog = Dialog(requireContext()).apply {
-            requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
-            setContentView(dialogBinding.root)
-            setCanceledOnTouchOutside(true)
-        }
-
-        with(dialogBinding) {
-            numberDialogIconText.text = icon
-            numberDialogTitleText.text = title
-            numberDialogHelperText.text = helperText
-            numberDialogUnitText.text = unitText
-
-            setValue(initialValue)
-
-            numberDialogMinusButton.setOnClickListener {
-                setValue(currentValue() - step)
-            }
-
-            numberDialogPlusButton.setOnClickListener {
-                setValue(currentValue() + step)
-            }
-
-            numberDialogCancelButton.setOnClickListener {
-                dialog.dismiss()
-            }
-
-            numberDialogSaveButton.setOnClickListener {
-                val value = numberDialogInput.text
-                    ?.toString()
-                    ?.trim()
-                    ?.toIntOrNull()
-
-                if (value == null || value !in validRange) {
-                    numberDialogRangeText.text = errorText
-                    numberDialogRangeText.setTextColor(
-                        requireContext().getColor(R.color.fitto_error)
-                    )
-                    return@setOnClickListener
-                }
-
-                onValueSaved(value)
-                dialog.dismiss()
-            }
-        }
-
-        dialog.setOnShowListener {
-            dialog.window?.let { window ->
-                window.setBackgroundDrawableResource(android.R.color.transparent)
-                window.setLayout(
-                    (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-                    WindowManager.LayoutParams.WRAP_CONTENT
-                )
-            }
-        }
-
-        dialog.show()
     }
 
     private fun bindPreferenceChip(chip: Chip, preferenceKey: String) {
