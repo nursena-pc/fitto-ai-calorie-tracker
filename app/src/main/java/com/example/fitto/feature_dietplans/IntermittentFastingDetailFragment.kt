@@ -15,7 +15,6 @@ import com.example.fitto.feature_dietplans.model.FastingPlanUiModel
 import com.google.android.material.card.MaterialCardView
 import android.graphics.Typeface
 import android.view.ViewGroup
-import java.util.Locale
 
 class IntermittentFastingDetailFragment :
     Fragment(R.layout.fragment_intermittent_fasting_detail) {
@@ -24,175 +23,15 @@ class IntermittentFastingDetailFragment :
     private val binding get() = _binding!!
 
     private lateinit var preferenceStore: DietPlanPreferenceStore
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private var selectedPlanType: FastingPlanType = FastingPlanType.PLAN_16_8
     private var customFastingHours: Int? = null
-
-    private val fastingPlans by lazy {
-        mapOf(
-            FastingPlanType.PLAN_12_12 to FastingPlanUiModel(
-                type = FastingPlanType.PLAN_12_12,
-                selectedPlanLabelRes = R.string.if_plan_12_12_selected_label,
-                selectedPlanRatioRes = R.string.if_plan_12_12_selected_ratio,
-
-                timeStartRes = R.string.if_plan_12_12_time_start,
-                timeStartSubRes = R.string.if_plan_12_12_time_start_sub,
-                timeEatRes = R.string.if_plan_12_12_time_eat,
-                timeEatSubRes = R.string.if_plan_12_12_time_eat_sub,
-                timeEndRes = R.string.if_plan_12_12_time_end,
-                timeEndSubRes = R.string.if_plan_12_12_time_end_sub,
-
-                aboutDescRes = R.string.if_plan_12_12_about_desc,
-
-                benefit1TitleRes = R.string.if_plan_12_12_benefit_1_title,
-                benefit1DescRes = R.string.if_plan_12_12_benefit_1_desc,
-                benefit2TitleRes = R.string.if_plan_12_12_benefit_2_title,
-                benefit2DescRes = R.string.if_plan_12_12_benefit_2_desc,
-                benefit3TitleRes = R.string.if_plan_12_12_benefit_3_title,
-                benefit3DescRes = R.string.if_plan_12_12_benefit_3_desc,
-
-                forWhomDescRes = R.string.if_plan_12_12_for_whom_desc,
-                weeklyFlowDescRes = R.string.if_plan_12_12_weekly_flow_desc,
-
-                faq1Res = R.string.if_plan_12_12_faq_1,
-                faq1AnswerRes = R.string.if_plan_12_12_faq_1_answer,
-                faq2Res = R.string.if_plan_12_12_faq_2,
-                faq2AnswerRes = R.string.if_plan_12_12_faq_2_answer,
-                faq3Res = R.string.if_plan_12_12_faq_3,
-                faq3AnswerRes = R.string.if_plan_12_12_faq_3_answer
-            ),
-            FastingPlanType.PLAN_15_9 to FastingPlanUiModel(
-                type = FastingPlanType.PLAN_15_9,
-                selectedPlanLabelRes = R.string.if_plan_15_9_selected_label,
-                selectedPlanRatioRes = R.string.if_plan_15_9_selected_ratio,
-
-                timeStartRes = R.string.if_plan_15_9_time_start,
-                timeStartSubRes = R.string.if_plan_15_9_time_start_sub,
-                timeEatRes = R.string.if_plan_15_9_time_eat,
-                timeEatSubRes = R.string.if_plan_15_9_time_eat_sub,
-                timeEndRes = R.string.if_plan_15_9_time_end,
-                timeEndSubRes = R.string.if_plan_15_9_time_end_sub,
-
-                aboutDescRes = R.string.if_plan_15_9_about_desc,
-
-                benefit1TitleRes = R.string.if_plan_15_9_benefit_1_title,
-                benefit1DescRes = R.string.if_plan_15_9_benefit_1_desc,
-                benefit2TitleRes = R.string.if_plan_15_9_benefit_2_title,
-                benefit2DescRes = R.string.if_plan_15_9_benefit_2_desc,
-                benefit3TitleRes = R.string.if_plan_15_9_benefit_3_title,
-                benefit3DescRes = R.string.if_plan_15_9_benefit_3_desc,
-
-                forWhomDescRes = R.string.if_plan_15_9_for_whom_desc,
-                weeklyFlowDescRes = R.string.if_plan_15_9_weekly_flow_desc,
-
-                faq1Res = R.string.if_plan_15_9_faq_1,
-                faq1AnswerRes = R.string.if_plan_15_9_faq_1_answer,
-                faq2Res = R.string.if_plan_15_9_faq_2,
-                faq2AnswerRes = R.string.if_plan_15_9_faq_2_answer,
-                faq3Res = R.string.if_plan_15_9_faq_3,
-                faq3AnswerRes = R.string.if_plan_15_9_faq_3_answer
-            ),
-
-            FastingPlanType.PLAN_6_1 to FastingPlanUiModel(
-                type = FastingPlanType.PLAN_6_1,
-                selectedPlanLabelRes = R.string.if_plan_6_1_selected_label,
-                selectedPlanRatioRes = R.string.if_plan_6_1_selected_ratio,
-
-                timeStartRes = R.string.if_plan_6_1_time_start,
-                timeStartSubRes = R.string.if_plan_6_1_time_start_sub,
-                timeEatRes = R.string.if_plan_6_1_time_eat,
-                timeEatSubRes = R.string.if_plan_6_1_time_eat_sub,
-                timeEndRes = R.string.if_plan_6_1_time_end,
-                timeEndSubRes = R.string.if_plan_6_1_time_end_sub,
-
-                aboutDescRes = R.string.if_plan_6_1_about_desc,
-
-                benefit1TitleRes = R.string.if_plan_6_1_benefit_1_title,
-                benefit1DescRes = R.string.if_plan_6_1_benefit_1_desc,
-                benefit2TitleRes = R.string.if_plan_6_1_benefit_2_title,
-                benefit2DescRes = R.string.if_plan_6_1_benefit_2_desc,
-                benefit3TitleRes = R.string.if_plan_6_1_benefit_3_title,
-                benefit3DescRes = R.string.if_plan_6_1_benefit_3_desc,
-
-                forWhomDescRes = R.string.if_plan_6_1_for_whom_desc,
-                weeklyFlowDescRes = R.string.if_plan_6_1_weekly_flow_desc,
-
-                faq1Res = R.string.if_plan_6_1_faq_1,
-                faq1AnswerRes = R.string.if_plan_6_1_faq_1_answer,
-                faq2Res = R.string.if_plan_6_1_faq_2,
-                faq2AnswerRes = R.string.if_plan_6_1_faq_2_answer,
-                faq3Res = R.string.if_plan_6_1_faq_3,
-                faq3AnswerRes = R.string.if_plan_6_1_faq_3_answer
-            ),
-
-            FastingPlanType.PLAN_5_2 to FastingPlanUiModel(
-                type = FastingPlanType.PLAN_5_2,
-                selectedPlanLabelRes = R.string.if_plan_5_2_selected_label,
-                selectedPlanRatioRes = R.string.if_plan_5_2_selected_ratio,
-
-                timeStartRes = R.string.if_plan_5_2_time_start,
-                timeStartSubRes = R.string.if_plan_5_2_time_start_sub,
-                timeEatRes = R.string.if_plan_5_2_time_eat,
-                timeEatSubRes = R.string.if_plan_5_2_time_eat_sub,
-                timeEndRes = R.string.if_plan_5_2_time_end,
-                timeEndSubRes = R.string.if_plan_5_2_time_end_sub,
-
-                aboutDescRes = R.string.if_plan_5_2_about_desc,
-
-                benefit1TitleRes = R.string.if_plan_5_2_benefit_1_title,
-                benefit1DescRes = R.string.if_plan_5_2_benefit_1_desc,
-                benefit2TitleRes = R.string.if_plan_5_2_benefit_2_title,
-                benefit2DescRes = R.string.if_plan_5_2_benefit_2_desc,
-                benefit3TitleRes = R.string.if_plan_5_2_benefit_3_title,
-                benefit3DescRes = R.string.if_plan_5_2_benefit_3_desc,
-
-                forWhomDescRes = R.string.if_plan_5_2_for_whom_desc,
-                weeklyFlowDescRes = R.string.if_plan_5_2_weekly_flow_desc,
-
-                faq1Res = R.string.if_plan_5_2_faq_1,
-                faq1AnswerRes = R.string.if_plan_5_2_faq_1_answer,
-                faq2Res = R.string.if_plan_5_2_faq_2,
-                faq2AnswerRes = R.string.if_plan_5_2_faq_2_answer,
-                faq3Res = R.string.if_plan_5_2_faq_3,
-                faq3AnswerRes = R.string.if_plan_5_2_faq_3_answer
-            ),
-            FastingPlanType.PLAN_16_8 to FastingPlanUiModel(
-                type = FastingPlanType.PLAN_16_8,
-                selectedPlanLabelRes = R.string.if_detail_selected_plan,
-                selectedPlanRatioRes = R.string.if_detail_selected_plan_ratio,
-
-                timeStartRes = R.string.if_detail_time_start,
-                timeStartSubRes = R.string.if_detail_time_start_sub,
-                timeEatRes = R.string.if_detail_time_eat,
-                timeEatSubRes = R.string.if_detail_time_eat_sub,
-                timeEndRes = R.string.if_detail_time_end,
-                timeEndSubRes = R.string.if_detail_time_end_sub,
-
-                aboutDescRes = R.string.if_detail_about_desc,
-
-                benefit1TitleRes = R.string.if_detail_benefit_1_title,
-                benefit1DescRes = R.string.if_detail_benefit_1_desc,
-                benefit2TitleRes = R.string.if_detail_benefit_2_title,
-                benefit2DescRes = R.string.if_detail_benefit_2_desc,
-                benefit3TitleRes = R.string.if_detail_benefit_3_title,
-                benefit3DescRes = R.string.if_detail_benefit_3_desc,
-
-                forWhomDescRes = R.string.if_detail_for_whom_desc,
-                weeklyFlowDescRes = R.string.if_detail_weekly_flow_desc,
-
-                faq1Res = R.string.if_detail_faq_1,
-                faq1AnswerRes = R.string.if_detail_faq_1_answer,
-                faq2Res = R.string.if_detail_faq_2,
-                faq2AnswerRes = R.string.if_detail_faq_2_answer,
-                faq3Res = R.string.if_detail_faq_3,
-                faq3AnswerRes = R.string.if_detail_faq_3_answer
-            )
-        )
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentIntermittentFastingDetailBinding.bind(view)
         preferenceStore = DietPlanPreferenceStore(requireContext())
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
 
         setupClicks()
         setupFaqAccordion()
@@ -202,14 +41,16 @@ class IntermittentFastingDetailFragment :
         setupCustomPlanResult()
     }
     private fun toggleSaveFastingPlan() {
-        val isSavedNow = preferenceStore.toggleFavorite(DietPlanCatalog.PLAN_INTERMITTENT_FASTING)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(
+            DietPlanCatalog.PLAN_INTERMITTENT_FASTING
+        )
 
         renderSaveState()
 
         Toast.makeText(
             requireContext(),
             getString(
-                if (isSavedNow) {
+                if (favoriteResult.isFavorite) {
                     R.string.diet_plans_favorite_added_message
                 } else {
                     R.string.diet_plans_favorite_removed_message
@@ -224,7 +65,7 @@ class IntermittentFastingDetailFragment :
             Bundle().apply {
                 putString(
                     DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    preferenceStore.getActivePlanId()
+                    favoriteResult.activePlanId
                 )
             }
         )
@@ -247,7 +88,7 @@ class IntermittentFastingDetailFragment :
         ) { _, bundle ->
             val fastingHours = bundle.getInt(
                 CustomFastingPlanBottomSheet.BUNDLE_FASTING_HOURS,
-                16
+                CustomFastingPlanRules.DEFAULT_FASTING_HOURS
             )
             renderCustomPlan(fastingHours)
         }
@@ -288,7 +129,7 @@ class IntermittentFastingDetailFragment :
         }
         fastingPlanCustomCard.setOnClickListener {
             CustomFastingPlanBottomSheet
-                .newInstance(16)
+                .newInstance(customFastingHours ?: CustomFastingPlanRules.DEFAULT_FASTING_HOURS)
                 .show(childFragmentManager, CustomFastingPlanBottomSheet.TAG)
         }
     }
@@ -297,7 +138,7 @@ class IntermittentFastingDetailFragment :
         selectedPlanType = planType
         customFastingHours = null
 
-        val plan = fastingPlans[planType] ?: return
+        val plan = FastingPlanContentCatalog.get(planType) ?: return
 
         updatePlanSelectionUi(planType)
         bindPlanContent(plan)
@@ -319,38 +160,34 @@ class IntermittentFastingDetailFragment :
 
 
     private fun renderCustomPlan(fastingHours: Int) = with(binding) {
-        val safeFastingHours = fastingHours.coerceIn(12, 20)
-        val eatingHours = 24 - safeFastingHours
+        val schedule = CustomFastingPlanRules.resolveSchedule(fastingHours)
 
         selectedPlanType = FastingPlanType.PLAN_CUSTOM
-        customFastingHours = safeFastingHours
+        customFastingHours = schedule.fastingHours
 
         resetPlanCardStyles()
         highlightPlanCard(fastingPlanCustomCard)
 
-        val fastStartHour = 20
-        val eatingStartHour = (fastStartHour + safeFastingHours) % 24
-
         selectedPlanLabelText.text = getString(R.string.if_custom_selected_label)
         selectedPlanRatioText.text = getString(
             R.string.if_custom_selected_ratio,
-            safeFastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
-        timeStartText.text = formatHour(fastStartHour)
+        timeStartText.text = schedule.fastingStartText
         timeStartSubText.text = getString(R.string.if_custom_time_start_sub)
 
-        timeEatText.text = formatHour(eatingStartHour)
+        timeEatText.text = schedule.eatingStartText
         timeEatSubText.text = getString(R.string.if_custom_time_eat_sub)
 
-        timeEndText.text = formatHour(fastStartHour)
+        timeEndText.text = schedule.fastingEndText
         timeEndSubText.text = getString(R.string.if_custom_time_end_sub)
 
         aboutDescText.text = getString(
             R.string.if_custom_about_desc,
-            safeFastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
         benefit1TitleText.text = getString(R.string.if_custom_benefit_1_title)
@@ -364,20 +201,20 @@ class IntermittentFastingDetailFragment :
 
         forWhomDescText.text = getString(
             R.string.if_custom_for_whom_desc,
-            safeFastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
         weeklyFlowDescText.text = getString(
             R.string.if_custom_weekly_flow_desc,
-            safeFastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
         faq1QuestionText.text = getString(
             R.string.if_custom_faq_1,
-            safeFastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
         faq1Answer.text = getString(R.string.if_custom_faq_1_answer)
 
@@ -390,10 +227,6 @@ class IntermittentFastingDetailFragment :
         collapseFaqs()
     }
 
-    private fun formatHour(hour: Int): String {
-        val normalizedHour = ((hour % 24) + 24) % 24
-        return String.format(Locale.getDefault(), "%02d:00", normalizedHour)
-    }
     private fun resetPlanCardStyles() = with(binding) {
         val defaultBg = ContextCompat.getColor(requireContext(), R.color.fitto_surface)
         val defaultStroke = ContextCompat.getColor(requireContext(), R.color.fitto_divider_soft)
@@ -532,19 +365,18 @@ class IntermittentFastingDetailFragment :
 
 
     private fun applySelectedFastingPlan() {
-        preferenceStore.saveActivePlan(
+        val applyResult = dietPlanPreferenceAction.applyPlan(
             planId = DietPlanCatalog.PLAN_INTERMITTENT_FASTING,
             fastingType = selectedPlanType,
             customFastingHours = customFastingHours
         )
-        preferenceStore.applyActivePlanToday()
 
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
                 putString(
                     DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                    DietPlanCatalog.PLAN_INTERMITTENT_FASTING
+                    applyResult.activePlanId
                 )
             }
         )

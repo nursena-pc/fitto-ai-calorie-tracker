@@ -2,6 +2,7 @@ package com.example.fitto.feature_dietplans.data
 
 import android.content.Context
 import com.example.fitto.R
+import com.example.fitto.feature_dietplans.CustomFastingPlanRules
 import com.example.fitto.feature_dietplans.DietPlanDetailFragment
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
@@ -205,8 +206,10 @@ object DietPlanCatalog {
             )
 
             FastingPlanType.PLAN_CUSTOM -> {
-                val fastingHours = customFastingHours ?: 16
-                val eatingHours = 24 - fastingHours
+                val fastingHours = CustomFastingPlanRules.sanitizeFastingHours(
+                    customFastingHours ?: CustomFastingPlanRules.DEFAULT_FASTING_HOURS
+                )
+                val eatingHours = CustomFastingPlanRules.eatingHoursFor(fastingHours)
                 FastingSummary(
                     badge = context.getString(
                         R.string.daily_fasting_badge_custom,

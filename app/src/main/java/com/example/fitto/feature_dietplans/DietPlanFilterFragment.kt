@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDietPlanFilterBinding
+import com.example.fitto.feature_dietplans.DietPlanFilterOptions as FilterOptions
 import com.google.android.material.button.MaterialButton
 
 class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
@@ -15,13 +16,13 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     private var _binding: FragmentDietPlanFilterBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedGoal: String = GOAL_WEIGHT_LOSS
-    private var selectedDuration: Int = 14
-    private var selectedType: String = TYPE_MEDITERRANEAN
+    private var selectedGoal: String = FilterOptions.DEFAULT_GOAL
+    private var selectedDuration: Int = FilterOptions.DEFAULT_DURATION
+    private var selectedType: String = FilterOptions.DEFAULT_TYPE
     private val selectedFeatures = mutableSetOf<String>()
 
-    private var minCalories: Int = 1400
-    private var maxCalories: Int = 2200
+    private var minCalories: Int = FilterOptions.DEFAULT_MIN_CALORIES
+    private var maxCalories: Int = FilterOptions.DEFAULT_MAX_CALORIES
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -75,7 +76,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         setToggleButtonSelected(featureLowSodiumButton, false)
         setToggleButtonSelected(featureHighProteinButton, false)
         setToggleButtonSelected(featureEasyButton, false)
-        selectedFeatures.add(FEATURE_HEART)
+        selectedFeatures.add(FilterOptions.FEATURE_HEART_FRIENDLY)
     }
 
     private fun setupClicks() = with(binding) {
@@ -84,7 +85,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalWeightLossButton.setOnClickListener {
-            selectedGoal = GOAL_WEIGHT_LOSS
+            selectedGoal = FilterOptions.GOAL_WEIGHT_LOSS
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalWeightLossButton
@@ -92,7 +93,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalWeightGainButton.setOnClickListener {
-            selectedGoal = GOAL_WEIGHT_GAIN
+            selectedGoal = FilterOptions.GOAL_WEIGHT_GAIN
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalWeightGainButton
@@ -100,7 +101,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalMuscleButton.setOnClickListener {
-            selectedGoal = GOAL_MUSCLE
+            selectedGoal = FilterOptions.GOAL_MUSCLE_GAIN
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalMuscleButton
@@ -108,7 +109,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalBalancedButton.setOnClickListener {
-            selectedGoal = GOAL_BALANCED
+            selectedGoal = FilterOptions.GOAL_BALANCED
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalBalancedButton
@@ -148,7 +149,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeMediterraneanButton.setOnClickListener {
-            selectedType = TYPE_MEDITERRANEAN
+            selectedType = FilterOptions.TYPE_MEDITERRANEAN
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeMediterraneanButton
@@ -156,7 +157,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeDashButton.setOnClickListener {
-            selectedType = TYPE_DASH
+            selectedType = FilterOptions.TYPE_DASH
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeDashButton
@@ -164,7 +165,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeFastingButton.setOnClickListener {
-            selectedType = TYPE_FASTING
+            selectedType = FilterOptions.TYPE_INTERMITTENT_FASTING
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeFastingButton
@@ -172,7 +173,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeKetoButton.setOnClickListener {
-            selectedType = TYPE_KETO
+            selectedType = FilterOptions.TYPE_KETOGENIC
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeKetoButton
@@ -180,7 +181,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typePlantBasedButton.setOnClickListener {
-            selectedType = TYPE_PLANT_BASED
+            selectedType = FilterOptions.TYPE_PLANT_BASED
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typePlantBasedButton
@@ -188,19 +189,19 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         featureHeartButton.setOnClickListener {
-            toggleFeature(FEATURE_HEART, featureHeartButton)
+            toggleFeature(FilterOptions.FEATURE_HEART_FRIENDLY, featureHeartButton)
         }
 
         featureLowSodiumButton.setOnClickListener {
-            toggleFeature(FEATURE_LOW_SODIUM, featureLowSodiumButton)
+            toggleFeature(FilterOptions.FEATURE_LOW_SODIUM, featureLowSodiumButton)
         }
 
         featureHighProteinButton.setOnClickListener {
-            toggleFeature(FEATURE_HIGH_PROTEIN, featureHighProteinButton)
+            toggleFeature(FilterOptions.FEATURE_HIGH_PROTEIN, featureHighProteinButton)
         }
 
         featureEasyButton.setOnClickListener {
-            toggleFeature(FEATURE_EASY, featureEasyButton)
+            toggleFeature(FilterOptions.FEATURE_EASY, featureEasyButton)
         }
 
         resetButton.setOnClickListener {
@@ -215,8 +216,8 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     private fun setupCalorieSlider() = with(binding) {
         calorieRangeSlider.addOnChangeListener { slider, _, _ ->
             val values = slider.values
-            minCalories = values.getOrNull(0)?.toInt() ?: 1400
-            maxCalories = values.getOrNull(1)?.toInt() ?: 2200
+            minCalories = values.getOrNull(0)?.toInt() ?: FilterOptions.DEFAULT_MIN_CALORIES
+            maxCalories = values.getOrNull(1)?.toInt() ?: FilterOptions.DEFAULT_MAX_CALORIES
             updateCalorieTexts()
         }
     }
@@ -266,14 +267,14 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     }
 
     private fun resetFilters() = with(binding) {
-        selectedGoal = GOAL_WEIGHT_LOSS
-        selectedDuration = 14
-        selectedType = TYPE_MEDITERRANEAN
+        selectedGoal = FilterOptions.DEFAULT_GOAL
+        selectedDuration = FilterOptions.DEFAULT_DURATION
+        selectedType = FilterOptions.DEFAULT_TYPE
         selectedFeatures.clear()
-        selectedFeatures.add(FEATURE_HEART)
+        selectedFeatures.addAll(FilterOptions.DEFAULT_FEATURES)
 
-        minCalories = 1400
-        maxCalories = 2200
+        minCalories = FilterOptions.DEFAULT_MIN_CALORIES
+        maxCalories = FilterOptions.DEFAULT_MAX_CALORIES
         calorieRangeSlider.valueFrom = 800f
         calorieRangeSlider.valueTo = 3000f
         calorieRangeSlider.stepSize = 100f
@@ -339,21 +340,5 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         const val BUNDLE_MIN_CALORIES = "bundle_min_calories"
         const val BUNDLE_MAX_CALORIES = "bundle_max_calories"
         const val BUNDLE_CLEAR_FILTER = "bundle_clear_filter"
-
-        private const val GOAL_WEIGHT_LOSS = "weight_loss"
-        private const val GOAL_WEIGHT_GAIN = "weight_gain"
-        private const val GOAL_MUSCLE = "muscle_gain"
-        private const val GOAL_BALANCED = "balanced"
-
-        private const val TYPE_MEDITERRANEAN = "mediterranean"
-        private const val TYPE_DASH = "dash"
-        private const val TYPE_FASTING = "intermittent_fasting"
-        private const val TYPE_KETO = "ketogenic"
-        private const val TYPE_PLANT_BASED = "plant_based"
-
-        private const val FEATURE_HEART = "heart_friendly"
-        private const val FEATURE_LOW_SODIUM = "low_sodium"
-        private const val FEATURE_HIGH_PROTEIN = "high_protein"
-        private const val FEATURE_EASY = "easy"
     }
 }

@@ -1,26 +1,25 @@
 package com.example.fitto.feature_dietplans
 
+import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDietPlanSearchBinding
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
-import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
-import java.util.Locale
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import android.graphics.Typeface
-import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.widget.TextView
-import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
+
 class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
     private var _binding: FragmentDietPlanSearchBinding? = null
@@ -29,6 +28,9 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     private lateinit var adapter: DietPlansAdapter
     private lateinit var preferenceStore: DietPlanPreferenceStore
     private lateinit var customDietPlanStore: CustomDietPlanStore
+    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
+    private lateinit var dietPlanListLoader: DietPlanListLoader
 
     private var allPlans: List<DietPlanUiModel> = emptyList()
 
@@ -38,8 +40,17 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
         preferenceStore = DietPlanPreferenceStore(requireContext())
         customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
+        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = preferenceStore
+        )
+        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
+        dietPlanListLoader = DietPlanListLoader.from(
+            customPlanStore = customDietPlanStore,
+            preferenceStore = preferenceStore
+        )
 
-        allPlans = createSearchPlans()
+        allPlans = dietPlanListLoader.load(includeDrafts = false).allPlans
 
         setupRecyclerView()
         setupClicks()
@@ -69,7 +80,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
         searchResultsRecyclerView.adapter = adapter
     }
     private fun confirmDeleteCustomPlan(plan: DietPlanUiModel) {
-        if (!plan.id.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) return
+        if (!CustomDietPlanDeletionAction.isCustomPlanId(plan.id)) return
 
         MaterialAlertDialogBuilder(
             requireContext(),
@@ -79,7 +90,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             .setMessage(
                 getString(
                     R.string.diet_plans_delete_custom_plan_message,
-                    plan.displayTitle()
+                    titleTextForPlan(plan)
                 )
             )
             .setNegativeButton(getString(R.string.common_cancel), null)
@@ -90,35 +101,37 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun deleteCustomPlan(plan: DietPlanUiModel) {
-        runCatching {
-            customDietPlanStore.deletePlan(plan.id)
-            preferenceStore.removeFavorite(plan.id)
-            preferenceStore.clearActivePlanIf(plan.id)
-        }.onSuccess {
-            parentFragmentManager.setFragmentResult(
-                DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                Bundle().apply {
-                    putString(
-                        DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                        preferenceStore.getActivePlanId()
-                    )
-                }
-            )
+        when (val result = customPlanDeletionAction.delete(plan.id)) {
+            is CustomDietPlanDeletionResult.Deleted -> {
+                parentFragmentManager.setFragmentResult(
+                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+                    Bundle().apply {
+                        putString(
+                            DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
+                            result.activePlanId
+                        )
+                    }
+                )
 
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_success),
-                Toast.LENGTH_SHORT
-            ).show()
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_success),
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            refreshPlans()
-            filterPlans(binding.searchInput.text?.toString().orEmpty())
-        }.onFailure {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.diet_plans_delete_custom_plan_error),
-                Toast.LENGTH_SHORT
-            ).show()
+                refreshPlans()
+                filterPlans(binding.searchInput.text?.toString().orEmpty())
+            }
+
+            is CustomDietPlanDeletionResult.Failed -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.diet_plans_delete_custom_plan_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
         }
     }
     private fun setupClicks() = with(binding) {
@@ -223,36 +236,21 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun filterPlans(query: String) {
-        val normalizedQuery = query.trim().lowercase(Locale.ROOT)
-
-        val filteredPlans = if (normalizedQuery.isBlank()) {
-            allPlans
-        } else {
-            allPlans.filter { plan ->
-                plan.displayTitle().lowercase(Locale.ROOT).contains(normalizedQuery) ||
-                        plan.displayDescription().lowercase(Locale.ROOT).contains(normalizedQuery)
-            }
-        }
-
-        adapter.submitList(filteredPlans)
+        adapter.submitList(
+            DietPlanSearchResolver.filter(
+                plans = allPlans,
+                query = query,
+                titleTextForPlan = ::titleTextForPlan,
+                descriptionTextForPlan = ::descriptionTextForPlan
+            )
+        )
     }
 
     private fun openPlanDetail(plan: DietPlanUiModel) {
         rememberCurrentSearchIfNeeded()
-        if (plan.id.startsWith(CustomDietPlanStore.CUSTOM_PLAN_ID_PREFIX)) {
-            parentFragmentManager.beginTransaction()
-                .setReorderingAllowed(true)
-                .replace(
-                    R.id.homeTabContainer,
-                    CustomDietPlanDetailFragment.newInstance(plan.id)
-                )
-                .addToBackStack("custom_diet_plan_detail")
-                .commit()
-            return
-        }
 
-        when (plan.id) {
-            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> {
+        when (val destination = DietPlanDestinationResolver.resolve(plan.id)) {
+            DietPlanDestination.IntermittentFasting -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(R.id.homeTabContainer, IntermittentFastingDetailFragment())
@@ -260,28 +258,40 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
                     .commit()
             }
 
-            else -> {
+            is DietPlanDestination.ReadyDetail -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
                     .replace(
                         R.id.homeTabContainer,
-                        DietPlanDetailFragment.newInstance(plan.id)
+                        DietPlanDetailFragment.newInstance(destination.planId)
                     )
                     .addToBackStack("diet_plan_detail")
                     .commit()
             }
+
+            is DietPlanDestination.CustomDetail -> {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(
+                        R.id.homeTabContainer,
+                        CustomDietPlanDetailFragment.newInstance(destination.planId)
+                    )
+                    .addToBackStack("custom_diet_plan_detail")
+                    .commit()
+            }
+
+            is DietPlanDestination.Unknown -> Unit
         }
     }
 
     private fun applyPlan(plan: DietPlanUiModel) {
         rememberCurrentSearchIfNeeded()
-        preferenceStore.saveActivePlan(plan.id)
-        preferenceStore.applyActivePlanToday()
+        val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
 
         parentFragmentManager.setFragmentResult(
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, plan.id)
+                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
             }
         )
 
@@ -289,7 +299,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
             requireContext(),
             getString(
                 R.string.diet_plans_apply_success_message,
-                plan.displayTitle()
+                titleTextForPlan(plan)
             ),
             Toast.LENGTH_SHORT
         ).show()
@@ -299,9 +309,9 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun toggleFavorite(plan: DietPlanUiModel) {
-        val isFavoriteNow = preferenceStore.toggleFavorite(plan.id)
+        val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
 
-        val messageRes = if (isFavoriteNow) {
+        val messageRes = if (favoriteResult.isFavorite) {
             R.string.diet_plans_favorite_added_message
         } else {
             R.string.diet_plans_favorite_removed_message
@@ -309,7 +319,7 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
 
         Toast.makeText(
             requireContext(),
-            getString(messageRes, plan.displayTitle()),
+            getString(messageRes, titleTextForPlan(plan)),
             Toast.LENGTH_SHORT
         ).show()
 
@@ -318,42 +328,23 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun refreshPlans() {
-        allPlans = createSearchPlans()
+        allPlans = dietPlanListLoader.load(includeDrafts = false).allPlans
     }
 
-    private fun createSearchPlans(): List<DietPlanUiModel> {
-        val favoriteIds = preferenceStore.getFavoriteIds()
-        val activePlanId = preferenceStore.getActivePlanId()
-
-        val readyPlans = DietPlanCatalog.getReadyPlans(
-            favoriteIds = favoriteIds,
-            activePlanId = activePlanId
+    private fun titleTextForPlan(plan: DietPlanUiModel): String {
+        return DietPlanTextResolver.title(
+            plan = plan,
+            stringProvider = ::getString,
+            fallback = getString(R.string.app_name)
         )
-
-        val customPlans = customDietPlanStore
-            .getPlans(includeDrafts = false)
-            .map { customPlan ->
-                customDietPlanStore.toDietPlanUiModel(
-                    plan = customPlan,
-                    isFavorite = customPlan.id in favoriteIds
-                ).copy(
-                    isApplied = customPlan.id == activePlanId
-                )
-            }
-
-        return customPlans + readyPlans
     }
 
-    private fun DietPlanUiModel.displayTitle(): String {
-        return titleText
-            ?: titleRes?.let { getString(it) }
-            ?: getString(R.string.app_name)
-    }
-
-    private fun DietPlanUiModel.displayDescription(): String {
-        return descriptionText
-            ?: descriptionRes?.let { getString(it) }
-            ?: getString(R.string.diet_plan_custom_default_desc)
+    private fun descriptionTextForPlan(plan: DietPlanUiModel): String {
+        return DietPlanTextResolver.description(
+            plan = plan,
+            stringProvider = ::getString,
+            fallback = getString(R.string.diet_plan_custom_default_desc)
+        )
     }
 
     override fun onDestroyView() {

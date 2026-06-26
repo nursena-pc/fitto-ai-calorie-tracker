@@ -49,10 +49,16 @@ data class DailyPlannedMealsUiModel(
     val completedMealIds: Set<String>
 ) {
     val progressPercent: Int
-        get() = if (meals.isEmpty()) 0 else ((completedMealIds.size.toFloat() / meals.size.toFloat()) * 100).roundToInt()
+        get() = PlannedMealProgressResolver.progressPercent(
+            meals = meals,
+            completedMealIds = completedMealIds
+        )
 
     val isCompleted: Boolean
-        get() = meals.isNotEmpty() && completedMealIds.size >= meals.size
+        get() = PlannedMealProgressResolver.isCompleted(
+            meals = meals,
+            completedMealIds = completedMealIds
+        )
 }
 
 private fun Int.roundToNearest(step: Int): Int {

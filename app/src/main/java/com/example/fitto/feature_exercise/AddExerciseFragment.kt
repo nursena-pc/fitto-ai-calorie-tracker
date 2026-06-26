@@ -18,7 +18,6 @@
     import com.example.fitto.feature_exercise.model.ExerciseCategory
     import com.example.fitto.feature_exercise.model.ExerciseIntensity
     import com.example.fitto.feature_exercise.model.ExerciseUiModel
-    import com.google.android.material.button.MaterialButton
     import com.google.android.material.card.MaterialCardView
     import kotlin.math.roundToInt
     import com.example.fitto.feature_exercise.data.ExerciseLogStore
@@ -32,7 +31,6 @@
     import android.view.inputmethod.InputMethodManager
     import android.content.Context
     import androidx.lifecycle.lifecycleScope
-    import com.example.fitto.data.local.entity.UserProfileEntity
     import com.example.fitto.data.local.repository.ProfileCacheRepository
     import com.google.android.material.dialog.MaterialAlertDialogBuilder
     import com.google.android.material.textfield.TextInputEditText
@@ -43,8 +41,6 @@
     import kotlinx.coroutines.Dispatchers
     import kotlinx.coroutines.launch
     import kotlinx.coroutines.withContext
-    import java.text.Normalizer
-    import java.util.Locale
 
     class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
 
@@ -115,10 +111,11 @@
                 calorieTextProvider = { activity ->
                     getString(
                         R.string.exercise_kcal_value,
-                        calculateCaloriesFor(
+                        ExerciseCalorieCalculator.calculate(
                             activity = activity,
                             minutes = activity.defaultDurationMinutes,
-                            intensity = filterState.intensity ?: selectedIntensity
+                            intensity = filterState.intensity ?: selectedIntensity,
+                            userWeightKg = userWeightKg
                         )
                     )
                 }
@@ -201,7 +198,7 @@
         private fun renderUserWeight() = with(binding) {
             userWeightChipText.text = getString(
                 R.string.exercise_weight_chip,
-                formatWeight(userWeightKg)
+                ExerciseProfileWeightResolver.formatWeight(userWeightKg)
             )
         }
         private fun loadUserWeightAndRender() {
@@ -211,83 +208,15 @@
                         ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
                 }
 
-                userWeightKg = resolveProfileWeightKg(profile)
+                userWeightKg = ExerciseProfileWeightResolver.resolveWeightKg(profile)
                     ?: DEFAULT_USER_WEIGHT_KG
 
                 renderUserWeight()
                 renderSelectedExercise()
             }
         }
-
-        private fun resolveProfileWeightKg(profile: UserProfileEntity?): Double? {
-            if (profile == null) return null
-
-            val candidateNames = listOf(
-                "weightKg",
-                "currentWeightKg",
-                "weight",
-                "currentWeight",
-                "initialWeightKg",
-                "initialWeight"
-            )
-
-            candidateNames.forEach { name ->
-                profile.readNumberProperty(name)
-                    ?.takeIf { it in MIN_USER_WEIGHT_KG..MAX_USER_WEIGHT_KG }
-                    ?.let { return it }
-            }
-
-            return null
-        }
         private fun rebuildSearchCache() {
-            searchableTextById = allActivities.associate { activity ->
-                activity.id to listOf(
-                    activity.id,
-                    activity.title,
-                    activity.description,
-                    activity.searchKeywords.joinToString(" "),
-                    activity.sourceDescription,
-                    activity.sourceMajorHeading
-                )
-                    .joinToString(" ")
-                    .normalizedForExerciseSearch()
-            }
-        }
-        private fun Any.readNumberProperty(name: String): Double? {
-            val fieldValue = runCatching {
-                javaClass.getDeclaredField(name).apply {
-                    isAccessible = true
-                }.get(this)
-            }.getOrNull()
-
-            fieldValue.asDoubleOrNull()?.let { return it }
-
-            val getterName = "get" + name.replaceFirstChar { it.uppercaseChar() }
-
-            val getterValue = runCatching {
-                javaClass.methods
-                    .firstOrNull { method ->
-                        method.name == getterName && method.parameterCount == 0
-                    }
-                    ?.invoke(this)
-            }.getOrNull()
-
-            return getterValue.asDoubleOrNull()
-        }
-
-        private fun Any?.asDoubleOrNull(): Double? {
-            return when (this) {
-                is Number -> toDouble()
-                is String -> replace(",", ".").toDoubleOrNull()
-                else -> null
-            }
-        }
-        private fun formatWeight(value: Double): String {
-            return if (value % 1.0 == 0.0) {
-                value.roundToInt().toString()
-            } else {
-                String.format(Locale.getDefault(), "%.1f", value)
-            }
+            searchableTextById = ExerciseActivitySearchCache.build(allActivities)
         }
         private fun showDurationInputDialog() {
             val context = requireContext()
@@ -393,233 +322,24 @@
                 ?.trim()
                 .orEmpty()
 
-            val normalizedQuery = rawQuery.normalizedForExerciseSearch()
-            val queryWords = buildExerciseSearchQueries(normalizedQuery)
-
-            val isSearching = queryWords.isNotEmpty()
-            val listIntensity = filterState.intensity ?: selectedIntensity
-
-            val filtered = allActivities.filter { activity ->
-                val searchableText = searchableTextById[activity.id].orEmpty()
-
-                val categoryMatches = if (isSearching) {
-                    true
-                } else {
-                    activity.category == selectedCategory
-                }
-
-                val durationMatches = if (isSearching) {
-                    true
-                } else {
-                    filterState.durationRange.matches(activity.defaultDurationMinutes)
-                }
-
-                val searchMatches = if (!isSearching) {
-                    true
-                } else {
-                    queryWords.any { query ->
-                        searchableText.contains(query)
-                    }
-                }
-
-                categoryMatches && durationMatches && searchMatches
-            }
-
-            return when (filterState.sort) {
-                ExerciseSort.RECOMMENDED -> filtered
-
-                ExerciseSort.KCAL_LOW_HIGH -> filtered.sortedBy {
-                    calculateCaloriesFor(
-                        activity = it,
-                        minutes = it.defaultDurationMinutes,
-                        intensity = listIntensity
-                    )
-                }
-
-                ExerciseSort.KCAL_HIGH_LOW -> filtered.sortedByDescending {
-                    calculateCaloriesFor(
-                        activity = it,
-                        minutes = it.defaultDurationMinutes,
-                        intensity = listIntensity
-                    )
-                }
-
-                ExerciseSort.DURATION_LOW_HIGH -> filtered.sortedBy {
-                    it.defaultDurationMinutes
-                }
-            }
-        }
-        private fun buildExerciseSearchQueries(normalizedQuery: String): Set<String> {
-            if (normalizedQuery.isBlank()) return emptySet()
-
-            val queries = linkedSetOf(normalizedQuery)
-
-            val aliasMap = mapOf(
-                "kosu" to listOf("running", "run", "jogging", "jog"),
-                "kosmak" to listOf("running", "run", "jogging", "jog"),
-                "jogging" to listOf("kosu", "running", "run", "jog"),
-                "running" to listOf("kosu", "run", "jogging", "jog"),
-                "run" to listOf("kosu", "running", "jogging", "jog"),
-
-                "yuruyus" to listOf("walking", "walk", "brisk", "steps"),
-                "yuru" to listOf("walking", "walk", "brisk", "steps"),
-                "walk" to listOf("yuruyus", "walking", "brisk", "steps"),
-                "walking" to listOf("yuruyus", "walk", "brisk", "steps"),
-
-                "bisiklet" to listOf("bicycling", "cycling", "cycle", "bike"),
-                "bike" to listOf("bisiklet", "bicycling", "cycling"),
-                "cycling" to listOf("bisiklet", "bicycling", "bike"),
-                "bicycling" to listOf("bisiklet", "cycling", "bike"),
-
-                "yuzme" to listOf("swimming", "swim", "water"),
-                "swim" to listOf("yuzme", "swimming", "water"),
-                "swimming" to listOf("yuzme", "swim", "water"),
-
-                "dans" to listOf("dance", "dancing"),
-                "dance" to listOf("dans", "dancing"),
-                "dancing" to listOf("dans", "dance"),
-
-                "yoga" to listOf("yoga"),
-                "pilates" to listOf("pilates"),
-
-                "esneme" to listOf("stretch", "stretching", "mobility"),
-                "stretch" to listOf("esneme", "stretching", "mobility"),
-                "stretching" to listOf("esneme", "stretch", "mobility"),
-                "mobilite" to listOf("mobility", "stretching", "esneme"),
-                "mobility" to listOf("mobilite", "stretching", "esneme"),
-
-                "temizlik" to listOf("cleaning", "housework", "home"),
-                "cleaning" to listOf("temizlik", "housework", "home"),
-                "ev isi" to listOf("housework", "cleaning", "home"),
-                "housework" to listOf("ev isi", "temizlik", "cleaning"),
-
-                "market" to listOf("shopping", "grocery", "walking"),
-                "alisveris" to listOf("shopping", "grocery"),
-                "shopping" to listOf("market", "alisveris", "grocery"),
-
-                "bahce" to listOf("gardening", "garden", "yard"),
-                "gardening" to listOf("bahce", "garden", "yard"),
-
-                "merdiven" to listOf("stairs", "stair", "climbing"),
-                "stairs" to listOf("merdiven", "stair", "climbing"),
-
-                "agirlik" to listOf("weight", "weights", "strength", "resistance"),
-                "kuvvet" to listOf("strength", "weight", "resistance"),
-                "strength" to listOf("kuvvet", "agirlik", "weight"),
-                "weight" to listOf("agirlik", "kuvvet", "strength"),
-
-                "karin" to listOf("core", "abs", "abdominal"),
-                "core" to listOf("karin", "abs", "abdominal"),
-                "abs" to listOf("karin", "core", "abdominal"),
-
-                "ip atlama" to listOf("jump rope", "rope", "jumping"),
-                "ip" to listOf("jump rope", "rope", "jumping"),
-                "rope" to listOf("ip", "jump rope", "jumping")
+            return ExerciseActivityFilter.resolveVisibleActivities(
+                activities = allActivities,
+                searchableTextById = searchableTextById,
+                selectedCategory = selectedCategory,
+                filterState = filterState,
+                selectedIntensity = selectedIntensity,
+                rawQuery = rawQuery,
+                userWeightKg = userWeightKg
             )
-
-            aliasMap.forEach { (key, aliases) ->
-                if (normalizedQuery.contains(key)) {
-                    queries.add(key)
-                    queries.addAll(aliases.map { it.normalizedForExerciseSearch() })
-                }
-            }
-
-            // Kullanıcı iki kelime yazarsa her kelime için de alias denensin.
-            normalizedQuery.split(" ")
-                .filter { it.length >= 2 }
-                .forEach { word ->
-                    queries.add(word)
-                    aliasMap[word]?.forEach { alias ->
-                        queries.add(alias.normalizedForExerciseSearch())
-                    }
-                }
-
-            return queries.filter { it.isNotBlank() }.toSet()
         }
         private fun resolveEditableActivityForLog(log: ExerciseLogLocalModel): ExerciseUiModel {
-            allActivities.firstOrNull { it.id == log.exerciseId }?.let { return it }
-
-            val normalizedLogTitle = log.exerciseTitle.normalizedForExerciseSearch()
-
-            allActivities.firstOrNull { activity ->
-                activity.title.normalizedForExerciseSearch() == normalizedLogTitle
-            }?.let { return it }
-
-            allActivities.firstOrNull { activity ->
-                activity.title.normalizedForExerciseSearch().contains(normalizedLogTitle) ||
-                        normalizedLogTitle.contains(activity.title.normalizedForExerciseSearch())
-            }?.let { return it }
-
-            return createLegacyActivityFromLog(log)
-        }
-
-        private fun createLegacyActivityFromLog(log: ExerciseLogLocalModel): ExerciseUiModel {
-            return ExerciseUiModel(
-                id = log.exerciseId.ifBlank { "legacy_${System.currentTimeMillis()}" },
-                title = log.exerciseTitle.ifBlank { getString(R.string.exercise_add_title) },
-                description = buildString {
-                    append(log.categoryName.ifBlank { getString(R.string.exercise_category_cardio) })
-                    append(" · ")
-                    append(getString(R.string.exercise_estimated_kcal))
-                },
-                category = resolveLegacyCategory(log),
-                metValue = log.metValue.takeIf { it > 0.0 } ?: 4.3,
-                defaultDurationMinutes = log.durationMinutes.coerceIn(1, 240),
-                iconEmoji = resolveLegacyEmoji(log.exerciseId),
-                searchKeywords = listOf(
-                    log.exerciseTitle,
-                    log.categoryName,
-                    log.exerciseId
-                ),
-                sourceCode = "",
-                sourceMajorHeading = "Legacy",
-                sourceDescription = log.exerciseTitle
+            return ExerciseLegacyActivityResolver.resolveActivityForLog(
+                log = log,
+                activities = allActivities,
+                fallbackTitle = getString(R.string.exercise_add_title),
+                fallbackCategoryName = getString(R.string.exercise_category_cardio),
+                estimatedCaloriesText = getString(R.string.exercise_estimated_kcal)
             )
-        }
-
-        private fun resolveLegacyCategory(log: ExerciseLogLocalModel): ExerciseCategory {
-            val raw = "${log.categoryName} ${log.exerciseId} ${log.exerciseTitle}"
-                .normalizedForExerciseSearch()
-
-            return when {
-                raw.contains("kuvvet") ||
-                        raw.contains("strength") ||
-                        raw.contains("weight") ||
-                        raw.contains("bodyweight") ||
-                        raw.contains("calisthenics") -> ExerciseCategory.STRENGTH
-
-                raw.contains("esneme") ||
-                        raw.contains("stretch") ||
-                        raw.contains("yoga") ||
-                        raw.contains("pilates") ||
-                        raw.contains("mobility") -> ExerciseCategory.STRETCHING
-
-                raw.contains("yasam") ||
-                        raw.contains("lifestyle") ||
-                        raw.contains("cleaning") ||
-                        raw.contains("cooking") ||
-                        raw.contains("knitting") ||
-                        raw.contains("stairs") -> ExerciseCategory.LIFESTYLE
-
-                else -> ExerciseCategory.CARDIO
-            }
-        }
-
-        private fun resolveLegacyEmoji(exerciseId: String): String {
-            val id = exerciseId.normalizedForExerciseSearch()
-
-            return when {
-                id.contains("walk") || id.contains("walking") || id.contains("brisk") -> "🚶"
-                id.contains("run") || id.contains("running") -> "🏃"
-                id.contains("cycl") || id.contains("bicy") -> "🚴"
-                id.contains("yoga") -> "🧘"
-                id.contains("pilates") -> "🧎"
-                id.contains("clean") -> "🧹"
-                id.contains("cook") -> "🍳"
-                id.contains("knit") -> "🧶"
-                id.contains("stairs") -> "🪜"
-                else -> "🔥"
-            }
         }
         private fun renderCategoryChipColors() = with(binding) {
             val selectedBackground = ContextCompat.getColor(requireContext(), R.color.fitto_primary_soft)
@@ -695,22 +415,6 @@
                 selectedId = selectedActivity?.id
             )
         }
-
-
-            private fun String.normalizedForExerciseSearch(): String {
-                val fixedTurkish = lowercase(Locale("tr", "TR"))
-                    .replace("ı", "i")
-
-                return Normalizer.normalize(fixedTurkish, Normalizer.Form.NFD)
-                    .replace("\\p{Mn}+".toRegex(), "")
-                    .replace("ğ", "g")
-                    .replace("ü", "u")
-                    .replace("ş", "s")
-                    .replace("ö", "o")
-                    .replace("ç", "c")
-                    .replace("\\s+".toRegex(), " ")
-                    .trim()
-            }
         private fun selectActivityFromList(activity: ExerciseUiModel) {
             editingLogId = null
             selectedCategory = activity.category
@@ -771,23 +475,12 @@
             activity: ExerciseUiModel,
             minutes: Int
         ): Int {
-            return calculateCaloriesFor(
+            return ExerciseCalorieCalculator.calculate(
                 activity = activity,
                 minutes = minutes,
-                intensity = selectedIntensity
+                intensity = selectedIntensity,
+                userWeightKg = userWeightKg
             )
-        }
-
-        private fun calculateCaloriesFor(
-            activity: ExerciseUiModel,
-            minutes: Int,
-            intensity: ExerciseIntensity
-        ): Int {
-            val durationHours = minutes / 60.0
-
-            return (activity.metValue * userWeightKg * durationHours * intensity.multiplier)
-                .roundToInt()
-                .coerceAtLeast(0)
         }
         private fun renderTodayExerciseLogs() = with(binding) {
             val entryDate = currentEntryDate()
@@ -933,7 +626,7 @@
             durationMinutes = log.durationMinutes.coerceIn(1, 240)
             selectedIntensity = resolveIntensityByName(log.intensityName)
 
-            // Düzenleme sırasında arama/filtre eski aktiviteyi gizlemesin.
+            // Keep search/filter state from hiding the activity being edited.
             filterState = ExerciseFilterState()
             if (!binding.exerciseSearchInput.text.isNullOrBlank()) {
                 binding.exerciseSearchInput.setText("")
@@ -990,98 +683,21 @@
                 ?: LocalDate.now().toString()
         }
         private fun displayActivityTitle(activity: ExerciseUiModel): String {
-            val raw = activity.title.trim()
-            val normalized = raw.normalizedForExerciseSearch()
-
-            return when {
-                normalized.contains("bicycl") ||
-                        normalized.contains("cycling") ||
-                        normalized.contains("bisiklet") -> {
-                    "Bisiklet • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("running") ||
-                        normalized.contains("jogging") ||
-                        normalized.contains("kosu") ||
-                        normalized.contains("run") -> {
-                    "Koşu • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("walking") ||
-                        normalized.contains("walk") ||
-                        normalized.contains("yuruyus") -> {
-                    "Yürüyüş • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("swimming") ||
-                        normalized.contains("swim") ||
-                        normalized.contains("yuzme") -> {
-                    "Yüzme • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("yoga") -> "Yoga"
-                normalized.contains("pilates") -> "Pilates"
-                normalized.contains("stretch") ||
-                        normalized.contains("stretching") ||
-                        normalized.contains("esneme") -> "Esneme"
-
-                normalized.contains("cleaning") ||
-                        normalized.contains("housework") ||
-                        normalized.contains("temizlik") -> {
-                    "Ev temizliği • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("gardening") ||
-                        normalized.contains("garden") ||
-                        normalized.contains("bahce") -> {
-                    "Bahçe işi • ${effortLabel(activity.metValue)}"
-                }
-
-                normalized.contains("shopping") ||
-                        normalized.contains("grocery") ||
-                        normalized.contains("market") -> {
-                    "Alışveriş yürüyüşü"
-                }
-
-                else -> raw
-                    .substringBefore(";")
-                    .substringBefore(" veya ")
-                    .substringBefore(",")
-                    .trim()
-                    .ifBlank { raw }
-                    .take(42)
-            }
+            return ExerciseDisplayTextResolver.resolveTitle(activity)
         }
 
         private fun displayActivityDescription(activity: ExerciseUiModel): String {
-            return "${getString(activity.category.titleRes)} • ${activityIntensityText(activity.metValue)}"
-        }
-
-        private fun effortLabel(metValue: Double): String {
-            return when {
-                metValue < 2.5 -> "Hafif tempo"
-                metValue < 4.5 -> "Orta tempo"
-                metValue < 7.0 -> "Canlı tempo"
-                metValue < 10.0 -> "Yüksek tempo"
-                else -> "Çok yüksek tempo"
-            }
-        }
-
-        private fun activityIntensityText(metValue: Double): String {
-            return when {
-                metValue < 2.5 -> "Düşük efor"
-                metValue < 4.5 -> "Orta efor"
-                metValue < 7.0 -> "Aktif tempo"
-                metValue < 10.0 -> "Yoğun efor"
-                else -> "Çok yoğun efor"
-            }
+            return ExerciseDisplayTextResolver.resolveDescription(
+                activity = activity,
+                categoryName = getString(activity.category.titleRes)
+            )
         }
 
         private fun resolveExerciseEmoji(exerciseId: String): String {
-            return allActivities
-                .firstOrNull { it.id == exerciseId }
-                ?.iconEmoji
-                ?: resolveLegacyEmoji(exerciseId)
+            return ExerciseLegacyActivityResolver.resolveEmoji(
+                exerciseId = exerciseId,
+                activities = allActivities
+            )
         }
 
         private fun addSelectedExercise() {
@@ -1175,8 +791,6 @@
             const val BUNDLE_EXERCISE_DATE = "bundle_exercise_date"
             private const val DEFAULT_USER_WEIGHT_KG = 70.0
             private const val ARG_ENTRY_DATE = "arg_entry_date"
-            private const val MIN_USER_WEIGHT_KG = 25.0
-            private const val MAX_USER_WEIGHT_KG = 300.0
 
             fun newInstance(entryDate: String): AddExerciseFragment {
                 return AddExerciseFragment().apply {

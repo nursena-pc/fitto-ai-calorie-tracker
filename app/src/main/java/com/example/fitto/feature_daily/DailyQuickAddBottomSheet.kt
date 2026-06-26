@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import com.example.fitto.R
 import com.example.fitto.databinding.BottomSheetDailyQuickAddBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
@@ -30,48 +28,33 @@ class DailyQuickAddBottomSheet : BottomSheetDialogFragment() {
 
     private fun setupClicks() = with(binding) {
         quickAddSearchFood.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.openAddMeal()
+            runDailyAction { openAddMeal() }
         }
 
         quickAddCameraFood.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.openCameraFoodEntry()
+            runDailyAction { openCameraFoodEntry() }
         }
 
         quickAddCreateFood.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.openAddMeal()
+            runDailyAction { openAddMeal() }
         }
 
         quickAddWater.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.addQuickWater()
+            runDailyAction { addQuickWater() }
         }
 
         quickAddActivity.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.openAddExercise()
+            runDailyAction { openAddExercise() }
         }
 
         quickAddDietPlan.setOnClickListener {
-            dismiss()
-            (parentFragment as? DailyFragment)?.openDietPlans()
+            runDailyAction { openDietPlans() }
         }
     }
 
-    private fun openAddMealFromSheet() {
+    private fun runDailyAction(action: DailyFragment.() -> Unit) {
         dismiss()
-        (parentFragment as? DailyFragment)?.openAddMeal()
-    }
-
-    private fun handleAction(label: String) {
-        dismiss()
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.daily_mock_action_message, label),
-            Toast.LENGTH_SHORT
-        ).show()
+        (parentFragment as? DailyFragment)?.action()
     }
 
     override fun onDestroyView() {

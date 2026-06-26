@@ -27,14 +27,19 @@ class CustomFastingPlanBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val initialHours = arguments?.getInt(ARG_INITIAL_FASTING_HOURS, 16) ?: 16
+        val initialHours = arguments?.getInt(
+            ARG_INITIAL_FASTING_HOURS,
+            CustomFastingPlanRules.DEFAULT_FASTING_HOURS
+        ) ?: CustomFastingPlanRules.DEFAULT_FASTING_HOURS
         setupUi(initialHours)
         setupClicks()
     }
 
     private fun setupUi(initialHours: Int) = with(binding) {
-        fastingHoursSlider.value = initialHours.toFloat()
-        updatePreview(initialHours)
+        val safeInitialHours = CustomFastingPlanRules.sanitizeFastingHours(initialHours)
+
+        fastingHoursSlider.value = safeInitialHours.toFloat()
+        updatePreview(safeInitialHours)
 
         fastingHoursSlider.addOnChangeListener { _, value, _ ->
             updatePreview(value.toInt())
@@ -42,24 +47,24 @@ class CustomFastingPlanBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun updatePreview(fastingHours: Int) = with(binding) {
-        val eatingHours = 24 - fastingHours
+        val schedule = CustomFastingPlanRules.resolveSchedule(fastingHours)
 
         selectedRatioText.text = getString(
             R.string.if_custom_dialog_preview,
-            fastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
         summaryText.text = getString(
             R.string.if_custom_dialog_summary,
-            fastingHours,
-            eatingHours
+            schedule.fastingHours,
+            schedule.eatingHours
         )
 
         startInfoText.text = getString(R.string.if_custom_dialog_start_info)
         eatInfoText.text = getString(
             R.string.if_custom_dialog_eat_info,
-            eatingHours
+            schedule.eatingHours
         )
     }
 
@@ -91,7 +96,9 @@ class CustomFastingPlanBottomSheet : BottomSheetDialogFragment() {
         const val BUNDLE_FASTING_HOURS = "bundle_fasting_hours"
         private const val ARG_INITIAL_FASTING_HOURS = "arg_initial_fasting_hours"
 
-        fun newInstance(initialHours: Int = 16): CustomFastingPlanBottomSheet {
+        fun newInstance(
+            initialHours: Int = CustomFastingPlanRules.DEFAULT_FASTING_HOURS
+        ): CustomFastingPlanBottomSheet {
             return CustomFastingPlanBottomSheet().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_INITIAL_FASTING_HOURS, initialHours)
