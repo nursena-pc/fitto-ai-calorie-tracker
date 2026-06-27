@@ -121,21 +121,19 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private val activityRecognitionPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.step_counter_permission_granted),
-                Toast.LENGTH_SHORT
-            ).show()
+        val effect = DailyActivityRecognitionPermissionResultResolver.resolve(granted)
 
+        Toast.makeText(
+            requireContext(),
+            getString(effect.messageRes),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        if (effect.shouldStartStepCounter) {
             startLocalStepCounterIfNeeded()
-        } else {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.step_counter_permission_denied),
-                Toast.LENGTH_SHORT
-            ).show()
+        }
 
+        if (effect.shouldRenderSteps) {
             renderActivityStepsOnly()
         }
     }
