@@ -1104,7 +1104,7 @@ class SocialRepository {
         val currentProfile = getCurrentUserProfile()
         val targetProfile = getUserProfile(targetUserId) ?: return null
 
-        val threadId = directThreadId(currentUser.uid, targetUserId)
+        val threadId = SocialThreadParticipantResolver.directThreadId(currentUser.uid, targetUserId)
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val now = System.currentTimeMillis()
 
@@ -1121,14 +1121,14 @@ class SocialRepository {
                         "participantIds" to listOf(currentUser.uid, targetUserId).sorted(),
                         "memberCount" to 2,
                         "participants" to mapOf(
-                            currentUser.uid to participantMap(
+                            currentUser.uid to SocialThreadParticipantResolver.participantMap(
                                 uid = currentUser.uid,
                                 userName = currentProfile?.userName?.takeIf { it.isNotBlank() }
                                     ?: currentUser.email?.substringBefore("@")
                                     ?: "fitto_user",
                                 photoUrl = currentProfile?.photoUrl ?: currentUser.photoUrl?.toString()
                             ),
-                            targetUserId to participantMap(
+                            targetUserId to SocialThreadParticipantResolver.participantMap(
                                 uid = targetUserId,
                                 userName = targetProfile.userName.ifBlank { "fitto_user" },
                                 photoUrl = targetProfile.photoUrl
@@ -1186,14 +1186,14 @@ class SocialRepository {
         val participantIds = (listOf(currentUser.uid) + uniqueSelectedUsers.map { it.id }).distinct()
         val participants = mutableMapOf<String, Map<String, Any?>>()
 
-        participants[currentUser.uid] = participantMap(
+        participants[currentUser.uid] = SocialThreadParticipantResolver.participantMap(
             uid = currentUser.uid,
             userName = currentUserName,
             photoUrl = currentPhotoUrl
         )
 
         uniqueSelectedUsers.forEach { user ->
-            participants[user.id] = participantMap(
+            participants[user.id] = SocialThreadParticipantResolver.participantMap(
                 uid = user.id,
                 userName = user.userName,
                 photoUrl = user.photoUrl
@@ -1463,7 +1463,7 @@ class SocialRepository {
         )
 
         newUsers.forEach { user ->
-            updates["participants.${user.id}"] = participantMap(
+            updates["participants.${user.id}"] = SocialThreadParticipantResolver.participantMap(
                 uid = user.id,
                 userName = user.userName,
                 photoUrl = user.photoUrl
@@ -3755,26 +3755,6 @@ class SocialRepository {
         return (get(field) as? List<*>)
             ?.mapNotNull { it as? String }
             .orEmpty()
-    }
-
-    private fun directThreadId(
-        firstUserId: String,
-        secondUserId: String
-    ): String {
-        val sortedIds = listOf(firstUserId, secondUserId).sorted()
-        return "direct_${sortedIds[0]}_${sortedIds[1]}"
-    }
-
-    private fun participantMap(
-        uid: String,
-        userName: String,
-        photoUrl: String?
-    ): Map<String, Any?> {
-        return mapOf(
-            "uid" to uid,
-            "userName" to userName.ifBlank { "fitto_user" },
-            "photoUrl" to photoUrl
-        )
     }
 
     companion object {
