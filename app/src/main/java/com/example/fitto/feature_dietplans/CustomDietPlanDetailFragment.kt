@@ -212,11 +212,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         val isSaved = preferenceStore.isFavorite(plan.id)
 
         savePlanButton.text = getString(
-            if (isSaved) {
-                R.string.custom_diet_detail_saved
-            } else {
-                R.string.diet_plan_detail_save_plan
-            }
+            CustomDietPlanDetailButtonStateResolver.save(isSaved).textRes
         )
     }
 
@@ -224,16 +220,11 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         val plan = currentPlan ?: return@with
         val isActive = preferenceStore.getActivePlanId() == plan.id
 
-        applyPlanButton.text = getString(
-            if (isActive) {
-                R.string.diet_plans_applied
-            } else {
-                R.string.diet_plans_apply
-            }
-        )
+        val buttonState = CustomDietPlanDetailButtonStateResolver.apply(isActive)
 
-        applyPlanButton.isEnabled = !isActive
-        applyPlanButton.alpha = if (isActive) 0.72f else 1f
+        applyPlanButton.text = getString(buttonState.textRes)
+        applyPlanButton.isEnabled = buttonState.isEnabled
+        applyPlanButton.alpha = buttonState.alpha
     }
 
     private fun notifyDietPlanChanged(
