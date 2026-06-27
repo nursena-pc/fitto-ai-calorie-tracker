@@ -25,8 +25,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.abs
@@ -616,7 +614,7 @@ class SocialRepository {
                     val title = user.userName.ifBlank { thread.title }
                     thread.copy(
                         title = title,
-                        initials = createInitials(title),
+                        initials = SocialTextResolver.createInitials(title),
                         photoUrl = user.photoUrl
                     )
                 }
@@ -658,7 +656,7 @@ class SocialRepository {
                             timeText = frozenPreview
                                 ?.createdAt
                                 ?.takeIf { it > 0L }
-                                ?.let { formatRelativeTime(it) }
+                                ?.let { SocialTextResolver.formatRelativeTime(it) }
                                 .orEmpty(),
                             unreadCount = 0,
                             highlightText = null
@@ -798,7 +796,7 @@ class SocialRepository {
                     ChatMessageUiModel(
                         id = document.id,
                         text = messageText,
-                        timeText = formatClockTime(createdAt),
+                        timeText = SocialTextResolver.formatClockTime(createdAt),
                         senderId = senderId,
                         senderName = document.getString("senderName").orEmpty()
                             .ifBlank { participantNames[senderId] ?: "Fitto" },
@@ -2072,7 +2070,7 @@ class SocialRepository {
 
     suspend fun searchUsers(query: String): List<SearchUserUiModel> {
         val currentUserId = auth.currentUser?.uid.orEmpty()
-        val normalizedQuery = normalizeUsername(query)
+        val normalizedQuery = SocialTextResolver.normalizeUsername(query)
 
         if (normalizedQuery.length < 2) return emptyList()
 
@@ -2110,7 +2108,7 @@ class SocialRepository {
         val snapshot = userRef.get().await()
 
         if (!snapshot.exists()) {
-            val publicUserName = normalizeUsername(
+            val publicUserName = SocialTextResolver.normalizeUsername(
                 user.email?.substringBefore("@")
                     ?: user.displayName
                     ?: "fitto_user"
@@ -3202,8 +3200,8 @@ class SocialRepository {
         bio: String
     ) {
         val user = auth.currentUser ?: return
-        val newVisibleName = normalizeUsername(displayName)
-        validateVisibleName(newVisibleName)
+        val newVisibleName = SocialTextResolver.normalizeUsername(displayName)
+        SocialTextResolver.validateVisibleName(newVisibleName)
 
         val cleanBio = bio.trim().take(160)
         val now = System.currentTimeMillis()
@@ -3217,7 +3215,7 @@ class SocialRepository {
                 add(userSnapshot.getString("username"))
                 add(userSnapshot.getString("displayName"))
             }.filterNotNull()
-                .map { normalizeUsername(it) }
+                .map { SocialTextResolver.normalizeUsername(it) }
                 .filter { it.isNotBlank() }
                 .toSet()
 
@@ -3804,11 +3802,11 @@ class SocialRepository {
             lastMessage = lastMessage,
             timeText = lastMessageCreatedAt
                 .takeIf { it > 0L }
-                ?.let { formatRelativeTime(it) }
+                ?.let { SocialTextResolver.formatRelativeTime(it) }
                 .orEmpty(),
             isGroup = isGroup,
             highlightText = if (unreadCount > 0) "$unreadCount yeni" else null,
-            initials = createInitials(title),
+            initials = SocialTextResolver.createInitials(title),
             unreadCount = unreadCount,
             participantIds = participantIds,
             otherParticipantId = if (isGroup) null else otherUserId,
@@ -3879,80 +3877,6 @@ class SocialRepository {
             "userName" to userName.ifBlank { "fitto_user" },
             "photoUrl" to photoUrl
         )
-    }
-
-    private fun createInitials(value: String): String {
-        val parts = value
-            .replace("@", "")
-            .split(" ", ".", "_", "-")
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-
-        val initials = parts
-            .take(2)
-            .mapNotNull { it.firstOrNull()?.uppercase(Locale("tr", "TR")) }
-            .joinToString("")
-
-        return initials.ifBlank {
-            value.firstOrNull()?.uppercase(Locale("tr", "TR")) ?: "F"
-        }
-    }
-
-    private fun formatRelativeTime(timeMillis: Long): String {
-        if (timeMillis <= 0L) return ""
-
-        val diffMillis = (System.currentTimeMillis() - timeMillis).coerceAtLeast(0L)
-        val diffMinutes = diffMillis / (1000L * 60L)
-        val diffHours = diffMinutes / 60L
-        val diffDays = diffHours / 24L
-
-        return when {
-            diffMinutes < 1L -> "şimdi"
-            diffMinutes < 60L -> "$diffMinutes dk"
-            diffHours < 24L -> "$diffHours sa"
-            diffDays == 1L -> "Dün"
-            diffDays < 7L -> "$diffDays gün"
-            else -> SimpleDateFormat("dd MMM", Locale("tr", "TR")).format(Date(timeMillis))
-        }
-    }
-
-    private fun formatClockTime(timeMillis: Long): String {
-        if (timeMillis <= 0L) return "şimdi"
-        return SimpleDateFormat("HH:mm", Locale("tr", "TR")).format(Date(timeMillis))
-    }
-
-    private fun validateVisibleName(value: String) {
-        if (value.length < 3 || value.length > 20) {
-            throw IllegalArgumentException("VISIBLE_NAME_LENGTH")
-        }
-
-        if (!Regex("^[a-z0-9._]+$").matches(value)) {
-            throw IllegalArgumentException("VISIBLE_NAME_INVALID")
-        }
-
-        if (value.startsWith('.') || value.startsWith('_') ||
-            value.endsWith('.') || value.endsWith('_')
-        ) {
-            throw IllegalArgumentException("VISIBLE_NAME_INVALID")
-        }
-    }
-
-    private fun normalizeUsername(value: String): String {
-        return value
-            .removePrefix("@")
-            .trim()
-            .lowercase(Locale.ROOT)
-            .replace("ğ", "g")
-            .replace("ü", "u")
-            .replace("ş", "s")
-            .replace("ı", "i")
-            .replace("ö", "o")
-            .replace("ç", "c")
-            .replace(Regex("\\s+"), ".")
-            .replace(Regex("[^a-z0-9._]"), "")
-            .replace(Regex("[.]{2,}"), ".")
-            .replace(Regex("[_]{2,}"), "_")
-            .trim()
     }
 
     companion object {
