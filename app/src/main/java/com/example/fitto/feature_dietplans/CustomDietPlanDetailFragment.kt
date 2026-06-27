@@ -10,7 +10,6 @@ import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlin.math.roundToInt
 
 class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan_detail) {
 
@@ -75,56 +74,58 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
     }
 
     private fun bindPlan(plan: CustomDietPlanLocalModel) = with(binding) {
+        val detail = CustomDietPlanDetailMapper.map(plan)
+
         heroCoverImage.setImageResource(R.drawable.my_plan)
-        heroTitle.text = plan.title
+        heroTitle.text = detail.title
 
         badgeCaloriesText.text = getString(
             R.string.custom_diet_detail_badge_calorie,
-            plan.dailyCalories
+            detail.dailyCalories
         )
 
         badgeDurationText.text = resources.getQuantityString(
             R.plurals.diet_plans_day_count,
-            plan.durationDays,
-            plan.durationDays
+            detail.durationDays,
+            detail.durationDays
         )
 
         badgeMealsText.text = getString(
             R.string.custom_diet_detail_badge_meal,
-            plan.mealCount
+            detail.mealCount
         )
 
-        descriptionText.text = plan.description
+        descriptionText.text = detail.description
             .takeIf { it.isNotBlank() }
             ?: getString(R.string.diet_plan_custom_default_desc)
 
-        goalText.text = goalLabel(plan.goalType)
+        goalText.setText(detail.goal.titleRes)
 
         macroCarbValueText.text = getString(
             R.string.custom_diet_detail_macro_gram,
-            carbTarget(plan)
+            detail.macroTargets.carbGrams
         )
         macroProteinValueText.text = getString(
             R.string.custom_diet_detail_macro_gram,
-            proteinTarget(plan)
+            detail.macroTargets.proteinGrams
         )
         macroFatValueText.text = getString(
             R.string.custom_diet_detail_macro_gram,
-            fatTarget(plan)
+            detail.macroTargets.fatGrams
         )
 
-        preferencesText.text = plan.preferences
+        preferencesText.text = detail.preferences
             .map { preferenceLabel(it) }
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" • ")
             ?: getString(R.string.custom_diet_detail_none)
 
-        exclusionsText.text = plan.exclusions
+        exclusionsText.text = detail.exclusions
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" • ")
             ?: getString(R.string.custom_diet_detail_no_exclusion)
 
-        mealOrderText.text = plan.mealOrder
+        mealOrderText.text = detail.mealOrder
             .mapIndexed { index, meal ->
                 "${index + 1}. ${mealLabel(meal)}"
             }
@@ -256,17 +257,6 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         )
     }
 
-    private fun goalLabel(goalType: String): String {
-        return when (goalType.uppercase()) {
-            "WEIGHT_LOSS" -> getString(R.string.create_diet_plan_goal_weight_loss)
-            "WEIGHT_GAIN" -> getString(R.string.create_diet_plan_goal_weight_gain)
-            "MUSCLE" -> getString(R.string.create_diet_plan_goal_muscle)
-            "MAINTAIN" -> getString(R.string.create_diet_plan_goal_maintain)
-            "BALANCED" -> getString(R.string.create_diet_plan_goal_balanced)
-            else -> getString(R.string.create_diet_plan_goal_balanced)
-        }
-    }
-
     private fun preferenceLabel(preference: String): String {
         return when (preference) {
             "vegetarian" -> getString(R.string.custom_diet_detail_preference_vegetarian)
@@ -287,18 +277,6 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
             "dinner" -> getString(R.string.create_post_dinner)
             else -> meal
         }
-    }
-
-    private fun carbTarget(plan: CustomDietPlanLocalModel): Int {
-        return ((plan.dailyCalories * 0.45) / 4.0).roundToInt()
-    }
-
-    private fun proteinTarget(plan: CustomDietPlanLocalModel): Int {
-        return ((plan.dailyCalories * 0.25) / 4.0).roundToInt()
-    }
-
-    private fun fatTarget(plan: CustomDietPlanLocalModel): Int {
-        return ((plan.dailyCalories * 0.30) / 9.0).roundToInt()
     }
 
     override fun onDestroyView() {
