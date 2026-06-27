@@ -31,39 +31,20 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
     private fun toggleSaveCurrentPlan() {
         val detail = DietPlanDetailCatalog.get(currentPlanId) ?: return
         val favoriteResult = dietPlanPreferenceAction.toggleFavorite(currentPlanId)
-
-        renderSaveState()
-
-        Toast.makeText(
-            requireContext(),
-            getString(
-                if (favoriteResult.isFavorite) {
-                    R.string.diet_plans_favorite_added_message
-                } else {
-                    R.string.diet_plans_favorite_removed_message
-                },
-                getString(detail.titleRes)
-            ),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        parentFragmentManager.setFragmentResult(
-            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, favoriteResult.activePlanId)
-            }
+        applyDetailEffect(
+            DietPlanDetailEffectResolver.favoriteToggled(
+                planTitle = getString(detail.titleRes),
+                result = favoriteResult
+            )
         )
     }
 
     private fun renderSaveState() = with(binding) {
-        val isSaved = preferenceStore.isFavorite(currentPlanId)
-
-        savePlanButton.text = getString(
-            if (isSaved) R.string.diet_plan_detail_saved_plan
-            else R.string.diet_plan_detail_save_plan
+        val state = DietPlanDetailEffectResolver.saveButtonState(
+            isSaved = preferenceStore.isFavorite(currentPlanId)
         )
-
-        savePlanButton.alpha = if (isSaved) 0.86f else 1f
+        savePlanButton.setText(state.labelRes)
+        savePlanButton.alpha = state.alpha
     }
     private fun bindPlanDetail(planId: String) = with(binding) {
         val detail = DietPlanDetailCatalog.get(planId) ?: return@with
@@ -167,21 +148,37 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
     private fun applyCurrentPlan() {
         val detail = DietPlanDetailCatalog.get(currentPlanId) ?: return
         val applyResult = dietPlanPreferenceAction.applyPlan(currentPlanId)
-
-        parentFragmentManager.setFragmentResult(
-            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
-            }
+        applyDetailEffect(
+            DietPlanDetailEffectResolver.planApplied(
+                planTitle = getString(detail.titleRes),
+                result = applyResult
+            )
         )
+    }
 
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.diet_plans_apply_success_message, getString(detail.titleRes)),
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun applyDetailEffect(effect: DietPlanDetailEffect) {
+        if (effect.shouldRenderSaveState) {
+            renderSaveState()
+        }
 
-        parentFragmentManager.popBackStack()
+        if (effect.shouldNotifyDietPlanChanged) {
+            parentFragmentManager.setFragmentResult(
+                DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+                Bundle().apply {
+                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, effect.activePlanId)
+                }
+            )
+        }
+
+        effect.toastMessageRes?.let { messageRes ->
+            val title = effect.toastPlanTitle
+            val message = if (title == null) getString(messageRes) else getString(messageRes, title)
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+
+        if (effect.shouldCloseScreen) {
+            parentFragmentManager.popBackStack()
+        }
     }
 
     override fun onDestroyView() {
