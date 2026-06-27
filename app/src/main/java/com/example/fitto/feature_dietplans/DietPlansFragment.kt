@@ -81,26 +81,12 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             },
             onFavoriteClick = { plan ->
                 val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
-
-                val planTitle = plan.titleText
-                    ?: plan.titleRes?.let { getString(it) }
-                    ?: getString(R.string.app_name)
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(
-                        if (favoriteResult.isFavorite) {
-                            R.string.diet_plans_favorite_added_message
-                        } else {
-                            R.string.diet_plans_favorite_removed_message
-                        },
-                        planTitle
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                loadDietPlans()
-                setupPersonalizedRecommendation()
+                renderListEffect(
+                    DietPlansListEffectResolver.favoriteToggled(
+                        planTitle = titleTextForPlan(plan),
+                        result = favoriteResult
+                    )
+                )
             },
             onDeleteClick = { plan ->
                 confirmDeleteCustomPlan(plan)
@@ -134,24 +120,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
 
         customDietPlanStore.savePlan(completedPlan)
 
-        parentFragmentManager.setFragmentResult(
-            REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(BUNDLE_SELECT_TAB, TAB_MY)
-            }
-        )
-
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.diet_plans_draft_completed),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        selectedTab = DietPlanTab.MY
-        binding.planChipGroup.check(R.id.chipMyPlans)
-
-        loadDietPlans()
-        setupPersonalizedRecommendation()
+        renderListEffect(DietPlansListEffectResolver.draftCompleted())
     }
 
     private fun setupClicks() = with(binding) {
@@ -374,57 +343,63 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun deleteCustomPlan(plan: DietPlanUiModel) {
-        when (val result = customPlanDeletionAction.delete(plan.id)) {
-            is CustomDietPlanDeletionResult.Deleted -> {
-                parentFragmentManager.setFragmentResult(
-                    REQUEST_DIET_PLAN_CHANGED,
-                    Bundle().apply {
-                        putString(BUNDLE_ACTIVE_PLAN_ID, result.activePlanId)
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_success),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                loadDietPlans()
-                setupPersonalizedRecommendation()
-            }
-
-            is CustomDietPlanDeletionResult.Failed -> {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_error),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
-        }
+        val result = customPlanDeletionAction.delete(plan.id)
+        renderListEffect(DietPlansListEffectResolver.customPlanDeleted(result))
     }
     private fun applyDietPlan(
         planId: String,
         planTitle: String
     ) {
         val applyResult = dietPlanPreferenceAction.applyPlan(planId)
-
-        parentFragmentManager.setFragmentResult(
-            REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
-            }
+        renderListEffect(
+            DietPlansListEffectResolver.planApplied(
+                planTitle = planTitle,
+                result = applyResult
+            )
         )
+    }
 
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.diet_plans_apply_success, planTitle),
-            Toast.LENGTH_SHORT
-        ).show()
 
-        loadDietPlans()
-        setupPersonalizedRecommendation()
+    private fun renderListEffect(effect: DietPlansListEffect) {
+        if (effect.shouldNotifyDietPlanChanged) {
+            parentFragmentManager.setFragmentResult(
+                REQUEST_DIET_PLAN_CHANGED,
+                Bundle().apply {
+                    effect.activePlanId?.let { activePlanId ->
+                        putString(BUNDLE_ACTIVE_PLAN_ID, activePlanId)
+                    }
+                    effect.selectTab?.let { selectTab ->
+                        putString(BUNDLE_SELECT_TAB, selectTab)
+                    }
+                }
+            )
+        }
+
+        effect.toastMessageRes?.let { messageRes ->
+            Toast.makeText(
+                requireContext(),
+                effect.toastPlanTitle?.let { planTitle ->
+                    getString(messageRes, planTitle)
+                } ?: getString(messageRes),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        effect.selectedTab?.let { tab ->
+            selectedTab = tab
+        }
+
+        effect.checkedChipId?.let { chipId ->
+            binding.planChipGroup.check(chipId)
+        }
+
+        if (effect.shouldReloadPlans) {
+            loadDietPlans()
+        }
+
+        if (effect.shouldRefreshRecommendation) {
+            setupPersonalizedRecommendation()
+        }
     }
 
     private fun openRecommendedPlanDetail(planId: String) {
