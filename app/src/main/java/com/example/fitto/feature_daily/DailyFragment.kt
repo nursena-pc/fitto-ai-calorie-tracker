@@ -2185,23 +2185,24 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     )
                 }
             }.onSuccess {
+                val effect = DailyPlannedMealApplyResultResolver.resolveSuccess(applyRequest)
+
                 markPlannedMealCompleted(applyRequest.completion)
 
                 Toast.makeText(
                     requireContext(),
-                    getString(
-                        R.string.daily_planned_meal_applied_message,
-                        getString(applyRequest.mealTypeTitleRes)
-                    ),
+                    getString(effect.messageRes, getString(effect.mealTypeTitleRes)),
                     Toast.LENGTH_SHORT
                 ).show()
 
-                renderMealTotals()
-                renderActivePlan()
+                if (effect.refreshMealTotals) renderMealTotals()
+                if (effect.refreshActivePlan) renderActivePlan()
             }.onFailure {
+                val effect = DailyPlannedMealApplyResultResolver.resolveFailure()
+
                 Toast.makeText(
                     requireContext(),
-                    getString(R.string.daily_planned_meal_save_error_message),
+                    getString(effect.messageRes),
                     Toast.LENGTH_SHORT
                 ).show()
             }
