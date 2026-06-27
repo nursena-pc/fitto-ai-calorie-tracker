@@ -208,21 +208,15 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             DietPlanFilterFragment.REQUEST_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
-            activeFilterState = if (bundle.getBoolean(DietPlanFilterFragment.BUNDLE_CLEAR_FILTER, false)) {
-                null
-            } else {
-                DietPlanFilterState(
-                    goal = bundle.getString(DietPlanFilterFragment.BUNDLE_GOAL).orEmpty(),
-                    duration = bundle.getInt(DietPlanFilterFragment.BUNDLE_DURATION, 0),
-                    type = bundle.getString(DietPlanFilterFragment.BUNDLE_TYPE).orEmpty(),
-                    features = bundle
-                        .getStringArrayList(DietPlanFilterFragment.BUNDLE_FEATURES)
-                        .orEmpty()
-                        .toSet(),
-                    minCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MIN_CALORIES, 0),
-                    maxCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MAX_CALORIES, Int.MAX_VALUE)
-                )
-            }
+            activeFilterState = DietPlanFilterResultMapper.fromResult(
+                clearFilters = bundle.getBoolean(DietPlanFilterFragment.BUNDLE_CLEAR_FILTER, false),
+                goal = bundle.getString(DietPlanFilterFragment.BUNDLE_GOAL),
+                duration = bundle.getInt(DietPlanFilterFragment.BUNDLE_DURATION, 0),
+                type = bundle.getString(DietPlanFilterFragment.BUNDLE_TYPE),
+                features = bundle.getStringArrayList(DietPlanFilterFragment.BUNDLE_FEATURES),
+                minCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MIN_CALORIES, 0),
+                maxCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MAX_CALORIES, Int.MAX_VALUE)
+            )
 
             applyVisiblePlans()
         }
