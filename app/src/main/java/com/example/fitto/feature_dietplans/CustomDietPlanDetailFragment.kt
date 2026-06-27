@@ -139,37 +139,24 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         val plan = currentPlan ?: return
         val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
 
-        renderSaveState()
-
-        Toast.makeText(
-            requireContext(),
-            getString(
-                if (favoriteResult.isFavorite) {
-                    R.string.diet_plans_favorite_added_message
-                } else {
-                    R.string.diet_plans_favorite_removed_message
-                },
-                plan.title
-            ),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        notifyDietPlanChanged(activePlanId = favoriteResult.activePlanId)
+        renderDetailEffect(
+            CustomDietPlanDetailEffectResolver.favoriteToggled(
+                planTitle = plan.title,
+                result = favoriteResult
+            )
+        )
     }
 
     private fun applyPlan() {
         val plan = currentPlan ?: return
-
         val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
 
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.diet_plans_apply_success, plan.title),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        notifyDietPlanChanged(activePlanId = applyResult.activePlanId)
-        renderApplyState()
+        renderDetailEffect(
+            CustomDietPlanDetailEffectResolver.planApplied(
+                planTitle = plan.title,
+                result = applyResult
+            )
+        )
     }
 
     private fun confirmDelete() {
@@ -189,28 +176,35 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
     }
 
     private fun deletePlan(plan: CustomDietPlanLocalModel) {
-        when (val result = customPlanDeletionAction.delete(plan.id)) {
-            is CustomDietPlanDeletionResult.Deleted -> {
-                notifyDietPlanChanged(activePlanId = result.activePlanId)
+        val result = customPlanDeletionAction.delete(plan.id)
+        renderDetailEffect(CustomDietPlanDetailEffectResolver.planDeleted(result))
+    }
 
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_success),
-                    Toast.LENGTH_SHORT
-                ).show()
+    private fun renderDetailEffect(effect: CustomDietPlanDetailEffect) {
+        if (effect.shouldRenderSaveState) {
+            renderSaveState()
+        }
 
-                parentFragmentManager.popBackStack()
-            }
+        if (effect.shouldNotifyDietPlanChanged) {
+            notifyDietPlanChanged(activePlanId = effect.activePlanId)
+        }
 
-            is CustomDietPlanDeletionResult.Failed -> {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_error),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        effect.toastMessageRes?.let { messageRes ->
+            Toast.makeText(
+                requireContext(),
+                effect.toastPlanTitle?.let { planTitle ->
+                    getString(messageRes, planTitle)
+                } ?: getString(messageRes),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
-            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
+        if (effect.shouldRenderApplyState) {
+            renderApplyState()
+        }
+
+        if (effect.shouldCloseScreen) {
+            parentFragmentManager.popBackStack()
         }
     }
 
