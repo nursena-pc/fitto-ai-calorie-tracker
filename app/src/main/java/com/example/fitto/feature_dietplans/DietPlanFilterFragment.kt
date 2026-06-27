@@ -16,13 +16,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     private var _binding: FragmentDietPlanFilterBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedGoal: String = FilterOptions.DEFAULT_GOAL
-    private var selectedDuration: Int = FilterOptions.DEFAULT_DURATION
-    private var selectedType: String = FilterOptions.DEFAULT_TYPE
-    private val selectedFeatures = mutableSetOf<String>()
-
-    private var minCalories: Int = FilterOptions.DEFAULT_MIN_CALORIES
-    private var maxCalories: Int = FilterOptions.DEFAULT_MAX_CALORIES
+    private val filterStateStore = DietPlanFilterStateStore()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -37,7 +31,8 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         calorieRangeSlider.valueFrom = 800f
         calorieRangeSlider.valueTo = 3000f
         calorieRangeSlider.stepSize = 100f
-        calorieRangeSlider.values = listOf(minCalories.toFloat(), maxCalories.toFloat())
+        val state = filterStateStore.current()
+        calorieRangeSlider.values = listOf(state.minCalories.toFloat(), state.maxCalories.toFloat())
 
         updateCalorieTexts()
 
@@ -48,7 +43,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
                 goalMuscleButton,
                 goalBalancedButton
             ),
-            selectedButton = goalWeightLossButton
+            selectedButton = goalButtonFor(state.goal)
         )
 
         selectSingleButton(
@@ -58,7 +53,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
                 duration21Button,
                 duration30Button
             ),
-            selectedButton = duration14Button
+            selectedButton = durationButtonFor(state.duration)
         )
 
         selectSingleButton(
@@ -69,14 +64,13 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
                 typeKetoButton,
                 typePlantBasedButton
             ),
-            selectedButton = typeMediterraneanButton
+            selectedButton = typeButtonFor(state.type)
         )
 
-        setToggleButtonSelected(featureHeartButton, true)
-        setToggleButtonSelected(featureLowSodiumButton, false)
-        setToggleButtonSelected(featureHighProteinButton, false)
-        setToggleButtonSelected(featureEasyButton, false)
-        selectedFeatures.add(FilterOptions.FEATURE_HEART_FRIENDLY)
+        setToggleButtonSelected(featureHeartButton, FilterOptions.FEATURE_HEART_FRIENDLY in state.features)
+        setToggleButtonSelected(featureLowSodiumButton, FilterOptions.FEATURE_LOW_SODIUM in state.features)
+        setToggleButtonSelected(featureHighProteinButton, FilterOptions.FEATURE_HIGH_PROTEIN in state.features)
+        setToggleButtonSelected(featureEasyButton, FilterOptions.FEATURE_EASY in state.features)
     }
 
     private fun setupClicks() = with(binding) {
@@ -85,7 +79,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalWeightLossButton.setOnClickListener {
-            selectedGoal = FilterOptions.GOAL_WEIGHT_LOSS
+            filterStateStore.selectGoal(FilterOptions.GOAL_WEIGHT_LOSS)
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalWeightLossButton
@@ -93,7 +87,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalWeightGainButton.setOnClickListener {
-            selectedGoal = FilterOptions.GOAL_WEIGHT_GAIN
+            filterStateStore.selectGoal(FilterOptions.GOAL_WEIGHT_GAIN)
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalWeightGainButton
@@ -101,7 +95,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalMuscleButton.setOnClickListener {
-            selectedGoal = FilterOptions.GOAL_MUSCLE_GAIN
+            filterStateStore.selectGoal(FilterOptions.GOAL_MUSCLE_GAIN)
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalMuscleButton
@@ -109,7 +103,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         goalBalancedButton.setOnClickListener {
-            selectedGoal = FilterOptions.GOAL_BALANCED
+            filterStateStore.selectGoal(FilterOptions.GOAL_BALANCED)
             selectSingleButton(
                 listOf(goalWeightLossButton, goalWeightGainButton, goalMuscleButton, goalBalancedButton),
                 goalBalancedButton
@@ -117,7 +111,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         duration7Button.setOnClickListener {
-            selectedDuration = 7
+            filterStateStore.selectDuration(7)
             selectSingleButton(
                 listOf(duration7Button, duration14Button, duration21Button, duration30Button),
                 duration7Button
@@ -125,7 +119,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         duration14Button.setOnClickListener {
-            selectedDuration = 14
+            filterStateStore.selectDuration(14)
             selectSingleButton(
                 listOf(duration7Button, duration14Button, duration21Button, duration30Button),
                 duration14Button
@@ -133,7 +127,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         duration21Button.setOnClickListener {
-            selectedDuration = 21
+            filterStateStore.selectDuration(21)
             selectSingleButton(
                 listOf(duration7Button, duration14Button, duration21Button, duration30Button),
                 duration21Button
@@ -141,7 +135,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         duration30Button.setOnClickListener {
-            selectedDuration = 30
+            filterStateStore.selectDuration(30)
             selectSingleButton(
                 listOf(duration7Button, duration14Button, duration21Button, duration30Button),
                 duration30Button
@@ -149,7 +143,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeMediterraneanButton.setOnClickListener {
-            selectedType = FilterOptions.TYPE_MEDITERRANEAN
+            filterStateStore.selectType(FilterOptions.TYPE_MEDITERRANEAN)
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeMediterraneanButton
@@ -157,7 +151,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeDashButton.setOnClickListener {
-            selectedType = FilterOptions.TYPE_DASH
+            filterStateStore.selectType(FilterOptions.TYPE_DASH)
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeDashButton
@@ -165,7 +159,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeFastingButton.setOnClickListener {
-            selectedType = FilterOptions.TYPE_INTERMITTENT_FASTING
+            filterStateStore.selectType(FilterOptions.TYPE_INTERMITTENT_FASTING)
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeFastingButton
@@ -173,7 +167,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typeKetoButton.setOnClickListener {
-            selectedType = FilterOptions.TYPE_KETOGENIC
+            filterStateStore.selectType(FilterOptions.TYPE_KETOGENIC)
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typeKetoButton
@@ -181,7 +175,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         }
 
         typePlantBasedButton.setOnClickListener {
-            selectedType = FilterOptions.TYPE_PLANT_BASED
+            filterStateStore.selectType(FilterOptions.TYPE_PLANT_BASED)
             selectSingleButton(
                 listOf(typeMediterraneanButton, typeDashButton, typeFastingButton, typeKetoButton, typePlantBasedButton),
                 typePlantBasedButton
@@ -216,15 +210,45 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     private fun setupCalorieSlider() = with(binding) {
         calorieRangeSlider.addOnChangeListener { slider, _, _ ->
             val values = slider.values
-            minCalories = values.getOrNull(0)?.toInt() ?: FilterOptions.DEFAULT_MIN_CALORIES
-            maxCalories = values.getOrNull(1)?.toInt() ?: FilterOptions.DEFAULT_MAX_CALORIES
+            val minCalories = values.getOrNull(0)?.toInt() ?: FilterOptions.DEFAULT_MIN_CALORIES
+            val maxCalories = values.getOrNull(1)?.toInt() ?: FilterOptions.DEFAULT_MAX_CALORIES
+            filterStateStore.setCalorieRange(minCalories, maxCalories)
             updateCalorieTexts()
         }
     }
 
     private fun updateCalorieTexts() = with(binding) {
-        minCalorieText.text = getString(R.string.diet_filter_calorie_value, minCalories)
-        maxCalorieText.text = getString(R.string.diet_filter_calorie_value, maxCalories)
+        val state = filterStateStore.current()
+        minCalorieText.text = getString(R.string.diet_filter_calorie_value, state.minCalories)
+        maxCalorieText.text = getString(R.string.diet_filter_calorie_value, state.maxCalories)
+    }
+
+    private fun goalButtonFor(goal: String): MaterialButton = with(binding) {
+        when (goal) {
+            FilterOptions.GOAL_WEIGHT_GAIN -> goalWeightGainButton
+            FilterOptions.GOAL_MUSCLE_GAIN -> goalMuscleButton
+            FilterOptions.GOAL_BALANCED -> goalBalancedButton
+            else -> goalWeightLossButton
+        }
+    }
+
+    private fun durationButtonFor(duration: Int): MaterialButton = with(binding) {
+        when (duration) {
+            7 -> duration7Button
+            21 -> duration21Button
+            30 -> duration30Button
+            else -> duration14Button
+        }
+    }
+
+    private fun typeButtonFor(type: String): MaterialButton = with(binding) {
+        when (type) {
+            FilterOptions.TYPE_DASH -> typeDashButton
+            FilterOptions.TYPE_INTERMITTENT_FASTING -> typeFastingButton
+            FilterOptions.TYPE_KETOGENIC -> typeKetoButton
+            FilterOptions.TYPE_PLANT_BASED -> typePlantBasedButton
+            else -> typeMediterraneanButton
+        }
     }
 
     private fun selectSingleButton(
@@ -237,15 +261,8 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     }
 
     private fun toggleFeature(feature: String, button: MaterialButton) {
-        val willSelect = selectedFeatures.contains(feature).not()
-
-        if (willSelect) {
-            selectedFeatures.add(feature)
-        } else {
-            selectedFeatures.remove(feature)
-        }
-
-        setToggleButtonSelected(button, willSelect)
+        val isSelected = filterStateStore.toggleFeature(feature)
+        setToggleButtonSelected(button, isSelected)
     }
 
     private fun setToggleButtonSelected(button: MaterialButton, isSelected: Boolean) {
@@ -267,20 +284,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     }
 
     private fun resetFilters() = with(binding) {
-        selectedGoal = FilterOptions.DEFAULT_GOAL
-        selectedDuration = FilterOptions.DEFAULT_DURATION
-        selectedType = FilterOptions.DEFAULT_TYPE
-        selectedFeatures.clear()
-        selectedFeatures.addAll(FilterOptions.DEFAULT_FEATURES)
-
-        minCalories = FilterOptions.DEFAULT_MIN_CALORIES
-        maxCalories = FilterOptions.DEFAULT_MAX_CALORIES
-        calorieRangeSlider.valueFrom = 800f
-        calorieRangeSlider.valueTo = 3000f
-        calorieRangeSlider.stepSize = 100f
-        calorieRangeSlider.values = listOf(minCalories.toFloat(), maxCalories.toFloat())
-        updateCalorieTexts()
-
+        filterStateStore.reset()
         setupInitialUi()
 
         parentFragmentManager.setFragmentResult(
@@ -303,12 +307,13 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
         parentFragmentManager.setFragmentResult(
             REQUEST_KEY,
             Bundle().apply {
-                putString(BUNDLE_GOAL, selectedGoal)
-                putInt(BUNDLE_DURATION, selectedDuration)
-                putString(BUNDLE_TYPE, selectedType)
-                putStringArrayList(BUNDLE_FEATURES, ArrayList(selectedFeatures))
-                putInt(BUNDLE_MIN_CALORIES, minCalories)
-                putInt(BUNDLE_MAX_CALORIES, maxCalories)
+                val state = filterStateStore.current()
+                putString(BUNDLE_GOAL, state.goal)
+                putInt(BUNDLE_DURATION, state.duration)
+                putString(BUNDLE_TYPE, state.type)
+                putStringArrayList(BUNDLE_FEATURES, ArrayList(state.features))
+                putInt(BUNDLE_MIN_CALORIES, state.minCalories)
+                putInt(BUNDLE_MAX_CALORIES, state.maxCalories)
             }
         )
 
