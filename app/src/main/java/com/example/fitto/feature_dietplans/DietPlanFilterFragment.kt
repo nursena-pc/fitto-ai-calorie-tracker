@@ -286,28 +286,37 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
     private fun resetFilters() = with(binding) {
         filterStateStore.reset()
         setupInitialUi()
+        handleResultEffect(DietPlanFilterResultAction.reset())
+    }
 
+    private fun applyFilters() {
+        handleResultEffect(DietPlanFilterResultAction.apply(filterStateStore.current()))
+    }
+
+    private fun handleResultEffect(effect: DietPlanFilterResultEffect) {
         parentFragmentManager.setFragmentResult(
             REQUEST_KEY,
-            Bundle().apply {
-                putBoolean(BUNDLE_CLEAR_FILTER, true)
-            }
+            effect.toBundle()
         )
 
         Toast.makeText(
             requireContext(),
-            getString(R.string.diet_filter_reset_mock),
+            getString(effect.toastResId),
             Toast.LENGTH_SHORT
         ).show()
 
-        parentFragmentManager.popBackStack()
+        if (effect.closeScreen) {
+            parentFragmentManager.popBackStack()
+        }
     }
 
-    private fun applyFilters() {
-        parentFragmentManager.setFragmentResult(
-            REQUEST_KEY,
-            Bundle().apply {
-                val state = filterStateStore.current()
+    private fun DietPlanFilterResultEffect.toBundle(): Bundle {
+        return Bundle().apply {
+            if (clearFilters) {
+                putBoolean(BUNDLE_CLEAR_FILTER, true)
+            }
+
+            state?.let { state ->
                 putString(BUNDLE_GOAL, state.goal)
                 putInt(BUNDLE_DURATION, state.duration)
                 putString(BUNDLE_TYPE, state.type)
@@ -315,15 +324,7 @@ class DietPlanFilterFragment : Fragment(R.layout.fragment_diet_plan_filter) {
                 putInt(BUNDLE_MIN_CALORIES, state.minCalories)
                 putInt(BUNDLE_MAX_CALORIES, state.maxCalories)
             }
-        )
-
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.diet_filter_apply_success),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        parentFragmentManager.popBackStack()
+        }
     }
 
     private fun dp(value: Int): Int {
