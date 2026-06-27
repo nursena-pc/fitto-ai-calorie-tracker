@@ -55,7 +55,6 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.example.fitto.feature_exercise.AddExerciseFragment
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
@@ -1075,12 +1074,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         ) { _, bundle ->
             val entryDate = bundle.getString(AddExerciseFragment.BUNDLE_EXERCISE_DATE)
 
-            if (!entryDate.isNullOrBlank()) {
-                selectedDateIso = entryDate
-                selectedDate = runCatching { LocalDate.parse(entryDate) }
-                    .getOrDefault(selectedDate)
-                renderSelectedDate()
-            }
+            applySelectedDateFromEntry(entryDate)
 
             loadHealthConnectSummary()
             renderMealTotals()
@@ -1134,33 +1128,49 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 .atZone(ZoneOffset.UTC)
                 .toLocalDate()
 
-            if (pickedDate.isAfter(LocalDate.now())) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.daily_future_date_blocked),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@addOnPositiveButtonClickListener
-            }
+            when (DailyDateSelectionResolver.resolvePickedDate(pickedDate)) {
+                DailyDateSelectionResolver.PickedDateResult.FutureDate -> {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.daily_future_date_blocked),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
-            selectedDate = pickedDate
-            renderSelectedDate()
-            reloadDailyDataForSelectedDate()
+                is DailyDateSelectionResolver.PickedDateResult.Selected -> {
+                    updateSelectedDate(pickedDate)
+                    reloadDailyDataForSelectedDate()
+                }
+            }
         }
 
         picker.show(parentFragmentManager, "daily_date_picker")
     }
 
+
+    private fun applySelectedDateFromEntry(entryDate: String?) {
+        DailyDateSelectionResolver.resolveEntryDate(
+            currentDate = selectedDate,
+            entryDate = entryDate
+        )?.let { selection ->
+            updateSelectedDate(selection.date)
+        }
+    }
+
+    private fun updateSelectedDate(date: LocalDate) {
+        selectedDate = date
+        selectedDateIso = date.toString()
+        renderSelectedDate()
+    }
+
     private fun renderSelectedDate() = with(binding) {
         selectedDateIso = selectedDate.toString()
 
-        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy, EEEE", Locale.getDefault())
-        val formattedDate = selectedDate.format(formatter)
-
-        dailySelectedDateText.text = if (selectedDate == LocalDate.now()) {
-            getString(R.string.daily_selected_date_today, formattedDate)
+        val selectedDateText = DailySelectedDateTextResolver.resolve(selectedDate)
+        dailySelectedDateText.text = if (selectedDateText.isToday) {
+            getString(R.string.daily_selected_date_today, selectedDateText.formattedDate)
         } else {
-            getString(R.string.daily_selected_date_format, formattedDate)
+            getString(R.string.daily_selected_date_format, selectedDateText.formattedDate)
         }
     }
 
@@ -1203,12 +1213,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
 
             val entryDate = bundle.getString(AddMealFragment.BUNDLE_ENTRY_DATE)
-            if (entryDate != null) {
-                selectedDateIso = entryDate
-                selectedDate = runCatching { LocalDate.parse(entryDate) }
-                    .getOrDefault(selectedDate)
-                renderSelectedDate()
-            }
+            applySelectedDateFromEntry(entryDate)
 
             markNextPlannedMealCompletedIfMatches(mealType)
 
@@ -2130,21 +2135,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun applyActivePlanTodayOrOpenList() {
-        val activePlan = currentActivePlan
-        if (activePlan == null) {
-            openDietPlans()
-            return
+        when (val result = DailyActivePlanApplyAction(
+            applyActivePlanToday = { dietPlanStore.applyActivePlanToday() }
+        ).execute(currentActivePlan?.title)) {
+            DailyActivePlanApplyAction.Result.OpenPlanList -> openDietPlans()
+            is DailyActivePlanApplyAction.Result.Applied -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.daily_active_plan_applied_today, result.planTitle),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                renderActivePlan()
+                renderMealTotals()
+            }
         }
-
-        dietPlanStore.applyActivePlanToday()
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.daily_active_plan_applied_today, activePlan.title),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        renderActivePlan()
-        renderMealTotals()
     }
 
     private fun applyNextPlannedMeal() {
