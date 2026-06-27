@@ -55,7 +55,6 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import java.time.Instant
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.example.fitto.feature_exercise.AddExerciseFragment
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
@@ -1167,13 +1166,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun renderSelectedDate() = with(binding) {
         selectedDateIso = selectedDate.toString()
 
-        val formatter = DateTimeFormatter.ofPattern("d MMMM yyyy, EEEE", Locale.getDefault())
-        val formattedDate = selectedDate.format(formatter)
-
-        dailySelectedDateText.text = if (selectedDate == LocalDate.now()) {
-            getString(R.string.daily_selected_date_today, formattedDate)
+        val selectedDateText = DailySelectedDateTextResolver.resolve(selectedDate)
+        dailySelectedDateText.text = if (selectedDateText.isToday) {
+            getString(R.string.daily_selected_date_today, selectedDateText.formattedDate)
         } else {
-            getString(R.string.daily_selected_date_format, formattedDate)
+            getString(R.string.daily_selected_date_format, selectedDateText.formattedDate)
         }
     }
 
