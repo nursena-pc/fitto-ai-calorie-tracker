@@ -1072,13 +1072,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             AddExerciseFragment.REQUEST_EXERCISE_ADDED,
             viewLifecycleOwner
         ) { _, bundle ->
-            val entryDate = bundle.getString(AddExerciseFragment.BUNDLE_EXERCISE_DATE)
+            val (dateEffect, refreshEffect) = DailyResultEffectResolver.resolveExerciseAdded(
+                currentDate = selectedDate,
+                entryDate = bundle.getString(AddExerciseFragment.BUNDLE_EXERCISE_DATE)
+            )
 
-            applySelectedDateFromEntry(entryDate)
-
-            loadHealthConnectSummary()
-            renderMealTotals()
-            renderActivePlan()
+            applyDateSelectionEffect(dateEffect)
+            applyRefreshEffect(refreshEffect)
         }
     }
     override fun onResume() {
@@ -1148,12 +1148,27 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
 
-    private fun applySelectedDateFromEntry(entryDate: String?) {
-        DailyDateSelectionResolver.resolveEntryDate(
-            currentDate = selectedDate,
-            entryDate = entryDate
-        )?.let { selection ->
+    private fun applyDateSelectionEffect(effect: DailyResultEffectResolver.DateSelectionEffect) {
+        effect.selection?.let { selection ->
             updateSelectedDate(selection.date)
+        }
+    }
+
+    private fun applyRefreshEffect(effect: DailyResultEffectResolver.RefreshEffect) {
+        if (effect.shouldLoadHealthConnectSummary) {
+            loadHealthConnectSummary()
+        }
+
+        if (effect.shouldRenderMealTotals) {
+            renderMealTotals()
+        }
+
+        if (effect.shouldRenderActivePlan) {
+            renderActivePlan()
+        }
+
+        if (effect.shouldRenderWeeklyCalorieProgress) {
+            renderWeeklyCalorieProgress()
         }
     }
 
@@ -1198,8 +1213,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             viewLifecycleOwner
         ) { _, _ ->
-            renderActivePlan()
-            renderMealTotals()
+            applyRefreshEffect(DailyResultEffectResolver.resolveDietPlanChanged())
         }
     }
 
@@ -1208,18 +1222,18 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             AddMealFragment.REQUEST_MEAL_ENTRY_ADDED,
             viewLifecycleOwner
         ) { _, bundle ->
-            val mealType = MealType.fromArgument(
-                bundle.getString(AddMealFragment.BUNDLE_MEAL_TYPE)
+            val effect = DailyResultEffectResolver.resolveMealAdded(
+                currentDate = selectedDate,
+                mealTypeArgument = bundle.getString(AddMealFragment.BUNDLE_MEAL_TYPE),
+                entryDate = bundle.getString(AddMealFragment.BUNDLE_ENTRY_DATE)
             )
 
-            val entryDate = bundle.getString(AddMealFragment.BUNDLE_ENTRY_DATE)
-            applySelectedDateFromEntry(entryDate)
+            applyDateSelectionEffect(
+                DailyResultEffectResolver.DateSelectionEffect(effect.dateSelection)
+            )
 
-            markNextPlannedMealCompletedIfMatches(mealType)
-
-            renderMealTotals()
-            renderActivePlan()
-            renderWeeklyCalorieProgress()
+            markNextPlannedMealCompletedIfMatches(effect.mealType)
+            applyRefreshEffect(effect.refreshEffect)
         }
     }
 
@@ -1228,10 +1242,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             MealDetailFragment.REQUEST_MEAL_DETAIL_CHANGED,
             viewLifecycleOwner
         ) { _, _ ->
-            renderMealTotals()
-            renderActivePlan()
-            renderWeeklyCalorieProgress()
-
+            applyRefreshEffect(DailyResultEffectResolver.resolveMealDetailChanged())
         }
     }
 
