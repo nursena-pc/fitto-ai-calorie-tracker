@@ -101,38 +101,8 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     }
 
     private fun deleteCustomPlan(plan: DietPlanUiModel) {
-        when (val result = customPlanDeletionAction.delete(plan.id)) {
-            is CustomDietPlanDeletionResult.Deleted -> {
-                parentFragmentManager.setFragmentResult(
-                    DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-                    Bundle().apply {
-                        putString(
-                            DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID,
-                            result.activePlanId
-                        )
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_success),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                refreshPlans()
-                filterPlans(binding.searchInput.text?.toString().orEmpty())
-            }
-
-            is CustomDietPlanDeletionResult.Failed -> {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.diet_plans_delete_custom_plan_error),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            CustomDietPlanDeletionResult.NotCustomPlan -> Unit
-        }
+        val result = customPlanDeletionAction.delete(plan.id)
+        renderSearchEffect(DietPlanSearchEffectResolver.customPlanDeleted(result))
     }
     private fun setupClicks() = with(binding) {
         backButton.setOnClickListener {
@@ -287,44 +257,55 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
     private fun applyPlan(plan: DietPlanUiModel) {
         rememberCurrentSearchIfNeeded()
         val applyResult = dietPlanPreferenceAction.applyPlan(plan.id)
-
-        parentFragmentManager.setFragmentResult(
-            DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
-            Bundle().apply {
-                putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, applyResult.activePlanId)
-            }
+        renderSearchEffect(
+            DietPlanSearchEffectResolver.planApplied(
+                planTitle = titleTextForPlan(plan),
+                result = applyResult
+            )
         )
-
-        Toast.makeText(
-            requireContext(),
-            getString(
-                R.string.diet_plans_apply_success_message,
-                titleTextForPlan(plan)
-            ),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        refreshPlans()
-        parentFragmentManager.popBackStack()
     }
 
     private fun toggleFavorite(plan: DietPlanUiModel) {
         val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
+        renderSearchEffect(
+            DietPlanSearchEffectResolver.favoriteToggled(
+                planTitle = titleTextForPlan(plan),
+                result = favoriteResult
+            )
+        )
+    }
 
-        val messageRes = if (favoriteResult.isFavorite) {
-            R.string.diet_plans_favorite_added_message
-        } else {
-            R.string.diet_plans_favorite_removed_message
+    private fun renderSearchEffect(effect: DietPlanSearchEffect) {
+        if (effect.shouldNotifyDietPlanChanged) {
+            parentFragmentManager.setFragmentResult(
+                DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
+                Bundle().apply {
+                    putString(DietPlansFragment.BUNDLE_ACTIVE_PLAN_ID, effect.activePlanId)
+                }
+            )
         }
 
-        Toast.makeText(
-            requireContext(),
-            getString(messageRes, titleTextForPlan(plan)),
-            Toast.LENGTH_SHORT
-        ).show()
+        effect.toastMessageRes?.let { messageRes ->
+            Toast.makeText(
+                requireContext(),
+                effect.toastPlanTitle?.let { planTitle ->
+                    getString(messageRes, planTitle)
+                } ?: getString(messageRes),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
-        refreshPlans()
-        filterPlans(binding.searchInput.text?.toString().orEmpty())
+        if (effect.shouldReloadPlans) {
+            refreshPlans()
+        }
+
+        if (effect.shouldRefilterPlans) {
+            filterPlans(binding.searchInput.text?.toString().orEmpty())
+        }
+
+        if (effect.shouldCloseScreen) {
+            parentFragmentManager.popBackStack()
+        }
     }
 
     private fun refreshPlans() {
