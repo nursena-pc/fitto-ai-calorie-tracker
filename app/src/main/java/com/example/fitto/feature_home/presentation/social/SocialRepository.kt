@@ -769,7 +769,7 @@ class SocialRepository {
                     }
 
                     val senderId = document.getString("senderId").orEmpty()
-                    val readBy = readByMap(document.get("readBy"))
+                    val readBy = SocialReadReceiptResolver.readByMap(document.get("readBy"))
                     val readByOthersCount = readBy.keys
                         .filter { uid -> uid != senderId }
                         .distinct()
@@ -814,7 +814,7 @@ class SocialRepository {
                         fileSizeBytes = fileSizeBytes,
                         participantNames = participantNames,
                         readReceiptText = if (senderId == currentUserId) {
-                            createReadReceiptText(readByOthersCount, totalRecipientCount)
+                            SocialReadReceiptResolver.createReadReceiptText(readByOthersCount, totalRecipientCount)
                         } else {
                             null
                         },
@@ -1975,7 +1975,7 @@ class SocialRepository {
 
                 senderId != currentUserId &&
                         !isBlockedSenderMessage &&
-                        !readByIds(document.get("readBy")).contains(currentUserId)
+                        !SocialReadReceiptResolver.readByIds(document.get("readBy")).contains(currentUserId)
             }
 
         firestore.runBatch { batch ->
@@ -1985,7 +1985,7 @@ class SocialRepository {
             )
 
             unreadMessages.forEach { document ->
-                val readByMap = readByMap(document.get("readBy")).toMutableMap()
+                val readByMap = SocialReadReceiptResolver.readByMap(document.get("readBy")).toMutableMap()
                 readByMap[currentUserId] = now
 
                 batch.set(
@@ -3816,42 +3816,6 @@ class SocialRepository {
         )
     }
 
-    private fun readByIds(value: Any?): List<String> {
-        return when (value) {
-            is Map<*, *> -> value.keys.mapNotNull { it as? String }
-            is List<*> -> value.mapNotNull { it as? String }
-            else -> emptyList()
-        }
-    }
-
-    private fun readByMap(value: Any?): Map<String, Long> {
-        return when (value) {
-            is Map<*, *> -> value.mapNotNull { entry ->
-                val uid = entry.key as? String ?: return@mapNotNull null
-                val time = (entry.value as? Number)?.toLong() ?: 0L
-                uid to time
-            }.toMap()
-            is List<*> -> value.mapNotNull { uid ->
-                (uid as? String)?.let { it to 0L }
-            }.toMap()
-            else -> emptyMap()
-        }
-    }
-
-    private fun createReadReceiptText(
-        readByOthersCount: Int,
-        totalRecipientCount: Int
-    ): String {
-        if (totalRecipientCount <= 1) {
-            return if (readByOthersCount > 0) "Görüldü" else "Gönderildi"
-        }
-
-        return if (readByOthersCount > 0) {
-            "$readByOthersCount/$totalRecipientCount görüldü"
-        } else {
-            "Gönderildi"
-        }
-    }
 
     private fun DocumentSnapshot.getStringListCompat(field: String): List<String> {
         return (get(field) as? List<*>)
