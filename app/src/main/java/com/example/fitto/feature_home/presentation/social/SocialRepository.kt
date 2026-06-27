@@ -703,7 +703,7 @@ class SocialRepository {
                     ?.toSet()
                     ?: emptySet()
 
-                blockedThreadPreviews = readBlockedThreadPreviews(
+                blockedThreadPreviews = SocialMessageHiddenRangeResolver.readBlockedThreadPreviews(
                     snapshot?.get("blockedThreadPreviews")
                 )
 
@@ -1942,8 +1942,8 @@ class SocialRepository {
 
             isOtherUserCurrentlyBlocked = blockedUserIds.contains(otherUserId)
 
-            hiddenRanges = readCompletedHiddenRanges(userSnapshot, threadId) +
-                    listOfNotNull(readActiveHiddenRange(userSnapshot, threadId))
+            hiddenRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(userSnapshot, threadId) +
+                    listOfNotNull(SocialMessageHiddenRangeResolver.readActiveHiddenRange(userSnapshot, threadId))
         }
 
         val unreadMessages = threadRef
@@ -1961,7 +1961,7 @@ class SocialRepository {
                     !otherUserId.isNullOrBlank() &&
                             senderId == otherUserId &&
                             (
-                                    isMessageInHiddenRanges(
+                                    SocialMessageHiddenRangeResolver.isMessageInHiddenRanges(
                                         senderId = senderId,
                                         createdAt = createdAt,
                                         hiddenRanges = hiddenRanges
@@ -2693,7 +2693,7 @@ class SocialRepository {
         )
 
         fun closeHiddenRangeForThread(targetThreadId: String) {
-            val activeRange = readActiveHiddenRange(snapshot, targetThreadId)
+            val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, targetThreadId)
 
             if (activeRange != null && activeRange.userId == targetUserId) {
                 updates["blockedMessageRanges.$targetThreadId"] = FieldValue.arrayUnion(
@@ -2716,7 +2716,7 @@ class SocialRepository {
 
             activeRanges.orEmpty().forEach { entry ->
                 val targetThreadId = entry.key as? String ?: return@forEach
-                val activeRange = readMessageHiddenRange(entry.value) ?: return@forEach
+                val activeRange = SocialMessageHiddenRangeResolver.readMessageHiddenRange(entry.value) ?: return@forEach
 
                 if (activeRange.userId == targetUserId) {
                     closeHiddenRangeForThread(targetThreadId)
@@ -2726,72 +2726,6 @@ class SocialRepository {
         }
 
         userRef.update(updates).await()
-    }
-
-    private data class BlockedThreadPreview(
-        val text: String,
-        val createdAt: Long
-    )
-    private fun readBlockedThreadPreviews(value: Any?): Map<String, BlockedThreadPreview> {
-        val rawMap = value as? Map<*, *> ?: return emptyMap()
-
-        return rawMap.mapNotNull { entry ->
-            val threadId = entry.key as? String ?: return@mapNotNull null
-            val previewMap = entry.value as? Map<*, *> ?: return@mapNotNull null
-
-            val text = previewMap["text"] as? String ?: "Henüz mesaj yok."
-            val createdAt = (previewMap["createdAt"] as? Number)?.toLong() ?: 0L
-
-            threadId to BlockedThreadPreview(
-                text = text,
-                createdAt = createdAt
-            )
-        }.toMap()
-    }
-    private fun readMessageHiddenRange(value: Any?): MessageHiddenRange? {
-        val map = value as? Map<*, *> ?: return null
-
-        val userId = map["userId"] as? String ?: return null
-        val startAt = (map["startAt"] as? Number)?.toLong() ?: return null
-        val endAt = (map["endAt"] as? Number)?.toLong()
-
-        return MessageHiddenRange(
-            userId = userId,
-            startAt = startAt,
-            endAt = endAt
-        )
-    }
-
-    private fun readCompletedHiddenRanges(
-        snapshot: DocumentSnapshot,
-        threadId: String
-    ): List<MessageHiddenRange> {
-        return (snapshot.get("blockedMessageRanges.$threadId") as? List<*>)
-            ?.mapNotNull { item ->
-                readMessageHiddenRange(item)
-            }
-            .orEmpty()
-    }
-
-    private fun readActiveHiddenRange(
-        snapshot: DocumentSnapshot,
-        threadId: String
-    ): MessageHiddenRange? {
-        return readMessageHiddenRange(
-            snapshot.get("activeBlockedMessageRanges.$threadId")
-        )
-    }
-
-    private fun isMessageInHiddenRanges(
-        senderId: String,
-        createdAt: Long,
-        hiddenRanges: List<MessageHiddenRange>
-    ): Boolean {
-        return hiddenRanges.any { range ->
-            range.userId == senderId &&
-                    createdAt >= range.startAt &&
-                    (range.endAt == null || createdAt <= range.endAt)
-        }
     }
 
     suspend fun isUserBlocked(targetUserId: String): Boolean {
@@ -2835,8 +2769,8 @@ class SocialRepository {
             ?.mapNotNull { it as? String }
             .orEmpty()
 
-        val completedRanges = readCompletedHiddenRanges(snapshot, threadId)
-        val activeRange = readActiveHiddenRange(snapshot, threadId)
+        val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
+        val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
 
         return DirectThreadBlockState(
             isBlocked = blockedUserIds.contains(targetUserId),
@@ -2878,8 +2812,8 @@ class SocialRepository {
                     ?.mapNotNull { it as? String }
                     .orEmpty()
 
-                val completedRanges = readCompletedHiddenRanges(snapshot, threadId)
-                val activeRange = readActiveHiddenRange(snapshot, threadId)
+                val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
+                val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
 
                 trySend(
                     DirectThreadBlockState(
