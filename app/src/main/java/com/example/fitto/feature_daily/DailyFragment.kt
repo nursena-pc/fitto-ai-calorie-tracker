@@ -121,21 +121,19 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private val activityRecognitionPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.step_counter_permission_granted),
-                Toast.LENGTH_SHORT
-            ).show()
+        val effect = DailyActivityRecognitionPermissionResultResolver.resolve(granted)
 
+        Toast.makeText(
+            requireContext(),
+            getString(effect.messageRes),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        if (effect.shouldStartStepCounter) {
             startLocalStepCounterIfNeeded()
-        } else {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.step_counter_permission_denied),
-                Toast.LENGTH_SHORT
-            ).show()
+        }
 
+        if (effect.shouldRenderSteps) {
             renderActivityStepsOnly()
         }
     }
@@ -990,36 +988,38 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         localStepCount = stepCounterManager.getCachedSteps(selectedDate)
         renderActivityStepsOnly()
 
-        if (selectedDate != LocalDate.now()) {
-            stepCounterManager.stop()
-            return
-        }
+        val requiresActivityRecognitionPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        val hasActivityRecognitionPermission = !requiresActivityRecognitionPermission ||
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
 
-        if (!stepCounterManager.isStepCounterAvailable()) {
-            Toast.makeText(
+        when (
+            DailyStepCounterStartPolicy.resolve(
+                selectedDate = selectedDate,
+                today = LocalDate.now(),
+                isStepCounterAvailable = stepCounterManager.isStepCounterAvailable(),
+                requiresActivityRecognitionPermission = requiresActivityRecognitionPermission,
+                hasActivityRecognitionPermission = hasActivityRecognitionPermission
+            )
+        ) {
+            DailyStepCounterStartPolicy.Decision.StopForPastDate -> stepCounterManager.stop()
+            DailyStepCounterStartPolicy.Decision.SensorUnavailable -> Toast.makeText(
                 requireContext(),
                 getString(R.string.step_counter_sensor_unavailable),
                 Toast.LENGTH_SHORT
             ).show()
-            return
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.ACTIVITY_RECOGNITION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            activityRecognitionPermissionLauncher.launch(
-                Manifest.permission.ACTIVITY_RECOGNITION
-            )
-            return
-        }
-
-        stepCounterManager.start(selectedDate) { steps ->
-            localStepCount = steps
-            renderActivityStepsOnly()
-            renderMealTotals()
+            DailyStepCounterStartPolicy.Decision.RequestActivityRecognitionPermission -> {
+                activityRecognitionPermissionLauncher.launch(
+                    Manifest.permission.ACTIVITY_RECOGNITION
+                )
+            }
+            DailyStepCounterStartPolicy.Decision.Start -> stepCounterManager.start(selectedDate) { steps ->
+                localStepCount = steps
+                renderActivityStepsOnly()
+                renderMealTotals()
+            }
         }
     }
 
