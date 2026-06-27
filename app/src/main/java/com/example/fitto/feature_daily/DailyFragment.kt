@@ -1075,12 +1075,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         ) { _, bundle ->
             val entryDate = bundle.getString(AddExerciseFragment.BUNDLE_EXERCISE_DATE)
 
-            if (!entryDate.isNullOrBlank()) {
-                selectedDateIso = entryDate
-                selectedDate = runCatching { LocalDate.parse(entryDate) }
-                    .getOrDefault(selectedDate)
-                renderSelectedDate()
-            }
+            applySelectedDateFromEntry(entryDate)
 
             loadHealthConnectSummary()
             renderMealTotals()
@@ -1134,21 +1129,39 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 .atZone(ZoneOffset.UTC)
                 .toLocalDate()
 
-            if (pickedDate.isAfter(LocalDate.now())) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.daily_future_date_blocked),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@addOnPositiveButtonClickListener
-            }
+            when (DailyDateSelectionResolver.resolvePickedDate(pickedDate)) {
+                DailyDateSelectionResolver.PickedDateResult.FutureDate -> {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.daily_future_date_blocked),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
-            selectedDate = pickedDate
-            renderSelectedDate()
-            reloadDailyDataForSelectedDate()
+                is DailyDateSelectionResolver.PickedDateResult.Selected -> {
+                    updateSelectedDate(pickedDate)
+                    reloadDailyDataForSelectedDate()
+                }
+            }
         }
 
         picker.show(parentFragmentManager, "daily_date_picker")
+    }
+
+
+    private fun applySelectedDateFromEntry(entryDate: String?) {
+        DailyDateSelectionResolver.resolveEntryDate(
+            currentDate = selectedDate,
+            entryDate = entryDate
+        )?.let { selection ->
+            updateSelectedDate(selection.date)
+        }
+    }
+
+    private fun updateSelectedDate(date: LocalDate) {
+        selectedDate = date
+        selectedDateIso = date.toString()
+        renderSelectedDate()
     }
 
     private fun renderSelectedDate() = with(binding) {
@@ -1203,12 +1216,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
 
             val entryDate = bundle.getString(AddMealFragment.BUNDLE_ENTRY_DATE)
-            if (entryDate != null) {
-                selectedDateIso = entryDate
-                selectedDate = runCatching { LocalDate.parse(entryDate) }
-                    .getOrDefault(selectedDate)
-                renderSelectedDate()
-            }
+            applySelectedDateFromEntry(entryDate)
 
             markNextPlannedMealCompletedIfMatches(mealType)
 
