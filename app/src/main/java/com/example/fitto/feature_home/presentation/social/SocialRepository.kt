@@ -3657,72 +3657,21 @@ class SocialRepository {
     ): MessageThreadUiModel? {
         if (!document.exists()) return null
 
-        val isGroup = document.getString("type") == THREAD_TYPE_GROUP
-        val participantIds = document.getStringListCompat("participantIds")
-        val otherUserId = participantIds.firstOrNull { participantId -> participantId != currentUserId }
-            ?: currentUserId
-        val participants = document.get("participants") as? Map<*, *>
-        val otherParticipant = participants?.get(otherUserId) as? Map<*, *>
-        val title = if (isGroup) {
-            document.getString("title").orEmpty().ifBlank { "Fitto Grup" }
-        } else {
-            (otherParticipant?.get("userName") as? String)
-                ?.ifBlank { null }
-                ?: "fitto_user"
-        }
-        val photoUrl = if (isGroup) {
-            document.getString("photoUrl")
-        } else {
-            otherParticipant?.get("photoUrl") as? String
-        }
-        val rawLastMessage = document.getString("lastMessageText").orEmpty()
-        val rawLastMessageCreatedAt = document.getLong("lastMessageCreatedAt")
-            ?: document.getLong("updatedAt")
-            ?: 0L
-        val clearedAtMap = document.get("clearedAt") as? Map<*, *>
-        val currentUserClearedAt = (clearedAtMap?.get(currentUserId) as? Number)?.toLong() ?: 0L
-        val isClearedForCurrentUser = rawLastMessageCreatedAt > 0L &&
-                rawLastMessageCreatedAt <= currentUserClearedAt
-
-        if (isClearedForCurrentUser && !includeClearedThread) {
-            return null
-        }
-
-        val lastMessage = if (isClearedForCurrentUser) {
-            "Henüz mesaj yok."
-        } else {
-            rawLastMessage.ifBlank { "Henüz mesaj yok." }
-        }
-        val lastMessageCreatedAt = if (isClearedForCurrentUser) {
-            0L
-        } else {
-            rawLastMessageCreatedAt
-        }
-
-        val unreadCounts = document.get("unreadCounts") as? Map<*, *>
-        val unreadCount = if (isClearedForCurrentUser) {
-            0
-        } else {
-            (unreadCounts?.get(currentUserId) as? Number)?.toInt() ?: 0
-        }
-
-        return MessageThreadUiModel(
+        return SocialMessageThreadDocumentResolver.resolve(
             id = document.id,
-            title = title,
-            lastMessage = lastMessage,
-            timeText = lastMessageCreatedAt
-                .takeIf { it > 0L }
-                ?.let { SocialTextResolver.formatRelativeTime(it) }
-                .orEmpty(),
-            isGroup = isGroup,
-            highlightText = if (unreadCount > 0) "$unreadCount yeni" else null,
-            initials = SocialTextResolver.createInitials(title),
-            unreadCount = unreadCount,
-            participantIds = participantIds,
-            otherParticipantId = if (isGroup) null else otherUserId,
-            photoUrl = photoUrl,
-            memberCount = document.getLong("memberCount")?.toInt() ?: participantIds.size,
-            lastMessageCreatedAt = lastMessageCreatedAt
+            type = document.getString("type"),
+            currentUserId = currentUserId,
+            participantIds = document.getStringListCompat("participantIds"),
+            participants = document.get("participants") as? Map<*, *>,
+            groupTitle = document.getString("title"),
+            groupPhotoUrl = document.getString("photoUrl"),
+            lastMessageText = document.getString("lastMessageText"),
+            lastMessageCreatedAt = document.getLong("lastMessageCreatedAt"),
+            updatedAt = document.getLong("updatedAt"),
+            clearedAt = document.get("clearedAt") as? Map<*, *>,
+            unreadCounts = document.get("unreadCounts") as? Map<*, *>,
+            memberCount = document.getLong("memberCount")?.toInt(),
+            includeClearedThread = includeClearedThread
         )
     }
 
