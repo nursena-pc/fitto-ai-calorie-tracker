@@ -3459,9 +3459,9 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = posts,
-                updates = mapOf(
-                    "userName" to userName,
-                    "updatedAt" to now
+                updates = SocialProfileCopyUpdateResolver.publicUsernameUpdate(
+                    userName = userName,
+                    now = now
                 )
             )
         }.onFailure { error ->
@@ -3477,9 +3477,9 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = comments,
-                updates = mapOf(
-                    "userName" to userName,
-                    "updatedAt" to now
+                updates = SocialProfileCopyUpdateResolver.publicUsernameUpdate(
+                    userName = userName,
+                    now = now
                 )
             )
         }.onFailure { error ->
@@ -3495,9 +3495,10 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = messageThreads,
-                updates = mapOf(
-                    "participants.$uid.userName" to userName,
-                    "updatedAt" to now
+                updates = SocialProfileCopyUpdateResolver.participantUsernameUpdate(
+                    uid = uid,
+                    userName = userName,
+                    now = now
                 ),
                 useSetMerge = false
             )
@@ -3514,9 +3515,9 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = messages,
-                updates = mapOf(
-                    "senderName" to userName,
-                    "updatedAt" to now
+                updates = SocialProfileCopyUpdateResolver.senderUsernameUpdate(
+                    userName = userName,
+                    now = now
                 )
             )
         }.onFailure { error ->
@@ -3541,7 +3542,7 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = posts,
-                updates = profilePhotoCopyUpdate(
+                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
                     fieldNames = listOf("userPhotoUrl", "photoUrl"),
                     photoUrl = photoUrl,
                     now = now
@@ -3560,7 +3561,7 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = comments,
-                updates = profilePhotoCopyUpdate(
+                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
                     fieldNames = listOf("userPhotoUrl", "photoUrl"),
                     photoUrl = photoUrl,
                     now = now
@@ -3577,17 +3578,11 @@ class SocialRepository {
                 .await()
                 .documents
 
-            val updates = if (photoUrl.isNullOrBlank()) {
-                mapOf(
-                    "participants.$uid.photoUrl" to FieldValue.delete(),
-                    "updatedAt" to now
-                )
-            } else {
-                mapOf(
-                    "participants.$uid.photoUrl" to photoUrl,
-                    "updatedAt" to now
-                )
-            }
+            val updates = SocialProfileCopyUpdateResolver.participantPhotoUpdate(
+                uid = uid,
+                photoUrl = photoUrl,
+                now = now
+            )
 
             updateDocumentsInBatches(
                 documents = messageThreads,
@@ -3607,7 +3602,7 @@ class SocialRepository {
 
             updateDocumentsInBatches(
                 documents = messages,
-                updates = profilePhotoCopyUpdate(
+                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
                     fieldNames = listOf("senderPhotoUrl", "photoUrl"),
                     photoUrl = photoUrl,
                     now = now
@@ -3618,25 +3613,6 @@ class SocialRepository {
         }
     }
 
-    private fun profilePhotoCopyUpdate(
-        fieldNames: List<String>,
-        photoUrl: String?,
-        now: Long
-    ): Map<String, Any> {
-        val updates = mutableMapOf<String, Any>(
-            "updatedAt" to now
-        )
-
-        fieldNames.forEach { fieldName ->
-            updates[fieldName] = if (photoUrl.isNullOrBlank()) {
-                FieldValue.delete()
-            } else {
-                photoUrl
-            }
-        }
-
-        return updates
-    }
 
     private suspend fun updateDocumentsInBatches(
         documents: List<DocumentSnapshot>,
