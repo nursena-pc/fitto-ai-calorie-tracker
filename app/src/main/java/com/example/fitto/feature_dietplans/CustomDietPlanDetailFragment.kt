@@ -115,7 +115,7 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         )
 
         preferencesText.text = detail.preferences
-            .map { preferenceLabel(it) }
+            .map { resolveLabel(CustomDietPlanDetailLabelResolver.preference(it)) }
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" • ")
             ?: getString(R.string.custom_diet_detail_none)
@@ -125,11 +125,10 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
             ?.joinToString(" • ")
             ?: getString(R.string.custom_diet_detail_no_exclusion)
 
-        mealOrderText.text = detail.mealOrder
-            .mapIndexed { index, meal ->
-                "${index + 1}. ${mealLabel(meal)}"
+        mealOrderText.text = CustomDietPlanDetailLabelResolver.mealOrder(detail.mealOrder)
+            .joinToString("\n") { meal ->
+                "${meal.order}. ${resolveLabel(meal.label)}"
             }
-            .joinToString("\n")
 
         renderSaveState()
         renderApplyState()
@@ -251,26 +250,8 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         )
     }
 
-    private fun preferenceLabel(preference: String): String {
-        return when (preference) {
-            "vegetarian" -> getString(R.string.custom_diet_detail_preference_vegetarian)
-            "vegan" -> getString(R.string.custom_diet_detail_preference_vegan)
-            "gluten_free" -> getString(R.string.custom_diet_detail_preference_gluten_free)
-            "lactose_free" -> getString(R.string.custom_diet_detail_preference_lactose_free)
-            "high_protein" -> getString(R.string.custom_diet_detail_preference_high_protein)
-            "low_carb" -> getString(R.string.custom_diet_detail_preference_low_carb)
-            else -> preference
-        }
-    }
-
-    private fun mealLabel(meal: String): String {
-        return when (meal) {
-            "breakfast" -> getString(R.string.create_post_breakfast)
-            "snack" -> getString(R.string.create_post_snack)
-            "lunch" -> getString(R.string.create_post_lunch)
-            "dinner" -> getString(R.string.create_post_dinner)
-            else -> meal
-        }
+    private fun resolveLabel(label: CustomDietPlanDetailLabel): String {
+        return label.stringRes?.let(::getString) ?: label.fallback
     }
 
     override fun onDestroyView() {
