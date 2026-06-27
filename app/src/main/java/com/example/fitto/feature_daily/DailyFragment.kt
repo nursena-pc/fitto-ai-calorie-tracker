@@ -2138,21 +2138,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun applyActivePlanTodayOrOpenList() {
-        val activePlan = currentActivePlan
-        if (activePlan == null) {
-            openDietPlans()
-            return
+        when (val result = DailyActivePlanApplyAction(
+            applyActivePlanToday = { dietPlanStore.applyActivePlanToday() }
+        ).execute(currentActivePlan?.title)) {
+            DailyActivePlanApplyAction.Result.OpenPlanList -> openDietPlans()
+            is DailyActivePlanApplyAction.Result.Applied -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.daily_active_plan_applied_today, result.planTitle),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                renderActivePlan()
+                renderMealTotals()
+            }
         }
-
-        dietPlanStore.applyActivePlanToday()
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.daily_active_plan_applied_today, activePlan.title),
-            Toast.LENGTH_SHORT
-        ).show()
-
-        renderActivePlan()
-        renderMealTotals()
     }
 
     private fun applyNextPlannedMeal() {
