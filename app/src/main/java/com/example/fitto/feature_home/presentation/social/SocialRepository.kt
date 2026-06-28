@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import java.util.UUID
-import kotlin.math.abs
 import android.util.Patterns
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.firestore.FieldPath
@@ -190,30 +189,25 @@ class SocialRepository {
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val now = System.currentTimeMillis()
-                val users = snapshot.children.mapNotNull { child ->
-                    val uid = child.child("uid").getValue(String::class.java)
-                        ?: child.key
-                        ?: return@mapNotNull null
-                    if (uid == currentUserId) return@mapNotNull null
-
-                    val isTyping = child.child("isTyping").getValue(Boolean::class.java) == true
-                    if (!isTyping) return@mapNotNull null
-
-                    val updatedAt = child.child("updatedAt").getValue(Long::class.java) ?: 0L
-                    if (updatedAt > 0L && abs(now - updatedAt) > TYPING_STALE_MILLIS) {
-                        return@mapNotNull null
-                    }
-
-                    TypingUserUiModel(
-                        uid = uid,
-                        userName = child.child("userName").getValue(String::class.java) ?: "fitto_user",
-                        photoUrl = child.child("photoUrl").getValue(String::class.java),
-                        updatedAt = updatedAt
+                val records = snapshot.children.map { child ->
+                    SocialTypingUserResolver.TypingRecord(
+                        key = child.key,
+                        uid = child.child("uid").getValue(String::class.java),
+                        isTyping = child.child("isTyping").getValue(Boolean::class.java) == true,
+                        updatedAt = child.child("updatedAt").getValue(Long::class.java) ?: 0L,
+                        userName = child.child("userName").getValue(String::class.java),
+                        photoUrl = child.child("photoUrl").getValue(String::class.java)
                     )
                 }
 
-                trySend(users)
+                trySend(
+                    SocialTypingUserResolver.resolve(
+                        records = records,
+                        currentUserId = currentUserId,
+                        nowMillis = System.currentTimeMillis(),
+                        staleMillis = TYPING_STALE_MILLIS
+                    )
+                )
             }
 
             override fun onCancelled(error: DatabaseError) {
