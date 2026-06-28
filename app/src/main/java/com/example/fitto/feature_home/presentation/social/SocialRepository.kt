@@ -2877,78 +2877,12 @@ class SocialRepository {
         userName: String,
         now: Long
     ) {
-        runCatching {
-            val posts = firestore.collection("posts")
-                .whereEqualTo("userId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = posts,
-                updates = SocialProfileCopyUpdateResolver.publicUsernameUpdate(
-                    userName = userName,
-                    now = now
-                )
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            val comments = firestore.collectionGroup("comments")
-                .whereEqualTo("userId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = comments,
-                updates = SocialProfileCopyUpdateResolver.publicUsernameUpdate(
-                    userName = userName,
-                    now = now
-                )
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            val messageThreads = firestore.collection(MESSAGE_THREADS_COLLECTION)
-                .whereArrayContains("participantIds", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = messageThreads,
-                updates = SocialProfileCopyUpdateResolver.participantUsernameUpdate(
-                    uid = uid,
-                    userName = userName,
-                    now = now
-                ),
-                useSetMerge = false
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            val messages = firestore.collectionGroup(MESSAGES_SUBCOLLECTION)
-                .whereEqualTo("senderId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = messages,
-                updates = SocialProfileCopyUpdateResolver.senderUsernameUpdate(
-                    userName = userName,
-                    now = now
-                )
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
+        SocialProfileCopyPropagationResolver.publicUsernameTargets(
+            uid = uid,
+            userName = userName,
+            now = now
+        ).forEach { target ->
+            propagateProfileCopyTarget(target)
         }
     }
 
@@ -2960,95 +2894,55 @@ class SocialRepository {
         // Her alanı ayrı güncelliyoruz. Böylece örneğin collectionGroup yorum
         // sorgusu izin/index yüzünden başarısız olsa bile postlar ve mesaj
         // thread'leri güncellenmeye devam eder.
-        runCatching {
-            val posts = firestore.collection("posts")
-                .whereEqualTo("userId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = posts,
-                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
-                    fieldNames = listOf("userPhotoUrl", "photoUrl"),
-                    photoUrl = photoUrl,
-                    now = now
-                )
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
+        SocialProfileCopyPropagationResolver.profilePhotoTargets(
+            uid = uid,
+            photoUrl = photoUrl,
+            now = now
+        ).forEach { target ->
+            propagateProfileCopyTarget(target)
         }
+    }
 
+    private suspend fun propagateProfileCopyTarget(target: SocialProfileCopyPropagationTarget) {
         runCatching {
-            val comments = firestore.collectionGroup("comments")
-                .whereEqualTo("userId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = comments,
-                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
-                    fieldNames = listOf("userPhotoUrl", "photoUrl"),
-                    photoUrl = photoUrl,
-                    now = now
+            val query = when (target.scope) {
+                SocialProfileCopyQueryScope.COLLECTION -> firestore.collection(target.sourceName)
+                SocialProfileCopyQueryScope.COLLECTION_GROUP -> firestore.collectionGroup(target.sourceName)
+            }
+            val filteredQuery = when (target.lookupOperator) {
+                SocialProfileCopyLookupOperator.EQUAL_TO -> query.whereEqualTo(
+                    target.lookupField,
+                    target.lookupValue
                 )
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            val messageThreads = firestore.collection(MESSAGE_THREADS_COLLECTION)
-                .whereArrayContains("participantIds", uid)
-                .get()
-                .await()
-                .documents
-
-            val updates = SocialProfileCopyUpdateResolver.participantPhotoUpdate(
-                uid = uid,
-                photoUrl = photoUrl,
-                now = now
-            )
-
-            updateDocumentsInBatches(
-                documents = messageThreads,
-                updates = updates,
-                useSetMerge = false
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            val messages = firestore.collectionGroup(MESSAGES_SUBCOLLECTION)
-                .whereEqualTo("senderId", uid)
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = messages,
-                updates = SocialProfileCopyUpdateResolver.profilePhotoUpdate(
-                    fieldNames = listOf("senderPhotoUrl", "photoUrl"),
-                    photoUrl = photoUrl,
-                    now = now
+                SocialProfileCopyLookupOperator.ARRAY_CONTAINS -> query.whereArrayContains(
+                    target.lookupField,
+                    target.lookupValue
                 )
+            }
+            val documents = filteredQuery
+                .get()
+                .await()
+                .documents
+
+            updateDocumentsInBatches(
+                documents = documents,
+                updates = target.updates,
+                useSetMerge = target.useSetMerge
             )
         }.onFailure { error ->
             error.printStackTrace()
         }
     }
 
-
     private suspend fun updateDocumentsInBatches(
         documents: List<DocumentSnapshot>,
         updates: Map<String, Any>,
         useSetMerge: Boolean = true
     ) {
-        if (documents.isEmpty()) return
+        val documentBatches = SocialProfileCopyPropagationResolver.documentBatches(documents)
+        if (documentBatches.isEmpty()) return
 
-        documents.chunked(450).forEach { chunk ->
+        documentBatches.forEach { chunk ->
             val batch = firestore.batch()
 
             chunk.forEach { document ->
