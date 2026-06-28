@@ -156,72 +156,20 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                var mediaCount = 0
-                var linkCount = 0
-                var fileCount = 0
-
-                snapshot?.documents.orEmpty().forEach { doc ->
-                    val text = doc.getString("text").orEmpty()
-                    val content = doc.getString("content").orEmpty()
-                    val body = if (text.isNotBlank()) text else content
-
-                    val attachmentUrl = doc.getString("attachmentUrl")
-                    val attachmentType = doc.getString("attachmentType").orEmpty().lowercase()
-                    val mimeType = doc.getString("mimeType").orEmpty().lowercase()
-
-                    val imageUrl = doc.getString("imageUrl")
-                    val videoUrl = doc.getString("videoUrl")
-                    val linkUrl = doc.getString("linkUrl")
-
-                    val hasMedia =
-                        !imageUrl.isNullOrBlank() ||
-                                !videoUrl.isNullOrBlank() ||
-                                attachmentType == "image" ||
-                                attachmentType == "video" ||
-                                attachmentType == "media" ||
-                                mimeType.startsWith("image/") ||
-                                mimeType.startsWith("video/")
-
-                    val hasFile =
-                        !hasMedia && (
-                                attachmentType == "file" ||
-                                        !attachmentUrl.isNullOrBlank() ||
-                                        (
-                                                mimeType.isNotBlank() &&
-                                                        !mimeType.startsWith("image/") &&
-                                                        !mimeType.startsWith("video/")
-                                                )
-                                )
-
-                    if (hasMedia) mediaCount++
-                    if (hasFile) fileCount++
-
-                    val linksInMessage = mutableSetOf<String>()
-
-                    if (body.isNotBlank()) {
-                        val matcher = Patterns.WEB_URL.matcher(body)
-                        while (matcher.find()) {
-                            val url = matcher.group()
-                            if (!url.isNullOrBlank()) {
-                                linksInMessage.add(url)
-                            }
-                        }
-                    }
-
-                    if (!linkUrl.isNullOrBlank()) {
-                        linksInMessage.add(linkUrl)
-                    }
-
-                    linkCount += linksInMessage.size
+                val messages = snapshot?.documents.orEmpty().map { doc ->
+                    SocialThreadSharedContentSummaryResolver.Message(
+                        text = doc.getString("text").orEmpty(),
+                        content = doc.getString("content").orEmpty(),
+                        attachmentUrl = doc.getString("attachmentUrl"),
+                        attachmentType = doc.getString("attachmentType").orEmpty(),
+                        mimeType = doc.getString("mimeType").orEmpty(),
+                        imageUrl = doc.getString("imageUrl"),
+                        videoUrl = doc.getString("videoUrl"),
+                        linkUrl = doc.getString("linkUrl")
+                    )
                 }
 
-                trySend(
-                    ThreadSharedContentSummary(
-                        mediaCount = mediaCount,
-                        linkCount = linkCount,
-                        fileCount = fileCount
-                    )
-                )
+                trySend(SocialThreadSharedContentSummaryResolver.summarize(messages))
             }
 
         awaitClose { registration.remove() }
