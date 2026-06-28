@@ -1308,28 +1308,16 @@ class SocialRepository {
             senderId = currentUser.uid
         )
 
-        val visibleRecipientIds = participantIds
-            .filter { participantId ->
-                participantId != currentUser.uid &&
-                        !blockedRecipientIds.contains(participantId)
-            }
-        val threadUpdates = mutableMapOf<String, Any>(
-            "lastMessageText" to trimmedText,
-            "lastMessageSenderId" to currentUser.uid,
-            "lastMessageCreatedAt" to now,
-            "lastMessageType" to "text",
-            "lastMessageHiddenFor" to blockedRecipientIds,
-            "updatedAt" to now,
-            "unreadCounts.${currentUser.uid}" to 0
+        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
+            lastMessageText = trimmedText,
+            lastMessageSenderId = currentUser.uid,
+            lastMessageCreatedAt = now,
+            lastMessageType = "text",
+            participantIds = participantIds,
+            senderId = currentUser.uid,
+            blockedRecipientIds = blockedRecipientIds,
+            updatedAt = now
         )
-
-        visibleRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = FieldValue.increment(1)
-        }
-
-        blockedRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = 0
-        }
 
         firestore.runBatch { batch ->
             batch.set(
@@ -1418,28 +1406,16 @@ class SocialRepository {
             senderId = currentUser.uid
         )
 
-        val visibleRecipientIds = participantIds
-            .filter { participantId ->
-                participantId != currentUser.uid &&
-                        !blockedRecipientIds.contains(participantId)
-            }
-        val threadUpdates = mutableMapOf<String, Any>(
-            "lastMessageText" to lastMessageText,
-            "lastMessageSenderId" to currentUser.uid,
-            "lastMessageCreatedAt" to now,
-            "lastMessageHiddenFor" to blockedRecipientIds,
-            "lastMessageType" to "file",
-            "updatedAt" to now,
-            "unreadCounts.${currentUser.uid}" to 0
+        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
+            lastMessageText = lastMessageText,
+            lastMessageSenderId = currentUser.uid,
+            lastMessageCreatedAt = now,
+            lastMessageType = "file",
+            participantIds = participantIds,
+            senderId = currentUser.uid,
+            blockedRecipientIds = blockedRecipientIds,
+            updatedAt = now
         )
-
-        visibleRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = FieldValue.increment(1)
-        }
-
-        blockedRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = 0
-        }
 
         firestore.runBatch { batch ->
             batch.set(
@@ -1525,28 +1501,16 @@ class SocialRepository {
             senderId = currentUser.uid
         )
 
-        val visibleRecipientIds = participantIds
-            .filter { participantId ->
-                participantId != currentUser.uid &&
-                        !blockedRecipientIds.contains(participantId)
-            }
-        val threadUpdates = mutableMapOf<String, Any>(
-            "lastMessageText" to lastMessageText,
-            "lastMessageSenderId" to currentUser.uid,
-            "lastMessageCreatedAt" to now,
-            "lastMessageHiddenFor" to blockedRecipientIds,
-            "lastMessageType" to "audio",
-            "updatedAt" to now,
-            "unreadCounts.${currentUser.uid}" to 0
+        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
+            lastMessageText = lastMessageText,
+            lastMessageSenderId = currentUser.uid,
+            lastMessageCreatedAt = now,
+            lastMessageType = "audio",
+            participantIds = participantIds,
+            senderId = currentUser.uid,
+            blockedRecipientIds = blockedRecipientIds,
+            updatedAt = now
         )
-
-        visibleRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = FieldValue.increment(1)
-        }
-
-        blockedRecipientIds.forEach { participantId ->
-            threadUpdates["unreadCounts.$participantId"] = 0
-        }
 
         firestore.runBatch { batch ->
             batch.set(
