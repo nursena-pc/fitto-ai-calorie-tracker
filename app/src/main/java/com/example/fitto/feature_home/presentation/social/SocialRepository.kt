@@ -417,51 +417,13 @@ class SocialRepository {
     }
 
     private suspend fun hydratePostAuthors(posts: List<SocialPost>): List<SocialPost> {
-        if (posts.isEmpty()) return posts
-
-        val usersById = getUsersByIds(
-            posts.map { post -> post.userId }
-                .filter { userId -> userId.isNotBlank() }
-                .distinct()
-        ).associateBy { user -> user.id }
-
-        if (usersById.isEmpty()) return posts
-
-        return posts.map { post ->
-            val user = usersById[post.userId]
-            if (user == null) {
-                post
-            } else {
-                post.copy(
-                    userName = user.userName.ifBlank { post.userName },
-                    userPhotoUrl = user.photoUrl
-                )
-            }
-        }
+        val users = getUsersByIds(SocialAuthorHydrationResolver.postAuthorIds(posts))
+        return SocialAuthorHydrationResolver.hydratePosts(posts, users)
     }
 
     private suspend fun hydrateCommentAuthors(comments: List<SocialComment>): List<SocialComment> {
-        if (comments.isEmpty()) return comments
-
-        val usersById = getUsersByIds(
-            comments.map { comment -> comment.userId }
-                .filter { userId -> userId.isNotBlank() }
-                .distinct()
-        ).associateBy { user -> user.id }
-
-        if (usersById.isEmpty()) return comments
-
-        return comments.map { comment ->
-            val user = usersById[comment.userId]
-            if (user == null) {
-                comment
-            } else {
-                comment.copy(
-                    userName = user.userName.ifBlank { comment.userName },
-                    userPhotoUrl = user.photoUrl
-                )
-            }
-        }
+        val users = getUsersByIds(SocialAuthorHydrationResolver.commentAuthorIds(comments))
+        return SocialAuthorHydrationResolver.hydrateComments(comments, users)
     }
 
     fun observeComments(postId: String): Flow<List<SocialComment>> = callbackFlow {
@@ -504,33 +466,8 @@ class SocialRepository {
     }
 
     private suspend fun hydrateMessageThreads(threads: List<MessageThreadUiModel>): List<MessageThreadUiModel> {
-        if (threads.isEmpty()) return threads
-
-        val usersById = getUsersByIds(
-            threads.mapNotNull { thread -> thread.otherParticipantId }
-                .filter { userId -> userId.isNotBlank() }
-                .distinct()
-        ).associateBy { user -> user.id }
-
-        if (usersById.isEmpty()) return threads
-
-        return threads.map { thread ->
-            if (thread.isGroup) {
-                thread
-            } else {
-                val user = usersById[thread.otherParticipantId]
-                if (user == null) {
-                    thread
-                } else {
-                    val title = user.userName.ifBlank { thread.title }
-                    thread.copy(
-                        title = title,
-                        initials = SocialTextResolver.createInitials(title),
-                        photoUrl = user.photoUrl
-                    )
-                }
-            }
-        }
+        val users = getUsersByIds(SocialAuthorHydrationResolver.messageThreadParticipantIds(threads))
+        return SocialAuthorHydrationResolver.hydrateMessageThreads(threads, users)
     }
 
     fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> = callbackFlow {
