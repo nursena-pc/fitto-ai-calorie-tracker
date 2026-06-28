@@ -457,51 +457,36 @@ class SocialRepository {
     fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> = callbackFlow {
         val currentUserId = auth.currentUser?.uid
 
-        if (currentUserId.isNullOrBlank()) {
+        if (SocialMessageThreadListResolver.shouldSkipThreadList(currentUserId)) {
             trySend(emptyList())
             close()
             return@callbackFlow
         }
 
+        val activeUserId = currentUserId.orEmpty()
         var threadDocuments: List<DocumentSnapshot> = emptyList()
         var blockedUserIds: Set<String> = emptySet()
         var blockedThreadPreviews: Map<String, BlockedThreadPreview> = emptyMap()
 
         fun emitThreads() {
-            val threads = threadDocuments
+            val threadItems = threadDocuments
                 .mapNotNull { document ->
                     val thread = mapMessageThreadDocument(
                         document = document,
-                        currentUserId = currentUserId
+                        currentUserId = activeUserId
                     ) ?: return@mapNotNull null
 
-                    val isBlockedDirectThread =
-                        !thread.isGroup &&
-                                !thread.otherParticipantId.isNullOrBlank() &&
-                                blockedUserIds.contains(thread.otherParticipantId)
-
-                    if (isBlockedDirectThread) {
-                        val frozenPreview = blockedThreadPreviews[thread.id]
-
-                        thread.copy(
-                            lastMessage = frozenPreview?.text ?: "Bu kullanıcı engellendi",
-                            timeText = frozenPreview
-                                ?.createdAt
-                                ?.takeIf { it > 0L }
-                                ?.let { SocialTextResolver.formatRelativeTime(it) }
-                                .orEmpty(),
-                            unreadCount = 0,
-                            highlightText = null
-                        )
-                    } else {
-                        thread
-                    }
+                    SocialMessageThreadListItem(
+                        thread = thread,
+                        updatedAt = document.getLong("updatedAt") ?: 0L
+                    )
                 }
-                .sortedByDescending { thread ->
-                    threadDocuments
-                        .firstOrNull { document -> document.id == thread.id }
-                        ?.getLong("updatedAt") ?: 0L
-                }
+
+            val threads = SocialMessageThreadListResolver.resolveThreads(
+                items = threadItems,
+                blockedUserIds = blockedUserIds,
+                blockedThreadPreviews = blockedThreadPreviews
+            )
 
             launch {
                 trySend(hydrateMessageThreads(threads))
@@ -509,7 +494,7 @@ class SocialRepository {
         }
 
         val threadsListener = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .whereArrayContains("participantIds", currentUserId)
+            .whereArrayContains("participantIds", activeUserId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     trySend(emptyList())
@@ -521,7 +506,7 @@ class SocialRepository {
             }
 
         val userListener = firestore.collection("users")
-            .document(currentUserId)
+            .document(activeUserId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     blockedUserIds = emptySet()
@@ -530,10 +515,9 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                blockedUserIds = (snapshot?.get("blockedUserIds") as? List<*>)
-                    ?.mapNotNull { it as? String }
-                    ?.toSet()
-                    ?: emptySet()
+                blockedUserIds = SocialMessageThreadListResolver.blockedUserIds(
+                    snapshot?.get("blockedUserIds")
+                )
 
                 blockedThreadPreviews = SocialMessageHiddenRangeResolver.readBlockedThreadPreviews(
                     snapshot?.get("blockedThreadPreviews")
