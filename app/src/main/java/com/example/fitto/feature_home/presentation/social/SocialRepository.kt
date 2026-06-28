@@ -2669,29 +2669,18 @@ class SocialRepository {
             uploadPostImage(uri)
         } ?: existingImageUrl ?: snapshot.getString("imageUrl")
 
-        val finalVisibility = if (publish) {
-            visibility.ifBlank { POST_VISIBILITY_COMMUNITY }
-        } else {
-            POST_VISIBILITY_PRIVATE
-        }
-
         val now = System.currentTimeMillis()
-
-        val updates = mutableMapOf<String, Any?>(
-            "content" to content.trim(),
-            "imageUrl" to finalImageUrl,
-            "mealInfo" to mealInfo?.trim(),
-            "calories" to calories,
-            "allowComments" to allowComments,
-            "visibility" to finalVisibility,
-            "tags" to tags,
-            "isDraft" to !publish,
-            "updatedAt" to now
+        val updates = SocialPostDraftUpdateResolver.createUpdatePayload(
+            content = content,
+            imageUrl = finalImageUrl,
+            mealInfo = mealInfo,
+            calories = calories,
+            allowComments = allowComments,
+            visibility = visibility,
+            tags = tags,
+            publish = publish,
+            updatedAt = now
         )
-
-        if (publish) {
-            updates["publishedAt"] = now
-        }
 
         postRef.set(updates, SetOptions.merge()).await()
     }
