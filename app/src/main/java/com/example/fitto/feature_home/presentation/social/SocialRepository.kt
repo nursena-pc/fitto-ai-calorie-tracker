@@ -2062,31 +2062,25 @@ class SocialRepository {
             .get()
             .await()
 
-        val blockedUserIds = currentUserSnapshot
-            .getStringListCompat("blockedUserIds")
-            .filter { userId -> userId.isNotBlank() && userId != currentUserId }
-            .distinct()
+        val blockedUserIds = SocialBlockedUserListResolver.blockedUserIds(
+            ids = currentUserSnapshot.getStringListCompat("blockedUserIds"),
+            currentUserId = currentUserId
+        )
 
         if (blockedUserIds.isEmpty()) return emptyList()
 
         val usersById = mutableMapOf<String, SocialUser>()
 
-        blockedUserIds.chunked(10).forEach { chunk ->
+        SocialBlockedUserListResolver.lookupChunks(blockedUserIds).forEach { chunk ->
             val snapshot = firestore.collection("users")
                 .whereIn(FieldPath.documentId(), chunk)
                 .get()
                 .await()
 
             snapshot.documents.forEach { document ->
-                val isDeleted = document.getBoolean("isDeleted") == true
-                val fallbackName = if (isDeleted) {
-                    "Silinen Kullanıcı"
-                } else {
-                    "fitto_user"
-                }
-
-                usersById[document.id] = SocialUserDocumentResolver.resolveBlockedUser(
+                usersById[document.id] = SocialBlockedUserListResolver.resolveBlockedUser(
                     id = document.id,
+                    isDeleted = document.getBoolean("isDeleted"),
                     userName = document.getString("userName"),
                     username = document.getString("username"),
                     displayName = document.getString("displayName"),
@@ -2095,22 +2089,16 @@ class SocialRepository {
                     email = document.getString("email"),
                     photoUrl = document.getString("photoUrl"),
                     bio = document.getString("bio"),
-                    followersCount = document.getLong("followersCount")?.toInt() ?: 0,
-                    followingCount = document.getLong("followingCount")?.toInt() ?: 0,
-                    fallbackName = fallbackName
+                    followersCount = document.getLong("followersCount"),
+                    followingCount = document.getLong("followingCount")
                 )
             }
         }
 
-        return blockedUserIds.map { userId ->
-            usersById[userId] ?: SocialUser(
-                id = userId,
-                userName = "Silinen Kullanıcı",
-                displayName = "Silinen Kullanıcı"
-            )
-        }.sortedBy { user ->
-            user.userName.ifBlank { user.displayName.orEmpty() }
-        }
+        return SocialBlockedUserListResolver.orderBlockedUsers(
+            blockedUserIds = blockedUserIds,
+            usersById = usersById
+        )
     }
 
     suspend fun reportPost(
