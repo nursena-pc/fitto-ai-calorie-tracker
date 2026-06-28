@@ -73,7 +73,7 @@ class SocialRepository {
 
 
     fun observeThreadMessagesForSearch(threadId: String): Flow<List<GroupMessageSearchResultUiModel>> = callbackFlow {
-        if (threadId.isBlank()) {
+        if (SocialGroupMessageSearchResolver.shouldSkipSearch(threadId)) {
             trySend(emptyList())
             close()
             return@callbackFlow
@@ -90,17 +90,13 @@ class SocialRepository {
                 }
 
                 val items = snapshot?.documents.orEmpty().mapNotNull { document ->
-                    val text = document.getString("text").orEmpty().trim()
-                    if (text.isBlank()) return@mapNotNull null
-
-                    GroupMessageSearchResultUiModel(
+                    SocialGroupMessageSearchResolver.resolveResult(
                         messageId = document.id,
                         threadId = threadId,
-                        senderName = document.getString("senderName")
-                            ?: document.getString("senderDisplayName")
-                            ?: "Kullanıcı",
-                        messageText = text,
-                        createdAt = document.getLong("createdAt") ?: 0L
+                        text = document.getString("text"),
+                        senderName = document.getString("senderName"),
+                        senderDisplayName = document.getString("senderDisplayName"),
+                        createdAt = document.getLong("createdAt")
                     )
                 }
 
