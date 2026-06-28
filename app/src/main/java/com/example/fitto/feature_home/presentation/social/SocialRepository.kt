@@ -1685,9 +1685,9 @@ class SocialRepository {
 
     suspend fun searchUsers(query: String): List<SearchUserUiModel> {
         val currentUserId = auth.currentUser?.uid.orEmpty()
-        val normalizedQuery = SocialTextResolver.normalizeUsername(query)
+        val normalizedQuery = SocialUserLookupResolver.normalizeSearchQuery(query)
 
-        if (normalizedQuery.length < 2) return emptyList()
+        if (!SocialUserLookupResolver.shouldSearch(normalizedQuery)) return emptyList()
 
         val snapshot = firestore.collection("users")
             .orderBy("usernameLowercase")
@@ -1697,23 +1697,18 @@ class SocialRepository {
             .get()
             .await()
 
-        return snapshot.documents
-            .filter { document ->
-                document.id != currentUserId && document.getBoolean("isDeleted") != true
-            }
-            .mapNotNull { document ->
-                val userName = document.getString("userName")
-                    ?: document.getString("usernameLowercase")
-                    ?: document.getString("email")?.substringBefore("@")
-                    ?: return@mapNotNull null
-
-                SearchUserUiModel(
-                    id = document.id,
-                    userName = userName,
-                    bio = document.getString("bio"),
-                    photoUrl = document.getString("photoUrl")
-                )
-            }
+        return snapshot.documents.mapNotNull { document ->
+            SocialUserLookupResolver.resolveSearchUser(
+                id = document.id,
+                currentUserId = currentUserId,
+                isDeleted = document.getBoolean("isDeleted") == true,
+                userName = document.getString("userName"),
+                usernameLowercase = document.getString("usernameLowercase"),
+                email = document.getString("email"),
+                bio = document.getString("bio"),
+                photoUrl = document.getString("photoUrl")
+            )
+        }
     }
 
     suspend fun createCurrentUserProfileIfNeeded() {
@@ -2865,7 +2860,7 @@ class SocialRepository {
             .await()
             .documents
             .mapNotNull { document -> document.getString("followerId") }
-            .distinct()
+            .let(SocialUserLookupResolver::uniqueNonBlankIds)
 
         return getUsersByIds(followerIds)
     }
@@ -2879,19 +2874,18 @@ class SocialRepository {
             .await()
             .documents
             .mapNotNull { document -> document.getString("followingId") }
-            .distinct()
+            .let(SocialUserLookupResolver::uniqueNonBlankIds)
 
         return getUsersByIds(followingIds)
     }
 
     private suspend fun getUsersByIds(userIds: List<String>): List<SocialUser> {
-        if (userIds.isEmpty()) return emptyList()
+        val lookupIds = SocialUserLookupResolver.uniqueNonBlankIds(userIds)
+        if (lookupIds.isEmpty()) return emptyList()
 
         val users = mutableMapOf<String, SocialUser>()
 
-        userIds.filter { it.isNotBlank() }
-            .distinct()
-            .chunked(10)
+        lookupIds.chunked(10)
             .forEach { chunk ->
                 val snapshot = firestore.collection("users")
                     .whereIn(FieldPath.documentId(), chunk)
@@ -2917,7 +2911,10 @@ class SocialRepository {
                 }
             }
 
-        return userIds.mapNotNull { users[it] }
+        return SocialUserLookupResolver.orderUsersByRequestedIds(
+            requestedIds = userIds,
+            usersById = users
+        )
     }
 
     private suspend fun updateOwnedPublicUsernameCopies(
