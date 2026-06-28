@@ -626,9 +626,9 @@ class SocialRepository {
         messagesSnapshot.documents.forEach { document ->
             batch.update(
                 document.reference,
-                mapOf(
-                    "deletedFor" to FieldValue.arrayUnion(currentUserId),
-                    "updatedAt" to now
+                SocialMessageDeletionPayloadResolver.createDeleteForMePayload(
+                    currentUserId = currentUserId,
+                    updatedAt = now
                 )
             )
         }
@@ -1516,7 +1516,7 @@ class SocialRepository {
     }
     suspend fun markThreadRead(threadId: String) {
         val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
+        if (!SocialMessageReadStateResolver.canMarkThreadRead(currentUserId, threadId)) return
 
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val now = System.currentTimeMillis()
@@ -1525,13 +1525,11 @@ class SocialRepository {
         if (!threadSnapshot.exists()) return
 
         val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        val isDirectThread = threadSnapshot.getString("type") == THREAD_TYPE_DIRECT
-
-        val otherUserId = if (isDirectThread) {
-            participantIds.firstOrNull { uid -> uid != currentUserId }
-        } else {
-            null
-        }
+        val otherUserId = SocialMessageReadStateResolver.directPeerId(
+            threadType = threadSnapshot.getString("type"),
+            participantIds = participantIds,
+            currentUserId = currentUserId
+        )
 
         var isOtherUserCurrentlyBlocked = false
         var hiddenRanges: List<MessageHiddenRange> = emptyList()
@@ -1542,14 +1540,19 @@ class SocialRepository {
                 .get()
                 .await()
 
-            val blockedUserIds = (userSnapshot.get("blockedUserIds") as? List<*>)
-                ?.mapNotNull { it as? String }
-                .orEmpty()
+            val blockedUserIds = SocialMessageReadStateResolver.blockedUserIds(
+                userSnapshot.get("blockedUserIds")
+            )
 
-            isOtherUserCurrentlyBlocked = blockedUserIds.contains(otherUserId)
+            isOtherUserCurrentlyBlocked = SocialMessageReadStateResolver.isPeerBlocked(
+                blockedUserIds = blockedUserIds,
+                peerId = otherUserId
+            )
 
-            hiddenRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(userSnapshot, threadId) +
-                    listOfNotNull(SocialMessageHiddenRangeResolver.readActiveHiddenRange(userSnapshot, threadId))
+            hiddenRanges = SocialMessageReadStateResolver.hiddenRanges(
+                completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(userSnapshot, threadId),
+                activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(userSnapshot, threadId)
+            )
         }
 
         val unreadMessages = threadRef
