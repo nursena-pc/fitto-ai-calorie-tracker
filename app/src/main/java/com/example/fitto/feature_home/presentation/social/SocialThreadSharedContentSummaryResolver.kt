@@ -1,8 +1,10 @@
-package com.example.fitto.feature_home.presentation.social
-
-import android.util.Patterns
+﻿package com.example.fitto.feature_home.presentation.social
 
 internal object SocialThreadSharedContentSummaryResolver {
+
+    private val webUrlRegex = Regex(
+        pattern = """(?i)\b((?:https?://|www\.)[^\s]+)"""
+    )
 
     data class Message(
         val text: String,
@@ -66,10 +68,9 @@ internal object SocialThreadSharedContentSummaryResolver {
         val linksInMessage = mutableSetOf<String>()
 
         if (body.isNotBlank()) {
-            val matcher = Patterns.WEB_URL.matcher(body)
-            while (matcher.find()) {
-                val url = matcher.group()
-                if (!url.isNullOrBlank()) {
+            webUrlRegex.findAll(body).forEach { match ->
+                val url = match.value
+                if (url.isNotBlank()) {
                     linksInMessage.add(url)
                 }
             }
@@ -82,3 +83,5 @@ internal object SocialThreadSharedContentSummaryResolver {
         return linksInMessage.size
     }
 }
+
+

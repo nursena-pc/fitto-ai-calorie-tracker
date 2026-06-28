@@ -758,13 +758,8 @@ class SocialRepository {
             .get()
             .await()
 
-        val settings = snapshot.get("settings") as? Map<*, *>
-
-        return GroupSettingsUiModel(
-            joinApprovalRequired = settings?.get("joinApprovalRequired") as? Boolean ?: false,
-            membersCanSendMessages = settings?.get("membersCanSendMessages") as? Boolean ?: true,
-            membersCanAddMembers = settings?.get("membersCanAddMembers") as? Boolean ?: true,
-            membersCanEditGroupInfo = settings?.get("membersCanEditGroupInfo") as? Boolean ?: false
+        return SocialGroupSettingsResolver.fromRawMap(
+            snapshot.get("settings") as? Map<*, *>
         )
     }
 
@@ -779,12 +774,7 @@ class SocialRepository {
             .document(threadId)
             .update(
                 mapOf(
-                    "settings" to mapOf(
-                        "joinApprovalRequired" to settings.joinApprovalRequired,
-                        "membersCanSendMessages" to settings.membersCanSendMessages,
-                        "membersCanAddMembers" to settings.membersCanAddMembers,
-                        "membersCanEditGroupInfo" to settings.membersCanEditGroupInfo
-                    ),
+                    "settings" to SocialGroupSettingsResolver.toRawMap(settings),
                     "updatedAt" to System.currentTimeMillis()
                 )
             )
