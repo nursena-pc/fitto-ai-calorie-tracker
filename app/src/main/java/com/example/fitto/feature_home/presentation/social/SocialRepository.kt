@@ -1377,9 +1377,10 @@ class SocialRepository {
         val now = System.currentTimeMillis()
         val messageRef = threadRef.collection(MESSAGES_SUBCOLLECTION).document()
 
-        val safeFileName = fileInfo.name
-            .replace(Regex("[^A-Za-z0-9._-]"), "_")
-            .ifBlank { "file_${System.currentTimeMillis()}" }
+        val safeFileName = SocialMessageAttachmentPayloadResolver.safeStorageFileName(
+            fileName = fileInfo.name,
+            fallbackFileName = "file_${System.currentTimeMillis()}"
+        )
 
         val storageRef = FirebaseStorage.getInstance()
             .reference
@@ -1395,12 +1396,10 @@ class SocialRepository {
         storageRef.putFile(fileUri, metadata).await()
         val downloadUrl = storageRef.downloadUrl.await().toString()
 
-        val isImage = fileInfo.mimeType?.startsWith("image/") == true
-        val lastMessageText = if (isImage) {
-            "🖼️ Fotoğraf"
-        } else {
-            "📎 ${fileInfo.name}"
-        }
+        val lastMessageText = SocialMessageAttachmentPayloadResolver.fileLastMessageText(
+            fileName = fileInfo.name,
+            mimeType = fileInfo.mimeType
+        )
         val blockedRecipientIds = getRecipientsWhoBlockedSender(
             participantIds = participantIds,
             senderId = currentUser.uid
@@ -1420,23 +1419,17 @@ class SocialRepository {
         firestore.runBatch { batch ->
             batch.set(
                 messageRef,
-                mapOf(
-                    "id" to messageRef.id,
-                    "threadId" to threadId,
-                    "senderId" to currentUser.uid,
-                    "senderName" to sender.name,
-                    "senderPhotoUrl" to sender.photoUrl,
-                    "photoUrl" to sender.photoUrl,
-                    "text" to fileInfo.name,
-                    "type" to "file",
-                    "fileUrl" to downloadUrl,
-                    "deletedFor" to blockedRecipientIds,
-                    "fileName" to fileInfo.name,
-                    "fileMimeType" to fileInfo.mimeType,
-                    "fileSizeBytes" to fileInfo.sizeBytes,
-                    "readBy" to mapOf(currentUser.uid to now),
-                    "createdAt" to now,
-                    "deliveredAt" to now
+                SocialMessageAttachmentPayloadResolver.createFileMessagePayload(
+                    messageId = messageRef.id,
+                    threadId = threadId,
+                    senderId = currentUser.uid,
+                    sender = sender,
+                    fileUrl = downloadUrl,
+                    fileName = fileInfo.name,
+                    fileMimeType = fileInfo.mimeType,
+                    fileSizeBytes = fileInfo.sizeBytes,
+                    deletedFor = blockedRecipientIds,
+                    readAt = now
                 )
             )
 
@@ -1515,24 +1508,16 @@ class SocialRepository {
         firestore.runBatch { batch ->
             batch.set(
                 messageRef,
-                mapOf(
-                    "id" to messageRef.id,
-                    "threadId" to threadId,
-                    "senderId" to currentUser.uid,
-                    "senderName" to sender.name,
-                    "senderPhotoUrl" to sender.photoUrl,
-                    "photoUrl" to sender.photoUrl,
-                    "text" to "Ses mesajı",
-                    "type" to "audio",
-                    "fileUrl" to downloadUrl,
-                    "deletedFor" to blockedRecipientIds,
-                    "fileName" to "voice_message.m4a",
-                    "fileMimeType" to "audio/mp4",
-                    "fileSizeBytes" to audioFile.length(),
-                    "audioDurationMillis" to durationMillis,
-                    "readBy" to mapOf(currentUser.uid to now),
-                    "createdAt" to now,
-                    "deliveredAt" to now
+                SocialMessageAttachmentPayloadResolver.createAudioMessagePayload(
+                    messageId = messageRef.id,
+                    threadId = threadId,
+                    senderId = currentUser.uid,
+                    sender = sender,
+                    fileUrl = downloadUrl,
+                    fileSizeBytes = audioFile.length(),
+                    audioDurationMillis = durationMillis,
+                    deletedFor = blockedRecipientIds,
+                    readAt = now
                 )
             )
 
