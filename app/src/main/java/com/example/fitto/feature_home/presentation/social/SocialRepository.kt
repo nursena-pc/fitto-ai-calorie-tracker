@@ -877,63 +877,35 @@ class SocialRepository {
         selectedUsers: List<SearchUserUiModel>
     ): MessageThreadUiModel? {
         val currentUser = auth.currentUser ?: return null
-        val trimmedTitle = title.trim()
-        val trimmedDescription = description.trim()
-        val uniqueSelectedUsers = selectedUsers
-            .filter { user -> user.id.isNotBlank() && user.id != currentUser.uid }
-            .distinctBy { user -> user.id }
-
-        if (trimmedTitle.isBlank() || uniqueSelectedUsers.size < 2) return null
+        val resolvedInput = SocialGroupThreadPayloadResolver.resolveInput(
+            title = title,
+            description = description,
+            selectedUsers = selectedUsers,
+            currentUserId = currentUser.uid
+        ) ?: return null
 
         createCurrentUserProfileIfNeeded()
 
         val currentProfile = getCurrentUserProfile()
-        val currentUserName = currentProfile?.userName?.takeIf { it.isNotBlank() }
-            ?: currentUser.email?.substringBefore("@")
-            ?: "fitto_user"
-        val currentPhotoUrl = currentProfile?.photoUrl ?: currentUser.photoUrl?.toString()
+        val currentSender = SocialMessageSenderResolver.resolve(
+            profileUserName = currentProfile?.userName,
+            profilePhotoUrl = currentProfile?.photoUrl,
+            currentUserEmail = currentUser.email,
+            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+        )
 
         val threadId = "group_${UUID.randomUUID()}"
         val now = System.currentTimeMillis()
-        val participantIds = (listOf(currentUser.uid) + uniqueSelectedUsers.map { it.id }).distinct()
-        val participants = mutableMapOf<String, Map<String, Any?>>()
-
-        participants[currentUser.uid] = SocialThreadParticipantResolver.participantMap(
-            uid = currentUser.uid,
-            userName = currentUserName,
-            photoUrl = currentPhotoUrl
-        )
-
-        uniqueSelectedUsers.forEach { user ->
-            participants[user.id] = SocialThreadParticipantResolver.participantMap(
-                uid = user.id,
-                userName = user.userName,
-                photoUrl = user.photoUrl
-            )
-        }
-
-        val unreadCounts = participantIds.associateWith { 0 }
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
 
         threadRef.set(
-            mapOf(
-                "id" to threadId,
-                "type" to THREAD_TYPE_GROUP,
-                "title" to trimmedTitle,
-                "titleLowercase" to trimmedTitle.lowercase(Locale("tr", "TR")),
-                "creatorId" to currentUser.uid,
-                "participantIds" to participantIds,
-                "participants" to participants,
-                "memberCount" to participantIds.size,
-                "unreadCounts" to unreadCounts,
-                "lastMessageText" to "",
-                "lastMessageSenderId" to null,
-                "lastMessageCreatedAt" to null,
-                "createdAt" to now,
-                "deliveredAt" to now,
-                "updatedAt" to now,
-                "description" to trimmedDescription,
-                "descriptionLowercase" to trimmedDescription.lowercase(Locale("tr", "TR"))
+            SocialGroupThreadPayloadResolver.createPayload(
+                threadId = threadId,
+                currentUserId = currentUser.uid,
+                currentUserName = currentSender.name,
+                currentPhotoUrl = currentSender.photoUrl,
+                input = resolvedInput,
+                now = now
             )
         ).await()
 
