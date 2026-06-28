@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.Locale
 import java.util.UUID
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.firestore.FieldPath
@@ -1724,33 +1723,14 @@ class SocialRepository {
         val snapshot = userRef.get().await()
 
         if (!snapshot.exists()) {
-            val publicUserName = SocialTextResolver.normalizeUsername(
-                user.email?.substringBefore("@")
-                    ?: user.displayName
-                    ?: "fitto_user"
-            ).ifBlank { "fitto_user" }
-            val personalName = user.displayName
-                ?: user.email?.substringBefore("@")
-                ?: "Fitto"
-
             userRef.set(
-                mapOf(
-                    "uid" to user.uid,
-                    "displayName" to publicUserName,
-                    "displayNameLowercase" to publicUserName.lowercase(Locale.ROOT),
-                    "realName" to personalName,
-                    "name" to personalName,
-                    "userName" to publicUserName,
-                    "username" to publicUserName,
-                    "usernameLowercase" to publicUserName.lowercase(Locale.ROOT),
-                    "email" to user.email,
-                    "photoUrl" to user.photoUrl?.toString(),
-                    "bio" to "",
-                    "followersCount" to 0,
-                    "followingCount" to 0,
-                    "profileCompleted" to false,
-                    "createdAt" to System.currentTimeMillis(),
-                    "updatedAt" to System.currentTimeMillis()
+                SocialProfileMaintenanceResolver.createCurrentUserProfilePayload(
+                    uid = user.uid,
+                    email = user.email,
+                    displayName = user.displayName,
+                    photoUrl = user.photoUrl?.toString(),
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
                 )
             ).await()
         }
@@ -2644,21 +2624,17 @@ class SocialRepository {
         val newVisibleName = SocialTextResolver.normalizeUsername(displayName)
         SocialTextResolver.validateVisibleName(newVisibleName)
 
-        val cleanBio = bio.trim().take(160)
         val now = System.currentTimeMillis()
         val userRef = firestore.collection("users").document(user.uid)
         val newUsernameRef = firestore.collection("usernames").document(newVisibleName)
 
         firestore.runTransaction { transaction ->
             val userSnapshot = transaction.get(userRef)
-            val oldUsernameCandidates = buildSet {
-                add(userSnapshot.getString("userName"))
-                add(userSnapshot.getString("username"))
-                add(userSnapshot.getString("displayName"))
-            }.filterNotNull()
-                .map { SocialTextResolver.normalizeUsername(it) }
-                .filter { it.isNotBlank() }
-                .toSet()
+            val oldUsernameCandidates = SocialProfileMaintenanceResolver.oldUsernameCandidates(
+                userName = userSnapshot.getString("userName"),
+                username = userSnapshot.getString("username"),
+                displayName = userSnapshot.getString("displayName")
+            )
 
             val newUsernameSnapshot = transaction.get(newUsernameRef)
             val ownerUid = newUsernameSnapshot.getString("uid")
@@ -2682,26 +2658,21 @@ class SocialRepository {
 
             transaction.set(
                 newUsernameRef,
-                mapOf(
-                    "uid" to user.uid,
-                    "email" to user.email.orEmpty(),
-                    "username" to newVisibleName,
-                    "usernameLowercase" to newVisibleName.lowercase(Locale.ROOT),
-                    "updatedAt" to now
+                SocialProfileMaintenanceResolver.createUsernameClaimPayload(
+                    uid = user.uid,
+                    email = user.email.orEmpty(),
+                    username = newVisibleName,
+                    updatedAt = now
                 ),
                 SetOptions.merge()
             )
 
             transaction.set(
                 userRef,
-                mapOf(
-                    "displayName" to newVisibleName,
-                    "displayNameLowercase" to newVisibleName.lowercase(Locale.ROOT),
-                    "userName" to newVisibleName,
-                    "username" to newVisibleName,
-                    "usernameLowercase" to newVisibleName.lowercase(Locale.ROOT),
-                    "bio" to cleanBio,
-                    "updatedAt" to now
+                SocialProfileMaintenanceResolver.createProfileUpdatePayload(
+                    username = newVisibleName,
+                    bio = bio,
+                    updatedAt = now
                 ),
                 SetOptions.merge()
             )
@@ -2729,37 +2700,24 @@ class SocialRepository {
         val now = System.currentTimeMillis()
         val userRef = firestore.collection("users").document(user.uid)
 
-        val updates = if (photoUrl.isNullOrBlank()) {
-            mapOf(
-                "photoUrl" to FieldValue.delete(),
-                "updatedAt" to now
-            )
-        } else {
-            mapOf(
-                "photoUrl" to photoUrl,
-                "updatedAt" to now
-            )
-        }
-
-        userRef.set(updates, SetOptions.merge()).await()
+        userRef.set(
+            SocialProfileMaintenanceResolver.createPhotoDocumentUpdatePayload(
+                photoUrl = photoUrl,
+                updatedAt = now
+            ),
+            SetOptions.merge()
+        ).await()
 
         runCatching {
-            val statusUpdates = if (photoUrl.isNullOrBlank()) {
-                mapOf<String, Any?>(
-                    "photoUrl" to null,
-                    "updatedAt" to now
-                )
-            } else {
-                mapOf<String, Any?>(
-                    "photoUrl" to photoUrl,
-                    "updatedAt" to now
-                )
-            }
-
             realtimeDatabase.reference
                 .child(REALTIME_STATUS_NODE)
                 .child(user.uid)
-                .updateChildren(statusUpdates)
+                .updateChildren(
+                    SocialProfileMaintenanceResolver.createRealtimeStatusPhotoUpdatePayload(
+                        photoUrl = photoUrl,
+                        updatedAt = now
+                    )
+                )
                 .await()
         }.onFailure { error ->
             error.printStackTrace()
