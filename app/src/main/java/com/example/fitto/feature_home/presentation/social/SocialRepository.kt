@@ -1362,10 +1362,12 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-        val senderName = profile?.userName?.ifBlank { null }
-            ?: currentUser.email?.substringBefore("@")
-            ?: "fitto_user"
-        val senderPhotoUrl = profile?.photoUrl ?: currentUser.photoUrl?.toString()
+        val sender = SocialMessageSenderResolver.resolve(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            currentUserEmail = currentUser.email,
+            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+        )
 
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val threadSnapshot = threadRef.get().await()
@@ -1417,9 +1419,9 @@ class SocialRepository {
                     "id" to messageRef.id,
                     "threadId" to threadId,
                     "senderId" to currentUser.uid,
-                    "senderName" to senderName,
-                    "senderPhotoUrl" to senderPhotoUrl,
-                    "photoUrl" to senderPhotoUrl,
+                    "senderName" to sender.name,
+                    "senderPhotoUrl" to sender.photoUrl,
+                    "photoUrl" to sender.photoUrl,
                     "text" to trimmedText,
                     "type" to "text",
                     "readBy" to mapOf(currentUser.uid to now),
@@ -1445,11 +1447,12 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-        val senderName = profile?.userName?.ifBlank { null }
-            ?: currentUser.email?.substringBefore("@")
-            ?: "fitto_user"
-
-        val senderPhotoUrl = profile?.photoUrl ?: currentUser.photoUrl?.toString()
+        val sender = SocialMessageSenderResolver.resolve(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            currentUserEmail = currentUser.email,
+            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+        )
 
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val threadSnapshot = threadRef.get().await()
@@ -1526,9 +1529,9 @@ class SocialRepository {
                     "id" to messageRef.id,
                     "threadId" to threadId,
                     "senderId" to currentUser.uid,
-                    "senderName" to senderName,
-                    "senderPhotoUrl" to senderPhotoUrl,
-                    "photoUrl" to senderPhotoUrl,
+                    "senderName" to sender.name,
+                    "senderPhotoUrl" to sender.photoUrl,
+                    "photoUrl" to sender.photoUrl,
                     "text" to fileInfo.name,
                     "type" to "file",
                     "fileUrl" to downloadUrl,
@@ -1560,11 +1563,12 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-        val senderName = profile?.userName?.ifBlank { null }
-            ?: currentUser.email?.substringBefore("@")
-            ?: "fitto_user"
-
-        val senderPhotoUrl = profile?.photoUrl ?: currentUser.photoUrl?.toString()
+        val sender = SocialMessageSenderResolver.resolve(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            currentUserEmail = currentUser.email,
+            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+        )
 
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val threadSnapshot = threadRef.get().await()
@@ -1632,9 +1636,9 @@ class SocialRepository {
                     "id" to messageRef.id,
                     "threadId" to threadId,
                     "senderId" to currentUser.uid,
-                    "senderName" to senderName,
-                    "senderPhotoUrl" to senderPhotoUrl,
-                    "photoUrl" to senderPhotoUrl,
+                    "senderName" to sender.name,
+                    "senderPhotoUrl" to sender.photoUrl,
+                    "photoUrl" to sender.photoUrl,
                     "text" to "Ses mesajı",
                     "type" to "audio",
                     "fileUrl" to downloadUrl,
