@@ -440,64 +440,38 @@ class SocialRepository {
         document: DocumentSnapshot,
         currentUserId: String
     ): SocialPost? {
-        val userId = document.getString("userId").orEmpty()
-        if (userId.isBlank()) return null
-
-        val likedBy = (document.get("likedBy") as? List<*>)
-            ?.mapNotNull { it as? String }
-            ?: emptyList()
-
-        val savedBy = (document.get("savedBy") as? List<*>)
-            ?.mapNotNull { it as? String }
-            ?: emptyList()
-
-        val tags = (document.get("tags") as? List<*>)
-            ?.mapNotNull { it as? String }
-            ?: emptyList()
-
-        val visibility = document.getString("visibility")
-            .orEmpty()
-            .ifBlank { POST_VISIBILITY_COMMUNITY }
-
-        val isDraft = document.getBoolean("isDraft") ?: false
-
-        return SocialPost(
+        return SocialPostDocumentResolver.resolve(
             id = document.id,
-            userId = userId,
-            userName = document.getString("userName").orEmpty()
-                .ifBlank { "fitto_user" },
-            userPhotoUrl = document.getString("userPhotoUrl")
-                ?: document.getString("photoUrl"),
-            content = document.getString("content").orEmpty(),
+            currentUserId = currentUserId,
+            userId = document.getString("userId"),
+            userName = document.getString("userName"),
+            userPhotoUrl = document.getString("userPhotoUrl"),
+            fallbackPhotoUrl = document.getString("photoUrl"),
+            content = document.getString("content"),
             imageUrl = document.getString("imageUrl"),
             mealInfo = document.getString("mealInfo"),
-            calories = document.getLong("calories")?.toInt(),
-            likesCount = document.getLong("likesCount")?.toInt() ?: 0,
-            commentsCount = document.getLong("commentsCount")?.toInt() ?: 0,
-            createdAt = document.getLong("createdAt") ?: 0L,
-            likedByMe = likedBy.contains(currentUserId),
-            savedByMe = savedBy.contains(currentUserId),
-            allowComments = document.getBoolean("allowComments") ?: true,
-            visibility = visibility,
-            tags = tags,
-            isDraft = isDraft,
+            calories = document.getLong("calories"),
+            likesCount = document.getLong("likesCount"),
+            commentsCount = document.getLong("commentsCount"),
+            createdAt = document.getLong("createdAt"),
+            likedBy = document.get("likedBy"),
+            savedBy = document.get("savedBy"),
+            allowComments = document.getBoolean("allowComments"),
+            visibility = document.getString("visibility"),
+            tags = document.get("tags"),
+            isDraft = document.getBoolean("isDraft"),
             postType = document.getString("postType"),
             recipeId = document.getString("recipeId"),
             recipeTitle = document.getString("recipeTitle"),
-            recipeImageResId = document.getLong("recipeImageResId")?.toInt(),
+            recipeImageResId = document.getLong("recipeImageResId"),
             recipeDuration = document.getString("recipeDuration"),
             recipeServing = document.getString("recipeServing"),
-            recipeCalories = document.getLong("recipeCalories")?.toInt(),
+            recipeCalories = document.getLong("recipeCalories"),
             recipeCategory = document.getString("recipeCategory"),
             recipeSourceTag = document.getString("recipeSourceTag"),
             recipeDescription = document.getString("recipeDescription"),
-            recipeIngredients = (document.get("recipeIngredients") as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?: emptyList(),
-            recipeSteps = (document.get("recipeSteps") as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?: emptyList(),
-            isMine = userId == currentUserId
+            recipeIngredients = document.get("recipeIngredients"),
+            recipeSteps = document.get("recipeSteps")
         )
     }
 
