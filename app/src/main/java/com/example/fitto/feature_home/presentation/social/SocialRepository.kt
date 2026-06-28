@@ -940,62 +940,20 @@ class SocialRepository {
             .get()
             .await()
 
-        val sharedItems = mutableListOf<SharedContentUiModel>()
-
-        messagesSnapshot.documents.forEach { document ->
-            val messageId = document.id
-            val text = document.getString("text").orEmpty()
-            val createdAt = document.getLong("createdAt") ?: 0L
-            val senderName = document.getString("senderName").orEmpty()
-
-            extractLinks(text).forEachIndexed { index, link ->
-                sharedItems.add(
-                    SharedContentUiModel(
-                        id = "${messageId}_link_$index",
-                        type = SharedContentType.LINK,
-                        title = link,
-                        subtitle = senderName.ifBlank { "Mesaj içinden bağlantı" },
-                        url = link,
-                        createdAt = createdAt
-                    )
-                )
-            }
-
-            val imageUrl = document.getString("imageUrl")
-                ?: document.getString("mediaUrl")
-                ?: document.getString("photoUrl")
-
-            if (!imageUrl.isNullOrBlank()) {
-                sharedItems.add(
-                    SharedContentUiModel(
-                        id = "${messageId}_media",
-                        type = SharedContentType.MEDIA,
-                        title = "Medya",
-                        subtitle = senderName.ifBlank { "Paylaşılan medya" },
-                        url = imageUrl,
-                        createdAt = createdAt
-                    )
-                )
-            }
-
-            val fileUrl = document.getString("fileUrl")
-            val fileName = document.getString("fileName").orEmpty()
-
-            if (!fileUrl.isNullOrBlank()) {
-                sharedItems.add(
-                    SharedContentUiModel(
-                        id = "${messageId}_file",
-                        type = SharedContentType.FILE,
-                        title = fileName.ifBlank { "Dosya" },
-                        subtitle = senderName.ifBlank { "Paylaşılan dosya" },
-                        url = fileUrl,
-                        createdAt = createdAt
-                    )
-                )
-            }
+        return messagesSnapshot.documents.flatMap { document ->
+            SocialThreadSharedContentResolver.resolve(
+                messageId = document.id,
+                text = document.getString("text").orEmpty(),
+                createdAt = document.getLong("createdAt") ?: 0L,
+                senderName = document.getString("senderName").orEmpty(),
+                imageUrl = document.getString("imageUrl")
+                    ?: document.getString("mediaUrl")
+                    ?: document.getString("photoUrl"),
+                fileUrl = document.getString("fileUrl"),
+                fileName = document.getString("fileName").orEmpty(),
+                linkExtractor = ::extractLinks
+            )
         }
-
-        return sharedItems
     }
 
 
