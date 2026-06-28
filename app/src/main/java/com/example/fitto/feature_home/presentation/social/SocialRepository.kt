@@ -2173,34 +2173,14 @@ class SocialRepository {
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(commentRef)
 
-            val likedBy = (snapshot.get("likedBy") as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?.toMutableList()
-                ?: mutableListOf()
-
-            val currentLikes = snapshot.getLong("likesCount") ?: 0L
-
-            if (likedBy.contains(userId)) {
-                likedBy.remove(userId)
-
-                transaction.update(
-                    commentRef,
-                    mapOf(
-                        "likedBy" to likedBy,
-                        "likesCount" to (currentLikes - 1).coerceAtLeast(0)
-                    )
+            transaction.update(
+                commentRef,
+                SocialPostInteractionResolver.toggleLikePayload(
+                    likedByValue = snapshot.get("likedBy"),
+                    currentLikes = snapshot.getLong("likesCount") ?: 0L,
+                    userId = userId
                 )
-            } else {
-                likedBy.add(userId)
-
-                transaction.update(
-                    commentRef,
-                    mapOf(
-                        "likedBy" to likedBy,
-                        "likesCount" to currentLikes + 1
-                    )
-                )
-            }
+            )
         }.await()
     }
 
@@ -2211,21 +2191,11 @@ class SocialRepository {
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(postRef)
 
-            val savedBy = (snapshot.get("savedBy") as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?.toMutableList()
-                ?: mutableListOf()
-
-            if (savedBy.contains(userId)) {
-                savedBy.remove(userId)
-            } else {
-                savedBy.add(userId)
-            }
-
             transaction.update(
                 postRef,
-                mapOf(
-                    "savedBy" to savedBy
+                SocialPostInteractionResolver.toggleSavePayload(
+                    savedByValue = snapshot.get("savedBy"),
+                    userId = userId
                 )
             )
         }.await()
@@ -2238,34 +2208,14 @@ class SocialRepository {
         firestore.runTransaction { transaction ->
             val snapshot = transaction.get(postRef)
 
-            val likedBy = (snapshot.get("likedBy") as? List<*>)
-                ?.mapNotNull { it as? String }
-                ?.toMutableList()
-                ?: mutableListOf()
-
-            val currentLikes = snapshot.getLong("likesCount") ?: 0L
-
-            if (likedBy.contains(userId)) {
-                likedBy.remove(userId)
-
-                transaction.update(
-                    postRef,
-                    mapOf(
-                        "likedBy" to likedBy,
-                        "likesCount" to (currentLikes - 1).coerceAtLeast(0)
-                    )
+            transaction.update(
+                postRef,
+                SocialPostInteractionResolver.toggleLikePayload(
+                    likedByValue = snapshot.get("likedBy"),
+                    currentLikes = snapshot.getLong("likesCount") ?: 0L,
+                    userId = userId
                 )
-            } else {
-                likedBy.add(userId)
-
-                transaction.update(
-                    postRef,
-                    mapOf(
-                        "likedBy" to likedBy,
-                        "likesCount" to currentLikes + 1
-                    )
-                )
-            }
+            )
         }.await()
     }
 
