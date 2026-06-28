@@ -1786,11 +1786,14 @@ class SocialRepository {
 
     suspend fun toggleFollow(targetUser: SocialUser) {
         val currentUser = auth.currentUser ?: return
-        if (currentUser.uid == targetUser.id) return
+        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, targetUser.id)) return
 
         createCurrentUserProfileIfNeeded()
 
-        val followId = "${currentUser.uid}_${targetUser.id}"
+        val followId = SocialFollowPayloadResolver.followDocumentId(
+            followerId = currentUser.uid,
+            followingId = targetUser.id
+        )
         val followRef = firestore.collection("follows").document(followId)
         val currentUserRef = firestore.collection("users").document(currentUser.uid)
         val targetUserRef = firestore.collection("users").document(targetUser.id)
@@ -1799,8 +1802,10 @@ class SocialRepository {
             val followSnapshot = transaction.get(followRef)
             val targetSnapshot = transaction.get(targetUserRef)
 
-            val targetDeleted = !targetSnapshot.exists() ||
-                    targetSnapshot.getBoolean("isDeleted") == true
+            val targetDeleted = SocialFollowPayloadResolver.isDeletedOrMissing(
+                exists = targetSnapshot.exists(),
+                isDeleted = targetSnapshot.getBoolean("isDeleted")
+            )
 
             if (targetDeleted) {
                 if (followSnapshot.exists()) {
@@ -1815,10 +1820,7 @@ class SocialRepository {
                 if (targetSnapshot.exists()) {
                     transaction.update(
                         targetUserRef,
-                        mapOf(
-                            "followersCount" to 0,
-                            "followingCount" to 0
-                        )
+                        SocialFollowPayloadResolver.deletedUserCountResetPayload()
                     )
                 }
 
@@ -1832,10 +1834,10 @@ class SocialRepository {
             } else {
                 transaction.set(
                     followRef,
-                    mapOf(
-                        "followerId" to currentUser.uid,
-                        "followingId" to targetUser.id,
-                        "createdAt" to System.currentTimeMillis()
+                    SocialFollowPayloadResolver.createFollowPayload(
+                        followerId = currentUser.uid,
+                        followingId = targetUser.id,
+                        createdAt = System.currentTimeMillis()
                     )
                 )
 
@@ -2748,10 +2750,15 @@ class SocialRepository {
 
     suspend fun removeFollower(followerId: String) {
         val currentUser = auth.currentUser ?: return
-        if (followerId.isBlank() || followerId == currentUser.uid) return
+        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, followerId)) return
 
         val followRef = firestore.collection("follows")
-            .document("${followerId}_${currentUser.uid}")
+            .document(
+                SocialFollowPayloadResolver.followDocumentId(
+                    followerId = followerId,
+                    followingId = currentUser.uid
+                )
+            )
         val followerRef = firestore.collection("users").document(followerId)
         val currentUserRef = firestore.collection("users").document(currentUser.uid)
 
@@ -2763,19 +2770,22 @@ class SocialRepository {
             val currentSnapshot = transaction.get(currentUserRef)
 
             transaction.delete(followRef)
+            val updatedAt = System.currentTimeMillis()
             transaction.set(
                 followerRef,
-                mapOf(
-                    "followingCount" to ((followerSnapshot.getLong("followingCount") ?: 0L) - 1L).coerceAtLeast(0L),
-                    "updatedAt" to System.currentTimeMillis()
+                SocialFollowPayloadResolver.decrementCountPayload(
+                    field = "followingCount",
+                    currentCount = followerSnapshot.getLong("followingCount"),
+                    updatedAt = updatedAt
                 ),
                 SetOptions.merge()
             )
             transaction.set(
                 currentUserRef,
-                mapOf(
-                    "followersCount" to ((currentSnapshot.getLong("followersCount") ?: 0L) - 1L).coerceAtLeast(0L),
-                    "updatedAt" to System.currentTimeMillis()
+                SocialFollowPayloadResolver.decrementCountPayload(
+                    field = "followersCount",
+                    currentCount = currentSnapshot.getLong("followersCount"),
+                    updatedAt = updatedAt
                 ),
                 SetOptions.merge()
             )
@@ -2785,10 +2795,15 @@ class SocialRepository {
 
     suspend fun stopFollowing(followingId: String) {
         val currentUser = auth.currentUser ?: return
-        if (followingId.isBlank() || followingId == currentUser.uid) return
+        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, followingId)) return
 
         val followRef = firestore.collection("follows")
-            .document("${currentUser.uid}_${followingId}")
+            .document(
+                SocialFollowPayloadResolver.followDocumentId(
+                    followerId = currentUser.uid,
+                    followingId = followingId
+                )
+            )
         val currentUserRef = firestore.collection("users").document(currentUser.uid)
         val followingUserRef = firestore.collection("users").document(followingId)
 
@@ -2800,19 +2815,22 @@ class SocialRepository {
             val followingSnapshot = transaction.get(followingUserRef)
 
             transaction.delete(followRef)
+            val updatedAt = System.currentTimeMillis()
             transaction.set(
                 currentUserRef,
-                mapOf(
-                    "followingCount" to ((currentSnapshot.getLong("followingCount") ?: 0L) - 1L).coerceAtLeast(0L),
-                    "updatedAt" to System.currentTimeMillis()
+                SocialFollowPayloadResolver.decrementCountPayload(
+                    field = "followingCount",
+                    currentCount = currentSnapshot.getLong("followingCount"),
+                    updatedAt = updatedAt
                 ),
                 SetOptions.merge()
             )
             transaction.set(
                 followingUserRef,
-                mapOf(
-                    "followersCount" to ((followingSnapshot.getLong("followersCount") ?: 0L) - 1L).coerceAtLeast(0L),
-                    "updatedAt" to System.currentTimeMillis()
+                SocialFollowPayloadResolver.decrementCountPayload(
+                    field = "followersCount",
+                    currentCount = followingSnapshot.getLong("followersCount"),
+                    updatedAt = updatedAt
                 ),
                 SetOptions.merge()
             )
