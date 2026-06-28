@@ -728,70 +728,29 @@ class SocialRepository {
                 }
 
                 val messages = snapshot?.documents?.mapNotNull { document ->
-                    val createdAt = document.getLong("createdAt") ?: 0L
-                    if (createdAt <= currentUserClearedAt) {
-                        return@mapNotNull null
-                    }
-
-                    val deletedFor = document.getStringListCompat("deletedFor")
-                    if (deletedFor.contains(currentUserId)) {
-                        return@mapNotNull null
-                    }
-
-                    val senderId = document.getString("senderId").orEmpty()
-                    val readBy = SocialReadReceiptResolver.readByMap(document.get("readBy"))
-                    val readByOthersCount = readBy.keys
-                        .filter { uid -> uid != senderId }
-                        .distinct()
-                        .size
-                    val isDeleted = document.getBoolean("isDeleted") == true
-                    val messageType = document.getString("type").orEmpty().ifBlank { "text" }
-                    val fileName = document.getString("fileName")
-                    val fileUrl = document.getString("fileUrl")
-                    val fileMimeType = document.getString("fileMimeType")
-                    val fileSizeBytes = document.getLong("fileSizeBytes") ?: 0L
-                    val audioDurationMillis = document.getLong("audioDurationMillis") ?: 0L
-
-                    val messageText = if (isDeleted) {
-                        "Bu mesaj silindi"
-                    } else {
-                        when {
-                            messageType == "file" && fileMimeType?.startsWith("image/") == true -> ""
-                            messageType == "file" -> fileName ?: "Dosya"
-                            messageType == "audio" -> "Ses mesajı"
-                            else -> document.getString("text").orEmpty()
-                        }
-                    }
-
-                    ChatMessageUiModel(
+                    SocialChatMessageDocumentResolver.resolve(
                         id = document.id,
-                        text = messageText,
-                        timeText = SocialTextResolver.formatClockTime(createdAt),
-                        senderId = senderId,
-                        senderName = document.getString("senderName").orEmpty()
-                            .ifBlank { participantNames[senderId] ?: "Fitto" },
-                        senderPhotoUrl = document.getString("senderPhotoUrl")
-                            ?: document.getString("photoUrl")
-                            ?: participantPhotoUrls[senderId],
-                        isFromMe = senderId == currentUserId,
-                        createdAt = createdAt,
-                        deliveredAt = document.getLong("deliveredAt") ?: createdAt,
-                        readBy = readBy,
-                        type = messageType,
-                        fileUrl = fileUrl,
-                        fileName = fileName,
-                        fileMimeType = fileMimeType,
-                        fileSizeBytes = fileSizeBytes,
+                        createdAt = document.getLong("createdAt") ?: 0L,
+                        currentUserId = currentUserId,
+                        currentUserClearedAt = currentUserClearedAt,
+                        deletedFor = document.getStringListCompat("deletedFor"),
+                        senderId = document.getString("senderId").orEmpty(),
+                        senderName = document.getString("senderName"),
+                        senderPhotoUrl = document.getString("senderPhotoUrl"),
+                        fallbackPhotoUrl = document.getString("photoUrl"),
                         participantNames = participantNames,
-                        readReceiptText = if (senderId == currentUserId) {
-                            SocialReadReceiptResolver.createReadReceiptText(readByOthersCount, totalRecipientCount)
-                        } else {
-                            null
-                        },
-                        readByCount = readByOthersCount,
+                        participantPhotoUrls = participantPhotoUrls,
+                        readBy = SocialReadReceiptResolver.readByMap(document.get("readBy")),
                         totalRecipientCount = totalRecipientCount,
-                        isDeleted = isDeleted,
-                        audioDurationMillis = audioDurationMillis,
+                        isDeleted = document.getBoolean("isDeleted") == true,
+                        messageType = document.getString("type"),
+                        text = document.getString("text"),
+                        fileName = document.getString("fileName"),
+                        fileUrl = document.getString("fileUrl"),
+                        fileMimeType = document.getString("fileMimeType"),
+                        fileSizeBytes = document.getLong("fileSizeBytes") ?: 0L,
+                        audioDurationMillis = document.getLong("audioDurationMillis") ?: 0L,
+                        deliveredAt = document.getLong("deliveredAt"),
                         deletedAt = document.getLong("deletedAt") ?: 0L,
                         deletedBy = document.getString("deletedBy")
                     )
