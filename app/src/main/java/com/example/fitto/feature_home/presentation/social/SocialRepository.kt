@@ -2830,66 +2830,66 @@ class SocialRepository {
     }
 
     suspend fun getFollowers(userId: String): List<SocialUser> {
-        if (userId.isBlank()) return emptyList()
+        if (SocialUserListResolver.shouldSkipRelationshipLookup(userId)) return emptyList()
 
         val followerIds = firestore.collection("follows")
             .whereEqualTo("followingId", userId)
             .get()
             .await()
             .documents
-            .mapNotNull { document -> document.getString("followerId") }
-            .let(SocialUserLookupResolver::uniqueNonBlankIds)
+            .map { document -> document.getString("followerId") }
+            .let(SocialUserListResolver::followerIds)
 
         return getUsersByIds(followerIds)
     }
 
     suspend fun getFollowing(userId: String): List<SocialUser> {
-        if (userId.isBlank()) return emptyList()
+        if (SocialUserListResolver.shouldSkipRelationshipLookup(userId)) return emptyList()
 
         val followingIds = firestore.collection("follows")
             .whereEqualTo("followerId", userId)
             .get()
             .await()
             .documents
-            .mapNotNull { document -> document.getString("followingId") }
-            .let(SocialUserLookupResolver::uniqueNonBlankIds)
+            .map { document -> document.getString("followingId") }
+            .let(SocialUserListResolver::followingIds)
 
         return getUsersByIds(followingIds)
     }
 
     private suspend fun getUsersByIds(userIds: List<String>): List<SocialUser> {
-        val lookupIds = SocialUserLookupResolver.uniqueNonBlankIds(userIds)
-        if (lookupIds.isEmpty()) return emptyList()
+        val lookupChunks = SocialUserListResolver.lookupChunks(userIds)
+        if (lookupChunks.isEmpty()) return emptyList()
 
         val users = mutableMapOf<String, SocialUser>()
 
-        lookupIds.chunked(10)
-            .forEach { chunk ->
-                val snapshot = firestore.collection("users")
-                    .whereIn(FieldPath.documentId(), chunk)
-                    .get()
-                    .await()
+        lookupChunks.forEach { chunk ->
+            val snapshot = firestore.collection("users")
+                .whereIn(FieldPath.documentId(), chunk)
+                .get()
+                .await()
 
-                snapshot.documents.forEach { document ->
-                    if (document.getBoolean("isDeleted") == true) return@forEach
+            snapshot.documents.forEach { document ->
+                val user = SocialUserListResolver.resolveVisibleProfile(
+                    id = document.id,
+                    isDeleted = document.getBoolean("isDeleted"),
+                    userName = document.getString("userName"),
+                    username = document.getString("username"),
+                    displayName = document.getString("displayName"),
+                    name = document.getString("name"),
+                    realName = document.getString("realName"),
+                    email = document.getString("email"),
+                    photoUrl = document.getString("photoUrl"),
+                    bio = document.getString("bio"),
+                    followersCount = document.getLong("followersCount"),
+                    followingCount = document.getLong("followingCount")
+                ) ?: return@forEach
 
-                    users[document.id] = SocialUserDocumentResolver.resolveProfile(
-                        id = document.id,
-                        userName = document.getString("userName"),
-                        username = document.getString("username"),
-                        displayName = document.getString("displayName"),
-                        name = document.getString("name"),
-                        realName = document.getString("realName"),
-                        email = document.getString("email"),
-                        photoUrl = document.getString("photoUrl"),
-                        bio = document.getString("bio"),
-                        followersCount = document.getLong("followersCount")?.toInt() ?: 0,
-                        followingCount = document.getLong("followingCount")?.toInt() ?: 0
-                    )
-                }
+                users[user.id] = user
             }
+        }
 
-        return SocialUserLookupResolver.orderUsersByRequestedIds(
+        return SocialUserListResolver.orderUsersByRequestedIds(
             requestedIds = userIds,
             usersById = users
         )
