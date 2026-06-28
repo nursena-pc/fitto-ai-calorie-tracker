@@ -267,7 +267,7 @@ class SocialRepository {
     fun observeFeed(): Flow<List<SocialPost>> = callbackFlow {
         val currentUserId = auth.currentUser?.uid.orEmpty()
 
-        if (currentUserId.isBlank()) {
+        if (SocialFeedResolver.shouldSkipFeed(currentUserId)) {
             trySend(emptyList())
             close()
             return@callbackFlow
@@ -277,14 +277,7 @@ class SocialRepository {
         val registrations = mutableListOf<ListenerRegistration>()
 
         fun emitMergedPosts() {
-            val mergedPosts = sourcePostMaps
-                .values
-                .flatMap { it.values }
-                .associateBy { post -> post.id }
-                .values
-                .sortedByDescending { post -> post.createdAt }
-
-            trySend(mergedPosts)
+            trySend(SocialFeedResolver.mergeSourcePosts(sourcePostMaps))
         }
 
         fun attachSource(
@@ -311,10 +304,9 @@ class SocialRepository {
                     .filter(includePost)
 
                 launch {
-                    val posts = hydratePostAuthors(rawPosts)
-                        .associateBy { post -> post.id }
-
-                    sourcePostMaps[key] = posts
+                    sourcePostMaps[key] = SocialFeedResolver.sourcePostMap(
+                        hydratePostAuthors(rawPosts)
+                    )
                     emitMergedPosts()
                 }
             }
@@ -327,10 +319,8 @@ class SocialRepository {
             .get()
             .await()
             .documents
-            .mapNotNull { document ->
-                document.getString("followingId")
-            }
-            .toSet()
+            .map { document -> document.getString("followingId") }
+            .let(SocialFeedResolver::followingIds)
 
         // Herkesin görebileceği topluluk gönderileri
         attachSource(
@@ -351,8 +341,7 @@ class SocialRepository {
         )
 
         // Takip ettiğim kişilerin followers gönderileri
-        followingIds
-            .chunked(10)
+        SocialFeedResolver.followingLookupChunks(followingIds)
             .forEachIndexed { index, chunk ->
                 if (chunk.isNotEmpty()) {
                     attachSource(
