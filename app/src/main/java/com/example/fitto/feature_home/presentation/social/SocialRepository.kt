@@ -789,25 +789,11 @@ class SocialRepository {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
-        val creatorId = threadSnapshot.getString("creatorId").orEmpty()
-        val participants = threadSnapshot.get("participants") as? Map<*, *>
-
-        return participantIds.map { uid ->
-            val participant = participants?.get(uid) as? Map<*, *>
-
-            GroupMemberUiModel(
-                uid = uid,
-                userName = (participant?.get("userName") as? String)
-                    ?.ifBlank { null }
-                    ?: "fitto_user",
-                photoUrl = participant?.get("photoUrl") as? String,
-                isMe = uid == currentUserId,
-                isCreator = uid == creatorId
-            )
-        }.sortedWith(
-            compareByDescending<GroupMemberUiModel> { it.isMe }
-                .thenByDescending { it.isCreator }
-                .thenBy { it.userName.lowercase(Locale("tr", "TR")) }
+        return SocialGroupMemberResolver.resolveMembers(
+            participantIds = participantIds,
+            participants = threadSnapshot.get("participants") as? Map<*, *>,
+            currentUserId = currentUserId,
+            creatorId = threadSnapshot.getString("creatorId").orEmpty()
         )
     }
 
