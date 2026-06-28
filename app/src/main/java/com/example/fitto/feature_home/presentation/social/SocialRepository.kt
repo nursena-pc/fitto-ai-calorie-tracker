@@ -27,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import java.util.UUID
-import android.util.Patterns
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.firestore.FieldPath
 data class MessageHiddenRange(
@@ -883,36 +882,11 @@ class SocialRepository {
                     ?: document.getString("photoUrl"),
                 fileUrl = document.getString("fileUrl"),
                 fileName = document.getString("fileName").orEmpty(),
-                linkExtractor = ::extractLinks
+                linkExtractor = SocialLinkResolver::extractLinks
             )
         }
     }
 
-
-    private fun extractLinks(text: String): List<String> {
-        if (text.isBlank()) return emptyList()
-
-        val matcher = Patterns.WEB_URL.matcher(text)
-        val links = mutableListOf<String>()
-
-        while (matcher.find()) {
-            val rawLink = matcher.group().orEmpty()
-            if (rawLink.isNotBlank()) {
-                val normalizedLink = if (
-                    rawLink.startsWith("http://", ignoreCase = true) ||
-                    rawLink.startsWith("https://", ignoreCase = true)
-                ) {
-                    rawLink
-                } else {
-                    "https://$rawLink"
-                }
-
-                links.add(normalizedLink)
-            }
-        }
-
-        return links.distinct()
-    }
 
     suspend fun createOrGetDirectThread(targetUserId: String): MessageThreadUiModel? {
         val currentUser = auth.currentUser ?: return null
