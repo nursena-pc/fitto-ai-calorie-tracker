@@ -750,19 +750,20 @@ class SocialRepository {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
-        val storageRef = FirebaseStorage.getInstance()
-            .reference
-            .child("group_photos")
-            .child(threadId)
-            .child("${UUID.randomUUID()}.jpg")
+        val storageRef = storage.reference.child(
+            SocialMediaUploadResolver.groupPhotoStoragePath(
+                threadId = threadId,
+                fileId = UUID.randomUUID().toString()
+            )
+        )
 
         storageRef.putFile(imageUri).await()
         val downloadUrl = storageRef.downloadUrl.await().toString()
 
         threadRef.update(
-            mapOf(
-                "photoUrl" to downloadUrl,
-                "updatedAt" to System.currentTimeMillis()
+            SocialMediaUploadResolver.groupPhotoUpdatePayload(
+                photoUrl = downloadUrl,
+                updatedAt = System.currentTimeMillis()
             )
         ).await()
 
@@ -2838,13 +2839,21 @@ class SocialRepository {
         imageUri: Uri
     ): String {
         val user = auth.currentUser ?: return ""
-        val storageRef = storage.reference
-            .child("profile_photos")
-            .child(user.uid)
-            .child("${System.currentTimeMillis()}_${UUID.randomUUID()}.jpg")
+        val now = System.currentTimeMillis()
+        val storageRef = storage.reference.child(
+            SocialMediaUploadResolver.profilePhotoStoragePath(
+                userId = user.uid,
+                nowMillis = now,
+                fileId = UUID.randomUUID().toString()
+            )
+        )
 
         val metadata = StorageMetadata.Builder()
-            .setContentType(context.contentResolver.getType(imageUri) ?: "image/jpeg")
+            .setContentType(
+                SocialMediaUploadResolver.imageContentType(
+                    context.contentResolver.getType(imageUri)
+                )
+            )
             .build()
 
         storageRef.putFile(imageUri, metadata).await()
@@ -3110,8 +3119,11 @@ class SocialRepository {
 
     private suspend fun uploadPostImage(uri: Uri): String? {
         return try {
-            val fileName = "${UUID.randomUUID()}.jpg"
-            val imageRef = storage.reference.child("post_images/$fileName")
+            val imageRef = storage.reference.child(
+                SocialMediaUploadResolver.postImageStoragePath(
+                    fileId = UUID.randomUUID().toString()
+                )
+            )
 
             imageRef.putFile(uri).await()
 
