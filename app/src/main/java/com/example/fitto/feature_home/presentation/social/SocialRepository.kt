@@ -535,7 +535,7 @@ class SocialRepository {
     fun observeMessages(threadId: String): Flow<List<ChatMessageUiModel>> = callbackFlow {
         val currentUserId = auth.currentUser?.uid.orEmpty()
 
-        if (threadId.isBlank() || currentUserId.isBlank()) {
+        if (SocialMessageListResolver.shouldSkipMessageList(currentUserId, threadId)) {
             trySend(emptyList())
             close()
             return@callbackFlow
@@ -545,25 +545,23 @@ class SocialRepository {
         val threadSnapshot = threadRef.get().await()
         val participantIds = threadSnapshot.getStringListCompat("participantIds")
         val participants = threadSnapshot.get("participants") as? Map<*, *>
-        val participantNames = participantIds.associateWith { uid ->
-            val participant = participants?.get(uid) as? Map<*, *>
-            (participant?.get("userName") as? String).orEmpty().ifBlank { "fitto_user" }
-        }
+        val participantNames = SocialMessageListResolver.participantNames(
+            participantIds = participantIds,
+            participants = participants
+        )
         val latestParticipants = getUsersByIds(participantIds)
             .associateBy { user -> user.id }
-        val participantPhotoUrls = participantIds.associateWith { uid ->
-            val participant = participants?.get(uid) as? Map<*, *>
-            val latestParticipant = latestParticipants[uid]
-            if (latestParticipant != null) {
-                latestParticipant.photoUrl
-            } else {
-                participant?.get("photoUrl") as? String
-            }
-        }
+        val participantPhotoUrls = SocialMessageListResolver.participantPhotoUrls(
+            participantIds = participantIds,
+            participants = participants,
+            latestParticipants = latestParticipants
+        )
 
-        val totalRecipientCount = (participantIds.size - 1).coerceAtLeast(1)
-        val clearedAtMap = threadSnapshot.get("clearedAt") as? Map<*, *>
-        val currentUserClearedAt = (clearedAtMap?.get(currentUserId) as? Number)?.toLong() ?: 0L
+        val totalRecipientCount = SocialMessageListResolver.totalRecipientCount(participantIds)
+        val currentUserClearedAt = SocialMessageListResolver.currentUserClearedAt(
+            clearedAt = threadSnapshot.get("clearedAt"),
+            currentUserId = currentUserId
+        )
         val listener = threadRef
             .collection(MESSAGES_SUBCOLLECTION)
             .orderBy("createdAt", Query.Direction.ASCENDING)
