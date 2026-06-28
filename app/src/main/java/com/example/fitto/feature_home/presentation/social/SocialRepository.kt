@@ -1176,30 +1176,31 @@ class SocialRepository {
         participantIds: List<String>,
         senderId: String
     ): List<String> {
-        val recipientIds = participantIds
-            .filter { userId -> userId != senderId }
-            .distinct()
+        val blockedRecipientIds = mutableListOf<String>()
 
-        if (recipientIds.isEmpty()) return emptyList()
-
-        val blockedRecipientIds = mutableSetOf<String>()
-
-        recipientIds.chunked(10).forEach { chunk ->
+        SocialMessageDeliveryResolver.recipientLookupChunks(
+            participantIds = participantIds,
+            senderId = senderId
+        ).forEach { chunk ->
             val snapshot = firestore.collection("users")
                 .whereIn(FieldPath.documentId(), chunk)
                 .get()
                 .await()
 
-            snapshot.documents.forEach { userDocument ->
-                val blockedUserIds = userDocument.getStringListCompat("blockedUserIds")
-
-                if (blockedUserIds.contains(senderId)) {
-                    blockedRecipientIds.add(userDocument.id)
-                }
+            val records = snapshot.documents.map { userDocument ->
+                SocialMessageRecipientBlockRecord(
+                    userId = userDocument.id,
+                    blockedUserIds = userDocument.getStringListCompat("blockedUserIds")
+                )
             }
+
+            blockedRecipientIds += SocialMessageDeliveryResolver.blockedRecipientIds(
+                records = records,
+                senderId = senderId
+            )
         }
 
-        return blockedRecipientIds.toList()
+        return blockedRecipientIds.distinct()
     }
 
     suspend fun sendMessage(
@@ -1209,7 +1210,7 @@ class SocialRepository {
         val currentUser = auth.currentUser ?: return
         val trimmedText = text.trim()
 
-        if (threadId.isBlank() || trimmedText.isBlank()) return
+        if (SocialMessageDeliveryResolver.shouldSkipTextMessage(threadId, trimmedText)) return
 
         createCurrentUserProfileIfNeeded()
 
@@ -1277,7 +1278,7 @@ class SocialRepository {
         fileUri: Uri
     ) {
         val currentUser = auth.currentUser ?: return
-        if (threadId.isBlank()) return
+        if (SocialMessageDeliveryResolver.shouldSkipAttachmentMessage(threadId)) return
 
         createCurrentUserProfileIfNeeded()
 
@@ -1312,10 +1313,14 @@ class SocialRepository {
 
         val storageRef = FirebaseStorage.getInstance()
             .reference
-            .child("chat_attachments")
-            .child(threadId)
-            .child(messageRef.id)
-            .child("${UUID.randomUUID()}_$safeFileName")
+            .child(
+                SocialMessageDeliveryResolver.attachmentStoragePath(
+                    threadId = threadId,
+                    messageId = messageRef.id,
+                    fileId = UUID.randomUUID().toString(),
+                    safeFileName = safeFileName
+                )
+            )
 
         val metadata = StorageMetadata.Builder()
             .setContentType(fileInfo.mimeType)
@@ -1373,8 +1378,13 @@ class SocialRepository {
         durationMillis: Long
     ) {
         val currentUser = auth.currentUser ?: return
-        if (threadId.isBlank()) return
-        if (!audioFile.exists() || audioFile.length() <= 0L) return
+        if (
+            SocialMessageDeliveryResolver.shouldSkipAudioMessage(
+                threadId = threadId,
+                fileExists = audioFile.exists(),
+                fileSizeBytes = audioFile.length()
+            )
+        ) return
 
         createCurrentUserProfileIfNeeded()
 
@@ -1404,19 +1414,22 @@ class SocialRepository {
 
         val storageRef = FirebaseStorage.getInstance()
             .reference
-            .child("chat_attachments")
-            .child(threadId)
-            .child(messageRef.id)
-            .child("${UUID.randomUUID()}_voice_message.m4a")
+            .child(
+                SocialMessageDeliveryResolver.audioStoragePath(
+                    threadId = threadId,
+                    messageId = messageRef.id,
+                    fileId = UUID.randomUUID().toString()
+                )
+            )
 
         val metadata = StorageMetadata.Builder()
-            .setContentType("audio/mp4")
+            .setContentType(SocialMessageDeliveryResolver.audioContentType())
             .build()
 
         storageRef.putFile(Uri.fromFile(audioFile), metadata).await()
         val downloadUrl = storageRef.downloadUrl.await().toString()
 
-        val lastMessageText = "🎤 Ses mesajı"
+        val lastMessageText = SocialMessageDeliveryResolver.audioLastMessageText()
         val blockedRecipientIds = getRecipientsWhoBlockedSender(
             participantIds = participantIds,
             senderId = currentUser.uid
