@@ -2121,11 +2121,11 @@ class SocialRepository {
 
         firestore.collection("reports")
             .add(
-                mapOf(
-                    "postId" to postId,
-                    "reporterId" to userId,
-                    "reason" to reason,
-                    "createdAt" to System.currentTimeMillis()
+                SocialModerationPayloadResolver.createPostReportPayload(
+                    postId = postId,
+                    reporterId = userId,
+                    reason = reason,
+                    createdAt = System.currentTimeMillis()
                 )
             )
             .await()
@@ -2138,31 +2138,22 @@ class SocialRepository {
     ) {
         val currentUserId = auth.currentUser?.uid ?: return
 
-        if (targetUserId.isBlank() || targetUserId == currentUserId) return
+        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
 
         createCurrentUserProfileIfNeeded()
 
         val userRef = firestore.collection("users").document(currentUserId)
         val now = System.currentTimeMillis()
 
-        val updates = mutableMapOf<String, Any>(
-            "blockedUserIds" to FieldValue.arrayUnion(targetUserId),
-            "updatedAt" to now
-        )
-
-        if (!threadId.isNullOrBlank()) {
-            updates["activeBlockedMessageRanges.$threadId"] = mapOf(
-                "userId" to targetUserId,
-                "startAt" to now
+        userRef.update(
+            SocialModerationPayloadResolver.createBlockUserPayload(
+                targetUserId = targetUserId,
+                threadId = threadId,
+                previewText = previewText,
+                previewCreatedAt = previewCreatedAt,
+                updatedAt = now
             )
-
-            updates["blockedThreadPreviews.$threadId"] = mapOf(
-                "text" to previewText.orEmpty().ifBlank { "Henüz mesaj yok." },
-                "createdAt" to (previewCreatedAt ?: now)
-            )
-        }
-
-        userRef.update(updates).await()
+        ).await()
     }
 
     suspend fun unblockUser(
@@ -2171,32 +2162,26 @@ class SocialRepository {
     ) {
         val currentUserId = auth.currentUser?.uid ?: return
 
-        if (targetUserId.isBlank() || targetUserId == currentUserId) return
+        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
 
         val userRef = firestore.collection("users").document(currentUserId)
         val snapshot = userRef.get().await()
         val now = System.currentTimeMillis()
 
-        val updates = mutableMapOf<String, Any>(
-            "blockedUserIds" to FieldValue.arrayRemove(targetUserId),
-            "updatedAt" to now
-        )
+        val updates = SocialModerationPayloadResolver.createUnblockBasePayload(
+            targetUserId = targetUserId,
+            updatedAt = now
+        ).toMutableMap()
 
         fun closeHiddenRangeForThread(targetThreadId: String) {
-            val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, targetThreadId)
-
-            if (activeRange != null && activeRange.userId == targetUserId) {
-                updates["blockedMessageRanges.$targetThreadId"] = FieldValue.arrayUnion(
-                    mapOf(
-                        "userId" to activeRange.userId,
-                        "startAt" to activeRange.startAt,
-                        "endAt" to now
-                    )
+            updates.putAll(
+                SocialModerationPayloadResolver.createCloseBlockedThreadPayload(
+                    threadId = targetThreadId,
+                    activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, targetThreadId),
+                    targetUserId = targetUserId,
+                    updatedAt = now
                 )
-            }
-
-            updates["activeBlockedMessageRanges.$targetThreadId"] = FieldValue.delete()
-            updates["blockedThreadPreviews.$targetThreadId"] = FieldValue.delete()
+            )
         }
 
         if (!threadId.isNullOrBlank()) {
@@ -2320,17 +2305,16 @@ class SocialRepository {
     ) {
         val currentUserId = auth.currentUser?.uid ?: return
 
-        if (targetUserId.isBlank() || targetUserId == currentUserId) return
+        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
 
         firestore.collection("reports")
             .add(
-                mapOf(
-                    "type" to "user",
-                    "reportedUserId" to targetUserId,
-                    "reporterId" to currentUserId,
-                    "threadId" to threadId,
-                    "reason" to reason,
-                    "createdAt" to System.currentTimeMillis()
+                SocialModerationPayloadResolver.createUserReportPayload(
+                    targetUserId = targetUserId,
+                    reporterId = currentUserId,
+                    threadId = threadId,
+                    reason = reason,
+                    createdAt = System.currentTimeMillis()
                 )
             )
             .await()
