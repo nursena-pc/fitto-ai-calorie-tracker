@@ -2405,15 +2405,15 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                val posts = snapshot?.documents.orEmpty()
-                    .mapNotNull { document ->
-                        mapSocialPostDocument(
-                            document = document,
-                            currentUserId = currentUserId
-                        )
-                    }
-                    .filterNot { post -> post.isDraft }
-                    .sortedByDescending { post -> post.createdAt }
+                val posts = SocialPostListResolver.profilePosts(
+                    snapshot?.documents.orEmpty()
+                        .mapNotNull { document ->
+                            mapSocialPostDocument(
+                                document = document,
+                                currentUserId = currentUserId
+                            )
+                        }
+                )
 
                 launch {
                     trySend(hydratePostAuthors(posts))
@@ -2441,15 +2441,15 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                val drafts = snapshot?.documents.orEmpty()
-                    .mapNotNull { document ->
-                        mapSocialPostDocument(
-                            document = document,
-                            currentUserId = currentUserId
-                        )
-                    }
-                    .filter { post -> post.isDraft }
-                    .sortedByDescending { post -> post.createdAt }
+                val drafts = SocialPostListResolver.draftPosts(
+                    snapshot?.documents.orEmpty()
+                        .mapNotNull { document ->
+                            mapSocialPostDocument(
+                                document = document,
+                                currentUserId = currentUserId
+                            )
+                        }
+                )
 
                 launch {
                     trySend(hydratePostAuthors(drafts))
@@ -2476,15 +2476,15 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                val posts = snapshot?.documents.orEmpty()
-                    .mapNotNull { document ->
-                        mapSocialPostDocument(
-                            document = document,
-                            currentUserId = currentUserId
-                        )
-                    }
-                    .filterNot { post -> post.isDraft }
-                    .sortedByDescending { post -> post.createdAt }
+                val posts = SocialPostListResolver.savedPosts(
+                    snapshot?.documents.orEmpty()
+                        .mapNotNull { document ->
+                            mapSocialPostDocument(
+                                document = document,
+                                currentUserId = currentUserId
+                            )
+                        }
+                )
 
                 launch {
                     trySend(hydratePostAuthors(posts))
@@ -2512,15 +2512,17 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                val post = snapshot
-                    ?.takeIf { document -> document.exists() }
-                    ?.let { document ->
-                        mapSocialPostDocument(
-                            document = document,
-                            currentUserId = currentUserId
-                        )
-                    }
-                    ?.takeIf { post -> !post.isDraft || post.userId == currentUserId }
+                val post = SocialPostListResolver.visiblePost(
+                    post = snapshot
+                        ?.takeIf { document -> document.exists() }
+                        ?.let { document ->
+                            mapSocialPostDocument(
+                                document = document,
+                                currentUserId = currentUserId
+                            )
+                        },
+                    currentUserId = currentUserId
+                )
 
                 launch {
                     trySend(post?.let { hydratePostAuthors(listOf(it)).firstOrNull() })
