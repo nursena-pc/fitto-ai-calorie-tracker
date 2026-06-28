@@ -1322,19 +1322,14 @@ class SocialRepository {
         firestore.runBatch { batch ->
             batch.set(
                 messageRef,
-                mapOf(
-                    "id" to messageRef.id,
-                    "threadId" to threadId,
-                    "senderId" to currentUser.uid,
-                    "senderName" to sender.name,
-                    "senderPhotoUrl" to sender.photoUrl,
-                    "photoUrl" to sender.photoUrl,
-                    "text" to trimmedText,
-                    "type" to "text",
-                    "readBy" to mapOf(currentUser.uid to now),
-                    "deletedFor" to blockedRecipientIds,
-                    "createdAt" to now,
-                    "deliveredAt" to now,
+                SocialMessageTextPayloadResolver.createTextMessagePayload(
+                    messageId = messageRef.id,
+                    threadId = threadId,
+                    senderId = currentUser.uid,
+                    sender = sender,
+                    text = trimmedText,
+                    deletedFor = blockedRecipientIds,
+                    readAt = now
                 )
             )
 
