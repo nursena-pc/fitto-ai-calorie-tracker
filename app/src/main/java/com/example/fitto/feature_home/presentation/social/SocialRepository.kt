@@ -1614,45 +1614,30 @@ class SocialRepository {
             .await()
             .documents
             .filter { document ->
-                val senderId = document.getString("senderId").orEmpty()
-                val createdAt = document.getLong("createdAt") ?: 0L
-
-                val isBlockedSenderMessage =
-                    !otherUserId.isNullOrBlank() &&
-                            senderId == otherUserId &&
-                            (
-                                    SocialMessageHiddenRangeResolver.isMessageInHiddenRanges(
-                                        senderId = senderId,
-                                        createdAt = createdAt,
-                                        hiddenRanges = hiddenRanges
-                                    )
-                                            ||
-                                            (
-                                                    isOtherUserCurrentlyBlocked &&
-                                                            hiddenRanges.isEmpty()
-                                                    )
-                                    )
-
-                senderId != currentUserId &&
-                        !isBlockedSenderMessage &&
-                        !SocialReadReceiptResolver.readByIds(document.get("readBy")).contains(currentUserId)
+                SocialThreadReadResolver.shouldMarkMessageAsRead(
+                    senderId = document.getString("senderId").orEmpty(),
+                    createdAt = document.getLong("createdAt") ?: 0L,
+                    readBy = document.get("readBy"),
+                    currentUserId = currentUserId,
+                    otherUserId = otherUserId,
+                    isOtherUserCurrentlyBlocked = isOtherUserCurrentlyBlocked,
+                    hiddenRanges = hiddenRanges
+                )
             }
 
         firestore.runBatch { batch ->
             batch.update(
                 threadRef,
-                mapOf("unreadCounts.$currentUserId" to 0)
+                SocialThreadReadResolver.createThreadReadPayload(currentUserId)
             )
 
             unreadMessages.forEach { document ->
-                val readByMap = SocialReadReceiptResolver.readByMap(document.get("readBy")).toMutableMap()
-                readByMap[currentUserId] = now
-
                 batch.set(
                     document.reference,
-                    mapOf(
-                        "readBy" to readByMap,
-                        "updatedAt" to now
+                    SocialThreadReadResolver.createMessageReadPayload(
+                        readBy = document.get("readBy"),
+                        currentUserId = currentUserId,
+                        readAt = now
                     ),
                     SetOptions.merge()
                 )
