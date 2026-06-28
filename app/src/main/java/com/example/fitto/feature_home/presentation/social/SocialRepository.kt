@@ -2367,11 +2367,10 @@ class SocialRepository {
             .get()
             .await()
 
-        val blockedUserIds = (snapshot.get("blockedUserIds") as? List<*>)
-            ?.mapNotNull { it as? String }
-            .orEmpty()
-
-        return blockedUserIds.contains(targetUserId)
+        return SocialDirectThreadBlockStateResolver.isBlocked(
+            blockedUserIds = snapshot.get("blockedUserIds"),
+            targetUserId = targetUserId
+        )
     }
     suspend fun getDirectThreadBlockState(
         threadId: String,
@@ -2394,16 +2393,14 @@ class SocialRepository {
             .get()
             .await()
 
-        val blockedUserIds = (snapshot.get("blockedUserIds") as? List<*>)
-            ?.mapNotNull { it as? String }
-            .orEmpty()
-
         val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
         val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
 
-        return DirectThreadBlockState(
-            isBlocked = blockedUserIds.contains(targetUserId),
-            hiddenRanges = completedRanges + listOfNotNull(activeRange)
+        return SocialDirectThreadBlockStateResolver.resolve(
+            blockedUserIds = snapshot.get("blockedUserIds"),
+            targetUserId = targetUserId,
+            completedRanges = completedRanges,
+            activeRange = activeRange
         )
     }
 
@@ -2437,17 +2434,15 @@ class SocialRepository {
                     return@addSnapshotListener
                 }
 
-                val blockedUserIds = (snapshot.get("blockedUserIds") as? List<*>)
-                    ?.mapNotNull { it as? String }
-                    .orEmpty()
-
                 val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
                 val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
 
                 trySend(
-                    DirectThreadBlockState(
-                        isBlocked = blockedUserIds.contains(targetUserId),
-                        hiddenRanges = completedRanges + listOfNotNull(activeRange)
+                    SocialDirectThreadBlockStateResolver.resolve(
+                        blockedUserIds = snapshot.get("blockedUserIds"),
+                        targetUserId = targetUserId,
+                        completedRanges = completedRanges,
+                        activeRange = activeRange
                     )
                 )
             }
