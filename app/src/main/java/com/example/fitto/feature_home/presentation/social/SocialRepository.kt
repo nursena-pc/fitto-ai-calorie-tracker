@@ -1665,9 +1665,9 @@ class SocialRepository {
             .document(messageId)
 
         messageRef.set(
-            mapOf(
-                "deletedFor" to FieldValue.arrayUnion(currentUserId),
-                "updatedAt" to System.currentTimeMillis()
+            SocialMessageDeletionPayloadResolver.createDeleteForMePayload(
+                currentUserId = currentUserId,
+                updatedAt = System.currentTimeMillis()
             ),
             SetOptions.merge()
         ).await()
@@ -1697,12 +1697,9 @@ class SocialRepository {
         firestore.runBatch { batch ->
             batch.set(
                 messageRef,
-                mapOf(
-                    "text" to "",
-                    "isDeleted" to true,
-                    "deletedBy" to currentUserId,
-                    "deletedAt" to now,
-                    "updatedAt" to now
+                SocialMessageDeletionPayloadResolver.createDeleteForEveryonePayload(
+                    currentUserId = currentUserId,
+                    deletedAt = now
                 ),
                 SetOptions.merge()
             )
@@ -1710,10 +1707,7 @@ class SocialRepository {
             if (isLastMessage) {
                 batch.update(
                     threadRef,
-                    mapOf(
-                        "lastMessageText" to "Bu mesaj silindi",
-                        "updatedAt" to now
-                    )
+                    SocialMessageDeletionPayloadResolver.createLastMessageDeletedPayload(updatedAt = now)
                 )
             }
         }.await()
