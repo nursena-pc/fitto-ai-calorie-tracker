@@ -2424,19 +2424,13 @@ class SocialRepository {
                     }
 
                     val totalUnread = snapshot?.documents.orEmpty().sumOf { document ->
-                        val unreadCounts = document.get("unreadCounts") as? Map<*, *>
-                        val rawUnreadCount = (unreadCounts?.get(userId) as? Number)?.toInt() ?: 0
-
-                        val lastMessageHiddenFor = document.getStringListCompat("lastMessageHiddenFor")
-                        val lastMessageCreatedAt = document.getLong("lastMessageCreatedAt") ?: 0L
-                        val clearedAtMap = document.get("clearedAt") as? Map<*, *>
-                        val currentUserClearedAt = (clearedAtMap?.get(userId) as? Number)?.toLong() ?: 0L
-
-                        if (lastMessageHiddenFor.contains(userId) || lastMessageCreatedAt <= currentUserClearedAt) {
-                            0
-                        } else {
-                            rawUnreadCount
-                        }
+                        SocialUnreadMessageCountResolver.unreadCountForThread(
+                            userId = userId,
+                            unreadCounts = document.get("unreadCounts"),
+                            lastMessageHiddenFor = document.getStringListCompat("lastMessageHiddenFor"),
+                            lastMessageCreatedAt = document.getLong("lastMessageCreatedAt") ?: 0L,
+                            clearedAt = document.get("clearedAt")
+                        )
                     }
 
                     trySend(totalUnread)
