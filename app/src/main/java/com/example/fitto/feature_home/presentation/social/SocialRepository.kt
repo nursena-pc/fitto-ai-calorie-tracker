@@ -537,24 +537,20 @@ class SocialRepository {
                 }
 
                 val comments = snapshot?.documents?.map { doc ->
-                    val likedBy = (doc.get("likedBy") as? List<*>)
-                        ?.mapNotNull { it as? String }
-                        ?: emptyList()
-
-                    SocialComment(
+                    SocialCommentDocumentResolver.resolve(
                         id = doc.id,
                         postId = postId,
-                        userId = doc.getString("userId").orEmpty(),
-                        userName = doc.getString("userName").orEmpty()
-                            .ifBlank { "fitto_user" },
-                        userPhotoUrl = doc.getString("userPhotoUrl")
-                            ?: doc.getString("photoUrl"),
-                        text = doc.getString("text").orEmpty(),
+                        currentUserId = currentUserId,
+                        userId = doc.getString("userId"),
+                        userName = doc.getString("userName"),
+                        userPhotoUrl = doc.getString("userPhotoUrl"),
+                        fallbackPhotoUrl = doc.getString("photoUrl"),
+                        text = doc.getString("text"),
                         parentCommentId = doc.getString("parentCommentId"),
-                        likesCount = doc.getLong("likesCount")?.toInt() ?: 0,
-                        replyCount = doc.getLong("replyCount")?.toInt() ?: 0,
-                        likedByMe = likedBy.contains(currentUserId),
-                        createdAt = doc.getLong("createdAt") ?: 0L
+                        likesCount = doc.getLong("likesCount"),
+                        replyCount = doc.getLong("replyCount"),
+                        likedBy = doc.get("likedBy"),
+                        createdAt = doc.getLong("createdAt")
                     )
                 }.orEmpty()
 
