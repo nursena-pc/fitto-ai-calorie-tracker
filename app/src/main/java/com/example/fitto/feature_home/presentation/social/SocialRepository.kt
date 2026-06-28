@@ -2142,24 +2142,13 @@ class SocialRepository {
             null
         }
 
-        return SocialUser(
+        return SocialUserDocumentResolver.resolveProfile(
             id = userDoc.id,
-            userName = userDoc.getString("userName").orEmpty()
-                .ifBlank {
-                    userDoc.getString("username").orEmpty()
-                        .ifBlank {
-                            userDoc.getString("email").orEmpty()
-                                .substringBefore("@")
-                                .ifBlank { "fitto_user" }
-                        }
-                },
-            displayName = userDoc.getString("displayName")
-                ?: userDoc.getString("userName")
-                ?: userDoc.getString("username")
-                ?: userDoc.getString("name")
-                ?: userDoc.getString("realName"),
-            personalName = userDoc.getString("realName")
-                ?: userDoc.getString("name"),
+            userName = userDoc.getString("userName"),
+            username = userDoc.getString("username"),
+            displayName = userDoc.getString("displayName"),
+            name = userDoc.getString("name"),
+            realName = userDoc.getString("realName"),
             email = userDoc.getString("email"),
             photoUrl = userDoc.getString("photoUrl"),
             bio = userDoc.getString("bio"),
@@ -2561,23 +2550,19 @@ class SocialRepository {
                     "fitto_user"
                 }
 
-                usersById[document.id] = SocialUser(
+                usersById[document.id] = SocialUserDocumentResolver.resolveBlockedUser(
                     id = document.id,
-                    userName = document.getString("userName")
-                        ?: document.getString("username")
-                        ?: document.getString("displayName")
-                        ?: fallbackName,
-                    displayName = document.getString("displayName")
-                        ?: document.getString("userName")
-                        ?: document.getString("username")
-                        ?: fallbackName,
-                    personalName = document.getString("realName")
-                        ?: document.getString("name"),
+                    userName = document.getString("userName"),
+                    username = document.getString("username"),
+                    displayName = document.getString("displayName"),
+                    name = document.getString("name"),
+                    realName = document.getString("realName"),
                     email = document.getString("email"),
                     photoUrl = document.getString("photoUrl"),
                     bio = document.getString("bio"),
                     followersCount = document.getLong("followersCount")?.toInt() ?: 0,
-                    followingCount = document.getLong("followingCount")?.toInt() ?: 0
+                    followingCount = document.getLong("followingCount")?.toInt() ?: 0,
+                    fallbackName = fallbackName
                 )
             }
         }
@@ -3388,21 +3373,13 @@ class SocialRepository {
                 snapshot.documents.forEach { document ->
                     if (document.getBoolean("isDeleted") == true) return@forEach
 
-                    val userName = document.getString("userName")
-                        ?: document.getString("username")
-                        ?: document.getString("email")?.substringBefore("@")
-                        ?: "fitto_user"
-
-                    users[document.id] = SocialUser(
+                    users[document.id] = SocialUserDocumentResolver.resolveProfile(
                         id = document.id,
-                        userName = userName,
-                        displayName = document.getString("displayName")
-                            ?: document.getString("userName")
-                            ?: document.getString("username")
-                            ?: document.getString("name")
-                            ?: document.getString("realName"),
-                        personalName = document.getString("realName")
-                            ?: document.getString("name"),
+                        userName = document.getString("userName"),
+                        username = document.getString("username"),
+                        displayName = document.getString("displayName"),
+                        name = document.getString("name"),
+                        realName = document.getString("realName"),
                         email = document.getString("email"),
                         photoUrl = document.getString("photoUrl"),
                         bio = document.getString("bio"),
