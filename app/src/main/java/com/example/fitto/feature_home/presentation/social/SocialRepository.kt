@@ -942,44 +942,48 @@ class SocialRepository {
 
     suspend fun updateGroupTitle(threadId: String, newTitle: String) {
         val currentUserId = auth.currentUser?.uid ?: return
-        val trimmedTitle = newTitle.trim()
-        if (threadId.isBlank() || trimmedTitle.isBlank()) return
+        val updatePayload = SocialGroupMetadataUpdateResolver.createTitleUpdatePayload(
+            newTitle = newTitle,
+            updatedAt = System.currentTimeMillis()
+        ) ?: return
+        if (threadId.isBlank()) return
 
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val snapshot = threadRef.get().await()
         val participantIds = snapshot.getStringListCompat("participantIds")
 
-        if (snapshot.getString("type") != THREAD_TYPE_GROUP || !participantIds.contains(currentUserId)) {
+        if (!SocialGroupMetadataUpdateResolver.isGroupParticipant(
+                threadType = snapshot.getString("type"),
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
-        threadRef.update(
-            mapOf(
-                "title" to trimmedTitle,
-                "titleLowercase" to trimmedTitle.lowercase(Locale("tr", "TR")),
-                "updatedAt" to System.currentTimeMillis()
-            )
-        ).await()
+        threadRef.update(updatePayload).await()
     }
     suspend fun updateGroupDescription(threadId: String, newDescription: String) {
         val currentUserId = auth.currentUser?.uid ?: return
         if (threadId.isBlank()) return
 
-        val trimmedDescription = newDescription.trim()
-
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
         val snapshot = threadRef.get().await()
         val participantIds = snapshot.getStringListCompat("participantIds")
 
-        if (snapshot.getString("type") != THREAD_TYPE_GROUP || !participantIds.contains(currentUserId)) {
+        if (!SocialGroupMetadataUpdateResolver.isGroupParticipant(
+                threadType = snapshot.getString("type"),
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
         threadRef.update(
-            mapOf(
-                "description" to trimmedDescription,
-                "descriptionLowercase" to trimmedDescription.lowercase(Locale("tr", "TR")),
-                "updatedAt" to System.currentTimeMillis()
+            SocialGroupMetadataUpdateResolver.createDescriptionUpdatePayload(
+                newDescription = newDescription,
+                updatedAt = System.currentTimeMillis()
             )
         ).await()
     }
@@ -990,18 +994,15 @@ class SocialRepository {
     ) {
         if (threadId.isBlank()) return
 
-        val trimmedName = newName.trim()
+        val updatePayload = SocialGroupMetadataUpdateResolver.createLegacyNameUpdatePayload(
+            newName = newName,
+            updatedAt = System.currentTimeMillis()
+        ) ?: return
 
         firestore
             .collection(MESSAGE_THREADS_COLLECTION)
             .document(threadId)
-            .update(
-                mapOf(
-                    "title" to trimmedName,
-                    "titleLowercase" to trimmedName.lowercase(),
-                    "updatedAt" to System.currentTimeMillis()
-                )
-            )
+            .update(updatePayload)
             .await()
     }
     suspend fun clearThreadForCurrentUser(threadId: String) {
