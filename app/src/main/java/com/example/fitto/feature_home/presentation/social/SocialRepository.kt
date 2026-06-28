@@ -238,32 +238,28 @@ class SocialRepository {
             .document(user.uid)
             .get()
             .addOnSuccessListener { document ->
-                val publicUserName = document.getString("userName")
-                    ?: document.getString("username")
-                    ?: user.email?.substringBefore("@")
-                    ?: "fitto_user"
-
-                val publicPhotoUrl = document.getString("photoUrl")
-                    ?: user.photoUrl?.toString()
-
                 typingRef.setValue(
-                    mapOf(
-                        "uid" to user.uid,
-                        "userName" to publicUserName,
-                        "photoUrl" to publicPhotoUrl,
-                        "isTyping" to true,
-                        "updatedAt" to ServerValue.TIMESTAMP
+                    SocialTypingPayloadResolver.createPayload(
+                        uid = user.uid,
+                        profileUserName = document.getString("userName"),
+                        profileUsername = document.getString("username"),
+                        profilePhotoUrl = document.getString("photoUrl"),
+                        email = user.email,
+                        authPhotoUrl = user.photoUrl?.toString(),
+                        updatedAt = ServerValue.TIMESTAMP
                     )
                 )
             }
             .addOnFailureListener {
                 typingRef.setValue(
-                    mapOf(
-                        "uid" to user.uid,
-                        "userName" to (user.email?.substringBefore("@") ?: "fitto_user"),
-                        "photoUrl" to user.photoUrl?.toString(),
-                        "isTyping" to true,
-                        "updatedAt" to ServerValue.TIMESTAMP
+                    SocialTypingPayloadResolver.createPayload(
+                        uid = user.uid,
+                        profileUserName = null,
+                        profileUsername = null,
+                        profilePhotoUrl = null,
+                        email = user.email,
+                        authPhotoUrl = user.photoUrl?.toString(),
+                        updatedAt = ServerValue.TIMESTAMP
                     )
                 )
             }
