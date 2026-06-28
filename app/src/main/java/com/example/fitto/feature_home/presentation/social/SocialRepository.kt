@@ -1996,35 +1996,29 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-
-        val publicUserName = profile?.userName?.ifBlank { null }
-            ?: user.email?.substringBefore("@")
-            ?: "fitto_user"
-
-        val publicPhotoUrl = profile?.photoUrl ?: user.photoUrl?.toString()
+        val author = SocialPostPayloadResolver.resolveAuthor(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            email = user.email,
+            authPhotoUrl = user.photoUrl?.toString()
+        )
 
         val imageUrl = imageUri?.let { uploadPostImage(it) }
 
         firestore.collection("posts")
             .add(
-                hashMapOf(
-                    "userId" to user.uid,
-                    "userName" to publicUserName,
-                    "userPhotoUrl" to publicPhotoUrl,
-                    "photoUrl" to publicPhotoUrl,
-                    "content" to content.trim(),
-                    "imageUrl" to imageUrl,
-                    "mealInfo" to mealInfo?.trim(),
-                    "calories" to calories,
-                    "visibility" to visibility,
-                    "tags" to tags,
-                    "isDraft" to isDraft,
-                    "likesCount" to 0,
-                    "commentsCount" to 0,
-                    "likedBy" to emptyList<String>(),
-                    "savedBy" to emptyList<String>(),
-                    "allowComments" to allowComments,
-                    "createdAt" to System.currentTimeMillis()
+                SocialPostPayloadResolver.createPostPayload(
+                    userId = user.uid,
+                    author = author,
+                    content = content,
+                    imageUrl = imageUrl,
+                    mealInfo = mealInfo,
+                    calories = calories,
+                    allowComments = allowComments,
+                    visibility = visibility,
+                    tags = tags,
+                    isDraft = isDraft,
+                    createdAt = System.currentTimeMillis()
                 )
             )
             .await()
@@ -2050,44 +2044,33 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-        val publicUserName = profile?.userName?.ifBlank { null }
-            ?: user.email?.substringBefore("@")
-            ?: "fitto_user"
-        val publicPhotoUrl = profile?.photoUrl ?: user.photoUrl?.toString()
+        val author = SocialPostPayloadResolver.resolveAuthor(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            email = user.email,
+            authPhotoUrl = user.photoUrl?.toString()
+        )
         val now = System.currentTimeMillis()
         val postRef = firestore.collection("posts").document()
 
         postRef.set(
-            hashMapOf(
-                "userId" to user.uid,
-                "userName" to publicUserName,
-                "userPhotoUrl" to publicPhotoUrl,
-                "photoUrl" to publicPhotoUrl,
-                "content" to content.trim(),
-                "imageUrl" to null,
-                "mealInfo" to recipeTitle.trim(),
-                "calories" to recipeCalories,
-                "visibility" to POST_VISIBILITY_COMMUNITY,
-                "tags" to tags.distinct().filter { it.isNotBlank() },
-                "isDraft" to false,
-                "likesCount" to 0,
-                "commentsCount" to 0,
-                "likedBy" to emptyList<String>(),
-                "savedBy" to emptyList<String>(),
-                "allowComments" to true,
-                "createdAt" to now,
-                "postType" to "recipe",
-                "recipeId" to recipeId,
-                "recipeTitle" to recipeTitle,
-                "recipeImageResId" to recipeImageResId,
-                "recipeDuration" to recipeDuration,
-                "recipeServing" to recipeServing,
-                "recipeCalories" to recipeCalories,
-                "recipeCategory" to recipeCategory,
-                "recipeSourceTag" to recipeSourceTag,
-                "recipeDescription" to recipeDescription.trim(),
-                "recipeIngredients" to recipeIngredients.map { it.trim() }.filter { it.isNotBlank() },
-                "recipeSteps" to recipeSteps.map { it.trim() }.filter { it.isNotBlank() }
+            SocialPostPayloadResolver.createRecipePostPayload(
+                userId = user.uid,
+                author = author,
+                content = content,
+                recipeId = recipeId,
+                recipeTitle = recipeTitle,
+                recipeImageResId = recipeImageResId,
+                recipeDuration = recipeDuration,
+                recipeServing = recipeServing,
+                recipeCalories = recipeCalories,
+                recipeCategory = recipeCategory,
+                tags = tags,
+                recipeSourceTag = recipeSourceTag,
+                recipeDescription = recipeDescription,
+                recipeIngredients = recipeIngredients,
+                recipeSteps = recipeSteps,
+                createdAt = now
             )
         ).await()
 
@@ -2111,31 +2094,26 @@ class SocialRepository {
         createCurrentUserProfileIfNeeded()
 
         val profile = getCurrentUserProfile()
-
-        val publicUserName = profile?.userName?.ifBlank { null }
-            ?: user.email?.substringBefore("@")
-            ?: "fitto_user"
-
-        val publicPhotoUrl = profile?.photoUrl ?: user.photoUrl?.toString()
+        val author = SocialPostPayloadResolver.resolveAuthor(
+            profileUserName = profile?.userName,
+            profilePhotoUrl = profile?.photoUrl,
+            email = user.email,
+            authPhotoUrl = user.photoUrl?.toString()
+        )
 
         firestore.runBatch { batch ->
             val commentRef = postRef.collection("comments").document()
 
             batch.set(
                 commentRef,
-                mapOf(
-                    "userId" to user.uid,
-                    "userName" to publicUserName,
-                    "userPhotoUrl" to publicPhotoUrl,
-                    "photoUrl" to publicPhotoUrl,
-                    "postId" to postId,
-                    "postOwnerId" to postSnapshot.getString("userId").orEmpty(),
-                    "text" to text.trim(),
-                    "parentCommentId" to parentCommentId,
-                    "likesCount" to 0,
-                    "replyCount" to 0,
-                    "likedBy" to emptyList<String>(),
-                    "createdAt" to System.currentTimeMillis()
+                SocialPostPayloadResolver.createCommentPayload(
+                    userId = user.uid,
+                    author = author,
+                    postId = postId,
+                    postOwnerId = postSnapshot.getString("userId").orEmpty(),
+                    text = text,
+                    parentCommentId = parentCommentId,
+                    createdAt = System.currentTimeMillis()
                 )
             )
 
