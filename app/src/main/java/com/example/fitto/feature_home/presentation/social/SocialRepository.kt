@@ -1016,17 +1016,20 @@ class SocialRepository {
         }
 
         val participantIds = snapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUserId)) {
+        if (!SocialThreadVisibilityPayloadResolver.isParticipant(
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
         val now = System.currentTimeMillis()
 
         threadRef.update(
-            mapOf(
-                "clearedAt.$currentUserId" to now,
-                "unreadCounts.$currentUserId" to 0,
-                "updatedAt" to now
+            SocialThreadVisibilityPayloadResolver.createClearPayload(
+                currentUserId = currentUserId,
+                clearedAt = now
             )
         ).await()
     }
@@ -1043,17 +1046,20 @@ class SocialRepository {
         }
 
         val participantIds = snapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUserId)) {
+        if (!SocialThreadVisibilityPayloadResolver.isParticipant(
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
         val now = System.currentTimeMillis()
 
         threadRef.update(
-            mapOf(
-                "clearedAt.$currentUserId" to now,
-                "unreadCounts.$currentUserId" to 0,
-                "updatedAt" to now
+            SocialThreadVisibilityPayloadResolver.createClearPayload(
+                currentUserId = currentUserId,
+                clearedAt = now
             )
         ).await()
     }
