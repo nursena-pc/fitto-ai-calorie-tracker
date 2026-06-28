@@ -1079,21 +1079,22 @@ class SocialRepository {
         val participantIds = snapshot.getStringListCompat("participantIds")
         val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
 
-        if (!isGroup || !participantIds.contains(currentUserId)) {
+        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
+                isGroup = isGroup,
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
         val now = System.currentTimeMillis()
-        val newMemberCount = (participantIds.size - 1).coerceAtLeast(0)
 
         threadRef.update(
-            mapOf(
-                "participantIds" to FieldValue.arrayRemove(currentUserId),
-                "participants.$currentUserId" to FieldValue.delete(),
-                "unreadCounts.$currentUserId" to FieldValue.delete(),
-                "typing.$currentUserId" to FieldValue.delete(),
-                "memberCount" to newMemberCount,
-                "updatedAt" to now
+            SocialGroupMembershipPayloadResolver.createRemoveMemberPayload(
+                memberId = currentUserId,
+                participantIds = participantIds,
+                updatedAt = now
             )
         ).await()
     }
@@ -1115,7 +1116,12 @@ class SocialRepository {
         val participantIds = snapshot.getStringListCompat("participantIds")
         val creatorId = snapshot.getString("creatorId").orEmpty()
 
-        if (!isGroup || !participantIds.contains(currentUserId)) {
+        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
+                isGroup = isGroup,
+                participantIds = participantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
@@ -1132,16 +1138,12 @@ class SocialRepository {
         }
 
         val now = System.currentTimeMillis()
-        val newMemberCount = (participantIds.size - 1).coerceAtLeast(0)
 
         threadRef.update(
-            mapOf(
-                "participantIds" to FieldValue.arrayRemove(memberId),
-                "participants.$memberId" to FieldValue.delete(),
-                "unreadCounts.$memberId" to FieldValue.delete(),
-                "typing.$memberId" to FieldValue.delete(),
-                "memberCount" to newMemberCount,
-                "updatedAt" to now
+            SocialGroupMembershipPayloadResolver.createRemoveMemberPayload(
+                memberId = memberId,
+                participantIds = participantIds,
+                updatedAt = now
             )
         ).await()
     }
@@ -1164,32 +1166,28 @@ class SocialRepository {
         val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
         val currentParticipantIds = snapshot.getStringListCompat("participantIds")
 
-        if (!isGroup || !currentParticipantIds.contains(currentUserId)) {
+        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
+                isGroup = isGroup,
+                participantIds = currentParticipantIds,
+                currentUserId = currentUserId
+            )
+        ) {
             throw IllegalStateException("THREAD_ACCESS_DENIED")
         }
 
-        val newUsers = selectedUsers
-            .filter { user -> user.id.isNotBlank() && !currentParticipantIds.contains(user.id) }
-            .distinctBy { user -> user.id }
+        val newUsers = SocialGroupMembershipPayloadResolver.filterNewMembers(
+            selectedUsers = selectedUsers,
+            currentParticipantIds = currentParticipantIds
+        )
 
         if (newUsers.isEmpty()) return
 
         val now = System.currentTimeMillis()
-        val updates = mutableMapOf<String, Any>(
-            "participantIds" to FieldValue.arrayUnion(*newUsers.map { it.id }.toTypedArray()),
-            "memberCount" to currentParticipantIds.size + newUsers.size,
-            "updatedAt" to now
+        val updates = SocialGroupMembershipPayloadResolver.createAddMembersPayload(
+            newUsers = newUsers,
+            currentParticipantIds = currentParticipantIds,
+            updatedAt = now
         )
-
-        newUsers.forEach { user ->
-            updates["participants.${user.id}"] = SocialThreadParticipantResolver.participantMap(
-                uid = user.id,
-                userName = user.userName,
-                photoUrl = user.photoUrl
-            )
-
-            updates["unreadCounts.${user.id}"] = 0
-        }
 
         threadRef.update(updates).await()
     }
