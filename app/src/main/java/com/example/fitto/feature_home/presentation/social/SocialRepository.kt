@@ -808,7 +808,7 @@ class SocialRepository {
 
     suspend fun createOrGetDirectThread(targetUserId: String): MessageThreadUiModel? {
         val currentUser = auth.currentUser ?: return null
-        if (targetUserId.isBlank() || targetUserId == currentUser.uid) return null
+        if (!SocialDirectThreadPayloadResolver.canCreateDirectThread(currentUser.uid, targetUserId)) return null
 
         createCurrentUserProfileIfNeeded()
 
@@ -825,36 +825,19 @@ class SocialRepository {
             if (!snapshot.exists()) {
                 transaction.set(
                     threadRef,
-                    mapOf(
-                        "id" to threadId,
-                        "type" to THREAD_TYPE_DIRECT,
-                        "title" to null,
-                        "participantIds" to listOf(currentUser.uid, targetUserId).sorted(),
-                        "memberCount" to 2,
-                        "participants" to mapOf(
-                            currentUser.uid to SocialThreadParticipantResolver.participantMap(
-                                uid = currentUser.uid,
-                                userName = currentProfile?.userName?.takeIf { it.isNotBlank() }
-                                    ?: currentUser.email?.substringBefore("@")
-                                    ?: "fitto_user",
-                                photoUrl = currentProfile?.photoUrl ?: currentUser.photoUrl?.toString()
-                            ),
-                            targetUserId to SocialThreadParticipantResolver.participantMap(
-                                uid = targetUserId,
-                                userName = targetProfile.userName.ifBlank { "fitto_user" },
-                                photoUrl = targetProfile.photoUrl
-                            )
+                    SocialDirectThreadPayloadResolver.createPayload(
+                        threadId = threadId,
+                        currentUserId = currentUser.uid,
+                        targetUserId = targetUserId,
+                        currentUserName = SocialDirectThreadPayloadResolver.currentUserName(
+                            profileUserName = currentProfile?.userName,
+                            email = currentUser.email
                         ),
-                        "unreadCounts" to mapOf(
-                            currentUser.uid to 0,
-                            targetUserId to 0
-                        ),
-                        "lastMessageText" to "",
-                        "lastMessageSenderId" to null,
-                        "lastMessageCreatedAt" to null,
-                        "createdAt" to now,
-                        "deliveredAt" to now,
-                        "updatedAt" to now
+                        currentUserPhotoUrl = currentProfile?.photoUrl ?: currentUser.photoUrl?.toString(),
+                        targetUserName = SocialDirectThreadPayloadResolver.targetUserName(targetProfile.userName),
+                        targetUserPhotoUrl = targetProfile.photoUrl,
+                        now = now,
+                        participantMapFactory = SocialThreadParticipantResolver::participantMap
                     )
                 )
             }
