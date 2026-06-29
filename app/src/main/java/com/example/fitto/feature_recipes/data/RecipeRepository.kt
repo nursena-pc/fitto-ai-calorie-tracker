@@ -259,28 +259,35 @@ open class RecipeRepository(context: Context) {
             recipeDao.findById(id)
         }
 
-        val isMyOwnPost = postUserId.isNotBlank() && postUserId == ownerUid
-        val isMyOwnRecipe = source?.ownerUid == ownerUid
-        val hasPostRecipePayload = !recipeTitle.isNullOrBlank() || recipeIngredients.isNotEmpty() || recipeSteps.isNotEmpty()
-        val isAppRecipePost = recipeSourceTag == RECIPE_SOURCE_TAG_APP || source?.sourceType == RecipeEntity.SOURCE_TYPE_SEED
-        val shouldStoreAsCommunity =
-            recipeSourceTag == RECIPE_SOURCE_TAG_COMMUNITY ||
-                    (!isAppRecipePost && !isMyOwnPost && !isMyOwnRecipe && hasPostRecipePayload)
-
-        if (isAppRecipePost) {
-            source?.let { recipe ->
-                saveFavorite(recipe.id)
-                return recipe.id
+        when (
+            RecipeCommunitySaveResolver.resolveSaveDecision(
+                RecipeCommunitySaveResolver.SaveDecisionInput(
+                    ownerUid = ownerUid,
+                    postUserId = postUserId,
+                    recipeTitle = recipeTitle,
+                    recipeIngredients = recipeIngredients,
+                    recipeSteps = recipeSteps,
+                    recipeSourceTag = recipeSourceTag,
+                    sourceOwnerUid = source?.ownerUid,
+                    sourceType = source?.sourceType
+                )
+            )
+        ) {
+            RecipeCommunitySaveResolver.SaveDecision.FAVORITE_SOURCE -> {
+                source?.let { recipe ->
+                    saveFavorite(recipe.id)
+                    return recipe.id
+                }
+                return null
             }
-            return null
-        }
-
-        if (!shouldStoreAsCommunity || isMyOwnPost || isMyOwnRecipe) {
-            source?.let { recipe ->
-                saveFavorite(recipe.id)
-                return recipe.id
+            RecipeCommunitySaveResolver.SaveDecision.IGNORE -> {
+                source?.let { recipe ->
+                    saveFavorite(recipe.id)
+                    return recipe.id
+                }
+                return null
             }
-            return null
+            RecipeCommunitySaveResolver.SaveDecision.STORE_COMMUNITY -> Unit
         }
 
         if (cleanPostId.isNotBlank()) {
@@ -290,28 +297,40 @@ open class RecipeRepository(context: Context) {
         }
 
         val now = System.currentTimeMillis()
-        val sharedId = "shared_${ownerUid}_${cleanPostId.ifBlank { cleanRecipeId }}_${now}".toSafeRecipeId()
-        val title = recipeTitle.orEmpty().trim().ifBlank { source?.title ?: "Topluluk Tarifi" }
-        val durationLabel = recipeDuration.orEmpty().trim().ifBlank { source?.durationLabel ?: "15-30 dk" }
-        val servingDisplay = recipeServing.orEmpty().trim().ifBlank { source?.servingDisplay ?: "1 porsiyon" }
-        val category = recipeCategory.orEmpty().trim().ifBlank { source?.mainCategoryKey ?: "" }
-        val calories = recipeCalories ?: source?.calories ?: 0
+        val sharedId = RecipeCommunitySaveResolver.buildSharedRecipeId(
+            ownerUid = ownerUid,
+            postId = cleanPostId,
+            recipeId = cleanRecipeId,
+            now = now
+        )
+        val values = RecipeCommunitySaveResolver.resolveCommunityValues(
+            recipeTitle = recipeTitle,
+            recipeDescription = recipeDescription,
+            recipeDuration = recipeDuration,
+            recipeServing = recipeServing,
+            recipeCalories = recipeCalories,
+            recipeCategory = recipeCategory,
+            recipeIngredients = recipeIngredients,
+            recipeSteps = recipeSteps,
+            source = source,
+            defaultDescription = "Topluluktan kaydedilen tarif"
+        )
 
         val communityEntity = if (source != null) {
             source.copy(
                 id = sharedId,
                 ownerUid = ownerUid,
                 sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = source.sourceRecipeId ?: source.id,
-                sourceUserId = postUserId.takeIf { it.isNotBlank() } ?: source.sourceUserId,
-                sourcePostId = cleanPostId.takeIf { it.isNotBlank() } ?: source.sourcePostId,
-                title = title,
-                description = recipeDescription.orEmpty().trim().ifBlank { "Topluluktan kaydedilen tarif" },
-                calories = calories,
+                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, source),
+                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, source),
+                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, source),
+                title = values.title,
+                description = values.description,
+                calories = values.calories,
                 imageResId = source.resolvedImageResId(),
-                ingredients = recipeIngredients.map { it.trim() }.filter { it.isNotBlank() }.ifEmpty { source.ingredients },
-                ingredientNames = recipeIngredients.map { it.trim() }.filter { it.isNotBlank() }.map { it.toIngredientNameForCopy() }.ifEmpty { source.ingredientNames },
-                steps = recipeSteps.map { it.trim() }.filter { it.isNotBlank() }.ifEmpty { source.steps },
+                ingredients = values.ingredients,
+                ingredientNames = values.ingredientNames,
+                steps = values.steps,
                 createdAt = now,
                 updatedAt = now
             )
@@ -320,30 +339,30 @@ open class RecipeRepository(context: Context) {
                 id = sharedId,
                 ownerUid = ownerUid,
                 sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = cleanRecipeId.takeIf { it.isNotBlank() },
-                sourceUserId = postUserId.takeIf { it.isNotBlank() },
-                sourcePostId = cleanPostId.takeIf { it.isNotBlank() },
-                title = title,
-                description = recipeDescription.orEmpty().trim().ifBlank { "Topluluktan kaydedilen tarif" },
-                mainCategoryKey = category,
+                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, null),
+                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, null),
+                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, null),
+                title = values.title,
+                description = values.description,
+                mainCategoryKey = values.category,
                 subcategoryKey = "",
                 subcategoryKeys = emptySet(),
                 mainIngredientKeys = emptySet(),
                 dietKeys = emptySet(),
                 methodKeys = emptySet(),
-                durationMinutes = durationLabel.toRepresentativeMinutes(),
-                durationLabel = durationLabel,
+                durationMinutes = values.durationLabel.toRepresentativeMinutes(),
+                durationLabel = values.durationLabel,
                 difficultyKey = "kolay",
-                calories = calories,
+                calories = values.calories,
                 imageResId = recipeImageResId ?: imageForRecipeIdOrDefault(cleanRecipeId),
                 servings = 1,
-                servingDisplay = servingDisplay,
+                servingDisplay = values.servingDisplay,
                 proteinGrams = 0,
                 carbGrams = 0,
                 fatGrams = 0,
-                ingredientNames = recipeIngredients.map { it.trim() }.filter { it.isNotBlank() }.map { it.toIngredientNameForCopy() },
-                ingredients = recipeIngredients.map { it.trim() }.filter { it.isNotBlank() },
-                steps = recipeSteps.map { it.trim() }.filter { it.isNotBlank() },
+                ingredientNames = values.ingredientNames,
+                ingredients = values.ingredients,
+                steps = values.steps,
                 tip = null,
                 createdAt = now,
                 updatedAt = now
@@ -382,16 +401,28 @@ open class RecipeRepository(context: Context) {
         recipeDao.findById(cleanRecipeId)?.let { existing -> return existing.id }
 
         val cleanPostId = postId.trim()
-        val previewId = "community_preview_${cleanPostId.ifBlank { cleanRecipeId }}".toSafeRecipeId()
+        val previewId = RecipeCommunitySaveResolver.buildPreviewRecipeId(
+            postId = cleanPostId,
+            recipeId = cleanRecipeId
+        )
         recipeDao.findById(previewId)?.let { existing -> return existing.id }
 
-        val title = recipeTitle.orEmpty().trim()
-        if (title.isBlank()) return null
-        val durationLabel = recipeDuration.orEmpty().trim().ifBlank { "15-30 dk" }
-        val servingDisplay = recipeServing.orEmpty().trim().ifBlank { "1 porsiyon" }
-        val category = recipeCategory.orEmpty().trim()
-        val ingredients = recipeIngredients.map { it.trim() }.filter { it.isNotBlank() }
-        val steps = recipeSteps.map { it.trim() }.filter { it.isNotBlank() }
+        val cleanTitle = recipeTitle.orEmpty().trim()
+        if (cleanTitle.isBlank()) return null
+
+        val values = RecipeCommunitySaveResolver.resolveCommunityValues(
+            recipeTitle = cleanTitle,
+            recipeDescription = recipeDescription,
+            recipeDuration = recipeDuration,
+            recipeServing = recipeServing,
+            recipeCalories = recipeCalories,
+            recipeCategory = recipeCategory,
+            recipeIngredients = recipeIngredients,
+            recipeSteps = recipeSteps,
+            source = null,
+            defaultDescription = "Topluluktan açılan tarif"
+        )
+        if (values.title.isBlank()) return null
         val now = System.currentTimeMillis()
 
         recipeDao.upsertRecipe(
@@ -399,30 +430,30 @@ open class RecipeRepository(context: Context) {
                 id = previewId,
                 ownerUid = null,
                 sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = cleanRecipeId.takeIf { it.isNotBlank() },
-                sourceUserId = postUserId.takeIf { it.isNotBlank() },
-                sourcePostId = cleanPostId.takeIf { it.isNotBlank() },
-                title = title,
-                description = recipeDescription.orEmpty().trim().ifBlank { "Topluluktan açılan tarif" },
-                mainCategoryKey = category,
+                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, null),
+                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, null),
+                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, null),
+                title = values.title,
+                description = values.description,
+                mainCategoryKey = values.category,
                 subcategoryKey = "",
                 subcategoryKeys = emptySet(),
                 mainIngredientKeys = emptySet(),
                 dietKeys = emptySet(),
                 methodKeys = emptySet(),
-                durationMinutes = durationLabel.toRepresentativeMinutes(),
-                durationLabel = durationLabel,
+                durationMinutes = values.durationLabel.toRepresentativeMinutes(),
+                durationLabel = values.durationLabel,
                 difficultyKey = "kolay",
-                calories = recipeCalories ?: 0,
+                calories = values.calories,
                 imageResId = recipeImageResId ?: imageForRecipeIdOrDefault(cleanRecipeId),
                 servings = 1,
-                servingDisplay = servingDisplay,
+                servingDisplay = values.servingDisplay,
                 proteinGrams = 0,
                 carbGrams = 0,
                 fatGrams = 0,
-                ingredientNames = ingredients.map { ingredientLine -> ingredientLine.toIngredientNameForCopy() },
-                ingredients = ingredients,
-                steps = steps,
+                ingredientNames = values.ingredientNames,
+                ingredients = values.ingredients,
+                steps = values.steps,
                 tip = null,
                 createdAt = now,
                 updatedAt = now
