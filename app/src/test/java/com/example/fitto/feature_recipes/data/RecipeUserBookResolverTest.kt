@@ -93,15 +93,6 @@ class RecipeUserBookResolverTest {
         assertEquals(88, entity.imageResId)
     }
 
-    @Test
-    fun representativeMinutes_mapsKnownLabelsAndFallsBack() {
-        assertEquals(10, RecipeUserBookResolver.representativeMinutes("15 dk altı"))
-        assertEquals(25, RecipeUserBookResolver.representativeMinutes("15-30 dk"))
-        assertEquals(45, RecipeUserBookResolver.representativeMinutes("30-60 dk"))
-        assertEquals(75, RecipeUserBookResolver.representativeMinutes("60 dk üzeri"))
-        assertEquals(30, RecipeUserBookResolver.representativeMinutes("bilinmeyen"))
-    }
-
     private fun recipe(
         id: String,
         sourceRecipeId: String?,

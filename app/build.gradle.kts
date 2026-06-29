@@ -93,6 +93,8 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
+    testImplementation("org.json:json:20240303")
+
     // Room
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")

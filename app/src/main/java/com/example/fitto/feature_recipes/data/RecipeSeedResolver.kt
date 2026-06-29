@@ -58,7 +58,7 @@ object RecipeSeedResolver {
             mainIngredientKeys = mainIngredientKeys,
             dietKeys = dietKeys,
             methodKeys = methodKeys,
-            durationMinutes = representativeMinutes(durationLabel),
+            durationMinutes = RecipeValueResolver.representativeMinutes(durationLabel),
             durationLabel = durationLabel,
             difficultyKey = json.optString("zorluk", "kolay").ifBlank { "kolay" },
             calories = 0,
@@ -75,16 +75,6 @@ object RecipeSeedResolver {
             createdAt = input.now,
             updatedAt = input.now
         )
-    }
-
-    fun representativeMinutes(durationLabel: String): Int {
-        return when (durationLabel) {
-            "15 dk altı" -> 10
-            "15-30 dk" -> 25
-            "30-60 dk" -> 45
-            "60 dk üzeri" -> 75
-            else -> 30
-        }
     }
 
     private fun buildDescription(

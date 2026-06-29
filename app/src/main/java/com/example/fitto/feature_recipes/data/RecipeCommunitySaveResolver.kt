@@ -1,7 +1,6 @@
 package com.example.fitto.feature_recipes.data
 
 import com.example.fitto.data.local.entity.RecipeEntity
-import java.util.Locale
 
 object RecipeCommunitySaveResolver {
 
@@ -58,18 +57,21 @@ object RecipeCommunitySaveResolver {
         recipeId: String,
         now: Long
     ): String {
-        return "shared_${ownerUid}_${postId.ifBlank { recipeId }}_${now}".toSafeRecipeId()
+        val safeOwnerUid = RecipeValueResolver.safeRecipeId(ownerUid).trim('_')
+        val safeRecipePart = RecipeValueResolver.safeRecipeId(postId.ifBlank { recipeId }).trim('_')
+        return "shared_${safeOwnerUid}_${safeRecipePart}_${now}"
     }
 
     fun buildPreviewRecipeId(
         postId: String,
         recipeId: String
     ): String {
-        return "community_preview_${postId.ifBlank { recipeId }}".toSafeRecipeId()
+        val safeRecipePart = RecipeValueResolver.safeRecipeId(postId.ifBlank { recipeId }).trim('_')
+        return "community_preview_${safeRecipePart}"
     }
 
     fun cleanLines(lines: List<String>): List<String> {
-        return lines.map { line -> line.trim() }.filter { line -> line.isNotBlank() }
+        return RecipeValueResolver.cleanLines(lines)
     }
 
     fun resolveCommunityValues(
@@ -90,7 +92,7 @@ object RecipeCommunitySaveResolver {
         val ingredientNames = if (cleanIngredients.isEmpty() && source != null) {
             source.ingredientNames
         } else {
-            ingredients.map { ingredientLine -> ingredientLine.toIngredientNameForCopy() }
+            ingredients.map(RecipeValueResolver::ingredientNameForCopy)
         }
         val steps = cleanSteps.ifEmpty { source?.steps.orEmpty() }
 
@@ -119,40 +121,7 @@ object RecipeCommunitySaveResolver {
         return source?.let { it.sourceRecipeId ?: it.id } ?: recipeId.takeIf { it.isNotBlank() }
     }
 
-    fun String.toSafeRecipeId(): String {
-        return replace(Regex("""[/.#\$\[\]]+"""), "_")
-            .replace(Regex("_+"), "_")
-            .trim('_')
-    }
-
-    fun String.toIngredientNameForCopy(): String {
-        val tokens = trim().split(Regex("\\s+")).filter { token -> token.isNotBlank() }
-        if (tokens.isEmpty()) return trim()
-
-        var nameStart = 0
-        if (tokens.first().any { char -> char.isDigit() } || "/" in tokens.first()) {
-            nameStart = 1
-            while (
-                nameStart < tokens.size &&
-                tokens[nameStart].lowercase(TURKISH_LOCALE) in INGREDIENT_AMOUNT_WORDS &&
-                nameStart < MAX_AMOUNT_TOKEN_SCAN_COUNT
-            ) {
-                nameStart++
-            }
-        }
-
-        return tokens.drop(nameStart).joinToString(" ").ifBlank { trim() }
-    }
-
-    private const val MAX_AMOUNT_TOKEN_SCAN_COUNT = 5
     private const val RECIPE_SOURCE_TAG_APP = "app_recipe"
     private const val RECIPE_SOURCE_TAG_COMMUNITY = "community_recipe"
 
-    private val TURKISH_LOCALE = Locale("tr", "TR")
-
-    private val INGREDIENT_AMOUNT_WORDS = setOf(
-        "adet", "g", "gr", "gram", "kg", "ml", "lt", "litre", "su", "bardağı", "bardak",
-        "küçük", "yemek", "tatlı", "çay", "kaşığı", "kaşık", "dilim", "demet", "tutam",
-        "avuç", "paket", "kase", "diş"
-    )
 }

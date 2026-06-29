@@ -285,7 +285,7 @@ open class RecipeRepository(context: Context) {
                 mainIngredientKeys = emptySet(),
                 dietKeys = emptySet(),
                 methodKeys = emptySet(),
-                durationMinutes = values.durationLabel.toRepresentativeMinutes(),
+                durationMinutes = RecipeValueResolver.representativeMinutes(values.durationLabel),
                 durationLabel = values.durationLabel,
                 difficultyKey = "kolay",
                 calories = values.calories,
@@ -376,7 +376,7 @@ open class RecipeRepository(context: Context) {
                 mainIngredientKeys = emptySet(),
                 dietKeys = emptySet(),
                 methodKeys = emptySet(),
-                durationMinutes = values.durationLabel.toRepresentativeMinutes(),
+                durationMinutes = RecipeValueResolver.representativeMinutes(values.durationLabel),
                 durationLabel = values.durationLabel,
                 difficultyKey = "kolay",
                 calories = values.calories,
@@ -512,16 +512,6 @@ open class RecipeRepository(context: Context) {
     }
 
 
-
-    private fun String.toRepresentativeMinutes(): Int {
-        return when (this) {
-            "15 dk altı" -> 10
-            "15-30 dk" -> 25
-            "30-60 dk" -> 45
-            "60 dk üzeri" -> 75
-            else -> 30
-        }
-    }
 
     companion object {
         private const val RECIPES_ASSET_NAME = "recipes.json"
