@@ -106,8 +106,8 @@ class SocialRepository {
         awaitClose { listener.remove() }
     }
     fun observeUserPresence(userId: String): Flow<PresenceStatusUiModel> = callbackFlow {
-        if (userId.isBlank()) {
-            trySend(PresenceStatusUiModel(userId = userId, isOnline = false, lastChanged = 0L))
+        if (SocialRealtimePresenceResolver.shouldSkipUserPresence(userId)) {
+            trySend(SocialRealtimePresenceResolver.offlineStatus(userId))
             close()
             return@callbackFlow
         }
@@ -122,16 +122,17 @@ class SocialRepository {
                 val lastChanged = snapshot.child("lastChanged").getValue(Long::class.java) ?: 0L
 
                 trySend(
-                    PresenceStatusUiModel(
+                    SocialRealtimePresenceResolver.resolvePresenceStatus(
                         userId = userId,
-                        isOnline = state == PRESENCE_ONLINE,
-                        lastChanged = lastChanged
+                        state = state,
+                        lastChanged = lastChanged,
+                        onlineState = PRESENCE_ONLINE
                     )
                 )
             }
 
             override fun onCancelled(error: DatabaseError) {
-                trySend(PresenceStatusUiModel(userId = userId, isOnline = false, lastChanged = 0L))
+                trySend(SocialRealtimePresenceResolver.offlineStatus(userId))
             }
         }
 
@@ -171,7 +172,11 @@ class SocialRepository {
     fun observeTypingUsers(threadId: String): Flow<List<TypingUserUiModel>> = callbackFlow {
         val currentUserId = auth.currentUser?.uid.orEmpty()
 
-        if (threadId.isBlank() || currentUserId.isBlank()) {
+        if (SocialRealtimePresenceResolver.shouldSkipTypingUsers(
+                threadId = threadId,
+                currentUserId = currentUserId
+            )
+        ) {
             trySend(emptyList())
             close()
             return@callbackFlow
@@ -215,14 +220,18 @@ class SocialRepository {
 
     fun setTyping(threadId: String, isTyping: Boolean) {
         val user = auth.currentUser ?: return
-        if (threadId.isBlank()) return
+        if (SocialRealtimePresenceResolver.shouldSkipTypingUpdate(
+                threadId = threadId,
+                userId = user.uid
+            )
+        ) return
 
         val typingRef = realtimeDatabase.reference
             .child(REALTIME_TYPING_NODE)
             .child(threadId)
             .child(user.uid)
 
-        if (!isTyping) {
+        if (SocialRealtimePresenceResolver.shouldRemoveTyping(isTyping)) {
             typingRef.removeValue()
             return
         }
