@@ -782,15 +782,33 @@ class SocialRepository {
         }
     }
 
-
     suspend fun createOrGetDirectThread(targetUserId: String): MessageThreadUiModel? {
         val currentUser = auth.currentUser ?: return null
-        if (!SocialDirectThreadPayloadResolver.canCreateDirectThread(currentUser.uid, targetUserId)) return null
+        if (
+            SocialDirectThreadPayloadResolver.shouldSkipTarget(
+                currentUserId = currentUser.uid,
+                targetUserId = targetUserId
+            )
+        ) return null
 
         createCurrentUserProfileIfNeeded()
 
         val currentProfile = getCurrentUserProfile()
         val targetProfile = getUserProfile(targetUserId) ?: return null
+
+        val currentParticipant = SocialDirectThreadPayloadResolver.currentParticipant(
+            uid = currentUser.uid,
+            profileUserName = currentProfile?.userName,
+            profilePhotoUrl = currentProfile?.photoUrl,
+            email = currentUser.email,
+            authPhotoUrl = currentUser.photoUrl?.toString()
+        )
+
+        val targetParticipant = SocialDirectThreadPayloadResolver.targetParticipant(
+            uid = targetUserId,
+            userName = targetProfile.userName,
+            photoUrl = targetProfile.photoUrl
+        )
 
         val threadId = SocialThreadParticipantResolver.directThreadId(currentUser.uid, targetUserId)
         val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
@@ -804,17 +822,10 @@ class SocialRepository {
                     threadRef,
                     SocialDirectThreadPayloadResolver.createPayload(
                         threadId = threadId,
-                        currentUserId = currentUser.uid,
-                        targetUserId = targetUserId,
-                        currentUserName = SocialDirectThreadPayloadResolver.currentUserName(
-                            profileUserName = currentProfile?.userName,
-                            email = currentUser.email
-                        ),
-                        currentUserPhotoUrl = currentProfile?.photoUrl ?: currentUser.photoUrl?.toString(),
-                        targetUserName = SocialDirectThreadPayloadResolver.targetUserName(targetProfile.userName),
-                        targetUserPhotoUrl = targetProfile.photoUrl,
-                        now = now,
-                        participantMapFactory = SocialThreadParticipantResolver::participantMap
+                        threadType = THREAD_TYPE_DIRECT,
+                        currentParticipant = currentParticipant,
+                        targetParticipant = targetParticipant,
+                        now = now
                     )
                 )
             }

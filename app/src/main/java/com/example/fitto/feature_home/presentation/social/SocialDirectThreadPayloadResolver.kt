@@ -1,64 +1,76 @@
 package com.example.fitto.feature_home.presentation.social
 
+internal data class SocialDirectThreadParticipant(
+    val uid: String,
+    val userName: String,
+    val photoUrl: String?
+)
+
 internal object SocialDirectThreadPayloadResolver {
 
-    fun canCreateDirectThread(
+    fun shouldSkipTarget(
         currentUserId: String,
         targetUserId: String
     ): Boolean {
-        return currentUserId.isNotBlank() &&
-            targetUserId.isNotBlank() &&
-            currentUserId != targetUserId
+        return targetUserId.isBlank() || targetUserId == currentUserId
     }
 
-    fun currentUserName(
+    fun currentParticipant(
+        uid: String,
         profileUserName: String?,
-        email: String?
-    ): String {
-        return profileUserName?.takeIf { it.isNotBlank() }
-            ?: email?.substringBefore("@")
-            ?: DEFAULT_USER_NAME
+        profilePhotoUrl: String?,
+        email: String?,
+        authPhotoUrl: String?
+    ): SocialDirectThreadParticipant {
+        return SocialDirectThreadParticipant(
+            uid = uid,
+            userName = profileUserName?.takeIf { it.isNotBlank() }
+                ?: email?.substringBefore("@")
+                ?: DEFAULT_USER_NAME,
+            photoUrl = profilePhotoUrl ?: authPhotoUrl
+        )
     }
 
-    fun targetUserName(userName: String?): String {
-        return userName?.ifBlank { null } ?: DEFAULT_USER_NAME
+    fun targetParticipant(
+        uid: String,
+        userName: String,
+        photoUrl: String?
+    ): SocialDirectThreadParticipant {
+        return SocialDirectThreadParticipant(
+            uid = uid,
+            userName = userName.ifBlank { DEFAULT_USER_NAME },
+            photoUrl = photoUrl
+        )
     }
 
     fun createPayload(
         threadId: String,
-        currentUserId: String,
-        targetUserId: String,
-        currentUserName: String,
-        currentUserPhotoUrl: String?,
-        targetUserName: String,
-        targetUserPhotoUrl: String?,
-        now: Long,
-        participantMapFactory: (uid: String, userName: String, photoUrl: String?) -> Map<String, Any?>
+        threadType: String,
+        currentParticipant: SocialDirectThreadParticipant,
+        targetParticipant: SocialDirectThreadParticipant,
+        now: Long
     ): Map<String, Any?> {
-        val participantIds = listOf(currentUserId, targetUserId).sorted()
+        val participantIds = listOf(currentParticipant.uid, targetParticipant.uid).sorted()
 
         return mapOf(
             "id" to threadId,
-            "type" to THREAD_TYPE_DIRECT,
+            "type" to threadType,
             "title" to null,
             "participantIds" to participantIds,
-            "memberCount" to DIRECT_MEMBER_COUNT,
+            "memberCount" to participantIds.size,
             "participants" to mapOf(
-                currentUserId to participantMapFactory(
-                    currentUserId,
-                    currentUserName,
-                    currentUserPhotoUrl
+                currentParticipant.uid to SocialThreadParticipantResolver.participantMap(
+                    uid = currentParticipant.uid,
+                    userName = currentParticipant.userName,
+                    photoUrl = currentParticipant.photoUrl
                 ),
-                targetUserId to participantMapFactory(
-                    targetUserId,
-                    targetUserName,
-                    targetUserPhotoUrl
+                targetParticipant.uid to SocialThreadParticipantResolver.participantMap(
+                    uid = targetParticipant.uid,
+                    userName = targetParticipant.userName,
+                    photoUrl = targetParticipant.photoUrl
                 )
             ),
-            "unreadCounts" to mapOf(
-                currentUserId to 0,
-                targetUserId to 0
-            ),
+            "unreadCounts" to participantIds.associateWith { 0 },
             "lastMessageText" to "",
             "lastMessageSenderId" to null,
             "lastMessageCreatedAt" to null,
@@ -68,7 +80,5 @@ internal object SocialDirectThreadPayloadResolver {
         )
     }
 
-    private const val THREAD_TYPE_DIRECT = "direct"
-    private const val DIRECT_MEMBER_COUNT = 2
     private const val DEFAULT_USER_NAME = "fitto_user"
 }
