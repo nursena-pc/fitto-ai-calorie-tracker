@@ -61,56 +61,17 @@ open class RecipeRepository(context: Context) {
         ensureSeeded()
 
         val now = System.currentTimeMillis()
-        val ownerUid = currentOwnerUid()
-        val cleanTitle = draft.title.trim().ifBlank { "Yeni Tarif" }
-        val cleanIngredients = draft.ingredients.map { it.trim() }.filter { it.isNotBlank() }
-        val cleanSteps = draft.steps.map { it.trim() }.filter { it.isNotBlank() }
-
-        val recipeId = "user_${ownerUid}_${now}"
-            .replace("/", "_")
-            .replace(".", "_")
-            .replace("#", "_")
-            .replace("$", "_")
-            .replace("[", "_")
-            .replace("]", "_")
-
-        val entity = RecipeEntity(
-            id = recipeId,
-            ownerUid = ownerUid,
-            sourceType = RecipeEntity.SOURCE_TYPE_USER,
-            sourceRecipeId = null,
-            sourceUserId = null,
-            sourcePostId = null,
-            title = cleanTitle,
-            description = draft.description.trim().ifBlank {
-                "Kullanıcı tarafından eklenen tarif"
-            },
-            mainCategoryKey = draft.mainCategoryKey,
-            subcategoryKey = "",
-            subcategoryKeys = emptySet(),
-            mainIngredientKeys = emptySet(),
-            dietKeys = emptySet(),
-            methodKeys = emptySet(),
-            durationMinutes = draft.durationLabel.toRepresentativeMinutes(),
-            durationLabel = draft.durationLabel,
-            difficultyKey = draft.difficultyKey,
-            calories = 0,
-            imageResId = R.drawable.profile_avatar_04,
-            servings = 1,
-            servingDisplay = "1 porsiyon",
-            proteinGrams = 0,
-            carbGrams = 0,
-            fatGrams = 0,
-            ingredientNames = cleanIngredients.map { it.substringBefore(" - ").trim() },
-            ingredients = cleanIngredients,
-            steps = cleanSteps,
-            tip = null,
-            createdAt = now,
-            updatedAt = now
+        val entity = RecipeUserBookResolver.buildUserRecipeEntity(
+            RecipeUserBookResolver.UserRecipeEntityInput(
+                draft = draft,
+                ownerUid = currentOwnerUid(),
+                now = now,
+                defaultImageResId = R.drawable.profile_avatar_04
+            )
         )
 
         recipeDao.upsertRecipe(entity)
-        return recipeId
+        return entity.id
     }
 
     fun findById(recipeId: String): RecipeUiModel? {
@@ -149,38 +110,18 @@ open class RecipeRepository(context: Context) {
 
         val source: RecipeEntity = recipeDao.findById(recipeId) ?: return null
         val now = System.currentTimeMillis()
-        val ownerUid = currentOwnerUid()
-        val cleanIngredients: List<String> = ingredientsOverride
-            ?.map { ingredient -> ingredient.trim() }
-            ?.filter { ingredient -> ingredient.isNotBlank() }
-            ?: source.ingredients
-
-        val copyId = "copied_${ownerUid}_${source.id}_${now}".toSafeRecipeId()
-        val sourceId = source.sourceRecipeId ?: source.id
-
-        val copiedEntity = source.copy(
-            id = copyId,
-            ownerUid = ownerUid,
-            sourceType = RecipeEntity.SOURCE_TYPE_COPIED,
-            sourceRecipeId = sourceId,
-            title = if (ingredientsOverride == null) source.title else "${source.title} (Bana Özel)",
-            imageResId = source.resolvedImageResId(),
-            ingredients = cleanIngredients,
-            ingredientNames = if (ingredientsOverride == null) {
-                source.ingredientNames
-            } else {
-                cleanIngredients.map { ingredientLine -> ingredientLine.toIngredientNameForCopy() }
-            },
-            calories = source.calories,
-            proteinGrams = source.proteinGrams,
-            carbGrams = source.carbGrams,
-            fatGrams = source.fatGrams,
-            createdAt = now,
-            updatedAt = now
+        val copiedEntity = RecipeUserBookResolver.buildCopiedRecipeEntity(
+            RecipeUserBookResolver.CopyRecipeEntityInput(
+                source = source,
+                ownerUid = currentOwnerUid(),
+                now = now,
+                ingredientsOverride = ingredientsOverride,
+                resolvedImageResId = source.resolvedImageResId()
+            )
         )
 
         recipeDao.upsertRecipe(copiedEntity)
-        return copyId
+        return copiedEntity.id
     }
 
 
@@ -598,30 +539,6 @@ open class RecipeRepository(context: Context) {
     }
 
 
-    private fun String.toSafeRecipeId(): String {
-        return replace("/", "_")
-            .replace(".", "_")
-            .replace("#", "_")
-            .replace("$", "_")
-            .replace("[", "_")
-            .replace("]", "_")
-    }
-
-    private fun String.toIngredientNameForCopy(): String {
-        val tokens = trim().split(Regex("\\s+")).filter { token -> token.isNotBlank() }
-        if (tokens.isEmpty()) return trim()
-
-        var nameStart = 0
-        if (tokens.first().any { char -> char.isDigit() } || "/" in tokens.first()) {
-            nameStart = 1
-            while (nameStart < tokens.size && tokens[nameStart].lowercase(TURKISH_LOCALE) in INGREDIENT_AMOUNT_WORDS && nameStart < 5) {
-                nameStart++
-            }
-        }
-
-        return tokens.drop(nameStart).joinToString(" ").ifBlank { trim() }
-    }
-
     private fun buildDescription(
         mainCategory: String,
         durationLabel: String,
@@ -763,10 +680,5 @@ open class RecipeRepository(context: Context) {
         private val favoriteIds: MutableSet<String> = mutableSetOf()
         private val communitySharedPostIds: MutableSet<String> = mutableSetOf()
 
-        private val INGREDIENT_AMOUNT_WORDS = setOf(
-            "adet", "g", "gr", "gram", "kg", "ml", "lt", "litre", "su", "bardağı", "bardak",
-            "küçük", "yemek", "tatlı", "çay", "kaşığı", "kaşık", "dilim", "demet", "tutam",
-            "avuç", "paket", "kase", "diş"
-        )
     }
 }
