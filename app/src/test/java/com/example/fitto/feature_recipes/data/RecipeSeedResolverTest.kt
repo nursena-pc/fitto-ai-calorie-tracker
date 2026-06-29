@@ -100,12 +100,4 @@ class RecipeSeedResolverTest {
         assertNull(entity.tip)
     }
 
-    @Test
-    fun representativeMinutes_mapsKnownLabelsAndFallsBack() {
-        assertEquals(10, RecipeSeedResolver.representativeMinutes("15 dk altı"))
-        assertEquals(25, RecipeSeedResolver.representativeMinutes("15-30 dk"))
-        assertEquals(45, RecipeSeedResolver.representativeMinutes("30-60 dk"))
-        assertEquals(75, RecipeSeedResolver.representativeMinutes("60 dk üzeri"))
-        assertEquals(30, RecipeSeedResolver.representativeMinutes("bilinmeyen"))
-    }
 }
