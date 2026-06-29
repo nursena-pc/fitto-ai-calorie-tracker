@@ -8,7 +8,6 @@ import com.example.fitto.data.local.entity.RecipeEntity
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.example.fitto.feature_recipes.model.RecipeFilterState
 import com.example.fitto.feature_recipes.model.RecipeUiModel
-import com.example.fitto.feature_recipes.util.normalizeRecipeText
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.google.firebase.auth.FirebaseAuth
 import org.json.JSONArray
@@ -452,75 +451,18 @@ open class RecipeRepository(context: Context) {
     }
 
     fun allIngredientOptions(): List<RecipeFilterOption> {
-        return recipes()
-            .flatMap { recipe -> recipe.ingredientNames }
-            .mapNotNull { ingredientName -> ingredientName.toIngredientOptionOrNull() }
-            .distinctBy { option -> option.key }
-            .sortedBy { option -> option.label.normalizeRecipeText() }
+        return RecipeFilterResolver.ingredientOptions(recipes())
     }
 
     fun filterRecipes(
         query: String,
         filterState: RecipeFilterState
     ): List<RecipeUiModel> {
-        val normalizedQuery: String = query.normalizeRecipeText()
-
-        return recipes().filter { recipe: RecipeUiModel ->
-            val queryMatches: Boolean = normalizedQuery.isBlank() ||
-                    recipe.searchableText().contains(normalizedQuery)
-
-            val categoryMatches: Boolean = filterState.selectedMainCategoryKey
-                ?.let { selectedCategory -> recipe.mainCategoryKey == selectedCategory }
-                ?: true
-
-            val subcategoryMatches: Boolean = filterState.selectedSubcategoryKey
-                ?.let { selectedSubcategory -> selectedSubcategory in recipe.subcategoryKeys }
-                ?: true
-
-            val ingredientMatches: Boolean = filterState.selectedMainIngredientKeys.isEmpty() ||
-                    recipe.mainIngredientKeys.any { ingredientKey -> ingredientKey in filterState.selectedMainIngredientKeys }
-
-            val dietMatches: Boolean = filterState.selectedDietKeys.isEmpty() ||
-                    filterState.selectedDietKeys.all { dietKey -> dietKey in recipe.dietKeys }
-
-            val methodMatches: Boolean = filterState.selectedMethodKeys.isEmpty() ||
-                    recipe.methodKeys.any { methodKey -> methodKey in filterState.selectedMethodKeys }
-
-            val durationMatches: Boolean = filterState.selectedDurationKey
-                ?.let { selectedDuration -> recipe.durationLabel == selectedDuration }
-                ?: true
-
-            val difficultyMatches: Boolean = filterState.selectedDifficultyKey
-                ?.let { selectedDifficulty -> recipe.difficultyKey == selectedDifficulty }
-                ?: true
-
-            val ingredientSearchPool: List<String> = recipe.ingredientNames.map { ingredientName ->
-                ingredientName.normalizeRecipeText()
-            }
-
-            val includedIngredientMatches: Boolean =
-                filterState.selectedIncludedIngredientKeys.isEmpty() ||
-                        filterState.selectedIncludedIngredientKeys.all { selectedIngredientKey ->
-                            ingredientSearchPool.any { ingredient -> ingredient.contains(selectedIngredientKey) }
-                        }
-
-            val excludedIngredientMatches: Boolean =
-                filterState.selectedExcludedIngredientKeys.isEmpty() ||
-                        filterState.selectedExcludedIngredientKeys.none { selectedIngredientKey ->
-                            ingredientSearchPool.any { ingredient -> ingredient.contains(selectedIngredientKey) }
-                        }
-
-            queryMatches &&
-                    categoryMatches &&
-                    subcategoryMatches &&
-                    ingredientMatches &&
-                    dietMatches &&
-                    methodMatches &&
-                    durationMatches &&
-                    difficultyMatches &&
-                    includedIngredientMatches &&
-                    excludedIngredientMatches
-        }
+        return RecipeFilterResolver.filterRecipes(
+            recipes = recipes(),
+            query = query,
+            filterState = filterState
+        )
     }
 
     private fun currentOwnerUid(): String {
@@ -790,36 +732,6 @@ open class RecipeRepository(context: Context) {
         }
     }
 
-    private fun RecipeUiModel.searchableText(): String {
-        return buildString {
-            append(title).append(' ')
-            append(description).append(' ')
-            append(mainCategoryKey).append(' ')
-            append(subcategoryKeys.joinToString(" ")).append(' ')
-            append(mainIngredientKeys.joinToString(" ")).append(' ')
-            append(dietKeys.joinToString(" ")).append(' ')
-            append(methodKeys.joinToString(" ")).append(' ')
-            append(ingredientNames.joinToString(" ")).append(' ')
-            append(ingredients.joinToString(" ")).append(' ')
-            append(steps.joinToString(" ")).append(' ')
-            append(durationLabel).append(' ')
-            append(durationMinutes).append(" dk ")
-            append(servingDisplay).append(' ')
-            append(difficultyKey).append(' ')
-            append(tip.orEmpty())
-        }.normalizeRecipeText()
-    }
-
-    private fun String.toIngredientOptionOrNull(): RecipeFilterOption? {
-        val label: String = substringBefore(" - ")
-            .substringBefore("(")
-            .trim()
-            .replaceFirstChar { char ->
-                if (char.isLowerCase()) char.titlecase(TURKISH_LOCALE) else char.toString()
-            }
-        if (label.isBlank()) return null
-        return RecipeFilterOption(key = label.normalizeRecipeText(), label = label)
-    }
 
     private data class RecipeIngredient(
         val name: String,
