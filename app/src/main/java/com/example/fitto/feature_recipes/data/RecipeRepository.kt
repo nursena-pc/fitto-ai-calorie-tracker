@@ -251,58 +251,21 @@ open class RecipeRepository(context: Context) {
             defaultDescription = "Topluluktan kaydedilen tarif"
         )
 
-        val communityEntity = if (source != null) {
-            source.copy(
+        val communityEntity = RecipeCommunityEntityResolver.buildCommunityRecipeEntity(
+            RecipeCommunityEntityResolver.CommunityEntityInput(
                 id = sharedId,
                 ownerUid = ownerUid,
-                sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, source),
-                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, source),
-                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, source),
-                title = values.title,
-                description = values.description,
-                calories = values.calories,
-                imageResId = source.resolvedImageResId(),
-                ingredients = values.ingredients,
-                ingredientNames = values.ingredientNames,
-                steps = values.steps,
-                createdAt = now,
-                updatedAt = now
+                source = source,
+                values = values,
+                postUserId = postUserId,
+                postId = cleanPostId,
+                recipeId = cleanRecipeId,
+                recipeImageResId = recipeImageResId,
+                fallbackImageResId = imageForRecipeIdOrDefault(cleanRecipeId),
+                resolvedSourceImageResId = source?.resolvedImageResId(),
+                now = now
             )
-        } else {
-            RecipeEntity(
-                id = sharedId,
-                ownerUid = ownerUid,
-                sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, null),
-                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, null),
-                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, null),
-                title = values.title,
-                description = values.description,
-                mainCategoryKey = values.category,
-                subcategoryKey = "",
-                subcategoryKeys = emptySet(),
-                mainIngredientKeys = emptySet(),
-                dietKeys = emptySet(),
-                methodKeys = emptySet(),
-                durationMinutes = RecipeValueResolver.representativeMinutes(values.durationLabel),
-                durationLabel = values.durationLabel,
-                difficultyKey = "kolay",
-                calories = values.calories,
-                imageResId = recipeImageResId ?: imageForRecipeIdOrDefault(cleanRecipeId),
-                servings = 1,
-                servingDisplay = values.servingDisplay,
-                proteinGrams = 0,
-                carbGrams = 0,
-                fatGrams = 0,
-                ingredientNames = values.ingredientNames,
-                ingredients = values.ingredients,
-                steps = values.steps,
-                tip = null,
-                createdAt = now,
-                updatedAt = now
-            )
-        }
+        )
 
         recipeDao.upsertRecipe(communityEntity)
         return sharedId
@@ -361,37 +324,20 @@ open class RecipeRepository(context: Context) {
         val now = System.currentTimeMillis()
 
         recipeDao.upsertRecipe(
-            RecipeEntity(
-                id = previewId,
-                ownerUid = null,
-                sourceType = RecipeEntity.SOURCE_TYPE_COMMUNITY,
-                sourceRecipeId = RecipeCommunitySaveResolver.sourceRecipeIdForCommunityCopy(cleanRecipeId, null),
-                sourceUserId = RecipeCommunitySaveResolver.sourceUserIdForCommunityCopy(postUserId, null),
-                sourcePostId = RecipeCommunitySaveResolver.sourcePostIdForCommunityCopy(cleanPostId, null),
-                title = values.title,
-                description = values.description,
-                mainCategoryKey = values.category,
-                subcategoryKey = "",
-                subcategoryKeys = emptySet(),
-                mainIngredientKeys = emptySet(),
-                dietKeys = emptySet(),
-                methodKeys = emptySet(),
-                durationMinutes = RecipeValueResolver.representativeMinutes(values.durationLabel),
-                durationLabel = values.durationLabel,
-                difficultyKey = "kolay",
-                calories = values.calories,
-                imageResId = recipeImageResId ?: imageForRecipeIdOrDefault(cleanRecipeId),
-                servings = 1,
-                servingDisplay = values.servingDisplay,
-                proteinGrams = 0,
-                carbGrams = 0,
-                fatGrams = 0,
-                ingredientNames = values.ingredientNames,
-                ingredients = values.ingredients,
-                steps = values.steps,
-                tip = null,
-                createdAt = now,
-                updatedAt = now
+            RecipeCommunityEntityResolver.buildCommunityRecipeEntity(
+                RecipeCommunityEntityResolver.CommunityEntityInput(
+                    id = previewId,
+                    ownerUid = null,
+                    source = null,
+                    values = values,
+                    postUserId = postUserId,
+                    postId = cleanPostId,
+                    recipeId = cleanRecipeId,
+                    recipeImageResId = recipeImageResId,
+                    fallbackImageResId = imageForRecipeIdOrDefault(cleanRecipeId),
+                    resolvedSourceImageResId = null,
+                    now = now
+                )
             )
         )
 
