@@ -19,23 +19,19 @@ class DietPlanListLoader(
             favoriteIds = favoriteIds,
             activePlanId = activePlanId
         )
-        val customPlans = customPlanSource
-            .getPlans(includeDrafts = includeDrafts)
-            .map { customPlan ->
-                customPlanSource.toDietPlanUiModel(
-                    plan = customPlan,
-                    isFavorite = customPlan.id in favoriteIds
-                ).copy(
-                    isApplied = customPlan.id == activePlanId
-                )
-            }
+        val customPlans = customPlanSource.getPlans(includeDrafts = includeDrafts)
 
-        return DietPlanListSnapshot(
+        return DietPlanListSnapshotResolver.resolve(
             customPlans = customPlans,
             readyPlans = readyPlans,
-            allPlans = customPlans + readyPlans,
             favoriteIds = favoriteIds,
-            activePlanId = activePlanId
+            activePlanId = activePlanId,
+            customPlanMapper = { customPlan, isFavorite ->
+                customPlanSource.toDietPlanUiModel(
+                    plan = customPlan,
+                    isFavorite = isFavorite
+                )
+            }
         )
     }
 
