@@ -9,27 +9,21 @@ import org.junit.Test
 class SocialDirectThreadPayloadResolverTest {
 
     @Test
-    fun canCreateDirectThread_rejectsBlankOrSelfTarget() {
-        assertFalse(
-            SocialDirectThreadPayloadResolver.canCreateDirectThread(
+    fun shouldSkipTarget_returnsTrueForBlankOrSelfTarget() {
+        assertTrue(
+            SocialDirectThreadPayloadResolver.shouldSkipTarget(
                 currentUserId = "current",
-                targetUserId = ""
-            )
-        )
-        assertFalse(
-            SocialDirectThreadPayloadResolver.canCreateDirectThread(
-                currentUserId = "same",
-                targetUserId = "same"
-            )
-        )
-        assertFalse(
-            SocialDirectThreadPayloadResolver.canCreateDirectThread(
-                currentUserId = "",
-                targetUserId = "target"
+                targetUserId = " "
             )
         )
         assertTrue(
-            SocialDirectThreadPayloadResolver.canCreateDirectThread(
+            SocialDirectThreadPayloadResolver.shouldSkipTarget(
+                currentUserId = "current",
+                targetUserId = "current"
+            )
+        )
+        assertFalse(
+            SocialDirectThreadPayloadResolver.shouldSkipTarget(
                 currentUserId = "current",
                 targetUserId = "target"
             )
@@ -37,62 +31,85 @@ class SocialDirectThreadPayloadResolverTest {
     }
 
     @Test
-    fun currentUserName_prefersProfileNameThenEmailPrefixThenDefault() {
-        assertEquals(
-            "profile_user",
-            SocialDirectThreadPayloadResolver.currentUserName(
-                profileUserName = "profile_user",
-                email = "mail@example.com"
-            )
+    fun currentParticipant_prefersProfileNameAndProfilePhoto() {
+        val participant = SocialDirectThreadPayloadResolver.currentParticipant(
+            uid = "current",
+            profileUserName = "nursena",
+            profilePhotoUrl = "profile-photo",
+            email = "mail@example.com",
+            authPhotoUrl = "auth-photo"
         )
-        assertEquals(
-            "mail",
-            SocialDirectThreadPayloadResolver.currentUserName(
-                profileUserName = "",
-                email = "mail@example.com"
-            )
-        )
-        assertEquals(
-            "fitto_user",
-            SocialDirectThreadPayloadResolver.currentUserName(
-                profileUserName = null,
-                email = null
-            )
-        )
+
+        assertEquals("current", participant.uid)
+        assertEquals("nursena", participant.userName)
+        assertEquals("profile-photo", participant.photoUrl)
     }
 
     @Test
-    fun targetUserName_fallsBackToDefaultWhenBlank() {
-        assertEquals("target_user", SocialDirectThreadPayloadResolver.targetUserName("target_user"))
-        assertEquals("fitto_user", SocialDirectThreadPayloadResolver.targetUserName(""))
-        assertEquals("fitto_user", SocialDirectThreadPayloadResolver.targetUserName(null))
+    fun currentParticipant_fallsBackToEmailNameAndAuthPhoto() {
+        val participant = SocialDirectThreadPayloadResolver.currentParticipant(
+            uid = "current",
+            profileUserName = " ",
+            profilePhotoUrl = null,
+            email = "nursena@example.com",
+            authPhotoUrl = "auth-photo"
+        )
+
+        assertEquals("nursena", participant.userName)
+        assertEquals("auth-photo", participant.photoUrl)
+    }
+
+    @Test
+    fun currentParticipant_fallsBackToDefaultUserNameWithoutEmail() {
+        val participant = SocialDirectThreadPayloadResolver.currentParticipant(
+            uid = "current",
+            profileUserName = null,
+            profilePhotoUrl = null,
+            email = null,
+            authPhotoUrl = null
+        )
+
+        assertEquals("fitto_user", participant.userName)
+        assertNull(participant.photoUrl)
+    }
+
+    @Test
+    fun targetParticipant_fallsBackToDefaultUserName() {
+        val participant = SocialDirectThreadPayloadResolver.targetParticipant(
+            uid = "target",
+            userName = " ",
+            photoUrl = "target-photo"
+        )
+
+        assertEquals("target", participant.uid)
+        assertEquals("fitto_user", participant.userName)
+        assertEquals("target-photo", participant.photoUrl)
     }
 
     @Test
     fun createPayload_buildsDirectThreadPayload() {
         val payload = SocialDirectThreadPayloadResolver.createPayload(
-            threadId = "thread-1",
-            currentUserId = "user-b",
-            targetUserId = "user-a",
-            currentUserName = "current",
-            currentUserPhotoUrl = "current-photo",
-            targetUserName = "target",
-            targetUserPhotoUrl = "target-photo",
-            now = 123L,
-            participantMapFactory = { uid, userName, photoUrl ->
-                mapOf(
-                    "uid" to uid,
-                    "userName" to userName,
-                    "photoUrl" to photoUrl
-                )
-            }
+            threadId = "direct_current_target",
+            threadType = "direct",
+            currentParticipant = SocialDirectThreadParticipant(
+                uid = "current",
+                userName = "nursena",
+                photoUrl = "current-photo"
+            ),
+            targetParticipant = SocialDirectThreadParticipant(
+                uid = "target",
+                userName = "ayse",
+                photoUrl = null
+            ),
+            now = 123L
         )
 
-        assertEquals("thread-1", payload["id"])
+        assertEquals("direct_current_target", payload["id"])
         assertEquals("direct", payload["type"])
         assertNull(payload["title"])
-        assertEquals(listOf("user-a", "user-b"), payload["participantIds"])
+        assertEquals(listOf("current", "target"), payload["participantIds"])
         assertEquals(2, payload["memberCount"])
+        assertEquals(mapOf("current" to 0, "target" to 0), payload["unreadCounts"])
         assertEquals("", payload["lastMessageText"])
         assertNull(payload["lastMessageSenderId"])
         assertNull(payload["lastMessageCreatedAt"])
@@ -102,14 +119,9 @@ class SocialDirectThreadPayloadResolverTest {
 
         @Suppress("UNCHECKED_CAST")
         val participants = payload["participants"] as Map<String, Map<String, Any?>>
-        assertEquals("current", participants.getValue("user-b")["userName"])
-        assertEquals("current-photo", participants.getValue("user-b")["photoUrl"])
-        assertEquals("target", participants.getValue("user-a")["userName"])
-        assertEquals("target-photo", participants.getValue("user-a")["photoUrl"])
-
-        assertEquals(
-            mapOf("user-b" to 0, "user-a" to 0),
-            payload["unreadCounts"]
-        )
+        assertEquals("nursena", participants.getValue("current")["userName"])
+        assertEquals("current-photo", participants.getValue("current")["photoUrl"])
+        assertEquals("ayse", participants.getValue("target")["userName"])
+        assertNull(participants.getValue("target")["photoUrl"])
     }
 }
