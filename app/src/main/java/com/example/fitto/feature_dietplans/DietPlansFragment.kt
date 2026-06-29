@@ -29,6 +29,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
+    private lateinit var draftCompletionAction: DietPlanDraftCompletionAction
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var dietPlanListLoader: DietPlanListLoader
     private var currentPlans: List<DietPlanUiModel> = emptyList()
@@ -44,6 +45,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             customPlanStore = customDietPlanStore,
             preferenceStore = dietPlanStore
         )
+        draftCompletionAction = DietPlanDraftCompletionAction.from(customDietPlanStore)
         dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
         dietPlanListLoader = DietPlanListLoader.from(
             customPlanStore = customDietPlanStore,
@@ -109,18 +111,11 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     private fun completeDraftPlan(plan: DietPlanUiModel) {
-        val draft = customDietPlanStore.getPlan(plan.id)
-            ?.takeIf { it.isDraft }
-            ?: return
+        val result = draftCompletionAction.complete(plan.id)
 
-        val completedPlan = draft.copy(
-            isDraft = false,
-            updatedAt = System.currentTimeMillis()
-        )
-
-        customDietPlanStore.savePlan(completedPlan)
-
-        renderListEffect(DietPlansListEffectResolver.draftCompleted())
+        if (result is DietPlanDraftCompletionResult.Completed) {
+            renderListEffect(DietPlansListEffectResolver.draftCompleted())
+        }
     }
 
     private fun setupClicks() = with(binding) {
