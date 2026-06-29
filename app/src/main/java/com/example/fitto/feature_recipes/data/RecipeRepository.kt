@@ -31,28 +31,37 @@ open class RecipeRepository(context: Context) {
     fun recipes(): List<RecipeUiModel> {
         ensureSeeded()
         val entities: List<RecipeEntity> = recipeDao.getVisibleRecipes(currentOwnerUid())
-        return entities.map { entity -> entity.toUiModel(isFavorite = entity.id in favoriteIds) }
+        return RecipePresentationResolver.toUiModels(
+            entities = entities,
+            favoriteIds = favoriteIds,
+            imageResIdResolver = { entity -> entity.resolvedImageResId() }
+        )
     }
 
     fun userRecipes(): List<RecipeUiModel> {
         ensureSeeded()
-        return recipeDao.getUserRecipes(currentOwnerUid())
-            .map { entity -> entity.toUiModel(isFavorite = entity.id in favoriteIds) }
+        return RecipePresentationResolver.toUiModels(
+            entities = recipeDao.getUserRecipes(currentOwnerUid()),
+            favoriteIds = favoriteIds,
+            imageResIdResolver = { entity -> entity.resolvedImageResId() }
+        )
     }
 
     fun communityRecipes(): List<RecipeUiModel> {
         ensureSeeded()
-        return recipeDao.getCommunityRecipes(currentOwnerUid())
-            .map { entity -> entity.toUiModel(isFavorite = entity.id in favoriteIds) }
+        return RecipePresentationResolver.toUiModels(
+            entities = recipeDao.getCommunityRecipes(currentOwnerUid()),
+            favoriteIds = favoriteIds,
+            imageResIdResolver = { entity -> entity.resolvedImageResId() }
+        )
     }
 
     fun favoriteOriginalRecipes(): List<RecipeUiModel> {
         ensureSeeded()
-        return recipeDao.getVisibleRecipes(currentOwnerUid())
-            .filter { entity ->
-                entity.id in favoriteIds && entity.sourceType == RecipeEntity.SOURCE_TYPE_SEED
-            }
-            .map { entity -> entity.toUiModel(isFavorite = true) }
+        return RecipePresentationResolver.favoriteOriginalRecipes(
+            entities = recipeDao.getVisibleRecipes(currentOwnerUid()),
+            favoriteIds = favoriteIds
+        ).map { entity -> entity.toUiModel(isFavorite = true) }
     }
 
     fun addUserRecipe(draft: UserRecipeDraft): String {
@@ -458,70 +467,40 @@ open class RecipeRepository(context: Context) {
     }
 
     private fun RecipeEntity.toUiModel(isFavorite: Boolean): RecipeUiModel {
-        return RecipeUiModel(
-            id = id,
-            title = title,
-            description = description,
-            mainCategoryKey = mainCategoryKey,
-            subcategoryKey = subcategoryKey,
-            subcategoryKeys = subcategoryKeys,
-            mainIngredientKeys = mainIngredientKeys,
-            dietKeys = dietKeys,
-            methodKeys = methodKeys,
-            durationMinutes = durationMinutes,
-            durationLabel = durationLabel,
-            difficultyKey = difficultyKey,
-            calories = calories,
-            imageResId = resolvedImageResId(),
-            servings = servings,
-            servingDisplay = servingDisplay,
-            proteinGrams = proteinGrams,
-            carbGrams = carbGrams,
-            fatGrams = fatGrams,
-            ingredientNames = ingredientNames,
-            ingredients = ingredients,
-            steps = steps,
-            tip = tip,
-            isFavorite = isFavorite
+        return RecipePresentationResolver.toUiModel(
+            entity = this,
+            isFavorite = isFavorite,
+            imageResId = resolvedImageResId()
         )
     }
 
 
     private fun RecipeEntity.resolvedImageResId(): Int {
-        val rawSeedId: String? = when {
-            sourceType == RecipeEntity.SOURCE_TYPE_SEED -> sourceRecipeId ?: id.removePrefix("seed_")
-            sourceRecipeId?.toIntOrNull() != null -> sourceRecipeId
-            id.startsWith("seed_") -> id.removePrefix("seed_")
-            else -> null
-        }
-
-        if (rawSeedId != null) {
-            return recipeImageResourceIdOrNull(rawSeedId) ?: R.drawable.profile_avatar_04
-        }
-
-        return imageResId.takeIf { it != 0 } ?: R.drawable.profile_avatar_04
+        return RecipePresentationResolver.resolvedImageResId(
+            entity = this,
+            resourceIdForRawId = ::recipeImageResourceIdOrNull,
+            defaultImageResId = R.drawable.profile_avatar_04
+        )
     }
 
     private fun imageForSeedRecipe(rawId: String): Int {
-        return recipeImageResourceIdOrNull(rawId) ?: R.drawable.profile_avatar_04
+        return RecipePresentationResolver.imageResIdForRawId(
+            rawId = rawId,
+            resourceIdForRawId = ::recipeImageResourceIdOrNull,
+            defaultImageResId = R.drawable.profile_avatar_04
+        )
     }
 
     private fun imageForRecipeIdOrDefault(recipeId: String): Int {
-        val cleanRecipeId = recipeId.trim()
-        val rawId = when {
-            cleanRecipeId.startsWith("seed_") -> cleanRecipeId.removePrefix("seed_")
-            cleanRecipeId.toIntOrNull() != null -> cleanRecipeId
-            else -> null
-        }
-
-        return rawId
-            ?.let { id -> recipeImageResourceIdOrNull(id) }
-            ?: R.drawable.profile_avatar_04
+        return RecipePresentationResolver.imageResIdForRecipeId(
+            recipeId = recipeId,
+            resourceIdForRawId = ::recipeImageResourceIdOrNull,
+            defaultImageResId = R.drawable.profile_avatar_04
+        )
     }
 
     private fun recipeImageResourceIdOrNull(rawId: String): Int? {
-        val numericId: Int = rawId.toIntOrNull() ?: return null
-        val resourceName = "recipe_${numericId.toString().padStart(3, '0')}"
+        val resourceName = RecipePresentationResolver.recipeImageResourceName(rawId) ?: return null
 
         val resourceId = appContext.resources.getIdentifier(
             resourceName,
