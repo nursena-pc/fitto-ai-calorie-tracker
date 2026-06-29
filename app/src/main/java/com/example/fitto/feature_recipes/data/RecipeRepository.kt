@@ -87,10 +87,9 @@ open class RecipeRepository(context: Context) {
     }
 
     fun toggleFavorite(recipeId: String) {
-        if (recipeId in favoriteIds) {
-            favoriteIds.remove(recipeId)
-        } else {
-            favoriteIds.add(recipeId)
+        when (RecipeRepositoryStateResolver.favoriteToggleDecision(recipeId, favoriteIds)) {
+            RecipeRepositoryStateResolver.FavoriteToggleDecision.ADD_TO_FAVORITES -> favoriteIds.add(recipeId)
+            RecipeRepositoryStateResolver.FavoriteToggleDecision.REMOVE_FROM_FAVORITES -> favoriteIds.remove(recipeId)
         }
     }
 
@@ -102,14 +101,14 @@ open class RecipeRepository(context: Context) {
         ensureSeeded()
 
         val recipe: RecipeEntity? = recipeDao.findById(recipeId)
-        if (recipe?.sourceType == RecipeEntity.SOURCE_TYPE_SEED) {
-            favoriteIds.remove(recipeId)
-            return true
-        }
-
         favoriteIds.remove(recipeId)
-        val ownerUid = currentOwnerUid()
-        return recipeDao.deleteOwnedBookRecipe(recipeId, ownerUid) > 0
+
+        return when (RecipeRepositoryStateResolver.bookRemovalDecision(recipe?.sourceType)) {
+            RecipeRepositoryStateResolver.BookRemovalDecision.REMOVE_FAVORITE_ONLY -> true
+            RecipeRepositoryStateResolver.BookRemovalDecision.DELETE_OWNED_RECIPE -> {
+                recipeDao.deleteOwnedBookRecipe(recipeId, currentOwnerUid()) > 0
+            }
+        }
     }
 
     fun copyRecipeToUserBook(recipeId: String, ingredientsOverride: List<String>? = null): String? {
@@ -377,7 +376,16 @@ open class RecipeRepository(context: Context) {
             val prefs = appContext.getSharedPreferences(SEED_PREFS_NAME, Context.MODE_PRIVATE)
             val savedSeedVersion = prefs.getInt(KEY_SEED_VERSION, 0)
 
-            if (savedSeedVersion < SEED_VERSION || currentSeedCount != seedRecipes.size) {
+            if (
+                RecipeRepositoryStateResolver.shouldRefreshSeedRecipes(
+                    RecipeRepositoryStateResolver.SeedRefreshInput(
+                        savedSeedVersion = savedSeedVersion,
+                        requiredSeedVersion = SEED_VERSION,
+                        currentSeedCount = currentSeedCount,
+                        expectedSeedCount = seedRecipes.size
+                    )
+                )
+            ) {
                 recipeDao.deleteSeedRecipes()
                 recipeDao.insertRecipes(seedRecipes)
 
