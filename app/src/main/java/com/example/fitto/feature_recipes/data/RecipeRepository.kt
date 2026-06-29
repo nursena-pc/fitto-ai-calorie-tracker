@@ -189,30 +189,18 @@ open class RecipeRepository(context: Context) {
         ensureSeeded()
 
         val source: RecipeEntity = recipeDao.findById(recipeId) ?: return null
-        val cleanIngredients: List<String> = ingredientsOverride
-            ?.map { ingredient -> ingredient.trim() }
-            ?.filter { ingredient -> ingredient.isNotBlank() }
-            ?: source.ingredients
-
-        val content = buildString {
-            val cleanComment = comment.trim()
-            if (cleanComment.isNotBlank()) {
-                append(cleanComment)
-                append("\n\n")
-            }
-            append("Denediğim tarifi toplulukla paylaşıyorum: ")
-            append(source.title)
-            if (cleanIngredients.isNotEmpty()) {
-                append("\n\nMalzemeler: ")
-                append(cleanIngredients.take(8).joinToString(", ") { it.toIngredientNameForCopy() })
-            }
-        }
-
-        val recipeSourceTag = if (source.sourceType == RecipeEntity.SOURCE_TYPE_SEED) {
-            RECIPE_SOURCE_TAG_APP
-        } else {
-            RECIPE_SOURCE_TAG_COMMUNITY
-        }
+        val cleanIngredients: List<String> = RecipeCommunityShareResolver.cleanShareIngredients(
+            ingredientsOverride = ingredientsOverride,
+            sourceIngredients = source.ingredients
+        )
+        val content = RecipeCommunityShareResolver.buildShareContent(
+            RecipeCommunityShareResolver.ShareContentInput(
+                comment = comment,
+                recipeTitle = source.title,
+                ingredients = cleanIngredients
+            )
+        )
+        val recipeSourceTag = RecipeCommunityShareResolver.sourceTagForRecipe(source.sourceType)
 
         val postId = SocialRepository().createRecipePost(
             content = content,
@@ -220,10 +208,10 @@ open class RecipeRepository(context: Context) {
             recipeTitle = source.title,
             recipeImageResId = source.resolvedImageResId(),
             recipeDuration = source.durationLabel,
-            recipeServing = source.servingDisplay.ifBlank { "${source.servings} kişilik" },
+            recipeServing = RecipeCommunityShareResolver.servingText(source.servingDisplay, source.servings),
             recipeCalories = source.calories.takeIf { it > 0 },
             recipeCategory = source.mainCategoryKey,
-            tags = listOf("Tarif", source.mainCategoryKey),
+            tags = RecipeCommunityShareResolver.tagsForRecipe(source.mainCategoryKey),
             recipeSourceTag = recipeSourceTag,
             recipeDescription = source.description,
             recipeIngredients = cleanIngredients,
