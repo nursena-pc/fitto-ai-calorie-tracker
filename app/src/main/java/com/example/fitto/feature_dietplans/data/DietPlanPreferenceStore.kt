@@ -2,10 +2,9 @@ package com.example.fitto.feature_dietplans.data
 
 import android.content.Context
 import com.example.fitto.data.local.session.UserSessionDataGuard
+import com.example.fitto.feature_dietplans.DietPlanPreferenceStateResolver
 import com.example.fitto.feature_dietplans.model.FastingPlanType
 import com.example.fitto.feature_meal.model.MealType
-import java.util.Calendar
-import kotlin.math.max
 
 class DietPlanPreferenceStore(context: Context) {
 
@@ -25,8 +24,9 @@ class DietPlanPreferenceStore(context: Context) {
     }
 
     fun getCustomFastingHours(): Int? {
-        val value = prefs.getInt(KEY_CUSTOM_FASTING_HOURS, CUSTOM_HOURS_NOT_SET)
-        return if (value == CUSTOM_HOURS_NOT_SET) null else value
+        return DietPlanPreferenceStateResolver.customFastingHoursOrNull(
+            prefs.getInt(KEY_CUSTOM_FASTING_HOURS, CUSTOM_HOURS_NOT_SET)
+        )
     }
 
     fun saveActivePlan(
@@ -38,7 +38,10 @@ class DietPlanPreferenceStore(context: Context) {
         prefs.edit()
             .putString(KEY_ACTIVE_PLAN_ID, planId)
             .putString(KEY_FASTING_TYPE, fastingType?.name)
-            .putInt(KEY_CUSTOM_FASTING_HOURS, customFastingHours ?: CUSTOM_HOURS_NOT_SET)
+            .putInt(
+                KEY_CUSTOM_FASTING_HOURS,
+                DietPlanPreferenceStateResolver.storedCustomFastingHours(customFastingHours)
+            )
             .putLong(KEY_ACTIVE_PLAN_STARTED_AT, now)
             .remove(KEY_TODAY_APPLIED_PLAN_ID)
             .remove(KEY_TODAY_APPLIED_AT)
@@ -58,11 +61,11 @@ class DietPlanPreferenceStore(context: Context) {
     }
 
     fun getCurrentPlanDay(durationDays: Int): Int {
-        if (durationDays <= 0) return 1
-
-        val startedAt = getActivePlanStartedAt().takeIf { it > 0L } ?: return 1
-        val elapsedDays = max(0, daysBetween(startedAt, System.currentTimeMillis()))
-        return (elapsedDays % durationDays) + 1
+        return DietPlanPreferenceStateResolver.currentPlanDay(
+            durationDays = durationDays,
+            startedAt = getActivePlanStartedAt(),
+            nowMillis = System.currentTimeMillis()
+        )
     }
 
     fun getCompletedPlannedMealIds(planId: String, dayNumber: Int): Set<String> {
@@ -84,7 +87,7 @@ class DietPlanPreferenceStore(context: Context) {
         mealType: MealType,
         plannedMealId: String
     ) {
-        if (plannedMealId.contains(mealType.argumentValue, ignoreCase = true)) {
+        if (DietPlanPreferenceStateResolver.shouldMarkMealTypeCompleted(mealType, plannedMealId)) {
             markPlannedMealCompleted(planId, dayNumber, plannedMealId)
         }
     }
@@ -98,44 +101,34 @@ class DietPlanPreferenceStore(context: Context) {
     }
 
     fun toggleFavorite(planId: String): Boolean {
-        val updatedFavorites = getFavoriteIds().toMutableSet()
-        val isFavoriteNow = if (updatedFavorites.contains(planId)) {
-            updatedFavorites.remove(planId)
-            false
-        } else {
-            updatedFavorites.add(planId)
-            true
-        }
+        val resolution = DietPlanPreferenceStateResolver.toggleFavorite(
+            favoriteIds = getFavoriteIds(),
+            planId = planId
+        )
 
         prefs.edit()
-            .putStringSet(KEY_FAVORITE_PLAN_IDS, updatedFavorites)
+            .putStringSet(KEY_FAVORITE_PLAN_IDS, resolution.favoriteIds)
             .apply()
 
-        return isFavoriteNow
+        return resolution.isFavorite
     }
 
     fun getRecentDietSearches(): List<String> {
-        return prefs.getString(KEY_RECENT_DIET_SEARCHES, "")
-            .orEmpty()
-            .split(RECENT_SEARCH_SEPARATOR)
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
+        return DietPlanPreferenceStateResolver.recentSearches(
+            prefs.getString(KEY_RECENT_DIET_SEARCHES, "")
+        )
     }
 
     fun saveRecentDietSearch(query: String) {
-        val cleanQuery = query.trim()
-        if (cleanQuery.isBlank()) return
-
-        val updatedSearches = listOf(cleanQuery) +
-                getRecentDietSearches()
-                    .filterNot { it.equals(cleanQuery, ignoreCase = true) }
+        val updatedSearches = DietPlanPreferenceStateResolver.updatedRecentSearches(
+            currentSearches = getRecentDietSearches(),
+            query = query
+        ) ?: return
 
         prefs.edit()
             .putString(
                 KEY_RECENT_DIET_SEARCHES,
-                updatedSearches
-                    .take(MAX_RECENT_SEARCH_COUNT)
-                    .joinToString(RECENT_SEARCH_SEPARATOR)
+                DietPlanPreferenceStateResolver.encodeRecentSearches(updatedSearches)
             )
             .apply()
     }
@@ -165,23 +158,6 @@ class DietPlanPreferenceStore(context: Context) {
         return "${KEY_COMPLETED_PLANNED_MEALS}_${planId}_day_$dayNumber"
     }
 
-    private fun daysBetween(startMillis: Long, endMillis: Long): Int {
-        val start = Calendar.getInstance().apply {
-            timeInMillis = startMillis
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val end = Calendar.getInstance().apply {
-            timeInMillis = endMillis
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        return ((end.timeInMillis - start.timeInMillis) / DAY_MILLIS).toInt()
-    }
 
     companion object {
         private const val PREF_NAME = "fitto_diet_plan_preferences"
@@ -194,10 +170,6 @@ class DietPlanPreferenceStore(context: Context) {
         private const val KEY_FAVORITE_PLAN_IDS = "favorite_plan_ids"
         private const val KEY_COMPLETED_PLANNED_MEALS = "completed_planned_meals"
         private const val CUSTOM_HOURS_NOT_SET = -1
-        private const val DAY_MILLIS = 24L * 60L * 60L * 1000L
         private const val KEY_RECENT_DIET_SEARCHES = "recent_diet_searches"
-        private const val RECENT_SEARCH_SEPARATOR = "\u001F"
-        private const val MAX_RECENT_SEARCH_COUNT = 6
-
     }
 }
