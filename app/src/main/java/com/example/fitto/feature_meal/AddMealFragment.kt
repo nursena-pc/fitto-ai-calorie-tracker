@@ -54,6 +54,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val foodPresentationResolver = AddMealFoodPresentationResolver()
     private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
+    private val favoriteStateResolver = AddMealFavoriteStateResolver()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -420,7 +421,9 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             if (_binding == null) return@launch
 
             val favoriteIds = withContext(Dispatchers.IO) {
-                foodRepository.getFavoriteFoodIds(limit = 200).toSet()
+                favoriteStateResolver.favoriteIdSet(
+                    foodRepository.getFavoriteFoodIds(limit = 200)
+                )
             }
 
             binding.foodsSectionTitleText.text = getString(
@@ -503,7 +506,9 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             currentFoodResults = searchStateResolver.mergeFoods(currentFoodResults, newFoods)
 
             val favoriteIds = withContext(Dispatchers.IO) {
-                foodRepository.getFavoriteFoodIds(limit = 200).toSet()
+                favoriteStateResolver.favoriteIdSet(
+                    foodRepository.getFavoriteFoodIds(limit = 200)
+                )
             }
 
             suggestedFoodAdapter.submitList(
@@ -565,7 +570,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
             binding.foodsSectionTitleText.text = getString(R.string.add_meal_favorite_foods)
 
-            if (foods.isEmpty()) {
+            if (favoriteStateResolver.shouldShowEmptyFavoriteFeedback(foods)) {
                 Toast.makeText(
                     requireContext(),
                     getString(R.string.add_meal_no_favorite_foods),
@@ -587,20 +592,25 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 foodRepository.toggleFavoriteFood(food.id)
             }
 
-            val message = if (isFavorite) {
-                getString(R.string.add_meal_added_to_favorites, food.name)
-            } else {
-                getString(R.string.add_meal_removed_from_favorites, food.name)
+            val message = when (favoriteStateResolver.toggleFeedback(isFavorite)) {
+                AddMealFavoriteToggleFeedback.ADDED -> {
+                    getString(R.string.add_meal_added_to_favorites, food.name)
+                }
+                AddMealFavoriteToggleFeedback.REMOVED -> {
+                    getString(R.string.add_meal_removed_from_favorites, food.name)
+                }
             }
 
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
 
-            val currentQuery = binding.searchEditText.text?.toString().orEmpty()
-            searchFoods(
-                query = currentQuery,
-                debounce = false,
-                allowOnlineSearch = false
-            )
+            if (favoriteStateResolver.shouldRefreshSearchAfterToggle()) {
+                val currentQuery = binding.searchEditText.text?.toString().orEmpty()
+                searchFoods(
+                    query = currentQuery,
+                    debounce = false,
+                    allowOnlineSearch = false
+                )
+            }
         }
     }
     private suspend fun ensureSeedImported(appContext: android.content.Context) {
