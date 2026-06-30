@@ -22,7 +22,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import kotlin.math.roundToInt
 import android.view.inputmethod.EditorInfo
 import android.util.Log
 import android.view.KeyEvent
@@ -52,6 +51,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private var searchJob: Job? = null
     private var seedReady: Boolean = false
     private var selectedFoods: List<SelectedFoodUiModel> = emptyList()
+    private val foodPresentationResolver = AddMealFoodPresentationResolver()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -200,28 +200,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun FoodEntity.toSelectedFoodFromDetectedServing(): SelectedFoodUiModel {
-        val servingAmount = defaultServingAmount
-            .takeIf { it > 0.0 }
-            ?: 100.0
-
-        val multiplier = servingAmount / 100.0
-
-        return SelectedFoodUiModel(
-            id = "$id-${System.nanoTime()}",
-            foodId = id,
-            name = nameTr,
-            amountLabel = formatServingLabel(servingAmount, defaultUnit.ifBlank { "g" }),
-            amountGrams = servingAmount.roundOneDecimal(),
-            calories = (caloriesPer100g * multiplier).roundToInt().coerceAtLeast(0),
-            protein = (proteinPer100g * multiplier).roundOneDecimal(),
-            carbs = (carbsPer100g * multiplier).roundOneDecimal(),
-            fat = (fatPer100g * multiplier).roundOneDecimal(),
-            emoji = foodEmoji()
-        )
-    }
-
-    private fun Double.roundOneDecimal(): Double {
-        return (this * 10.0).roundToInt() / 10.0
+        return foodPresentationResolver.toSelectedFoodFromDetectedServing(this)
     }
 
     private fun setupCameraFoodResultListener() {
@@ -694,71 +673,14 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         addMealButton.isEnabled = selectedFoods.isNotEmpty()
         addMealButton.alpha = if (selectedFoods.isNotEmpty()) 1f else 0.55f
     }
-    private fun FoodEntity.localizedFoodName(): String {
-        val languageCode = resources.configuration.locales[0].language
-
-        return if (languageCode == "en") {
-            nameEn?.takeIf { it.isNotBlank() } ?: nameTr
-        } else {
-            nameTr
-        }
-    }
     private fun FoodEntity.toFoodUiModel(
         isFavorite: Boolean = false
     ): FoodUiModel {
-        val servingAmount = defaultServingAmount.takeIf { it > 0.0 } ?: 100.0
-        val servingCalories = ((caloriesPer100g * servingAmount) / 100.0).roundToInt()
-
-        return FoodUiModel(
-            id = id,
-            name = localizedFoodName(),
-            serving = formatServingLabel(servingAmount, defaultUnit),
-            calories = servingCalories.coerceAtLeast(0),
-            emoji = foodEmoji(),
-            defaultServingAmount = servingAmount,
-            defaultUnit = defaultUnit,
-            caloriesPer100g = caloriesPer100g,
-            proteinPer100g = proteinPer100g,
-            carbsPer100g = carbsPer100g,
-            fatPer100g = fatPer100g,
+        return foodPresentationResolver.toFoodUiModel(
+            food = this,
+            languageCode = resources.configuration.locales[0].language,
             isFavorite = isFavorite
         )
-    }
-
-    private fun FoodEntity.foodEmoji(): String {
-        return when {
-            id.contains("oat", ignoreCase = true) || category == "grain" -> "🥣"
-            id.contains("chicken", ignoreCase = true) ||
-                    id.contains("turkey", ignoreCase = true) -> "🍗"
-
-            id.contains("egg", ignoreCase = true) -> "🥚"
-            id.contains("fish", ignoreCase = true) ||
-                    id.contains("tuna", ignoreCase = true) -> "🐟"
-
-            id.contains("yogurt", ignoreCase = true) ||
-                    id.contains("milk", ignoreCase = true) ||
-                    category == "dairy" -> "🥛"
-
-            id.contains("banana", ignoreCase = true) -> "🍌"
-            id.contains("apple", ignoreCase = true) -> "🍎"
-            id.contains("orange", ignoreCase = true) -> "🍊"
-            id.contains("strawberry", ignoreCase = true) -> "🍓"
-            category == "fruit" -> "🍏"
-            category == "vegetable" -> "🥗"
-            category == "legume" -> "🫘"
-            category == "nut" || category == "oil" -> "🥜"
-            category == "soup" -> "🍲"
-            else -> "🍽️"
-        }
-    }
-
-    private fun formatServingLabel(amount: Double, unit: String): String {
-        val normalizedAmount = if (amount % 1.0 == 0.0) {
-            amount.toInt().toString()
-        } else {
-            String.format("%.1f", amount)
-        }
-        return "$normalizedAmount $unit"
     }
 
     private fun showMockMessage(label: String) {
