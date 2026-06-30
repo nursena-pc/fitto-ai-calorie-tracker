@@ -68,25 +68,10 @@ class CustomDietMealPlanGenerator(
         allFoods: List<FoodEntity>,
         dayNumber: Int
     ): List<PlannedMealUiModel> {
-        val availableFoods = allFoods
-            .filter { food -> food.caloriesPer100g > 0.0 }
-            .filter { food ->
-                CustomDietFoodRules.isAllowedByPlan(
-                    food = food,
-                    plan = plan
-                )
-            }
-
-        val fallbackFoods = allFoods
-            .filter { food -> food.caloriesPer100g > 0.0 }
-            .filterNot { food ->
-                CustomDietFoodRules.isExcludedBy(
-                    food = food,
-                    exclusions = plan.exclusions
-                )
-            }
-
-        val sourceFoods = availableFoods.ifEmpty { fallbackFoods }
+        val sourceFoods = CustomDietMealFoodSelectionResolver.sourceFoods(
+            plan = plan,
+            allFoods = allFoods
+        )
         val mealTypes = CustomDietPlanScheduleResolver.mealTypesFor(
             mealOrder = plan.mealOrder,
             mealCount = plan.mealCount
@@ -94,7 +79,7 @@ class CustomDietMealPlanGenerator(
         val ratios = CustomDietPlanScheduleResolver.mealRatios(mealTypes)
 
         return mealTypes.mapIndexed { index, mealType ->
-            val mealFoods = selectFoodsForMeal(
+            val mealFoods = CustomDietMealFoodSelectionResolver.selectFoodsForMeal(
                 plan = plan,
                 mealType = mealType,
                 allFoods = sourceFoods,
@@ -120,121 +105,20 @@ class CustomDietMealPlanGenerator(
                     context.getString(mealType.titleRes)
                 ),
                 baseCalories = baseCalories,
-                foods = mealFoods.map { food -> food.displayName() }
-            )
-        }
-    }
-
-    private fun selectFoodsForMeal(
-        plan: CustomDietPlanLocalModel,
-        mealType: MealType,
-        allFoods: List<FoodEntity>,
-        dayNumber: Int,
-        mealIndex: Int
-    ): List<FoodEntity> {
-        val smartMealFoods = allFoods.filter { food ->
-            CustomDietFoodRules.isSmartCandidateForMeal(
-                food = food,
-                mealType = mealType
-            )
-        }
-
-        val mealFoods = smartMealFoods.ifEmpty {
-            allFoods.filter { food ->
-                CustomDietFoodRules.supportsMealType(
-                    food = food,
-                    mealType = mealType
+                foods = CustomDietMealFoodSelectionResolver.displayNames(
+                    foods = mealFoods,
+                    preferEnglish = shouldPreferEnglishFoodNames()
                 )
-            }
-        }
-
-        val candidateFoods = mealFoods.ifEmpty { allFoods }
-
-        val offset = ((dayNumber - 1) * 5) + mealIndex
-
-        fun List<FoodEntity>.rotatedPick(extraOffset: Int = 0): FoodEntity? {
-            if (isEmpty()) return null
-            val sortedFoods = sortedWith(planComparator(plan, mealType))
-            return sortedFoods[(offset + extraOffset).floorMod(sortedFoods.size)]
-        }
-
-        val selected = linkedMapOf<String, FoodEntity>()
-
-        fun add(food: FoodEntity?) {
-            if (food != null) selected[food.id] = food
-        }
-
-        when (mealType) {
-            MealType.BREAKFAST -> {
-                add(candidateFoods.filter(CustomDietFoodRules::isBreakfastMainCarb).rotatedPick(0))
-                add(candidateFoods.filter(CustomDietFoodRules::isBreakfastProtein).rotatedPick(1))
-                add(candidateFoods.filter(CustomDietFoodRules::isBreakfastFruit).rotatedPick(2))
-                add(candidateFoods.filter(CustomDietFoodRules::isBreakfastProduceOrHealthyFat).rotatedPick(3))
-            }
-
-            MealType.SNACK -> {
-                add(candidateFoods.filter(CustomDietFoodRules::isSnackFruitOrDairy).rotatedPick(0))
-                add(candidateFoods.filter(CustomDietFoodRules::isHealthyFat).rotatedPick(1))
-
-                if (isProteinFocusedPlan(plan)) {
-                    add(candidateFoods.filter(CustomDietFoodRules::isLightProteinSnack).rotatedPick(2))
-                }
-            }
-
-            MealType.LUNCH,
-            MealType.DINNER -> {
-                add(candidateFoods.filter(CustomDietFoodRules::isLunchDinnerProtein).rotatedPick(0))
-                add(candidateFoods.filter(CustomDietFoodRules::isLunchDinnerCarb).rotatedPick(1))
-                add(candidateFoods.filter(CustomDietFoodRules::isLunchDinnerVegetable).rotatedPick(2))
-                add(candidateFoods.filter(CustomDietFoodRules::isHealthyFat).rotatedPick(3))
-            }
-        }
-
-        if (selected.isEmpty()) {
-            candidateFoods
-                .sortedWith(planComparator(plan, mealType))
-                .take(DEFAULT_FOOD_COUNT_PER_MEAL)
-                .forEach(::add)
-        }
-
-        return selected.values.take(
-            if (mealType == MealType.SNACK) SNACK_FOOD_COUNT else DEFAULT_FOOD_COUNT_PER_MEAL
-        )
-    }
-
-    private fun planComparator(
-        plan: CustomDietPlanLocalModel,
-        mealType: MealType
-    ): Comparator<FoodEntity> {
-        return compareByDescending<FoodEntity> { food ->
-            CustomDietFoodRules.scoreFor(
-                food = food,
-                plan = plan,
-                mealType = mealType
             )
         }
-            .thenBy { food -> food.nameTr }
     }
 
-    private fun FoodEntity.displayName(): String {
+    private fun shouldPreferEnglishFoodNames(): Boolean {
         val localeLanguage = context.resources.configuration.locales[0].language
-        return CustomDietFoodRules.displayName(
-            food = this,
-            preferEnglish = localeLanguage.equals(Locale.ENGLISH.language, ignoreCase = true)
+        return localeLanguage.equals(
+            Locale.ENGLISH.language,
+            ignoreCase = true
         )
-    }
-
-    private fun Int.floorMod(other: Int): Int {
-        return ((this % other) + other) % other
-    }
-
-    private fun isProteinFocusedPlan(plan: CustomDietPlanLocalModel): Boolean {
-        return CustomDietFoodRules.hasPreference(
-            plan = plan,
-            preference = CustomDietFoodRules.PREF_HIGH_PROTEIN
-        ) ||
-            plan.goalType == GOAL_MUSCLE ||
-            plan.goalType == GOAL_WEIGHT_GAIN
     }
 
     companion object {
@@ -245,9 +129,5 @@ class CustomDietMealPlanGenerator(
         const val PREF_HIGH_PROTEIN = CustomDietFoodRules.PREF_HIGH_PROTEIN
         const val PREF_LOW_CARB = CustomDietFoodRules.PREF_LOW_CARB
 
-        private const val GOAL_MUSCLE = "MUSCLE"
-        private const val GOAL_WEIGHT_GAIN = "WEIGHT_GAIN"
-        private const val DEFAULT_FOOD_COUNT_PER_MEAL = 4
-        private const val SNACK_FOOD_COUNT = 3
     }
 }
