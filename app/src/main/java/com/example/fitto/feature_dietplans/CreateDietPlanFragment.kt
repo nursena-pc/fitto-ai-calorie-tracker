@@ -34,6 +34,7 @@ class CreateDietPlanFragment :
     private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
     private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
     private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
+    private lateinit var textResolver: CreateDietPlanTextResolver
     private val completionAction = CreateDietPlanCompletionAction()
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var uiRenderer: CreateDietPlanUiRenderer? = null
@@ -64,6 +65,7 @@ class CreateDietPlanFragment :
             customPlanStore = customDietPlanStore,
             preferenceAction = dietPlanPreferenceAction
         )
+        textResolver = CreateDietPlanTextResolver.from(requireContext())
         uiRenderer = CreateDietPlanUiRenderer(
             context = requireContext(),
             binding = binding
@@ -164,17 +166,7 @@ class CreateDietPlanFragment :
     }
 
     private fun setupDefaultExclusions() {
-        activeExclusionController.setValues(defaultExclusions())
-    }
-
-    private fun defaultExclusions(): List<String> {
-        return listOf(
-            getString(R.string.create_diet_plan_exclusion_broccoli),
-            getString(R.string.create_diet_plan_exclusion_mushroom),
-            getString(R.string.create_diet_plan_exclusion_milk),
-            getString(R.string.create_diet_plan_exclusion_peanut),
-            getString(R.string.create_diet_plan_exclusion_seafood)
-        )
+        activeExclusionController.setValues(textResolver.defaultExclusions())
     }
     private fun showCalorieInputDialog() {
         CreateDietPlanNumberInputDialog(requireContext()).show(
@@ -273,7 +265,7 @@ class CreateDietPlanFragment :
     private suspend fun handlePlanCreated(result: CreateDietPlanSaveResult.PlanCreated) {
         socialShareAction.share(
             plan = result.plan,
-            text = socialShareTextFor(result.goal, result.plan)
+            text = textResolver.socialShareText(result.goal, result.plan)
         )
 
         handleCompletionEffect(completionAction.planCreated(result.applyResult.activePlanId))
@@ -314,24 +306,6 @@ class CreateDietPlanFragment :
             CreateDietPlanCompletionMessage.PLAN_CREATED -> R.string.create_diet_plan_created
         }
 
-    private fun socialShareTextFor(
-        goal: CreatePlanGoal,
-        plan: CustomDietPlanLocalModel
-    ): CreateDietPlanSocialShareText {
-        val goalTitle = getString(goal.titleRes)
-
-        return CreateDietPlanSocialShareText(
-            content = getString(
-                R.string.create_diet_plan_social_share_content,
-                goalTitle,
-                plan.dailyCalories,
-                plan.durationDays
-            ),
-            mealInfo = getString(R.string.create_diet_plan_social_share_meal_info),
-            customTag = getString(R.string.diet_plan_tag_custom),
-            goalTag = goalTitle
-        )
-    }
 
     override fun onPlanNameChanged() = with(binding) {
         planNameInput.error = null
