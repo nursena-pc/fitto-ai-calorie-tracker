@@ -52,6 +52,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private var seedReady: Boolean = false
     private var selectedFoods: List<SelectedFoodUiModel> = emptyList()
     private val foodPresentationResolver = AddMealFoodPresentationResolver()
+    private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -115,9 +116,12 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             FoodPortionBottomSheet.REQUEST_PORTION_SELECTED,
             viewLifecycleOwner
         ) { _, bundle ->
-            selectedFoods = selectedFoods + FoodPortionBottomSheet.run {
-                bundle.toSelectedFoodUiModel()
-            }
+            selectedFoods = selectionStateResolver.addSelectedFood(
+                currentSelection = selectedFoods,
+                selectedFood = FoodPortionBottomSheet.run {
+                    bundle.toSelectedFoodUiModel()
+                }
+            )
             updateSelectedFoods()
         }
     }
@@ -224,9 +228,12 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
                 if (_binding == null || foods.isEmpty()) return@launch
 
-                selectedFoods = selectedFoods + foods.map { food ->
-                    food.toSelectedFoodFromDetectedServing()
-                }
+                selectedFoods = selectionStateResolver.addDetectedFoods(
+                    currentSelection = selectedFoods,
+                    detectedFoods = foods.map { food ->
+                        food.toSelectedFoodFromDetectedServing()
+                    }
+                )
 
                 updateSelectedFoods()
 
@@ -603,7 +610,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun saveSelectedFoodsToMeal() {
-        if (selectedFoods.isEmpty()) return
+        if (!selectionStateResolver.canSave(selectedFoods)) return
 
         binding.addMealButton.isEnabled = false
         binding.addMealButton.alpha = 0.65f
@@ -663,28 +670,31 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun removeFoodFromSelection(food: SelectedFoodUiModel) {
-        selectedFoods = selectedFoods.filterNot { it.id == food.id }
+        selectedFoods = selectionStateResolver.removeSelectedFood(
+            currentSelection = selectedFoods,
+            food = food
+        )
         updateSelectedFoods()
     }
 
     private fun updateSelectedFoods() = with(binding) {
         selectedFoodAdapter.submitList(selectedFoods)
 
-        val totalCalories = selectedFoods.sumOf { it.calories }
+        val selectionState = selectionStateResolver.resolveUiState(selectedFoods)
         selectedSummaryText.text = getString(
             R.string.add_meal_selected_summary,
-            selectedFoods.size,
-            totalCalories
+            selectionState.selectedCount,
+            selectionState.totalCalories
         )
 
         selectedFoodsRecyclerView.visibility =
-            if (selectedFoods.isEmpty()) View.GONE else View.VISIBLE
+            if (selectionState.selectedListVisible) View.VISIBLE else View.GONE
 
         emptySelectedText.visibility =
-            if (selectedFoods.isEmpty()) View.VISIBLE else View.GONE
+            if (selectionState.emptyStateVisible) View.VISIBLE else View.GONE
 
-        addMealButton.isEnabled = selectedFoods.isNotEmpty()
-        addMealButton.alpha = if (selectedFoods.isNotEmpty()) 1f else 0.55f
+        addMealButton.isEnabled = selectionState.saveButtonEnabled
+        addMealButton.alpha = selectionState.saveButtonAlpha
     }
     private fun FoodEntity.toFoodUiModel(
         isFavorite: Boolean = false
