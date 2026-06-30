@@ -55,6 +55,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
     private val favoriteStateResolver = AddMealFavoriteStateResolver()
+    private lateinit var saveAction: AddMealSaveAction
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -63,6 +64,13 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         val appContext = requireContext().applicationContext
         foodRepository = FoodRepository(appContext)
         mealRepository = MealRepository(appContext)
+        saveAction = AddMealSaveAction { mealType, selectedFoods, entryDate ->
+            mealRepository.addManualMealEntry(
+                mealType = mealType,
+                selectedFoods = selectedFoods,
+                entryDate = entryDate
+            )
+        }
 
         setupRecyclerViews()
         setupUi()
@@ -620,55 +628,64 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun saveSelectedFoodsToMeal() {
-        if (!selectionStateResolver.canSave(selectedFoods)) return
+        val request = AddMealSaveRequest(
+            mealType = targetMealType,
+            selectedFoods = selectedFoods,
+            entryDate = targetEntryDate
+        )
+
+        if (!saveAction.canSave(request.selectedFoods)) return
 
         binding.addMealButton.isEnabled = false
         binding.addMealButton.alpha = 0.65f
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val mealName = getString(targetMealType.titleRes)
-            val selectedCount = selectedFoods.size
-
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    mealRepository.addManualMealEntry(
-                        mealType = targetMealType,
-                        selectedFoods = selectedFoods,
-                        entryDate = targetEntryDate
-                    )
-                }
-            }.onSuccess {
-                parentFragmentManager.setFragmentResult(
-                    REQUEST_MEAL_ENTRY_ADDED,
-                    Bundle().apply {
-                        putString(BUNDLE_MEAL_TYPE, targetMealType.argumentValue)
-                        putString(BUNDLE_ENTRY_DATE, targetEntryDate)
-                    }
-                )
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(
-                        R.string.add_meal_mock_added_message,
-                        selectedCount,
-                        mealName
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                parentFragmentManager.popBackStack()
-            }.onFailure {
-                if (_binding != null) {
-                    binding.addMealButton.isEnabled = true
-                    binding.addMealButton.alpha = 1f
-                }
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.add_meal_save_error_message),
-                    Toast.LENGTH_SHORT
-                ).show()
+            when (val result = withContext(Dispatchers.IO) { saveAction.save(request) }) {
+                AddMealSaveResult.EmptySelection -> restoreSaveButton()
+                is AddMealSaveResult.Failed -> showSaveError()
+                is AddMealSaveResult.Saved -> showSaveSuccess(result)
             }
+        }
+    }
+
+    private fun showSaveSuccess(result: AddMealSaveResult.Saved) {
+        val mealName = getString(result.mealType.titleRes)
+
+        parentFragmentManager.setFragmentResult(
+            REQUEST_MEAL_ENTRY_ADDED,
+            Bundle().apply {
+                putString(BUNDLE_MEAL_TYPE, result.mealType.argumentValue)
+                putString(BUNDLE_ENTRY_DATE, result.entryDate)
+            }
+        )
+
+        Toast.makeText(
+            requireContext(),
+            getString(
+                R.string.add_meal_mock_added_message,
+                result.selectedCount,
+                mealName
+            ),
+            Toast.LENGTH_SHORT
+        ).show()
+
+        parentFragmentManager.popBackStack()
+    }
+
+    private fun showSaveError() {
+        restoreSaveButton()
+
+        Toast.makeText(
+            requireContext(),
+            getString(R.string.add_meal_save_error_message),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun restoreSaveButton() {
+        if (_binding != null) {
+            binding.addMealButton.isEnabled = true
+            binding.addMealButton.alpha = 1f
         }
     }
 
