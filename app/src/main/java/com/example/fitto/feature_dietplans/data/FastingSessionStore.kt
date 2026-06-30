@@ -14,7 +14,10 @@ class FastingSessionStore(
         fastingHours: Int,
         startedAtMillis: Long = System.currentTimeMillis()
     ) {
-        val endsAtMillis = startedAtMillis + fastingHours * HOUR_MILLIS
+        val endsAtMillis = FastingSessionStateResolver.resolveEndsAtMillis(
+            startedAtMillis = startedAtMillis,
+            fastingHours = fastingHours
+        )
 
         prefs.edit()
             .putString(KEY_PLAN_ID, planId)
@@ -34,9 +37,7 @@ class FastingSessionStore(
         val endsAt = prefs.getLong(KEY_ENDS_AT, 0L)
         val hours = prefs.getInt(KEY_FASTING_HOURS, 0)
 
-        if (startedAt <= 0L || endsAt <= 0L || hours <= 0) return null
-
-        return FastingSession(
+        return FastingSessionStateResolver.resolveSession(
             planId = planId,
             startedAtMillis = startedAt,
             endsAtMillis = endsAt,
@@ -44,12 +45,15 @@ class FastingSessionStore(
         )
     }
 
-    fun getRemainingMillis(planId: String): Long {
-        val session = getSession() ?: return 0L
-        if (session.planId != planId) return 0L
-
-        return (session.endsAtMillis - System.currentTimeMillis())
-            .coerceAtLeast(0L)
+    fun getRemainingMillis(
+        planId: String,
+        nowMillis: Long = System.currentTimeMillis()
+    ): Long {
+        return FastingSessionStateResolver.resolveRemainingMillis(
+            session = getSession(),
+            requestedPlanId = planId,
+            nowMillis = nowMillis
+        )
     }
 
     data class FastingSession(
@@ -65,6 +69,5 @@ class FastingSessionStore(
         private const val KEY_STARTED_AT = "started_at"
         private const val KEY_ENDS_AT = "ends_at"
         private const val KEY_FASTING_HOURS = "fasting_hours"
-        private const val HOUR_MILLIS = 60L * 60L * 1000L
     }
 }
