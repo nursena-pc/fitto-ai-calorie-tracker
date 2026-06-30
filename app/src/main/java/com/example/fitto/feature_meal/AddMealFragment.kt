@@ -56,6 +56,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val searchStateResolver = AddMealSearchStateResolver()
     private val favoriteStateResolver = AddMealFavoriteStateResolver()
     private lateinit var saveAction: AddMealSaveAction
+    private lateinit var customFoodAction: AddMealCustomFoodAction
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -69,6 +70,18 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 mealType = mealType,
                 selectedFoods = selectedFoods,
                 entryDate = entryDate
+            )
+        }
+        customFoodAction = AddMealCustomFoodAction { request ->
+            foodRepository.createCustomFood(
+                name = request.name,
+                defaultServingAmount = request.servingAmount,
+                defaultUnit = request.unit,
+                caloriesPer100g = request.caloriesPer100g,
+                proteinPer100g = request.proteinPer100g,
+                carbsPer100g = request.carbsPer100g,
+                fatPer100g = request.fatPer100g,
+                mealType = request.mealType
             )
         }
 
@@ -304,37 +317,42 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         fatPer100g: Double,
         mealType: String
     ) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    foodRepository.createCustomFood(
-                        name = name,
-                        defaultServingAmount = servingAmount,
-                        defaultUnit = unit,
-                        caloriesPer100g = caloriesPer100g,
-                        proteinPer100g = proteinPer100g,
-                        carbsPer100g = carbsPer100g,
-                        fatPer100g = fatPer100g,
-                        mealType = mealType
-                    )
-                }
-            }.onSuccess { food ->
-                val foodUiModel = food.toFoodUiModel()
-                openPortionBottomSheet(foodUiModel)
+        val request = AddMealCustomFoodRequest(
+            name = name,
+            servingAmount = servingAmount,
+            unit = unit,
+            caloriesPer100g = caloriesPer100g,
+            proteinPer100g = proteinPer100g,
+            carbsPer100g = carbsPer100g,
+            fatPer100g = fatPer100g,
+            mealType = mealType
+        )
 
-                searchFoods(
-                    query = binding.searchEditText.text?.toString().orEmpty(),
-                    debounce = false,
-                    allowOnlineSearch = false
-                )
-            }.onFailure {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.custom_food_save_error),
-                    Toast.LENGTH_SHORT
-                ).show()
+        viewLifecycleOwner.lifecycleScope.launch {
+            when (val result = withContext(Dispatchers.IO) { customFoodAction.create(request) }) {
+                is AddMealCustomFoodResult.Created -> showCreatedCustomFood(result.food)
+                is AddMealCustomFoodResult.Failed -> showCustomFoodSaveError()
             }
         }
+    }
+
+    private fun showCreatedCustomFood(food: FoodEntity) {
+        val foodUiModel = food.toFoodUiModel()
+        openPortionBottomSheet(foodUiModel)
+
+        searchFoods(
+            query = binding.searchEditText.text?.toString().orEmpty(),
+            debounce = false,
+            allowOnlineSearch = false
+        )
+    }
+
+    private fun showCustomFoodSaveError() {
+        Toast.makeText(
+            requireContext(),
+            getString(R.string.custom_food_save_error),
+            Toast.LENGTH_SHORT
+        ).show()
     }
     private fun searchFoods(
         query: String,
