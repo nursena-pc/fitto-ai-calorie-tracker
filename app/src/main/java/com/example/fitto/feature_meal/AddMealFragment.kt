@@ -52,6 +52,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private var seedReady: Boolean = false
     private var selectedFoods: List<SelectedFoodUiModel> = emptyList()
     private val foodPresentationResolver = AddMealFoodPresentationResolver()
+    private val searchStateResolver = AddMealSearchStateResolver()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -328,7 +329,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         searchJob = viewLifecycleOwner.lifecycleScope.launch {
             if (debounce) delay(300)
 
-            val normalizedQuery = query.trim()
+            val normalizedQuery = searchStateResolver.normalizeQuery(query)
             val appContext = context?.applicationContext ?: return@launch
 
             Log.d(
@@ -336,7 +337,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 "searchFoods query=$normalizedQuery allowOnlineSearch=$allowOnlineSearch"
             )
 
-            if (_binding != null && normalizedQuery.length >= 3) {
+            if (_binding != null && searchStateResolver.shouldShowSearchingTitle(normalizedQuery)) {
                 binding.foodsSectionTitleText.text = getString(R.string.add_meal_searching_foods)
             }
 
@@ -372,7 +373,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                             limit = 40
                         )
 
-                        if (allowOnlineSearch && normalizedQuery.length >= 3) {
+                        if (searchStateResolver.shouldSearchOnline(normalizedQuery, allowOnlineSearch)) {
                             showingSearchResults = true
                             onlineSearchAttempted = true
 
@@ -390,14 +391,12 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
                             lastOnlineQuery = normalizedQuery
                             nextUsdaPageNumber = 2
-                            canLoadMoreUsda = usdaFoods.size >= USDA_PAGE_SIZE
+                            canLoadMoreUsda = searchStateResolver.canLoadMore(
+                                fetchedCount = usdaFoods.size,
+                                pageSize = USDA_PAGE_SIZE
+                            )
 
-                            buildList {
-                                addAll(localFoods)
-                                addAll(usdaFoods)
-                            }.distinctBy { food ->
-                                food.id
-                            }
+                            searchStateResolver.mergeFoods(localFoods, usdaFoods)
 
                         } else {
                             if (localFoods.isNotEmpty()) {
@@ -417,32 +416,24 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 foodRepository.getFavoriteFoodIds(limit = 200).toSet()
             }
 
-            binding.foodsSectionTitleText.text = when {
-                showingRecentFoods -> getString(R.string.add_meal_recent_foods)
-                showingSuggestedFoods -> getString(R.string.add_meal_suggested_foods)
-                showingSearchResults -> getString(R.string.add_meal_food_results)
-                else -> getString(R.string.add_meal_suggested_foods)
-            }
+            binding.foodsSectionTitleText.text = getString(
+                searchStateResolver.sectionFor(
+                    showingRecentFoods = showingRecentFoods,
+                    showingSuggestedFoods = showingSuggestedFoods,
+                    showingSearchResults = showingSearchResults
+                ).titleRes()
+            )
 
-            when {
-                foods.isEmpty() && onlineSearchAttempted -> {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.add_meal_no_online_food_found),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            showEmptySearchFeedback(
+                searchStateResolver.emptyFeedback(
+                    foods = foods,
+                    normalizedQuery = normalizedQuery,
+                    onlineSearchAttempted = onlineSearchAttempted,
+                    allowOnlineSearch = allowOnlineSearch
+                )
+            )
 
-                foods.isEmpty() && normalizedQuery.length >= 3 && !allowOnlineSearch -> {
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.add_meal_press_search_for_more_results),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
-            if (!allowOnlineSearch) {
+            if (searchStateResolver.shouldResetOnlinePaging(allowOnlineSearch)) {
                 lastOnlineQuery = ""
                 nextUsdaPageNumber = 2
                 canLoadMoreUsda = false
@@ -459,7 +450,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private fun loadMoreUsdaFoods() {
         val query = lastOnlineQuery.trim()
 
-        if (query.isBlank() || !canLoadMoreUsda || isLoadingMoreUsda) return
+        if (!searchStateResolver.canStartLoadMore(query, canLoadMoreUsda, isLoadingMoreUsda)) return
 
         isLoadingMoreUsda = true
         binding.loadMoreFoodsButton.isEnabled = false
@@ -496,15 +487,13 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 return@launch
             }
 
-            nextUsdaPageNumber += 1
-            canLoadMoreUsda = newFoods.size >= USDA_PAGE_SIZE
+            nextUsdaPageNumber = searchStateResolver.nextPageAfterLoad(nextUsdaPageNumber)
+            canLoadMoreUsda = searchStateResolver.canLoadMore(
+                fetchedCount = newFoods.size,
+                pageSize = USDA_PAGE_SIZE
+            )
 
-            currentFoodResults = buildList {
-                addAll(currentFoodResults)
-                addAll(newFoods)
-            }.distinctBy { food ->
-                food.id
-            }
+            currentFoodResults = searchStateResolver.mergeFoods(currentFoodResults, newFoods)
 
             val favoriteIds = withContext(Dispatchers.IO) {
                 foodRepository.getFavoriteFoodIds(limit = 200).toSet()
@@ -518,6 +507,30 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
             updateLoadMoreButton()
         }
+    }
+
+    private fun AddMealFoodSection.titleRes(): Int {
+        return when (this) {
+            AddMealFoodSection.RECENT -> R.string.add_meal_recent_foods
+            AddMealFoodSection.SUGGESTED -> R.string.add_meal_suggested_foods
+            AddMealFoodSection.RESULTS -> R.string.add_meal_food_results
+        }
+    }
+
+    private fun showEmptySearchFeedback(feedback: AddMealEmptySearchFeedback) {
+        val messageRes = when (feedback) {
+            AddMealEmptySearchFeedback.NONE -> return
+            AddMealEmptySearchFeedback.NO_ONLINE_FOOD -> R.string.add_meal_no_online_food_found
+            AddMealEmptySearchFeedback.PRESS_SEARCH_FOR_MORE_RESULTS -> {
+                R.string.add_meal_press_search_for_more_results
+            }
+        }
+
+        Toast.makeText(
+            requireContext(),
+            getString(messageRes),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun updateLoadMoreButton() {
