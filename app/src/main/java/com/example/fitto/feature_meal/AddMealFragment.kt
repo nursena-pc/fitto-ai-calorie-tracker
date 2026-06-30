@@ -510,8 +510,14 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
             isLoadingMoreUsda = false
 
-            if (newFoods.isEmpty()) {
-                canLoadMoreUsda = false
+            val loadMoreResult = searchStateResolver.loadMoreResult(
+                currentPage = nextUsdaPageNumber,
+                fetchedCount = newFoods.size,
+                pageSize = USDA_PAGE_SIZE
+            )
+
+            if (searchStateResolver.shouldShowNoMoreFoodsFeedback(loadMoreResult)) {
+                canLoadMoreUsda = loadMoreResult.canLoadMore
                 updateLoadMoreButton()
 
                 Toast.makeText(
@@ -523,11 +529,8 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 return@launch
             }
 
-            nextUsdaPageNumber = searchStateResolver.nextPageAfterLoad(nextUsdaPageNumber)
-            canLoadMoreUsda = searchStateResolver.canLoadMore(
-                fetchedCount = newFoods.size,
-                pageSize = USDA_PAGE_SIZE
-            )
+            nextUsdaPageNumber = loadMoreResult.nextPageNumber
+            canLoadMoreUsda = loadMoreResult.canLoadMore
 
             currentFoodResults = searchStateResolver.mergeFoods(currentFoodResults, newFoods)
 
@@ -574,14 +577,14 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private fun updateLoadMoreButton() {
         if (_binding == null) return
 
-        binding.loadMoreFoodsButton.visibility =
-            if (canLoadMoreUsda && currentFoodResults.isNotEmpty()) {
-                View.VISIBLE
-            } else {
-                View.GONE
-            }
+        val uiState = searchStateResolver.loadMoreUiState(
+            canLoadMore = canLoadMoreUsda,
+            hasCurrentResults = currentFoodResults.isNotEmpty(),
+            isLoadingMore = isLoadingMoreUsda
+        )
 
-        binding.loadMoreFoodsButton.isEnabled = !isLoadingMoreUsda
+        binding.loadMoreFoodsButton.visibility = if (uiState.visible) View.VISIBLE else View.GONE
+        binding.loadMoreFoodsButton.isEnabled = uiState.enabled
         binding.loadMoreFoodsButton.text = getString(R.string.add_meal_load_more_foods)
     }
 

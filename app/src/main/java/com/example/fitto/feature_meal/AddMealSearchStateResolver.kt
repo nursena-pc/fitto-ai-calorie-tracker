@@ -14,6 +14,17 @@ enum class AddMealEmptySearchFeedback {
     PRESS_SEARCH_FOR_MORE_RESULTS
 }
 
+data class AddMealLoadMoreUiState(
+    val visible: Boolean,
+    val enabled: Boolean
+)
+
+data class AddMealLoadMoreResult(
+    val hasNewFoods: Boolean,
+    val nextPageNumber: Int,
+    val canLoadMore: Boolean
+)
+
 class AddMealSearchStateResolver {
 
     fun normalizeQuery(query: String): String {
@@ -56,6 +67,44 @@ class AddMealSearchStateResolver {
 
     fun nextPageAfterLoad(currentPage: Int): Int {
         return currentPage + 1
+    }
+
+    fun loadMoreResult(
+        currentPage: Int,
+        fetchedCount: Int,
+        pageSize: Int
+    ): AddMealLoadMoreResult {
+        return if (fetchedCount <= 0) {
+            AddMealLoadMoreResult(
+                hasNewFoods = false,
+                nextPageNumber = currentPage,
+                canLoadMore = false
+            )
+        } else {
+            AddMealLoadMoreResult(
+                hasNewFoods = true,
+                nextPageNumber = nextPageAfterLoad(currentPage),
+                canLoadMore = canLoadMore(
+                    fetchedCount = fetchedCount,
+                    pageSize = pageSize
+                )
+            )
+        }
+    }
+
+    fun loadMoreUiState(
+        canLoadMore: Boolean,
+        hasCurrentResults: Boolean,
+        isLoadingMore: Boolean
+    ): AddMealLoadMoreUiState {
+        return AddMealLoadMoreUiState(
+            visible = canLoadMore && hasCurrentResults,
+            enabled = !isLoadingMore
+        )
+    }
+
+    fun shouldShowNoMoreFoodsFeedback(result: AddMealLoadMoreResult): Boolean {
+        return !result.hasNewFoods
     }
 
     fun shouldResetOnlinePaging(allowOnlineSearch: Boolean): Boolean {
