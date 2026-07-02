@@ -56,6 +56,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val searchStateResolver = AddMealSearchStateResolver()
     private val favoriteStateResolver = AddMealFavoriteStateResolver()
     private lateinit var foodSearchAction: AddMealFoodSearchAction
+    private lateinit var loadMoreAction: AddMealLoadMoreAction
     private lateinit var saveAction: AddMealSaveAction
     private lateinit var customFoodAction: AddMealCustomFoodAction
 
@@ -86,6 +87,14 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 )
             }
         )
+        loadMoreAction = AddMealLoadMoreAction { query, mealType, limit, pageNumber ->
+            foodRepository.searchUsdaFoods(
+                query = query,
+                mealType = mealType,
+                limit = limit,
+                pageNumber = pageNumber
+            )
+        }
         saveAction = AddMealSaveAction { mealType, selectedFoods, entryDate ->
             mealRepository.addManualMealEntry(
                 mealType = mealType,
@@ -444,59 +453,50 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         binding.loadMoreFoodsButton.isEnabled = false
         binding.loadMoreFoodsButton.text = getString(R.string.add_meal_loading_more_foods)
 
+        val request = AddMealLoadMoreRequest(
+            query = query,
+            mealType = targetMealType.argumentValue,
+            currentFoods = currentFoodResults,
+            currentPage = nextUsdaPageNumber,
+            pageSize = USDA_PAGE_SIZE
+        )
+
         viewLifecycleOwner.lifecycleScope.launch {
-            val newFoods = runCatching {
-                withContext(Dispatchers.IO) {
-                    foodRepository.searchUsdaFoods(
-                        query = query,
-                        mealType = targetMealType.argumentValue,
-                        limit = USDA_PAGE_SIZE,
-                        pageNumber = nextUsdaPageNumber
-                    )
-                }
-            }.getOrElse {
-                emptyList()
-            }
+            val result = withContext(Dispatchers.IO) { loadMoreAction.load(request) }
 
             if (_binding == null) return@launch
 
             isLoadingMoreUsda = false
 
-            val loadMoreResult = searchStateResolver.loadMoreResult(
-                currentPage = nextUsdaPageNumber,
-                fetchedCount = newFoods.size,
-                pageSize = USDA_PAGE_SIZE
-            )
-
-            if (searchStateResolver.shouldShowNoMoreFoodsFeedback(loadMoreResult)) {
-                canLoadMoreUsda = loadMoreResult.canLoadMore
-                updateLoadMoreButton()
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.add_meal_no_more_foods),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                return@launch
-            }
-
-            nextUsdaPageNumber = loadMoreResult.nextPageNumber
-            canLoadMoreUsda = loadMoreResult.canLoadMore
-
-            currentFoodResults = searchStateResolver.mergeFoods(currentFoodResults, newFoods)
-
-            val favoriteIds = withContext(Dispatchers.IO) {
-                favoriteStateResolver.favoriteIdSet(
-                    foodRepository.getFavoriteFoodIds(limit = 200)
-                )
-            }
-
-            suggestedFoodAdapter.submitList(
-                currentFoodResults.map { food ->
-                    food.toFoodUiModel(isFavorite = food.id in favoriteIds)
+            when (result) {
+                is AddMealLoadMoreActionResult.NoMoreFoods -> {
+                    canLoadMoreUsda = result.canLoadMore
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.add_meal_no_more_foods),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-            )
+                is AddMealLoadMoreActionResult.Loaded -> {
+                    nextUsdaPageNumber = result.nextPageNumber
+                    canLoadMoreUsda = result.canLoadMore
+                    currentFoodResults = result.foods
+
+                    val favoriteIds = withContext(Dispatchers.IO) {
+                        favoriteStateResolver.favoriteIdSet(
+                            foodRepository.getFavoriteFoodIds(limit = 200)
+                        )
+                    }
+
+                    if (_binding == null) return@launch
+
+                    suggestedFoodAdapter.submitList(
+                        currentFoodResults.map { food ->
+                            food.toFoodUiModel(isFavorite = food.id in favoriteIds)
+                        }
+                    )
+                }
+            }
 
             updateLoadMoreButton()
         }
