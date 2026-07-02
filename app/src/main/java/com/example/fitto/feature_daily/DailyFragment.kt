@@ -99,8 +99,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var sleepLogStore: SleepLogStore
     private lateinit var dailyAiRepository: GeminiDailyAiRepository
     private lateinit var dailyAiCache: AiDailyAnalysisCache
+    private lateinit var profileLoadAction: DailyProfileLoadAction
+    private lateinit var dailySummaryLoadAction: DailySummaryLoadAction
+    private lateinit var weeklyProgressLoadAction: DailyWeeklyProgressLoadAction
+    private lateinit var waterTrackingAction: DailyWaterTrackingAction
 
-    private var currentWeightKg: Double = 70.0
+    private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
     private var currentDailyAiSnapshot: DailyAiSnapshot? = null
     private var dailyAiLoading: Boolean = false
@@ -111,10 +115,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var nutritionTargetStore: UserNutritionTargetStore
     private lateinit var mealRepository: MealRepository
     private lateinit var dietPlanSeedRepository: DietPlanSeedRepository
-    private lateinit var profileCacheRepository: ProfileCacheRepository
     private lateinit var stepCounterManager: FittoStepCounterManager
     private var localStepCount: Long = 0L
-    private lateinit var waterTrackingStore: WaterTrackingStore
     private var waterGoalMl: Int = 2500
     private val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
@@ -155,11 +157,41 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         nutritionTargetStore = UserNutritionTargetStore(requireContext())
         mealRepository = MealRepository(appContext)
         dietPlanSeedRepository = DietPlanSeedRepository(appContext)
-        profileCacheRepository = ProfileCacheRepository(appContext)
+        val profileCacheRepository = ProfileCacheRepository(appContext)
+        val waterTrackingStore = WaterTrackingStore(appContext)
         customDietPlanStore = CustomDietPlanStore(appContext)
         fastingSessionStore = FastingSessionStore(requireContext())
         exerciseLogStore = ExerciseLogStore(requireContext())
-        waterTrackingStore = WaterTrackingStore(appContext)
+
+        profileLoadAction = DailyProfileLoadAction(
+            getCachedProfile = profileCacheRepository::getCurrentUserProfile,
+            syncProfile = profileCacheRepository::syncCurrentUserProfileFromFirebase
+        )
+        dailySummaryLoadAction = DailySummaryLoadAction(
+            loadProfile = profileLoadAction::load,
+            getMealSummariesForDate = mealRepository::getMealSummariesForDate,
+            getNutritionSummaryForDate = mealRepository::getNutritionSummaryForDate,
+            getExerciseSummaryForDate = exerciseLogStore::getSummaryForDate,
+            getExerciseLogsForDate = exerciseLogStore::getLogsForDate,
+            getMealEntryDetailsForDate = mealRepository::getMealEntryDetailsForDate,
+            resolveNutritionTargets = ::resolveDailyNutritionTargets
+        )
+        weeklyProgressLoadAction = DailyWeeklyProgressLoadAction(
+            loadProfile = profileLoadAction::load,
+            getCaloriesForDate = { dateIso ->
+                mealRepository.getNutritionSummaryForDate(dateIso).totalCalories
+            },
+            resolveNutritionTargets = ::resolveDailyNutritionTargets
+        )
+        waterTrackingAction = DailyWaterTrackingAction(
+            getWaterMl = waterTrackingStore::getWaterMl,
+            setWaterMl = waterTrackingStore::setWaterMl,
+            addWaterMl = waterTrackingStore::addWaterMl,
+            getVisibleBottleCount = waterTrackingStore::getVisibleBottleCount,
+            increaseVisibleBottleCount = waterTrackingStore::increaseVisibleBottleCount,
+            decreaseVisibleBottleCount = waterTrackingStore::decreaseVisibleBottleCount
+        )
+
         healthConnectManager = HealthConnectManager(appContext)
         stepCounterManager = FittoStepCounterManager(appContext)
         sleepLogStore = SleepLogStore(requireContext())
@@ -204,18 +236,16 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         return selectedDate.toString()
     }
     private fun loadSleepWeightSummary() {
-        if (!::profileCacheRepository.isInitialized) return
+        if (!::profileLoadAction.isInitialized) return
 
         viewLifecycleOwner.lifecycleScope.launch {
             val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
+                profileLoadAction.load()
             }
-
             val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
 
             currentProfileWeightKg = resolvedWeight
-            currentWeightKg = resolvedWeight ?: 70.0
+            currentWeightKg = resolvedWeight ?: DEFAULT_PROFILE_WEIGHT_KG
 
             renderSleepWeightSummary()
             renderSleepCard()
@@ -690,30 +720,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderWeeklyCalorieProgress() {
-        if (_binding == null || !::mealRepository.isInitialized) return
+        if (_binding == null || !::weeklyProgressLoadAction.isInitialized) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
+            val requestedDate = selectedDate
+            val result = withContext(Dispatchers.IO) {
+                weeklyProgressLoadAction.load(
+                    DailyWeeklyProgressLoadRequest(
+                        selectedDate = requestedDate,
+                        minHeightPx = 18.dp,
+                        maxHeightPx = 90.dp
+                    )
+                )
             }
 
-            val targetCalories = resolveDailyNutritionTargets(profile)
-                .dailyCalories
-                .coerceAtLeast(1)
-
-            val days = (6 downTo 0).map { offset ->
-                selectedDate.minusDays(offset.toLong())
-            }
-
-            val dailyCalories = withContext(Dispatchers.IO) {
-                days.map { date ->
-                    val summary = mealRepository.getNutritionSummaryForDate(date.toString())
-                    summary.totalCalories.coerceAtLeast(0)
-                }
-            }
-
-            if (_binding == null) return@launch
+            if (_binding == null || selectedDate != requestedDate) return@launch
 
             val barViews: List<View> = listOf(
                 binding.weekBar1,
@@ -745,12 +766,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 binding.weekValue7
             )
 
-            val weeklyProgress = DailyWeeklyCalorieProgressCalculator.calculate(
-                dailyCalories = dailyCalories,
-                targetCalories = targetCalories,
-                minHeightPx = 18.dp,
-                maxHeightPx = 90.dp
-            )
+            val weeklyProgress = result.progress
 
             binding.weeklyProgressDescriptionText.text = if (weeklyProgress.daysWithFood == 0) {
                 getString(R.string.daily_no_weekly_data)
@@ -764,7 +780,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             binding.weeklyWaterProgress.progress = weeklyProgress.progressBarPercent
 
-            days.forEachIndexed { index, date ->
+            result.days.forEachIndexed { index, date ->
                 val dayProgress = weeklyProgress.days[index]
 
                 val params = barViews[index].layoutParams
@@ -806,10 +822,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun loadWaterGoalAndRender() {
+        if (!::profileLoadAction.isInitialized) return
+
         viewLifecycleOwner.lifecycleScope.launch {
             val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
+                profileLoadAction.load()
             }
 
             waterGoalMl = DailyProfileMetricsResolver.resolveWaterGoalMl(profile)
@@ -821,24 +838,16 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         scrollToEnd: Boolean = false,
         scrollToStart: Boolean = false
     ) {
-        if (_binding == null || !::waterTrackingStore.isInitialized) return
+        if (_binding == null || !::waterTrackingAction.isInitialized) return
 
-        val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
-        val defaultBottleCount = DailyWaterTrackingCalculator.defaultBottleCount(waterGoalMl)
-        val visibleBottleCount = waterTrackingStore.getVisibleBottleCount(
-            date = selectedDate,
-            defaultCount = defaultBottleCount
+        val result = waterTrackingAction.load(
+            DailyWaterTrackingRequest(
+                date = selectedDate,
+                waterGoalMl = waterGoalMl
+            )
         )
-        val waterState = DailyWaterTrackingCalculator.calculateState(
-            rawWaterMl = rawWaterMl,
-            waterGoalMl = waterGoalMl,
-            visibleBottleCount = visibleBottleCount
-        )
+        val waterState = result.waterState
         this.currentWaterMl = waterState.normalizedWaterMl
-
-        if (waterState.normalizedWaterMl != rawWaterMl) {
-            waterTrackingStore.setWaterMl(selectedDate, waterState.normalizedWaterMl)
-        }
 
         binding.waterAmountText.text = getString(
             R.string.daily_water_value_format,
@@ -848,7 +857,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         binding.waterBottleContainer.removeAllViews()
 
-        val waterBottleUiState = DailyWaterBottleUiStateResolver.resolve(waterState)
+        val waterBottleUiState = result.bottleUiState
 
         binding.waterBottleContainer.addView(
             createRemoveBottleView(waterBottleUiState.removeBottle)
@@ -906,23 +915,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             setOnClickListener {
                 if (!state.isEnabled) return@setOnClickListener
 
-                val rawWaterMl = waterTrackingStore.getWaterMl(selectedDate)
-
-                // Keep visible bottles at or above the filled bottle count.
-                val canRemoveBottle = DailyWaterTrackingCalculator.canRemoveVisibleBottle(
-                    visibleBottleCount = state.visibleBottleCount,
-                    rawWaterMl = rawWaterMl
-                )
-
-                if (!canRemoveBottle) return@setOnClickListener
-
-                waterTrackingStore.decreaseVisibleBottleCount(
+                val removed = waterTrackingAction.removeBottleSlot(
                     date = selectedDate,
-                    defaultCount = state.defaultBottleCount,
-                    amount = 1
+                    state = state
                 )
 
-                renderWaterTracking(scrollToStart = true)
+                if (removed) {
+                    renderWaterTracking(scrollToStart = true)
+                }
             }
         }
     }
@@ -957,28 +957,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun addWater(amountMl: Int) {
-        val normalizedAmount = DailyWaterTrackingCalculator.normalizeAddAmount(amountMl)
-
-        if (normalizedAmount <= 0) return
-
-        waterTrackingStore.addWaterMl(
+        val added = waterTrackingAction.addWater(
             date = selectedDate,
-            amountMl = normalizedAmount
+            amountMl = amountMl
         )
 
-        renderWaterTracking()
+        if (added) {
+            renderWaterTracking()
+        }
     }
+
     private fun toggleWaterBottle(isFilled: Boolean) {
-        val updatedWaterMl = DailyWaterTrackingCalculator.toggleBottleWaterMl(
-            rawWaterMl = waterTrackingStore.getWaterMl(selectedDate),
+        waterTrackingAction.toggleBottle(
+            date = selectedDate,
             isFilled = isFilled
         )
-
-        waterTrackingStore.setWaterMl(
-            date = selectedDate,
-            value = updatedWaterMl
-        )
-
         renderWaterTracking()
     }
 
@@ -1762,41 +1755,25 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderMealTotals() {
-        if (_binding == null || !::mealRepository.isInitialized) return
+        if (_binding == null || !::dailySummaryLoadAction.isInitialized) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
-            }
-
-            val selectedDateIso = selectedDate.toString()
-
-            val mealSummaries = withContext(Dispatchers.IO) {
-                mealRepository.getMealSummariesForDate(selectedDateIso)
-            }
-
-            val nutritionSummary = withContext(Dispatchers.IO) {
-                mealRepository.getNutritionSummaryForDate(selectedDateIso)
-            }
-            val exerciseSummary = withContext(Dispatchers.IO) {
-                exerciseLogStore.getSummaryForDate(selectedDateIso)
-            }
-            val exerciseLogs = withContext(Dispatchers.IO) {
-                exerciseLogStore.getLogsForDate(selectedDateIso)
-            }
-
-            val mealDetailsByType = withContext(Dispatchers.IO) {
-                MealType.entries.associateWith { mealType ->
-                    mealRepository.getMealEntryDetailsForDate(
+            val requestedDate = selectedDate
+            val selectedDateIso = requestedDate.toString()
+            val result = withContext(Dispatchers.IO) {
+                dailySummaryLoadAction.load(
+                    DailySummaryLoadRequest(
                         dateIso = selectedDateIso,
-                        mealType = mealType
+                        healthConnectSummary = healthConnectSummary,
+                        displaySteps = resolvedDisplaySteps(),
+                        fallbackWeightKg = currentWeightKg
                     )
-                }
+                )
             }
-            if (_binding == null) return@launch
+            if (_binding == null || selectedDate != requestedDate) return@launch
 
-            val nutritionTargets = resolveDailyNutritionTargets(profile)
+            val profile = result.profile
+            val nutritionTargets = result.nutritionTargets
             val targetCalories = nutritionTargets.dailyCalories
 
             val oldTargetCalories = currentDailyTargetCalories
@@ -1806,8 +1783,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             currentCarbTargetGrams = nutritionTargets.carbGrams
             currentFatTargetGrams = nutritionTargets.fatGrams
 
-            val byMealType = mealSummaries.associateBy { it.mealType }
-            val mealCalories = DailyMealCaloriesResolver.resolve(mealSummaries)
+            val byMealType = result.mealSummariesByType
+            val mealCalories = result.mealCalories
 
             binding.breakfastCaloriesText.text = getString(
                 R.string.daily_meal_calories_value,
@@ -1829,25 +1806,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 mealCalories.dinner
             )
 
-            val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
-            currentProfileWeightKg = resolvedWeight
-            currentWeightKg = resolvedWeight ?: currentWeightKg
+            currentProfileWeightKg = result.resolvedWeightKg
+            currentWeightKg = result.displayWeightKg
 
-            val healthActiveCalories = DailyHealthActiveCaloriesResolver.resolve(
-                isAvailable = healthConnectSummary.isAvailable,
-                hasPermission = healthConnectSummary.hasPermission,
-                activeCaloriesKcal = healthConnectSummary.activeCaloriesKcal
-            )
-
-            val displaySteps = resolvedDisplaySteps()
-            val summaryState = DailySummaryUiStateResolver.resolve(
-                nutritionSummary = nutritionSummary,
-                nutritionTargets = nutritionTargets,
-                exerciseSummary = exerciseSummary,
-                healthActiveCalories = healthActiveCalories,
-                displaySteps = displaySteps,
-                weightKg = currentWeightKg
-            )
+            val summaryState = result.summaryState
             val energyBalance = summaryState.energyBalance
 
             binding.remainingCaloriesText.text = energyBalance.remainingCalories.toString()
@@ -1907,7 +1869,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             val dailyAiMeals = buildDailyAiMeals(
                 mealSummariesByType = byMealType,
-                mealDetailsByType = mealDetailsByType
+                mealDetailsByType = result.mealDetailsByType
             )
 
             currentDailyAiSnapshot = DailyAiSnapshotResolver.resolve(
@@ -1923,9 +1885,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 waterMl = currentWaterMl,
                 waterGoalMl = waterGoalMl,
                 meals = dailyAiMeals,
-                exerciseLogCount = exerciseSummary.logCount,
+                exerciseLogCount = result.exerciseLogCount,
                 exerciseSummaryText = buildDailyAiExerciseSummary(
-                    exerciseLogs,
+                    result.exerciseLogs,
                     energyBalance.syncedActivityCalories
                 ),
                 dietPreferences = ProfilePreferenceStore.nutritionDietPreferencesText(
@@ -2115,14 +2077,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             addWater(WaterTrackingStore.BOTTLE_SIZE_ML * 2)
         }
         addWaterBottleSlotButton.setOnClickListener {
-            val defaultBottleCount = DailyWaterTrackingCalculator.defaultBottleCount(waterGoalMl)
-
-            waterTrackingStore.increaseVisibleBottleCount(
+            waterTrackingAction.addBottleSlots(
                 date = selectedDate,
-                defaultCount = defaultBottleCount,
-                amount = 4
+                waterGoalMl = waterGoalMl
             )
-
             renderWaterTracking(scrollToEnd = true)
         }
         activitySummaryCard.setOnClickListener {
@@ -2383,6 +2341,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         private const val DEFAULT_PROTEIN_TARGET_GRAMS = 120
         private const val DEFAULT_CARB_TARGET_GRAMS = 280
         private const val DEFAULT_FAT_TARGET_GRAMS = 70
+        private const val DEFAULT_PROFILE_WEIGHT_KG = 70.0
         private const val DAILY_AI_MEAL_SUMMARY_MAX_CHARS = 360
         private const val DAILY_AI_RATE_LIMIT_COOLDOWN_MS = 60_000L
         private const val FITTO_AI_LOG_TAG = "FittoAI"
