@@ -56,12 +56,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
@@ -79,7 +74,9 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private lateinit var viewModel: ProfileViewModel
     private val accountSettingsRepository = AccountSettingsRepository()
     private val socialRepository = SocialRepository()
-    private var emailChangeWatcherJob: Job? = null
+    private var accountEditCoordinator: ProfileAccountEditCoordinator? = null
+    private var accountDialogCoordinator: ProfileAccountDialogCoordinator? = null
+    private var emailChangeDialogCoordinator: ProfileEmailChangeDialogCoordinator? = null
 
     private var photoAlbumCoordinator: ProfilePhotoAlbumCoordinator? = null
     private var dataManagementCoordinator: ProfileDataManagementCoordinator? = null
@@ -94,7 +91,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     }
 
     private var lastProfileErrorMessage: String? = null
-    private var isEmailChangeRecoveryActive: Boolean = false
 
     private val notificationSoundPickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -123,6 +119,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
         viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
         setupDataManagement()
+        setupAccountEditing()
 
         val titleTextView = view.findViewById<TextView>(R.id.textProfileDetailTitle)
         val backButton = view.findViewById<TextView>(R.id.buttonProfileDetailBack)
@@ -181,7 +178,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         super.onResume()
 
         when (menuId) {
-            ProfileMenuId.ACCOUNT_MANAGEMENT -> refreshAccountDisplayFromAuth()
+            ProfileMenuId.ACCOUNT_MANAGEMENT -> accountEditCoordinator?.refreshAccountEmail()
             ProfileMenuId.NOTIFICATION_PREFERENCES,
             ProfileMenuId.NUTRITION_PREFERENCES -> bindRows()
             else -> Unit
@@ -189,8 +186,12 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     }
 
     override fun onDestroyView() {
-        emailChangeWatcherJob?.cancel()
-        emailChangeWatcherJob = null
+        accountEditCoordinator?.clear()
+        accountEditCoordinator = null
+        accountDialogCoordinator?.clear()
+        accountDialogCoordinator = null
+        emailChangeDialogCoordinator?.clear()
+        emailChangeDialogCoordinator = null
         photoAlbumCoordinator?.clear()
         photoAlbumCoordinator = null
         dataManagementCoordinator?.clear()
@@ -262,41 +263,99 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
-    private fun refreshAccountDisplayFromAuth() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val syncResult = runCatching {
+    private fun setupAccountEditing() {
+        if (menuId != ProfileMenuId.ACCOUNT_MANAGEMENT) return
+
+        val accountAction = ProfileAccountEditAction(
+            updateDisplayName = accountSettingsRepository::updateDisplayName,
+            updateUsername = accountSettingsRepository::updateUsername,
+            reauthenticateWithPassword = accountSettingsRepository::reauthenticateWithPassword,
+            updateEmailAfterReauth = accountSettingsRepository::updateEmailAfterReauth,
+            updatePasswordAfterReauth = accountSettingsRepository::updatePasswordAfterReauth,
+            syncCurrentAuthEmail = {
                 accountSettingsRepository.syncCurrentAuthEmailToProfileIfNeeded()
-            }.onFailure { exception ->
-                Log.w(TAG, "Auth email sync skipped", exception)
-                accountSettingsRepository.reloadCurrentUserBestEffort()
-            }.getOrDefault(EmailChangeSyncResult.WAITING)
+            },
+            reloadCurrentUserBestEffort = accountSettingsRepository::reloadCurrentUserBestEffort,
+            currentAuthEmail = accountSettingsRepository::currentAuthEmail,
+            hasCurrentUser = accountSettingsRepository::hasCurrentUser,
+            isPasswordProvider = accountSettingsRepository::isPasswordProvider,
+            isGoogleProvider = accountSettingsRepository::isGoogleProvider
+        )
 
-            latestUser = accountDisplayUser()
-            bindRows()
+        accountDialogCoordinator = ProfileAccountDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater
+        )
 
-            if (syncResult != EmailChangeSyncResult.SIGNED_OUT && accountSettingsRepository.hasCurrentUser()) {
+        emailChangeDialogCoordinator = ProfileEmailChangeDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater,
+            scope = viewLifecycleOwner.lifecycleScope,
+            action = ProfileEmailChangeAction(
+                checkAndSyncPendingEmailChange = accountSettingsRepository::checkAndSyncPendingEmailChange,
+                signInAfterVerifiedEmailChange = accountSettingsRepository::signInAfterVerifiedEmailChange,
+                resendPendingEmailChangeVerification =
+                    accountSettingsRepository::resendPendingEmailChangeVerification
+            ),
+            languageCode = ::emailLanguageCode,
+            onVerified = {
+                latestUser = accountDisplayUser()
+                bindRows()
                 viewModel.refreshProfile()
+            },
+            onVerificationFinished = {
+                showToast(R.string.profile_account_email_updated)
+            },
+            onCheckFailed = { error ->
+                Log.w(TAG, "Email change verification check skipped", error)
+            },
+            onResendFailed = { error ->
+                showToast(ProfileAccountErrorResolver.resolve(error))
             }
-        }
+        )
+
+        accountEditCoordinator = ProfileAccountEditCoordinator(
+            scope = viewLifecycleOwner.lifecycleScope,
+            action = accountAction,
+            languageCode = ::emailLanguageCode,
+            onDisplayNameUpdated = {
+                showToast(R.string.profile_account_display_name_updated)
+                viewModel.refreshProfile()
+            },
+            onUsernameUpdated = {
+                showToast(R.string.profile_account_username_updated)
+                viewModel.refreshProfile()
+            },
+            onEmailChangeRequested = { request ->
+                emailChangeDialogCoordinator?.show(request)
+            },
+            onPasswordUpdated = {
+                showToast(R.string.profile_account_password_updated)
+            },
+            onAccountEmailRefreshed = { result ->
+                result.syncFailure?.let { error ->
+                    Log.w(TAG, "Auth email sync skipped", error)
+                }
+                latestUser = ProfileAccountDisplayResolver.resolve(
+                    user = latestUser,
+                    authEmail = result.authEmail
+                )
+                bindRows()
+                if (result.shouldRefreshProfile) {
+                    viewModel.refreshProfile()
+                }
+            },
+            onFailure = { error ->
+                showToast(ProfileAccountErrorResolver.resolve(error))
+            }
+        )
     }
 
     private fun accountDisplayUser(): SocialUser? {
-        val authEmail = accountSettingsRepository.currentAuthEmail()
-            .takeIf { it.isNotBlank() }
-
-        val user = latestUser
-
-        return when {
-            user != null && authEmail != null && user.email != authEmail -> {
-                user.copy(email = authEmail)
-            }
-
-            user == null && authEmail != null -> {
-                SocialUser(email = authEmail)
-            }
-
-            else -> user
-        }
+        return ProfileAccountDisplayResolver.resolve(
+            user = latestUser,
+            authEmail = accountSettingsRepository.currentAuthEmail()
+        )
     }
 
     private fun observeProfileData() {
@@ -313,7 +372,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
             val errorMessage = state.errorMessage
             val shouldSuppressSessionError = menuId == ProfileMenuId.ACCOUNT_MANAGEMENT &&
-                    isEmailChangeRecoveryActive &&
+                    emailChangeDialogCoordinator?.isRecoveryActive == true &&
                     errorMessage == MISSING_SESSION_ERROR_MESSAGE
 
             if (errorMessage.isNullOrBlank() || shouldSuppressSessionError) {
@@ -1205,745 +1264,78 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
-    private fun showFittoInfoDialog(
-        @StringRes titleResId: Int,
-        @StringRes messageResId: Int,
-        iconResId: Int,
-        iconColorResId: Int = R.color.fitto_green
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_fitto_action,
-            null,
-            false
-        )
-
-        val iconImage = dialogView.findViewById<ImageView>(R.id.imageActionIcon)
-        val titleText = dialogView.findViewById<TextView>(R.id.textActionTitle)
-        val warningText = dialogView.findViewById<TextView>(R.id.textActionWarning)
-        val messageText = dialogView.findViewById<TextView>(R.id.textActionMessage)
-        val passwordArea = dialogView.findViewById<LinearLayout>(R.id.layoutPasswordArea)
-        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionCancel)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionConfirm)
-
-        titleText.setText(titleResId)
-        messageText.setText(messageResId)
-
-        warningText.isVisible = false
-        passwordArea.isVisible = false
-        cancelButton.isVisible = false
-
-        confirmButton.setText(R.string.profile_dialog_understood)
-        confirmButton.setTextColor(requireContext().getColor(R.color.fitto_green))
-
-        iconImage.setImageResource(iconResId)
-        iconImage.setColorFilter(requireContext().getColor(iconColorResId))
-
-        confirmButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
-
-    private fun showGoogleManagedAccountDialog() {
-        showFittoInfoDialog(
-            titleResId = R.string.profile_google_managed_account_title,
-            messageResId = R.string.profile_google_managed_account_message,
-            iconResId = R.drawable.ic_google_g,
-            iconColorResId = R.color.fitto_green
-        )
-    }
-
-    private fun showEmailVerificationSentDialog() {
-        showFittoInfoDialog(
-            titleResId = R.string.profile_account_email_verification_sent_title,
-            messageResId = R.string.profile_account_email_verification_sent_message,
-            iconResId = R.drawable.ic_email,
-            iconColorResId = R.color.fitto_green
-        )
-    }
-
-    private fun showEmailChangeWaitingDialog(
-        newEmail: String,
-        password: String? = null
-    ) {
-        emailChangeWatcherJob?.cancel()
-
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCanceledOnTouchOutside(false)
-        dialog.setCancelable(false)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_email_verification_wait,
-            null,
-            false
-        )
-
-        val titleText = dialogView.findViewById<TextView>(R.id.verificationTitleText)
-        val messageText = dialogView.findViewById<TextView>(R.id.verificationMessageText)
-        val statusText = dialogView.findViewById<TextView>(R.id.verificationStatusText)
-        val progressView = dialogView.findViewById<View>(R.id.verificationProgress)
-        val resendButton = dialogView.findViewById<MaterialButton>(R.id.verificationResendButton)
-        val closeButton = dialogView.findViewById<MaterialButton>(R.id.verificationCloseButton)
-
-        titleText.setText(R.string.profile_account_email_wait_title)
-        messageText.text = getString(R.string.profile_account_email_wait_message, newEmail)
-        statusText.setText(R.string.profile_account_email_wait_checking)
-        resendButton.setText(R.string.profile_account_email_wait_resend)
-        closeButton.setText(R.string.profile_account_email_wait_close)
-
-        resendButton.setOnClickListener {
-            resendEmailChangeVerification(
-                newEmail = newEmail,
-                resendButton = resendButton,
-                statusText = statusText
-            )
-        }
-
-        closeButton.setOnClickListener {
-            emailChangeWatcherJob?.cancel()
-            emailChangeWatcherJob = null
-            isEmailChangeRecoveryActive = false
-            dialog.dismiss()
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-
-        startEmailChangeWatcher(
-            newEmail = newEmail,
-            password = password,
-            dialog = dialog,
-            statusText = statusText,
-            progressView = progressView,
-            resendButton = resendButton,
-            closeButton = closeButton
-        )
-    }
-
-    private fun startEmailChangeWatcher(
-        newEmail: String,
-        password: String?,
-        dialog: Dialog,
-        statusText: TextView,
-        progressView: View,
-        resendButton: MaterialButton,
-        closeButton: MaterialButton
-    ) {
-        emailChangeWatcherJob?.cancel()
-        isEmailChangeRecoveryActive = true
-        emailChangeWatcherJob = viewLifecycleOwner.lifecycleScope.launch {
-            emailChangeLoop@ while (isActive) {
-                val result = runCatching {
-                    accountSettingsRepository.checkAndSyncPendingEmailChange(newEmail)
-                }.onFailure { exception ->
-                    Log.w(TAG, "Email change verification check skipped", exception)
-                }.getOrDefault(EmailChangeSyncResult.WAITING)
-
-                when (result) {
-                    EmailChangeSyncResult.VERIFIED -> {
-                        finishVerifiedEmailChange(
-                            dialog = dialog,
-                            statusText = statusText,
-                            progressView = progressView,
-                            resendButton = resendButton,
-                            closeButton = closeButton
-                        )
-                        break@emailChangeLoop
-                    }
-
-                    EmailChangeSyncResult.SIGNED_OUT -> {
-                        if (!password.isNullOrBlank()) {
-                            statusText.setText(R.string.profile_account_email_wait_restoring_session)
-                            val recoveryResult = runCatching {
-                                accountSettingsRepository.signInAfterVerifiedEmailChange(
-                                    email = newEmail,
-                                    password = password
-                                )
-                            }.onFailure { exception ->
-                                Log.w(TAG, "Email change session recovery failed", exception)
-                            }.getOrDefault(EmailChangeSyncResult.SIGNED_OUT)
-
-                            when (recoveryResult) {
-                                EmailChangeSyncResult.VERIFIED -> {
-                                    finishVerifiedEmailChange(
-                                        dialog = dialog,
-                                        statusText = statusText,
-                                        progressView = progressView,
-                                        resendButton = resendButton,
-                                        closeButton = closeButton
-                                    )
-                                    break@emailChangeLoop
-                                }
-
-                                EmailChangeSyncResult.WAITING -> {
-                                    statusText.setText(R.string.profile_account_email_wait_checking)
-                                    delay(2500)
-                                }
-
-                                EmailChangeSyncResult.SIGNED_OUT -> {
-                                    progressView.isVisible = false
-                                    resendButton.isVisible = false
-                                    closeButton.isEnabled = true
-                                    statusText.setText(R.string.profile_account_email_wait_session_lost)
-                                    isEmailChangeRecoveryActive = false
-                                    emailChangeWatcherJob = null
-                                    break@emailChangeLoop
-                                }
-                            }
-                        } else {
-                            progressView.isVisible = false
-                            resendButton.isVisible = false
-                            closeButton.isEnabled = true
-                            statusText.setText(R.string.profile_account_email_wait_session_lost)
-                            isEmailChangeRecoveryActive = false
-                            emailChangeWatcherJob = null
-                            break@emailChangeLoop
-                        }
-                    }
-
-                    EmailChangeSyncResult.WAITING -> {
-                        statusText.setText(R.string.profile_account_email_wait_checking)
-                        delay(2500)
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun finishVerifiedEmailChange(
-        dialog: Dialog,
-        statusText: TextView,
-        progressView: View,
-        resendButton: MaterialButton,
-        closeButton: MaterialButton
-    ) {
-        progressView.isVisible = false
-        resendButton.isVisible = false
-        closeButton.isEnabled = false
-        statusText.setText(R.string.profile_account_email_wait_verified)
-        latestUser = accountDisplayUser()
-        bindRows()
-        viewModel.refreshProfile()
-        delay(900)
-        if (dialog.isShowing) {
-            dialog.dismiss()
-        }
-        showToast(R.string.profile_account_email_updated)
-        isEmailChangeRecoveryActive = false
-        emailChangeWatcherJob = null
-    }
-
-    private fun resendEmailChangeVerification(
-        newEmail: String,
-        resendButton: MaterialButton,
-        statusText: TextView
-    ) {
-        resendButton.isEnabled = false
-        resendButton.alpha = 0.55f
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                accountSettingsRepository.resendPendingEmailChangeVerification(
-                    pendingEmail = newEmail,
-                    languageCode = emailLanguageCode()
-                )
-            }.onSuccess {
-                statusText.setText(R.string.profile_account_email_wait_resent)
-                resendButton.postDelayed({
-                    resendButton.isEnabled = true
-                    resendButton.alpha = 1f
-                }, EMAIL_CHANGE_RESEND_COOLDOWN_MS)
-            }.onFailure { exception ->
-                resendButton.isEnabled = true
-                resendButton.alpha = 1f
-                showAccountSettingsError(exception)
-            }
-        }
-    }
-
     private fun showUpdateDisplayNameDialog() {
-        showSingleInputActionDialog(
-            titleResId = R.string.profile_account_update_display_name_title,
-            messageResId = R.string.profile_account_update_display_name_message,
-            labelResId = R.string.profile_account_display_name_label,
-            hintResId = R.string.profile_account_display_name_hint,
-            positiveResId = R.string.profile_account_save_changes,
+        accountDialogCoordinator?.showDisplayName(
             initialValue = latestUser?.personalName.orEmpty(),
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS,
-            iconResId = R.drawable.ic_edit,
-            iconColorResId = R.color.fitto_green,
             onConfirmed = { displayName ->
-                updateDisplayName(displayName)
+                accountEditCoordinator?.updateDisplayName(displayName)
             }
         )
-    }
-
-    private fun updateDisplayName(displayName: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                accountSettingsRepository.updateDisplayName(displayName)
-            }.onSuccess {
-                showToast(R.string.profile_account_display_name_updated)
-                viewModel.refreshProfile()
-            }.onFailure { exception ->
-                showAccountSettingsError(exception)
-            }
-        }
     }
 
     private fun showUpdateUsernameDialog() {
-        showSingleInputActionDialog(
-            titleResId = R.string.profile_account_update_username_title,
-            messageResId = R.string.profile_account_update_username_message,
-            labelResId = R.string.profile_account_username_label,
-            hintResId = R.string.profile_account_username_hint,
-            positiveResId = R.string.profile_account_save_changes,
+        accountDialogCoordinator?.showUsername(
             initialValue = latestUser?.userName.orEmpty(),
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_NORMAL,
-            iconResId = R.drawable.ic_person_outline,
-            iconColorResId = R.color.fitto_green,
             onConfirmed = { username ->
-                updateUsername(username)
+                accountEditCoordinator?.updateUsername(username)
             }
         )
     }
 
-    private fun updateUsername(username: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                accountSettingsRepository.updateUsername(username)
-            }.onSuccess {
-                showToast(R.string.profile_account_username_updated)
-                viewModel.refreshProfile()
-            }.onFailure { exception ->
-                showAccountSettingsError(exception)
-            }
-        }
-    }
-
     private fun showUpdateEmailDialog() {
-        showSingleInputActionDialog(
-            titleResId = R.string.profile_account_update_email_title,
-            messageResId = R.string.profile_account_update_email_message,
-            labelResId = R.string.profile_account_email_label,
-            hintResId = R.string.profile_account_email_hint,
-            positiveResId = R.string.profile_account_continue,
-            initialValue = accountSettingsRepository.currentAuthEmail()
-                .ifBlank { latestUser?.email.orEmpty() },
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS,
-            iconResId = R.drawable.ic_email,
-            iconColorResId = R.color.fitto_green,
-            onConfirmed = { email ->
-                continueUpdateEmailAuthentication(email)
-            }
+        val currentEmail = accountEditCoordinator
+            ?.currentEmail()
+            .orEmpty()
+            .ifBlank { latestUser?.email.orEmpty() }
+
+        accountDialogCoordinator?.showEmail(
+            initialValue = currentEmail,
+            onConfirmed = ::continueUpdateEmailAuthentication
         )
     }
 
     private fun continueUpdateEmailAuthentication(newEmail: String) {
-        when {
-            accountSettingsRepository.isPasswordProvider() -> showUpdateEmailPasswordDialog(newEmail)
-            accountSettingsRepository.isGoogleProvider() -> showGoogleManagedAccountDialog()
-            else -> showToast(R.string.profile_account_provider_not_supported)
-        }
-    }
-
-    private fun showUpdateEmailPasswordDialog(newEmail: String) {
-        showSingleInputActionDialog(
-            titleResId = R.string.profile_account_verify_password_title,
-            messageResId = R.string.profile_account_verify_password_message,
-            labelResId = R.string.profile_delete_account_password_label,
-            hintResId = R.string.profile_delete_account_password_hint,
-            positiveResId = R.string.profile_delete_account_auth_confirm,
-            initialValue = "",
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD,
-            isPassword = true,
-            iconResId = R.drawable.ic_lock,
-            iconColorResId = R.color.fitto_green,
-            onConfirmed = { password ->
-                updateEmailWithPasswordReauth(newEmail, password)
+        when (accountEditCoordinator?.emailAuthenticationRoute()) {
+            ProfileAccountAuthenticationRoute.PASSWORD -> {
+                accountDialogCoordinator?.showEmailPassword { password ->
+                    accountEditCoordinator?.requestEmailChange(
+                        newEmail = newEmail,
+                        password = password
+                    )
+                }
             }
-        )
-    }
 
-    private fun updateEmailWithPasswordReauth(
-        newEmail: String,
-        password: String
-    ) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                accountSettingsRepository.reauthenticateWithPassword(password)
-                accountSettingsRepository.updateEmailAfterReauth(
-                    newEmail = newEmail,
-                    languageCode = emailLanguageCode()
-                )
-            }.onSuccess {
-                showEmailChangeWaitingDialog(
-                    newEmail = newEmail.trim(),
-                    password = password
-                )
-            }.onFailure { exception ->
-                showAccountSettingsError(exception)
+            ProfileAccountAuthenticationRoute.GOOGLE_MANAGED -> {
+                accountDialogCoordinator?.showGoogleManagedAccount()
             }
+
+            ProfileAccountAuthenticationRoute.UNSUPPORTED,
+            null -> showToast(R.string.profile_account_provider_not_supported)
         }
     }
 
     private fun showChangePasswordDialog() {
-        if (!accountSettingsRepository.isPasswordProvider()) {
-            showGoogleManagedAccountDialog()
-            return
-        }
-
-        showPasswordChangeDialog(
-            onConfirmed = { currentPassword, newPassword, confirmPassword ->
-                updatePassword(
-                    currentPassword = currentPassword,
-                    newPassword = newPassword,
-                    confirmPassword = confirmPassword
-                )
-            }
-        )
-    }
-
-    private fun updatePassword(
-        currentPassword: String,
-        newPassword: String,
-        confirmPassword: String
-    ) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                accountSettingsRepository.reauthenticateWithPassword(currentPassword)
-                accountSettingsRepository.updatePasswordAfterReauth(
-                    newPassword = newPassword,
-                    confirmPassword = confirmPassword
-                )
-            }.onSuccess {
-                showToast(R.string.profile_account_password_updated)
-            }.onFailure { exception ->
-                showAccountSettingsError(exception)
-            }
-        }
-    }
-
-    private fun showSingleInputActionDialog(
-        @StringRes titleResId: Int,
-        @StringRes messageResId: Int,
-        @StringRes labelResId: Int,
-        @StringRes hintResId: Int,
-        @StringRes positiveResId: Int,
-        initialValue: String,
-        inputType: Int,
-        iconResId: Int,
-        iconColorResId: Int,
-        isPassword: Boolean = false,
-        onConfirmed: (String) -> Unit
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_fitto_action,
-            null,
-            false
-        )
-
-        val iconImage = dialogView.findViewById<ImageView>(R.id.imageActionIcon)
-        val titleText = dialogView.findViewById<TextView>(R.id.textActionTitle)
-        val warningText = dialogView.findViewById<TextView>(R.id.textActionWarning)
-        val messageText = dialogView.findViewById<TextView>(R.id.textActionMessage)
-        val inputArea = dialogView.findViewById<LinearLayout>(R.id.layoutPasswordArea)
-        val inputLabel = dialogView.findViewById<TextView>(R.id.textPasswordLabel)
-        val inputLayout = dialogView.findViewById<TextInputLayout>(R.id.layoutPasswordInput)
-        val inputEditText = dialogView.findViewById<EditText>(R.id.editActionPassword)
-        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionCancel)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionConfirm)
-
-        titleText.setText(titleResId)
-        messageText.setText(messageResId)
-        warningText.isVisible = false
-
-        inputArea.isVisible = true
-        inputLabel.setText(labelResId)
-        inputLayout.hint = getString(hintResId)
-
-        if (isPassword) {
-            configurePasswordInput(inputLayout, inputEditText)
-        } else {
-            inputLayout.endIconMode = TextInputLayout.END_ICON_NONE
-            inputEditText.inputType = inputType
-        }
-
-        applySoftInputHintStyle(inputLayout, inputEditText)
-
-        inputEditText.setText(initialValue)
-        inputEditText.setSelection(inputEditText.text?.length ?: 0)
-
-        cancelButton.setText(R.string.profile_delete_account_cancel)
-        confirmButton.setText(positiveResId)
-
-        iconImage.setImageResource(iconResId)
-        iconImage.setColorFilter(requireContext().getColor(iconColorResId))
-        cancelButton.setTextColor(requireContext().getColor(R.color.profile_subtext))
-        confirmButton.setTextColor(requireContext().getColor(R.color.fitto_green))
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        confirmButton.setOnClickListener {
-            val value = inputEditText.text?.toString().orEmpty()
-
-            if (value.isBlank()) {
-                inputLayout.error = getString(R.string.profile_account_field_required)
-                return@setOnClickListener
-            }
-
-            inputLayout.error = null
-            dialog.dismiss()
-            onConfirmed(value)
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
-
-    private fun showPasswordChangeDialog(
-        onConfirmed: (String, String, String) -> Unit
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val container = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(
-                (22 * resources.displayMetrics.density).toInt(),
-                (22 * resources.displayMetrics.density).toInt(),
-                (22 * resources.displayMetrics.density).toInt(),
-                (14 * resources.displayMetrics.density).toInt()
-            )
-            background = requireContext().getDrawable(R.drawable.bg_profile_card)
-        }
-
-        val header = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-        }
-
-        val icon = ImageView(requireContext()).apply {
-            setImageResource(R.drawable.ic_lock)
-            setColorFilter(requireContext().getColor(R.color.fitto_green))
-        }
-
-        header.addView(
-            icon,
-            LinearLayout.LayoutParams(
-                (20 * resources.displayMetrics.density).toInt(),
-                (20 * resources.displayMetrics.density).toInt()
-            ).apply {
-                marginEnd = (10 * resources.displayMetrics.density).toInt()
-            }
-        )
-
-        val title = TextView(requireContext()).apply {
-            setText(R.string.profile_account_change_password_title)
-            setTextColor(requireContext().getColor(R.color.profile_text))
-            textSize = 18f
-            setTypeface(null, Typeface.BOLD)
-            includeFontPadding = false
-        }
-
-        header.addView(
-            title,
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        )
-
-        container.addView(header)
-
-        val message = TextView(requireContext()).apply {
-            setText(R.string.profile_account_change_password_message)
-            setTextColor(requireContext().getColor(R.color.profile_subtext))
-            textSize = 14f
-            setLineSpacing(3f, 1f)
-        }
-
-        container.addView(
-            message,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = (14 * resources.displayMetrics.density).toInt()
-            }
-        )
-
-        fun addPasswordField(
-            labelResId: Int,
-            hintResId: Int
-        ): Pair<TextInputLayout, EditText> {
-            val label = TextView(requireContext()).apply {
-                setText(labelResId)
-                setTextColor(requireContext().getColor(R.color.profile_text))
-                textSize = 13f
-                setTypeface(null, Typeface.BOLD)
-                includeFontPadding = false
-            }
-
-            container.addView(
-                label,
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = (16 * resources.displayMetrics.density).toInt()
-                }
-            )
-
-            val inputLayout = TextInputLayout(requireContext()).apply {
-                hint = getString(hintResId)
-                boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
-                setBoxCornerRadii(16f, 16f, 16f, 16f)
-                endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
-            }
-
-            val editText = com.google.android.material.textfield.TextInputEditText(requireContext()).apply {
-                maxLines = 1
-                isSingleLine = true
-                textSize = 15f
-                setTextColor(requireContext().getColor(R.color.profile_text))
-            }
-
-            configurePasswordInput(inputLayout, editText)
-            applySoftInputHintStyle(inputLayout, editText)
-
-            inputLayout.addView(editText)
-
-            container.addView(
-                inputLayout,
-                LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    topMargin = (8 * resources.displayMetrics.density).toInt()
-                }
-            )
-
-            return inputLayout to editText
-        }
-
-        val (currentPasswordLayout, currentPasswordEditText) = addPasswordField(
-            R.string.profile_account_current_password_label,
-            R.string.profile_account_current_password_hint
-        )
-
-        val (newPasswordLayout, newPasswordEditText) = addPasswordField(
-            R.string.profile_account_new_password_label,
-            R.string.profile_account_new_password_hint
-        )
-
-        val (confirmPasswordLayout, confirmPasswordEditText) = addPasswordField(
-            R.string.profile_account_confirm_password_label,
-            R.string.profile_account_confirm_password_hint
-        )
-
-        val buttons = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.END or android.view.Gravity.CENTER_VERTICAL
-        }
-
-        val cancelButton = MaterialButton(requireContext()).apply {
-            setText(R.string.profile_delete_account_cancel)
-            setTextColor(requireContext().getColor(R.color.profile_subtext))
-            backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-            elevation = 0f
-            isAllCaps = false
-        }
-
-        val confirmButton = MaterialButton(requireContext()).apply {
-            setText(R.string.profile_account_save_changes)
-            setTextColor(requireContext().getColor(R.color.fitto_green))
-            backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
-            elevation = 0f
-            isAllCaps = false
-        }
-
-        buttons.addView(cancelButton)
-        buttons.addView(confirmButton)
-
-        container.addView(
-            buttons,
-            LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = (22 * resources.displayMetrics.density).toInt()
-            }
-        )
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        confirmButton.setOnClickListener {
-            currentPasswordLayout.error = null
-            newPasswordLayout.error = null
-            confirmPasswordLayout.error = null
-
-            val currentPassword = currentPasswordEditText.text?.toString().orEmpty()
-            val newPassword = newPasswordEditText.text?.toString().orEmpty()
-            val confirmPassword = confirmPasswordEditText.text?.toString().orEmpty()
-
-            when {
-                currentPassword.isBlank() -> {
-                    currentPasswordLayout.error = getString(R.string.profile_account_field_required)
-                }
-                newPassword.isBlank() -> {
-                    newPasswordLayout.error = getString(R.string.profile_account_field_required)
-                }
-                confirmPassword.isBlank() -> {
-                    confirmPasswordLayout.error = getString(R.string.profile_account_field_required)
-                }
-                else -> {
-                    dialog.dismiss()
-                    onConfirmed(currentPassword, newPassword, confirmPassword)
+        when (accountEditCoordinator?.passwordAuthenticationRoute()) {
+            ProfileAccountAuthenticationRoute.PASSWORD -> {
+                accountDialogCoordinator?.showPasswordChange {
+                        currentPassword,
+                        newPassword,
+                        confirmPassword ->
+                    accountEditCoordinator?.updatePassword(
+                        currentPassword = currentPassword,
+                        newPassword = newPassword,
+                        confirmPassword = confirmPassword
+                    )
                 }
             }
+
+            ProfileAccountAuthenticationRoute.GOOGLE_MANAGED -> {
+                accountDialogCoordinator?.showGoogleManagedAccount()
+            }
+
+            ProfileAccountAuthenticationRoute.UNSUPPORTED,
+            null -> showToast(R.string.profile_account_provider_not_supported)
         }
-
-        dialog.setContentView(container)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
     }
 
     private fun configurePasswordInput(
@@ -1985,43 +1377,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             Color.green(color),
             Color.blue(color)
         )
-    }
-
-    private fun showAccountSettingsError(exception: Throwable) {
-        val messageResId = when {
-            exception is AccountSettingsException -> exception.error.messageResId()
-            exception is FirebaseAuthInvalidCredentialsException -> R.string.profile_account_error_wrong_password
-            exception is FirebaseAuthWeakPasswordException -> R.string.profile_account_error_password_too_short
-            exception is FirebaseAuthUserCollisionException -> R.string.profile_account_error_email_in_use
-            exception is FirebaseAuthRecentLoginRequiredException -> R.string.profile_delete_account_requires_recent_login
-            else -> R.string.profile_account_error_unknown
-        }
-
-        showToast(messageResId)
-    }
-
-    @StringRes
-    private fun AccountSettingsError.messageResId(): Int {
-        return when (this) {
-            AccountSettingsError.NOT_SIGNED_IN -> R.string.profile_delete_account_error
-            AccountSettingsError.EMAIL_MISSING -> R.string.profile_account_error_email_missing
-            AccountSettingsError.DISPLAY_NAME_TOO_SHORT -> R.string.profile_account_error_display_name_too_short
-            AccountSettingsError.DISPLAY_NAME_TOO_LONG -> R.string.profile_account_error_display_name_too_long
-            AccountSettingsError.USERNAME_TOO_SHORT -> R.string.profile_account_error_username_too_short
-            AccountSettingsError.USERNAME_TOO_LONG -> R.string.profile_account_error_username_too_long
-            AccountSettingsError.USERNAME_INVALID -> R.string.profile_account_error_username_invalid
-            AccountSettingsError.USERNAME_TAKEN -> R.string.profile_account_error_username_taken
-            AccountSettingsError.EMAIL_INVALID -> R.string.profile_account_error_email_invalid
-            AccountSettingsError.EMAIL_SAME_AS_CURRENT -> R.string.profile_account_email_same_error
-            AccountSettingsError.EMAIL_VERIFICATION_SENT -> R.string.profile_account_email_verification_sent_message
-            AccountSettingsError.CURRENT_PASSWORD_EMPTY -> R.string.profile_account_field_required
-            AccountSettingsError.WRONG_PASSWORD -> R.string.profile_account_error_wrong_password
-            AccountSettingsError.NEW_PASSWORD_TOO_SHORT -> R.string.profile_account_error_password_too_short
-            AccountSettingsError.PASSWORD_CONFIRM_MISMATCH -> R.string.profile_account_error_password_mismatch
-            AccountSettingsError.REQUIRES_RECENT_LOGIN -> R.string.profile_delete_account_requires_recent_login
-            AccountSettingsError.PROVIDER_NOT_SUPPORTED -> R.string.profile_account_provider_not_supported
-            AccountSettingsError.UNKNOWN -> R.string.profile_account_error_unknown
-        }
     }
 
     private fun showDeleteAccountDialog() {
@@ -2443,7 +1798,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         private const val FIREBASE_PROVIDER_ID = "firebase"
         private const val MISSING_SESSION_ERROR_MESSAGE = "Oturum bilgisi bulunamadı."
         private const val TAG = "ProfileDetailFragment"
-        private const val EMAIL_CHANGE_RESEND_COOLDOWN_MS = 30_000L
 
         fun newInstance(menuId: ProfileMenuId): ProfileDetailFragment {
             return ProfileDetailFragment().apply {
