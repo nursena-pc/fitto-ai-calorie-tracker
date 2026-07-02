@@ -1,11 +1,6 @@
 package com.example.fitto.feature_daily
 
-import android.graphics.Typeface
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StyleSpan
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -35,8 +30,6 @@ import com.example.fitto.data.local.repository.ProfileCacheRepository
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
 import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
-import android.animation.ObjectAnimator
-import android.view.animation.LinearInterpolator
 import com.example.fitto.feature_daily.data.FastingSessionStore
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
@@ -74,7 +67,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private val binding get() = _binding!!
     private lateinit var exerciseLogStore: ExerciseLogStore
     private var selectedDate: LocalDate = LocalDate.now()
-    private var hourglassAnimator: ObjectAnimator? = null
     private lateinit var dateSelectionAction: DailyDateSelectionAction
     private lateinit var dashboardRefreshCoordinator: DailyDashboardRefreshCoordinator
     private lateinit var navigator: DailyNavigator
@@ -94,6 +86,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var weeklyProgressRenderer: DailyWeeklyProgressRenderer? = null
     private var waterRenderer: DailyWaterRenderer? = null
     private var summaryRenderer: DailySummaryRenderer? = null
+    private var activePlanRenderer: DailyActivePlanRenderer? = null
+    private var plannedMealRenderer: DailyPlannedMealRenderer? = null
+    private var fastingRenderer: DailyFastingRenderer? = null
 
     private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
@@ -331,6 +326,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             binding = binding,
             context = requireContext(),
             onActivitySourceClick = ::showHealthConnectBottomSheet
+        )
+        activePlanRenderer = DailyActivePlanRenderer(binding)
+        plannedMealRenderer = DailyPlannedMealRenderer(
+            binding = binding,
+            context = requireContext()
+        )
+        fastingRenderer = DailyFastingRenderer(
+            binding = binding,
+            context = requireContext(),
+            onStart = ::startFasting,
+            onFinish = ::finishFasting
         )
         dashboardRefreshCoordinator = DailyDashboardRefreshCoordinator(
             renderSelectedDate = ::renderSelectedDate,
@@ -1039,50 +1045,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         when (val result = fastingAction.load(planId)) {
             DailyFastingAction.LoadResult.Hidden -> hideFastingCard()
             is DailyFastingAction.LoadResult.Visible -> {
-                binding.fastingActionContainer.isVisible = true
-                binding.fastingAnalysisContainer.isVisible = true
-                binding.fastingActionContainer.setOnClickListener {
-                    // Keep taps in the fasting control area from opening plan details.
-                }
-
                 renderFastingCardState(result.state)
                 startFastingTimerIfNeeded(result.state)
             }
         }
     }
 
-    private fun renderFastingCardState(state: DailyFastingCardState) = with(binding) {
-        fastingMealSuggestionText.text = buildString {
-            append(getString(R.string.daily_fasting_meal_suggestion_title))
-            append("\n")
-            append(getString(state.mealSuggestionRes))
-        }
-
-        val countdownState = state.countdownState
-        fastingCountdownTitleText.text = getString(countdownState.titleRes)
-        fastingCountdownText.text = countdownState.messageRes?.let(::getString)
-            ?: countdownState.remainingMillis
-                ?.let(DailyValueFormatter::formatRemainingTime)
-                .orEmpty()
-        startFastingButton.isEnabled = countdownState.isButtonEnabled
-        startFastingButton.text = getString(countdownState.buttonTextRes)
-        startFastingButton.setOnClickListener {
-            when (countdownState.buttonAction) {
-                DailyFastingUiStateResolver.ButtonAction.START -> startFasting(state.planId)
-                DailyFastingUiStateResolver.ButtonAction.FINISH -> finishFasting(state.planId)
-                DailyFastingUiStateResolver.ButtonAction.NONE -> Unit
-            }
-        }
-
-        if (countdownState.shouldAnimateHourglass) {
-            startHourglassAnimation()
-        } else {
-            stopHourglassAnimation()
-        }
-
-        fastingAnalysisTitleText.text = getString(state.analysisState.titleRes)
-        fastingAnalysisRangeText.text = getString(state.analysisState.rangeTitleRes)
-        fastingAnalysisBodyText.text = getString(state.analysisState.bodyTextRes)
+    private fun renderFastingCardState(state: DailyFastingCardState) {
+        fastingRenderer?.render(state)
     }
 
     private fun startFasting(planId: String) {
@@ -1123,190 +1093,25 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun hideFastingCard() = with(binding) {
-        fastingActionContainer.isVisible = false
-        fastingAnalysisContainer.isVisible = false
+    private fun hideFastingCard() {
+        fastingRenderer?.hide()
         fastingCountdownCoordinator.stop()
-        stopHourglassAnimation()
     }
 
-    private fun startHourglassAnimation() {
-        if (hourglassAnimator?.isRunning == true) return
+    private fun renderBasicActivePlan(activePlan: ActiveDietPlanUiModel) {
+        when (val effect = activePlanRenderer?.render(activePlan)) {
+            is DailyActivePlanRenderer.FastingEffect.Show -> {
+                renderFastingActionsIfNeeded(effect.planId)
+            }
 
-        hourglassAnimator = ObjectAnimator.ofFloat(
-            binding.fastingHourglassText,
-            View.ROTATION,
-            0f,
-            180f,
-            360f
-        ).apply {
-            duration = 1400L
-            repeatCount = ObjectAnimator.INFINITE
-            interpolator = LinearInterpolator()
-            start()
+            DailyActivePlanRenderer.FastingEffect.Hide -> hideFastingCard()
+            null -> Unit
         }
-
-        binding.fastingHourglassText.animate()
-            .alpha(0.65f)
-            .setDuration(700L)
-            .withEndAction {
-                binding.fastingHourglassText.animate()
-                    .alpha(1f)
-                    .setDuration(700L)
-                    .start()
-            }
-            .start()
     }
 
-    private fun stopHourglassAnimation() {
-        hourglassAnimator?.cancel()
-        hourglassAnimator = null
-
-        binding.fastingHourglassText.rotation = 0f
-        binding.fastingHourglassText.alpha = 1f
-    }
-
-    private fun renderBasicActivePlan(activePlan: ActiveDietPlanUiModel) = with(binding) {
-        val planState = DailyBasicActivePlanUiStateResolver.resolve(activePlan)
-
-        activePlanTitleText.text = planState.title
-        activePlanBadgeText.text = planState.badge
-
-        when (val content = planState.content) {
-            DailyBasicActivePlanUiStateResolver.Content.Fasting -> {
-                activePlanMetricsContainer.isVisible = false
-                fastingActionContainer.isVisible = true
-                fastingAnalysisContainer.isVisible = true
-
-                renderFastingActionsIfNeeded(planState.planId)
-            }
-
-            is DailyBasicActivePlanUiStateResolver.Content.Metrics -> {
-                activePlanMetricsContainer.isVisible = true
-                hideFastingCard()
-
-                activePlanIconText.isVisible = true
-                activePlanDivider.isVisible = true
-                activePlanMetricOneLabelText.isVisible = true
-                activePlanMetricOneValueText.isVisible = true
-                activePlanMetricTwoLabelText.isVisible = true
-                activePlanMetricTwoValueText.isVisible = true
-
-                activePlanMetricOneLabelText.text = content.primaryLabel
-                activePlanMetricOneValueText.text = content.primaryValue
-                activePlanMetricTwoLabelText.text = content.secondaryLabel
-                activePlanMetricTwoValueText.text = content.secondaryValue
-            }
-        }
-
-        plannedMealFoodsText.isVisible = false
-        applyPlannedMealButton.isVisible = false
-        fastingProgress.progress = planState.progress
-    }
-
-    private fun renderDailyMealPlan(plan: DailyPlannedMealsUiModel) = with(binding) {
+    private fun renderDailyMealPlan(plan: DailyPlannedMealsUiModel) {
         hideFastingCard()
-
-        activePlanMetricsContainer.isVisible = true
-        activePlanIconText.isVisible = true
-        activePlanDivider.isVisible = true
-        activePlanMetricOneLabelText.isVisible = true
-        activePlanMetricOneValueText.isVisible = true
-        activePlanMetricTwoLabelText.isVisible = true
-        activePlanMetricTwoValueText.isVisible = true
-
-        val planState = DailyPlannedMealUiStateResolver.resolve(plan)
-
-        activePlanTitleText.text = planState.planTitle
-
-        activePlanBadgeText.text = getString(
-            R.string.daily_active_plan_day_badge,
-            planState.dayNumber,
-            planState.durationDays,
-            planState.targetCalories
-        )
-
-        activePlanIconText.text = planState.planIcon
-        activePlanMetricOneLabelText.text = getString(R.string.daily_next_planned_meal_label)
-        activePlanMetricTwoLabelText.text = getString(R.string.daily_plan_status_label)
-        activePlanMetricTwoValueText.text = getString(
-            R.string.daily_plan_status_value,
-            planState.completedMealCount,
-            planState.totalMealCount
-        )
-        fastingProgress.progress = planState.progressPercent
-
-        when (val nextMealState = planState.nextMealState) {
-            DailyPlannedMealUiStateResolver.NextMealState.Completed -> {
-                activePlanMetricOneValueText.text = getString(R.string.daily_plan_completed_value)
-                plannedMealFoodsText.text = getString(R.string.daily_plan_completed_description)
-                plannedMealFoodsText.isVisible = true
-                applyPlannedMealButton.isVisible = false
-            }
-
-            is DailyPlannedMealUiStateResolver.NextMealState.Available -> {
-                activePlanMetricOneValueText.text = getString(
-                    R.string.daily_next_planned_meal_value,
-                    getString(nextMealState.mealTypeTitleRes),
-                    nextMealState.calories
-                )
-
-                plannedMealFoodsText.text = buildRecommendationText(
-                    mealTitle = nextMealState.mealTitle,
-                    foodSummary = nextMealState.foodSummary
-                )
-
-                plannedMealFoodsText.isVisible = true
-                applyPlannedMealButton.isVisible = true
-            }
-        }
-    }
-
-    private fun buildRecommendationText(
-        mealTitle: String,
-        foodSummary: String
-    ): SpannableStringBuilder {
-        val green = ContextCompat.getColor(requireContext(), R.color.fitto_green)
-
-        return SpannableStringBuilder().apply {
-            val mealLabelStart = length
-            append(getString(R.string.daily_meal_recommendation_label))
-            setSpan(
-                ForegroundColorSpan(green),
-                mealLabelStart,
-                length,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            setSpan(
-                StyleSpan(Typeface.BOLD),
-                mealLabelStart,
-                length,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-
-            append("\n")
-            append(mealTitle)
-
-            append("\n\n")
-
-            val foodLabelStart = length
-            append(getString(R.string.daily_food_recommendation_label))
-            setSpan(
-                ForegroundColorSpan(green),
-                foodLabelStart,
-                length,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            setSpan(
-                StyleSpan(Typeface.BOLD),
-                foodLabelStart,
-                length,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-
-            append("\n")
-            append(foodSummary)
-        }
+        plannedMealRenderer?.render(plan)
     }
 
     private fun renderMealTotals() {
@@ -1746,7 +1551,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         if (::fastingCountdownCoordinator.isInitialized) {
             fastingCountdownCoordinator.stop()
         }
-        stopHourglassAnimation()
+        fastingRenderer?.clear()
+        fastingRenderer = null
+        plannedMealRenderer = null
+        activePlanRenderer = null
         sleepWeightRenderer = null
         weeklyProgressRenderer = null
         waterRenderer = null
