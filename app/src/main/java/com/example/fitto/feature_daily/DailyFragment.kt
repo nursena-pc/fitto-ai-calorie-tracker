@@ -16,9 +16,7 @@ import com.example.fitto.R
 import com.example.fitto.data.local.repository.DietPlanSeedRepository
 import com.example.fitto.data.local.repository.MealRepository
 import com.example.fitto.databinding.FragmentDailyBinding
-import com.example.fitto.feature_dietplans.DietPlanDetailFragment
 import com.example.fitto.feature_dietplans.DietPlansFragment
-import com.example.fitto.feature_dietplans.IntermittentFastingDetailFragment
 import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
@@ -47,8 +45,6 @@ import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
-import java.time.Instant
-import java.time.ZoneOffset
 import java.util.Locale
 import com.example.fitto.feature_exercise.AddExerciseFragment
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
@@ -75,7 +71,6 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import java.time.format.TextStyle
-import com.example.fitto.feature_meal.CameraFoodEntryFragment
 
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
@@ -86,7 +81,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var exerciseLogStore: ExerciseLogStore
     private var selectedDate: LocalDate = LocalDate.now()
     private var hourglassAnimator: ObjectAnimator? = null
-    private var selectedDateIso: String = LocalDate.now().toString()
+    private lateinit var dateSelectionAction: DailyDateSelectionAction
+    private lateinit var dashboardRefreshCoordinator: DailyDashboardRefreshCoordinator
+    private lateinit var navigator: DailyNavigator
     private var currentProfileWeightKg: Double? = null
     private lateinit var sleepTrackingAction: DailySleepTrackingAction
     private lateinit var dailyAiAnalysisAction: DailyAiAnalysisAction
@@ -143,6 +140,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDailyBinding.bind(view)
+        dateSelectionAction = DailyDateSelectionAction()
+        navigator = DailyNavigator(
+            fragmentManager = parentFragmentManager,
+            containerId = R.id.homeTabContainer
+        )
 
         val appContext = requireContext().applicationContext
 
@@ -289,7 +291,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             onFinish = { planId ->
                 if (_binding != null) {
                     renderFastingCardState(fastingAction.complete(planId))
-                    renderActivePlan()
+                    refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
                 }
             }
         )
@@ -311,6 +313,18 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             saveLog = sleepLogStore::saveLog
         )
         dailyAiAnalysisAction = DailyAiAnalysisActionFactory.create(appContext)
+        dashboardRefreshCoordinator = DailyDashboardRefreshCoordinator(
+            renderSelectedDate = ::renderSelectedDate,
+            loadHealthConnectSummary = ::loadHealthConnectSummary,
+            renderActivePlan = ::renderActivePlan,
+            startLocalStepCounter = ::startLocalStepCounterIfNeeded,
+            renderWaterTracking = { renderWaterTracking() },
+            loadProfileMetrics = ::loadProfileMetricsAndRender,
+            renderSleepCard = ::renderSleepCard,
+            renderSleepWeightSummary = ::renderSleepWeightSummary,
+            renderWeeklyCalorieProgress = ::renderWeeklyCalorieProgress,
+            renderMealTotals = ::renderMealTotals
+        )
 
         currentDailyTargetCalories = nutritionTargetStore
             .getDailyTargetCalories()
@@ -327,6 +341,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         setupMockUi()
         setupHealthConnectResultListener()
+        setupQuickActionResultListener()
         setupDietPlanResultListener()
         setupMealAddedResultListener()
         setupMealDetailChangedResultListener()
@@ -335,15 +350,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         setupSleepCard()
         setupDailyAiCard()
 
-        renderSelectedDate()
-        renderActivePlan()
-        renderWaterTracking()
-        renderSleepCard()
-        renderSleepWeightSummary()
-        startLocalStepCounterIfNeeded()
-        loadProfileMetricsAndRender()
-        loadHealthConnectSummary()
-        renderWeeklyCalorieProgress()
+        refreshDashboard(DailyDashboardRefreshPlans.INITIAL)
     }
     private fun currentEntryDate(): String {
         return selectedDate.toString()
@@ -992,12 +999,35 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         )
     }
 
+    private fun setupQuickActionResultListener() {
+        childFragmentManager.setFragmentResultListener(
+            DailyQuickAddBottomSheet.REQUEST_QUICK_ACTION,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val action = DailyQuickAction.fromValue(
+                bundle.getString(DailyQuickAddBottomSheet.BUNDLE_QUICK_ACTION)
+            ) ?: return@setFragmentResultListener
+
+            when (val destination = DailyQuickActionDestinationResolver.resolve(action)) {
+                is DailyQuickActionDestination.AddMeal -> openAddMeal(destination.mealType)
+                is DailyQuickActionDestination.CameraFood -> {
+                    openCameraFoodEntry(destination.mealType)
+                }
+                DailyQuickActionDestination.AddWater -> {
+                    addWater(WaterTrackingStore.BOTTLE_SIZE_ML)
+                }
+                DailyQuickActionDestination.AddExercise -> openAddExercise()
+                DailyQuickActionDestination.DietPlans -> openDietPlans()
+            }
+        }
+    }
+
     private fun setupHealthConnectResultListener() {
         childFragmentManager.setFragmentResultListener(
             HealthConnectBottomSheetFragment.REQUEST_HEALTH_CONNECT_CHANGED,
             viewLifecycleOwner
         ) { _, _ ->
-            loadHealthConnectSummary()
+            refreshDashboard(DailyDashboardRefreshPlans.HEALTH_CONNECT_CHANGED)
         }
     }
 
@@ -1029,26 +1059,19 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             AddExerciseFragment.REQUEST_EXERCISE_ADDED,
             viewLifecycleOwner
         ) { _, bundle ->
-            val (dateEffect, refreshEffect) = DailyResultEffectResolver.resolveExerciseAdded(
+            val effect = DailyResultEffectResolver.resolveExerciseAdded(
                 currentDate = selectedDate,
                 entryDate = bundle.getString(AddExerciseFragment.BUNDLE_EXERCISE_DATE)
             )
 
-            applyDateSelectionEffect(dateEffect)
-            applyRefreshEffect(refreshEffect)
+            applyDateSelectionEffect(effect.dateSelectionEffect)
+            refreshDashboard(effect.refreshPlan)
         }
     }
     override fun onResume() {
         super.onResume()
-        if (_binding != null) {
-            renderSelectedDate()
-            loadHealthConnectSummary()
-            renderActivePlan()
-            startLocalStepCounterIfNeeded()
-            renderWaterTracking()
-            loadProfileMetricsAndRender()
-            renderSleepCard()
-            renderWeeklyCalorieProgress()
+        if (_binding != null && ::dashboardRefreshCoordinator.isInitialized) {
+            refreshDashboard(DailyDashboardRefreshPlans.RESUME)
         }
     }
     override fun onPause() {
@@ -1058,35 +1081,25 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         super.onPause()
     }
     private fun openDatePicker() {
-        val todayMillis = LocalDate.now()
-            .atStartOfDay()
-            .toInstant(ZoneOffset.UTC)
-            .toEpochMilli()
-
-        val selectedMillis = selectedDate
-            .atStartOfDay()
-            .toInstant(ZoneOffset.UTC)
-            .toEpochMilli()
+        val pickerState = dateSelectionAction.pickerState(selectedDate)
 
         val constraints = CalendarConstraints.Builder()
-            .setEnd(todayMillis)
+            .setEnd(pickerState.latestUtcMillis)
             .setValidator(DateValidatorPointBackward.now())
             .build()
 
         val picker = MaterialDatePicker.Builder.datePicker()
             .setTheme(R.style.ThemeOverlay_Fitto_MaterialDatePicker)
             .setTitleText(getString(R.string.daily_date_picker_title))
-            .setSelection(selectedMillis)
+            .setSelection(pickerState.selectedUtcMillis)
             .setCalendarConstraints(constraints)
             .build()
 
         picker.addOnPositiveButtonClickListener { selectedUtcMillis ->
-            val pickedDate = Instant.ofEpochMilli(selectedUtcMillis)
-                .atZone(ZoneOffset.UTC)
-                .toLocalDate()
+            val pickedDate = dateSelectionAction.dateFromUtcMillis(selectedUtcMillis)
 
-            when (DailyDateSelectionResolver.resolvePickedDate(pickedDate)) {
-                DailyDateSelectionResolver.PickedDateResult.FutureDate -> {
+            when (val result = dateSelectionAction.selectPickedDate(pickedDate)) {
+                DailyDateSelectionAction.PickedDateResult.FutureDate -> {
                     Toast.makeText(
                         requireContext(),
                         getString(R.string.daily_future_date_blocked),
@@ -1094,9 +1107,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     ).show()
                 }
 
-                is DailyDateSelectionResolver.PickedDateResult.Selected -> {
-                    updateSelectedDate(pickedDate)
-                    reloadDailyDataForSelectedDate()
+                is DailyDateSelectionAction.PickedDateResult.Selected -> {
+                    updateSelectedDate(result.date)
+                    refreshDashboard(result.refreshPlan)
                 }
             }
         }
@@ -1111,49 +1124,23 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun applyRefreshEffect(effect: DailyResultEffectResolver.RefreshEffect) {
-        if (effect.shouldLoadHealthConnectSummary) {
-            loadHealthConnectSummary()
-        }
-
-        if (effect.shouldRenderMealTotals) {
-            renderMealTotals()
-        }
-
-        if (effect.shouldRenderActivePlan) {
-            renderActivePlan()
-        }
-
-        if (effect.shouldRenderWeeklyCalorieProgress) {
-            renderWeeklyCalorieProgress()
-        }
+    private fun refreshDashboard(plan: DailyDashboardRefreshPlan) {
+        if (_binding == null || !::dashboardRefreshCoordinator.isInitialized) return
+        dashboardRefreshCoordinator.refresh(plan)
     }
 
     private fun updateSelectedDate(date: LocalDate) {
         selectedDate = date
-        selectedDateIso = date.toString()
         renderSelectedDate()
     }
 
     private fun renderSelectedDate() = with(binding) {
-        selectedDateIso = selectedDate.toString()
-
         val selectedDateText = DailySelectedDateTextResolver.resolve(selectedDate)
         dailySelectedDateText.text = if (selectedDateText.isToday) {
             getString(R.string.daily_selected_date_today, selectedDateText.formattedDate)
         } else {
             getString(R.string.daily_selected_date_format, selectedDateText.formattedDate)
         }
-    }
-
-    private fun reloadDailyDataForSelectedDate() {
-        selectedDateIso = selectedDate.toString()
-        loadHealthConnectSummary()
-        renderActivePlan()
-        startLocalStepCounterIfNeeded()
-        renderWaterTracking()
-        renderSleepCard()
-        renderWeeklyCalorieProgress()
     }
 
     private fun setupMockUi() = with(binding) {
@@ -1170,7 +1157,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             DietPlansFragment.REQUEST_DIET_PLAN_CHANGED,
             viewLifecycleOwner
         ) { _, _ ->
-            applyRefreshEffect(DailyResultEffectResolver.resolveDietPlanChanged())
+            refreshDashboard(DailyResultEffectResolver.resolveDietPlanChanged())
         }
     }
 
@@ -1190,7 +1177,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             )
 
             markNextPlannedMealCompletedIfMatches(effect.mealType)
-            applyRefreshEffect(effect.refreshEffect)
+            refreshDashboard(effect.refreshPlan)
         }
     }
 
@@ -1199,7 +1186,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             MealDetailFragment.REQUEST_MEAL_DETAIL_CHANGED,
             viewLifecycleOwner
         ) { _, _ ->
-            applyRefreshEffect(DailyResultEffectResolver.resolveMealDetailChanged())
+            refreshDashboard(DailyResultEffectResolver.resolveMealDetailChanged())
         }
     }
 
@@ -1304,7 +1291,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             Toast.LENGTH_SHORT
         ).show()
 
-        renderActivePlan()
+        refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
     }
 
     private fun startFastingTimerIfNeeded(state: DailyFastingCardState) {
@@ -1652,7 +1639,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             renderDailyAiState(currentDailyAiSnapshot)
 
             if (oldTargetCalories != targetCalories) {
-                renderActivePlan()
+                refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
             }
         }
     }
@@ -1863,15 +1850,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                renderActivePlan()
-                renderMealTotals()
+                refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_APPLIED)
             }
         }
     }
 
     private fun applyNextPlannedMeal() {
         val applyRequest = plannedMealAction.prepare(currentDailyMealPlan) ?: return
-        val entryDate = selectedDateIso
+        val entryDate = currentEntryDate()
 
         binding.applyPlannedMealButton.isEnabled = false
 
@@ -1893,8 +1879,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    if (effect.refreshMealTotals) renderMealTotals()
-                    if (effect.refreshActivePlan) renderActivePlan()
+                    val refreshSteps = buildList {
+                        if (effect.refreshMealTotals) {
+                            add(DailyDashboardRefreshStep.RENDER_MEAL_TOTALS)
+                        }
+                        if (effect.refreshActivePlan) {
+                            add(DailyDashboardRefreshStep.RENDER_ACTIVE_PLAN)
+                        }
+                    }
+                    refreshDashboard(
+                        DailyDashboardRefreshPlan.of(*refreshSteps.toTypedArray())
+                    )
                 }
 
                 is DailyPlannedMealExecutionResult.Failure -> {
@@ -1919,41 +1914,20 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         )
 
         if (wasCompleted) {
-            renderActivePlan()
+            refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
         }
     }
 
-    fun openDietPlans() {
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.homeTabContainer, DietPlansFragment())
-            .addToBackStack("diet_plans")
-            .commit()
+    private fun openDietPlans() {
+        navigator.openDietPlans()
     }
 
     private fun openActivePlanDetail(planId: String) {
-        if (DailyActivePlanPolicy.isCustomPlan(planId)) {
-            openDietPlans()
-            return
-        }
-        val fragment = when (planId) {
-            DietPlanCatalog.PLAN_INTERMITTENT_FASTING -> IntermittentFastingDetailFragment()
-            else -> DietPlanDetailFragment.newInstance(planId)
-        }
-
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.homeTabContainer, fragment)
-            .addToBackStack("active_diet_plan_detail")
-            .commit()
+        navigator.openActivePlanDetail(planId)
     }
 
     private fun openMealDetail(mealType: MealType) {
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(R.id.homeTabContainer, MealDetailFragment.newInstance(mealType))
-            .addToBackStack(MealDetailFragment.BACK_STACK_NAME)
-            .commit()
+        navigator.openMealDetail(mealType)
     }
 
 
@@ -1994,19 +1968,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    fun openAddMeal(mealType: MealType = MealType.BREAKFAST) {
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(
-                R.id.homeTabContainer,
-                AddMealFragment.newInstance(
-                    mealType = mealType,
-                    entryDate = selectedDate.toString()
-                )
-            )
-            .addToBackStack(AddMealFragment.BACK_STACK_NAME)
-            .commit()
+    private fun openAddMeal(mealType: MealType = MealType.BREAKFAST) {
+        navigator.openAddMeal(
+            mealType = mealType,
+            entryDate = currentEntryDate()
+        )
     }
+
     private fun renderActivitySourceStatus(
         healthActiveCalories: Int,
         manualExerciseCalories: Int
@@ -2026,33 +1994,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             showHealthConnectBottomSheet()
         }
     }
-    fun openAddExercise() {
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(
-                R.id.homeTabContainer,
-                AddExerciseFragment.newInstance(
-                    entryDate = selectedDate.toString()
-                )
-            )
-            .addToBackStack("add_exercise")
-            .commit()
-    }
-    fun openCameraFoodEntry(mealType: MealType = MealType.BREAKFAST) {
-        parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
-            .replace(
-                R.id.homeTabContainer,
-                CameraFoodEntryFragment.newInstance(
-                    mealType = mealType
-                )
-            )
-            .addToBackStack(CameraFoodEntryFragment.BACK_STACK_NAME)
-            .commit()
+    private fun openAddExercise() {
+        navigator.openAddExercise(entryDate = currentEntryDate())
     }
 
-    fun addQuickWater() {
-        addWater(WaterTrackingStore.BOTTLE_SIZE_ML)
+    private fun openCameraFoodEntry(mealType: MealType = MealType.BREAKFAST) {
+        navigator.openCameraFoodEntry(mealType)
     }
 
 

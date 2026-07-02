@@ -28,33 +28,38 @@ class DailyQuickAddBottomSheet : BottomSheetDialogFragment() {
 
     private fun setupClicks() = with(binding) {
         quickAddSearchFood.setOnClickListener {
-            runDailyAction { openAddMeal() }
+            dispatch(DailyQuickAction.SEARCH_FOOD)
         }
 
         quickAddCameraFood.setOnClickListener {
-            runDailyAction { openCameraFoodEntry() }
+            dispatch(DailyQuickAction.CAMERA_FOOD)
         }
 
         quickAddCreateFood.setOnClickListener {
-            runDailyAction { openAddMeal() }
+            dispatch(DailyQuickAction.CREATE_FOOD)
         }
 
         quickAddWater.setOnClickListener {
-            runDailyAction { addQuickWater() }
+            dispatch(DailyQuickAction.WATER)
         }
 
         quickAddActivity.setOnClickListener {
-            runDailyAction { openAddExercise() }
+            dispatch(DailyQuickAction.ACTIVITY)
         }
 
         quickAddDietPlan.setOnClickListener {
-            runDailyAction { openDietPlans() }
+            dispatch(DailyQuickAction.DIET_PLAN)
         }
     }
 
-    private fun runDailyAction(action: DailyFragment.() -> Unit) {
+    private fun dispatch(action: DailyQuickAction) {
         dismiss()
-        (parentFragment as? DailyFragment)?.action()
+        parentFragmentManager.setFragmentResult(
+            REQUEST_QUICK_ACTION,
+            Bundle().apply {
+                putString(BUNDLE_QUICK_ACTION, action.name)
+            }
+        )
     }
 
     override fun onDestroyView() {
@@ -64,5 +69,7 @@ class DailyQuickAddBottomSheet : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "DailyQuickAddBottomSheet"
+        const val REQUEST_QUICK_ACTION = "daily_quick_action"
+        const val BUNDLE_QUICK_ACTION = "daily_quick_action_value"
     }
 }

@@ -9,17 +9,15 @@ object DailyResultEffectResolver {
         val selection: DailyDateSelectionResolver.Selection?
     )
 
-    data class RefreshEffect(
-        val shouldLoadHealthConnectSummary: Boolean = false,
-        val shouldRenderMealTotals: Boolean = false,
-        val shouldRenderActivePlan: Boolean = false,
-        val shouldRenderWeeklyCalorieProgress: Boolean = false
+    data class ResultEffect(
+        val dateSelectionEffect: DateSelectionEffect,
+        val refreshPlan: DailyDashboardRefreshPlan
     )
 
     data class MealAddedEffect(
         val mealType: MealType,
         val dateSelection: DailyDateSelectionResolver.Selection?,
-        val refreshEffect: RefreshEffect
+        val refreshPlan: DailyDashboardRefreshPlan
     )
 
     fun resolveEntryDate(
@@ -34,11 +32,8 @@ object DailyResultEffectResolver {
         )
     }
 
-    fun resolveDietPlanChanged(): RefreshEffect {
-        return RefreshEffect(
-            shouldRenderMealTotals = true,
-            shouldRenderActivePlan = true
-        )
+    fun resolveDietPlanChanged(): DailyDashboardRefreshPlan {
+        return DailyDashboardRefreshPlans.DIET_PLAN_CHANGED
     }
 
     fun resolveMealAdded(
@@ -52,30 +47,21 @@ object DailyResultEffectResolver {
                 currentDate = currentDate,
                 entryDate = entryDate
             ),
-            refreshEffect = RefreshEffect(
-                shouldRenderMealTotals = true,
-                shouldRenderActivePlan = true,
-                shouldRenderWeeklyCalorieProgress = true
-            )
+            refreshPlan = DailyDashboardRefreshPlans.MEAL_CHANGED
         )
     }
 
-    fun resolveMealDetailChanged(): RefreshEffect {
-        return RefreshEffect(
-            shouldRenderMealTotals = true,
-            shouldRenderActivePlan = true,
-            shouldRenderWeeklyCalorieProgress = true
-        )
+    fun resolveMealDetailChanged(): DailyDashboardRefreshPlan {
+        return DailyDashboardRefreshPlans.MEAL_CHANGED
     }
 
     fun resolveExerciseAdded(
         currentDate: LocalDate,
         entryDate: String?
-    ): Pair<DateSelectionEffect, RefreshEffect> {
-        return resolveEntryDate(currentDate, entryDate) to RefreshEffect(
-            shouldLoadHealthConnectSummary = true,
-            shouldRenderMealTotals = true,
-            shouldRenderActivePlan = true
+    ): ResultEffect {
+        return ResultEffect(
+            dateSelectionEffect = resolveEntryDate(currentDate, entryDate),
+            refreshPlan = DailyDashboardRefreshPlans.EXERCISE_CHANGED
         )
     }
 }
