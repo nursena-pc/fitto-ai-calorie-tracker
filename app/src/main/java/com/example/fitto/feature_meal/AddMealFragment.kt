@@ -55,6 +55,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
     private val favoriteStateResolver = AddMealFavoriteStateResolver()
+    private lateinit var foodSearchAction: AddMealFoodSearchAction
     private lateinit var saveAction: AddMealSaveAction
     private lateinit var customFoodAction: AddMealCustomFoodAction
 
@@ -65,6 +66,26 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         val appContext = requireContext().applicationContext
         foodRepository = FoodRepository(appContext)
         mealRepository = MealRepository(appContext)
+        foodSearchAction = AddMealFoodSearchAction(
+            getRecentFoods = { limit ->
+                foodRepository.getRecentFoods(limit)
+            },
+            searchLocalFoods = { query, mealType, limit ->
+                foodRepository.searchFoods(
+                    query = query,
+                    mealType = mealType,
+                    limit = limit
+                )
+            },
+            searchOnlineFoods = { query, mealType, limit, pageNumber ->
+                foodRepository.searchUsdaFoods(
+                    query = query,
+                    mealType = mealType,
+                    limit = limit,
+                    pageNumber = pageNumber
+                )
+            }
+        )
         saveAction = AddMealSaveAction { mealType, selectedFoods, entryDate ->
             mealRepository.addManualMealEntry(
                 mealType = mealType,
@@ -375,73 +396,23 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 binding.foodsSectionTitleText.text = getString(R.string.add_meal_searching_foods)
             }
 
-            var showingRecentFoods = false
-            var showingSuggestedFoods = false
-            var showingSearchResults = false
-            var onlineSearchAttempted = false
+            if (searchStateResolver.shouldSearchOnline(normalizedQuery, allowOnlineSearch)) {
+                Log.d(
+                    "AddMealFragment",
+                    "USDA search will run for query=$normalizedQuery"
+                )
+            }
 
-            val foods = withContext(Dispatchers.IO) {
+            val searchResult = withContext(Dispatchers.IO) {
                 ensureSeedImported(appContext)
-
-                when {
-                    normalizedQuery.isBlank() -> {
-                        val recentFoods = foodRepository.getRecentFoods(limit = 12)
-
-                        if (recentFoods.isNotEmpty()) {
-                            showingRecentFoods = true
-                            recentFoods
-                        } else {
-                            showingSuggestedFoods = true
-                            foodRepository.searchFoods(
-                                query = "",
-                                mealType = targetMealType.argumentValue,
-                                limit = 40
-                            )
-                        }
-                    }
-
-                    else -> {
-                        val localFoods = foodRepository.searchFoods(
-                            query = normalizedQuery,
-                            mealType = targetMealType.argumentValue,
-                            limit = 40
-                        )
-
-                        if (searchStateResolver.shouldSearchOnline(normalizedQuery, allowOnlineSearch)) {
-                            showingSearchResults = true
-                            onlineSearchAttempted = true
-
-                            Log.d(
-                                "AddMealFragment",
-                                "USDA search will run for query=$normalizedQuery"
-                            )
-
-                            val usdaFoods = foodRepository.searchUsdaFoods(
-                                query = normalizedQuery,
-                                mealType = targetMealType.argumentValue,
-                                limit = USDA_PAGE_SIZE,
-                                pageNumber = 1
-                            )
-
-                            lastOnlineQuery = normalizedQuery
-                            nextUsdaPageNumber = 2
-                            canLoadMoreUsda = searchStateResolver.canLoadMore(
-                                fetchedCount = usdaFoods.size,
-                                pageSize = USDA_PAGE_SIZE
-                            )
-
-                            searchStateResolver.mergeFoods(localFoods, usdaFoods)
-
-                        } else {
-                            if (localFoods.isNotEmpty()) {
-                                showingSearchResults = true
-                                localFoods
-                            } else {
-                                emptyList<FoodEntity>()
-                            }
-                        }
-                    }
-                }
+                foodSearchAction.search(
+                    AddMealFoodSearchRequest(
+                        normalizedQuery = normalizedQuery,
+                        mealType = targetMealType.argumentValue,
+                        allowOnlineSearch = allowOnlineSearch,
+                        onlinePageSize = USDA_PAGE_SIZE
+                    )
+                )
             }
 
             if (_binding == null) return@launch
@@ -452,32 +423,13 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 )
             }
 
-            binding.foodsSectionTitleText.text = getString(
-                searchStateResolver.sectionFor(
-                    showingRecentFoods = showingRecentFoods,
-                    showingSuggestedFoods = showingSuggestedFoods,
-                    showingSearchResults = showingSearchResults
-                ).titleRes()
-            )
-
-            showEmptySearchFeedback(
-                searchStateResolver.emptyFeedback(
-                    foods = foods,
-                    normalizedQuery = normalizedQuery,
-                    onlineSearchAttempted = onlineSearchAttempted,
-                    allowOnlineSearch = allowOnlineSearch
-                )
-            )
-
-            if (searchStateResolver.shouldResetOnlinePaging(allowOnlineSearch)) {
-                lastOnlineQuery = ""
-                nextUsdaPageNumber = 2
-                canLoadMoreUsda = false
-            }
-            currentFoodResults = foods
+            binding.foodsSectionTitleText.text = getString(searchResult.section.titleRes())
+            showEmptySearchFeedback(searchResult.emptyFeedback)
+            applyOnlinePagingState(searchResult.pagingState)
+            currentFoodResults = searchResult.foods
             updateLoadMoreButton()
             suggestedFoodAdapter.submitList(
-                foods.map { food ->
+                searchResult.foods.map { food ->
                     food.toFoodUiModel(isFavorite = food.id in favoriteIds)
                 }
             )
@@ -555,6 +507,22 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             AddMealFoodSection.RECENT -> R.string.add_meal_recent_foods
             AddMealFoodSection.SUGGESTED -> R.string.add_meal_suggested_foods
             AddMealFoodSection.RESULTS -> R.string.add_meal_food_results
+        }
+    }
+
+    private fun applyOnlinePagingState(state: AddMealOnlinePagingState) {
+        when (state) {
+            AddMealOnlinePagingState.Keep -> Unit
+            AddMealOnlinePagingState.Reset -> {
+                lastOnlineQuery = ""
+                nextUsdaPageNumber = 2
+                canLoadMoreUsda = false
+            }
+            is AddMealOnlinePagingState.Active -> {
+                lastOnlineQuery = state.query
+                nextUsdaPageNumber = state.nextPageNumber
+                canLoadMoreUsda = state.canLoadMore
+            }
         }
     }
 
