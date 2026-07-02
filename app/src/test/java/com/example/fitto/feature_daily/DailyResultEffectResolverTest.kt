@@ -2,10 +2,8 @@ package com.example.fitto.feature_daily
 
 import com.example.fitto.feature_meal.model.MealType
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 
@@ -33,16 +31,14 @@ class DailyResultEffectResolverTest {
 
     @Test
     fun `diet plan changed refreshes active plan and meal totals`() {
-        val effect = DailyResultEffectResolver.resolveDietPlanChanged()
-
-        assertTrue(effect.shouldRenderActivePlan)
-        assertTrue(effect.shouldRenderMealTotals)
-        assertFalse(effect.shouldRenderWeeklyCalorieProgress)
-        assertFalse(effect.shouldLoadHealthConnectSummary)
+        assertEquals(
+            DailyDashboardRefreshPlans.DIET_PLAN_CHANGED,
+            DailyResultEffectResolver.resolveDietPlanChanged()
+        )
     }
 
     @Test
-    fun `meal added resolves meal type date and refreshes daily summaries`() {
+    fun `meal added resolves meal type date and meal refresh plan`() {
         val effect = DailyResultEffectResolver.resolveMealAdded(
             currentDate = LocalDate.of(2026, 6, 20),
             mealTypeArgument = "lunch",
@@ -51,9 +47,7 @@ class DailyResultEffectResolverTest {
 
         assertEquals(MealType.LUNCH, effect.mealType)
         assertEquals(LocalDate.of(2026, 6, 19), effect.dateSelection?.date)
-        assertTrue(effect.refreshEffect.shouldRenderMealTotals)
-        assertTrue(effect.refreshEffect.shouldRenderActivePlan)
-        assertTrue(effect.refreshEffect.shouldRenderWeeklyCalorieProgress)
+        assertEquals(DailyDashboardRefreshPlans.MEAL_CHANGED, effect.refreshPlan)
     }
 
     @Test
@@ -69,26 +63,25 @@ class DailyResultEffectResolverTest {
     }
 
     @Test
-    fun `meal detail changed refreshes meal totals active plan and weekly calories`() {
-        val effect = DailyResultEffectResolver.resolveMealDetailChanged()
-
-        assertTrue(effect.shouldRenderMealTotals)
-        assertTrue(effect.shouldRenderActivePlan)
-        assertTrue(effect.shouldRenderWeeklyCalorieProgress)
+    fun `meal detail changed uses meal refresh plan`() {
+        assertEquals(
+            DailyDashboardRefreshPlans.MEAL_CHANGED,
+            DailyResultEffectResolver.resolveMealDetailChanged()
+        )
     }
 
     @Test
-    fun `exercise added resolves date and refreshes health summary meal totals and active plan`() {
-        val (dateEffect, refreshEffect) = DailyResultEffectResolver.resolveExerciseAdded(
+    fun `exercise added resolves date and activity refresh plan`() {
+        val effect = DailyResultEffectResolver.resolveExerciseAdded(
             currentDate = LocalDate.of(2026, 6, 20),
             entryDate = "2026-06-17"
         )
 
-        assertNotNull(dateEffect.selection)
-        assertEquals(LocalDate.of(2026, 6, 17), dateEffect.selection?.date)
-        assertTrue(refreshEffect.shouldLoadHealthConnectSummary)
-        assertTrue(refreshEffect.shouldRenderMealTotals)
-        assertTrue(refreshEffect.shouldRenderActivePlan)
-        assertFalse(refreshEffect.shouldRenderWeeklyCalorieProgress)
+        assertNotNull(effect.dateSelectionEffect.selection)
+        assertEquals(
+            LocalDate.of(2026, 6, 17),
+            effect.dateSelectionEffect.selection?.date
+        )
+        assertEquals(DailyDashboardRefreshPlans.EXERCISE_CHANGED, effect.refreshPlan)
     }
 }
