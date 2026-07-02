@@ -95,10 +95,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var hourglassAnimator: ObjectAnimator? = null
     private var selectedDateIso: String = LocalDate.now().toString()
     private var currentProfileWeightKg: Double? = null
-    private lateinit var sleepLogStore: SleepLogStore
+    private lateinit var sleepTrackingAction: DailySleepTrackingAction
     private lateinit var dailyAiRepository: GeminiDailyAiRepository
     private lateinit var dailyAiCache: AiDailyAnalysisCache
     private lateinit var profileLoadAction: DailyProfileLoadAction
+    private lateinit var profileMetricsLoadAction: DailyProfileMetricsLoadAction
     private lateinit var dailySummaryLoadAction: DailySummaryLoadAction
     private lateinit var weeklyProgressLoadAction: DailyWeeklyProgressLoadAction
     private lateinit var waterTrackingAction: DailyWaterTrackingAction
@@ -167,6 +168,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         profileLoadAction = DailyProfileLoadAction(
             getCachedProfile = profileCacheRepository::getCurrentUserProfile,
             syncProfile = profileCacheRepository::syncCurrentUserProfileFromFirebase
+        )
+        profileMetricsLoadAction = DailyProfileMetricsLoadAction(
+            loadProfile = profileLoadAction::load
         )
         dailySummaryLoadAction = DailySummaryLoadAction(
             loadProfile = profileLoadAction::load,
@@ -279,7 +283,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             startStepCounter = stepCounterManager::start,
             stopStepCounter = stepCounterManager::stop
         )
-        sleepLogStore = SleepLogStore(requireContext())
+        val sleepLogStore = SleepLogStore(appContext)
+        sleepTrackingAction = DailySleepTrackingAction(
+            getLogForDate = sleepLogStore::getLogForDate,
+            saveLog = sleepLogStore::saveLog
+        )
         dailyAiRepository = GeminiDailyAiRepository()
         dailyAiCache = AiDailyAnalysisCache(appContext)
 
@@ -312,28 +320,30 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         renderSleepCard()
         renderSleepWeightSummary()
         startLocalStepCounterIfNeeded()
-        loadWaterGoalAndRender()
-        loadSleepWeightSummary()
+        loadProfileMetricsAndRender()
         loadHealthConnectSummary()
         renderWeeklyCalorieProgress()
     }
     private fun currentEntryDate(): String {
         return selectedDate.toString()
     }
-    private fun loadSleepWeightSummary() {
-        if (!::profileLoadAction.isInitialized) return
+    private fun loadProfileMetricsAndRender() {
+        if (!::profileMetricsLoadAction.isInitialized) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileLoadAction.load()
+            val result = withContext(Dispatchers.IO) {
+                profileMetricsLoadAction.load(
+                    fallbackWeightKg = DEFAULT_PROFILE_WEIGHT_KG
+                )
             }
-            val resolvedWeight = DailyProfileMetricsResolver.resolveWeightKg(profile)
+            if (_binding == null) return@launch
 
-            currentProfileWeightKg = resolvedWeight
-            currentWeightKg = resolvedWeight ?: DEFAULT_PROFILE_WEIGHT_KG
+            currentProfileWeightKg = result.profileWeightKg
+            currentWeightKg = result.displayWeightKg
+            waterGoalMl = result.waterGoalMl
 
             renderSleepWeightSummary()
-            renderSleepCard()
+            renderWaterTracking()
             renderMealTotals()
         }
     }
@@ -659,6 +669,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     )
 
     private fun showSleepTimeDialog() {
+        if (!::sleepTrackingAction.isInitialized) return
+
         val dialog = Dialog(requireContext())
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_sleep_time, null, false)
@@ -679,42 +691,39 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val cancelButton = view.findViewById<MaterialButton>(R.id.sleepCancelButton)
         val saveButton = view.findViewById<MaterialButton>(R.id.sleepSaveButton)
 
-        val currentDate = currentEntryDate()
-        val currentLog = sleepLogStore.getLogForDate(currentDate)
-
-        var sleepSelection = DailySleepTimeSelection.from(currentLog)
+        var editor = sleepTrackingAction.startEditing(currentEntryDate())
 
         fun refreshPreview() {
+            val preview = sleepTrackingAction.preview(
+                editor = editor,
+                weightKg = currentWeightKg
+            )
+
             bedtimeValueText.text = DailyValueFormatter.formatHourMinute(
-                sleepSelection.bedtimeHour,
-                sleepSelection.bedtimeMinute
+                preview.selection.bedtimeHour,
+                preview.selection.bedtimeMinute
             )
             wakeTimeValueText.text = DailyValueFormatter.formatHourMinute(
-                sleepSelection.wakeHour,
-                sleepSelection.wakeMinute
+                preview.selection.wakeHour,
+                preview.selection.wakeMinute
             )
-
-            val durationMinutes = sleepSelection.durationMinutes()
-            val calories = sleepSelection.calories(currentWeightKg)
-
             durationResultText.text = getString(
                 R.string.sleep_duration_result,
-                DailyValueFormatter.formatDuration(durationMinutes)
+                DailyValueFormatter.formatDuration(preview.durationMinutes)
             )
-
             caloriesResultText.text = getString(
                 R.string.sleep_calories_result,
-                calories
+                preview.caloriesBurned
             )
         }
 
         bedtimeCard.setOnClickListener {
             showTimePicker(
                 title = getString(R.string.sleep_time_picker_title_bed),
-                initialHour = sleepSelection.bedtimeHour,
-                initialMinute = sleepSelection.bedtimeMinute
+                initialHour = editor.selection.bedtimeHour,
+                initialMinute = editor.selection.bedtimeMinute
             ) { hour, minute ->
-                sleepSelection = sleepSelection.withBedtime(hour, minute)
+                editor = sleepTrackingAction.updateBedtime(editor, hour, minute)
                 refreshPreview()
             }
         }
@@ -722,10 +731,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         wakeTimeCard.setOnClickListener {
             showTimePicker(
                 title = getString(R.string.sleep_time_picker_title_wake),
-                initialHour = sleepSelection.wakeHour,
-                initialMinute = sleepSelection.wakeMinute
+                initialHour = editor.selection.wakeHour,
+                initialMinute = editor.selection.wakeMinute
             ) { hour, minute ->
-                sleepSelection = sleepSelection.withWakeTime(hour, minute)
+                editor = sleepTrackingAction.updateWakeTime(editor, hour, minute)
                 refreshPreview()
             }
         }
@@ -735,8 +744,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
 
         saveButton.setOnClickListener {
-            sleepLogStore.saveLog(sleepSelection.toLog(currentDate, currentWeightKg))
-            renderSleepCard()
+            val result = sleepTrackingAction.save(
+                editor = editor,
+                weightKg = currentWeightKg
+            )
+            renderSleepCard(result.cardState)
             dialog.dismiss()
 
             Toast.makeText(
@@ -772,12 +784,12 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         picker.show(childFragmentManager, "fitto_time_picker")
     }
 
-    private fun renderSleepCard() {
-        if (_binding == null || !::sleepLogStore.isInitialized) return
+    private fun renderSleepCard(
+        state: DailySleepCardStateResolver.State? = null
+    ) {
+        if (_binding == null || !::sleepTrackingAction.isInitialized) return
 
-        val sleepCardState = DailySleepCardStateResolver.resolve(
-            sleepLogStore.getLogForDate(currentEntryDate())
-        )
+        val sleepCardState = state ?: sleepTrackingAction.loadCard(currentEntryDate())
 
         when (sleepCardState) {
             DailySleepCardStateResolver.State.Empty -> {
@@ -892,30 +904,19 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         renderSleepCard()
 
-        val weightKg = currentProfileWeightKg
-
-        if (weightKg == null) {
-            binding.weightValueText.text = getString(R.string.daily_weight_unknown_short)
-            binding.weightStatusText.text = getString(R.string.daily_weight_not_saved)
-        } else {
-            binding.weightValueText.text = getString(
-                R.string.daily_weight_value_format,
-                DailyValueFormatter.formatWeightValue(weightKg)
-            )
-            binding.weightStatusText.text = getString(R.string.daily_weight_from_profile)
-        }
-    }
-
-    private fun loadWaterGoalAndRender() {
-        if (!::profileLoadAction.isInitialized) return
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileLoadAction.load()
+        when (val state = DailyWeightCardStateResolver.resolve(currentProfileWeightKg)) {
+            DailyWeightCardStateResolver.State.Unknown -> {
+                binding.weightValueText.text = getString(R.string.daily_weight_unknown_short)
+                binding.weightStatusText.text = getString(R.string.daily_weight_not_saved)
             }
 
-            waterGoalMl = DailyProfileMetricsResolver.resolveWaterGoalMl(profile)
-            renderWaterTracking()
+            is DailyWeightCardStateResolver.State.Available -> {
+                binding.weightValueText.text = getString(
+                    R.string.daily_weight_value_format,
+                    DailyValueFormatter.formatWeightValue(state.weightKg)
+                )
+                binding.weightStatusText.text = getString(R.string.daily_weight_from_profile)
+            }
         }
     }
 
@@ -1170,7 +1171,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             renderActivePlan()
             startLocalStepCounterIfNeeded()
             renderWaterTracking()
-            loadSleepWeightSummary()
+            loadProfileMetricsAndRender()
             renderSleepCard()
             renderWeeklyCalorieProgress()
         }
