@@ -3,11 +3,26 @@ package com.example.fitto.feature_meal
 import com.example.fitto.data.local.entity.FoodEntity
 import com.example.fitto.feature_meal.model.FoodUiModel
 import com.example.fitto.feature_meal.model.SelectedFoodUiModel
-import kotlin.math.roundToInt
 import java.util.Locale
+import kotlin.math.roundToInt
+
 class AddMealFoodPresentationResolver(
     private val idSuffixProvider: () -> String = { System.nanoTime().toString() }
 ) {
+
+    fun toFoodUiModels(
+        foods: List<FoodEntity>,
+        languageCode: String,
+        favoriteIds: Set<String> = emptySet()
+    ): List<FoodUiModel> {
+        return foods.map { food ->
+            toFoodUiModel(
+                food = food,
+                languageCode = languageCode,
+                isFavorite = food.id in favoriteIds
+            )
+        }
+    }
 
     fun toFoodUiModel(
         food: FoodEntity,

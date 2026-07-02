@@ -14,6 +14,32 @@ class AddMealFoodPresentationResolverTest {
     )
 
     @Test
+    fun `maps food lists with localized names and favorite ids`() {
+        val models = resolver.toFoodUiModels(
+            foods = listOf(
+                food(id = "banana", nameTr = "Muz", nameEn = "Banana"),
+                food(id = "apple", nameTr = "Elma", nameEn = "Apple")
+            ),
+            languageCode = "en",
+            favoriteIds = setOf("apple")
+        )
+
+        assertEquals(listOf("Banana", "Apple"), models.map { it.name })
+        assertFalse(models.first().isFavorite)
+        assertTrue(models.last().isFavorite)
+    }
+
+    @Test
+    fun `maps empty food list to empty presentation list`() {
+        assertTrue(
+            resolver.toFoodUiModels(
+                foods = emptyList(),
+                languageCode = "tr"
+            ).isEmpty()
+        )
+    }
+
+    @Test
     fun `uses english name when language is english and name exists`() {
         val model = resolver.toFoodUiModel(
             food = food(nameTr = "Muz", nameEn = "Banana"),
