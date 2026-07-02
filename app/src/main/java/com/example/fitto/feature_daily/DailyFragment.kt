@@ -45,7 +45,6 @@ import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
-import java.util.Locale
 import com.example.fitto.feature_exercise.AddExerciseFragment
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
@@ -57,10 +56,6 @@ import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.fitto.feature_health.FittoStepCounterManager
 import com.example.fitto.feature_daily.data.WaterTrackingStore
-import android.content.res.ColorStateList
-import android.widget.ImageView
-import android.widget.LinearLayout
-import androidx.appcompat.widget.AppCompatImageView
 import android.app.Dialog
 import android.view.LayoutInflater
 import android.view.WindowManager
@@ -70,7 +65,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import java.time.format.TextStyle
 
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
@@ -96,6 +90,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var plannedMealAction: DailyPlannedMealAction
     private lateinit var fastingAction: DailyFastingAction
     private lateinit var fastingCountdownCoordinator: DailyFastingCountdownCoordinator
+    private var sleepWeightRenderer: DailySleepWeightRenderer? = null
+    private var weeklyProgressRenderer: DailyWeeklyProgressRenderer? = null
+    private var waterRenderer: DailyWaterRenderer? = null
+    private var summaryRenderer: DailySummaryRenderer? = null
 
     private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
@@ -313,6 +311,27 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             saveLog = sleepLogStore::saveLog
         )
         dailyAiAnalysisAction = DailyAiAnalysisActionFactory.create(appContext)
+        sleepWeightRenderer = DailySleepWeightRenderer(binding, requireContext())
+        weeklyProgressRenderer = DailyWeeklyProgressRenderer(binding, requireContext())
+        waterRenderer = DailyWaterRenderer(
+            binding = binding,
+            context = requireContext(),
+            onRemoveBottle = { state ->
+                val removed = waterTrackingAction.removeBottleSlot(
+                    date = selectedDate,
+                    state = state
+                )
+                if (removed) {
+                    renderWaterTracking(DailyWaterScrollTarget.START)
+                }
+            },
+            onToggleBottle = ::toggleWaterBottle
+        )
+        summaryRenderer = DailySummaryRenderer(
+            binding = binding,
+            context = requireContext(),
+            onActivitySourceClick = ::showHealthConnectBottomSheet
+        )
         dashboardRefreshCoordinator = DailyDashboardRefreshCoordinator(
             renderSelectedDate = ::renderSelectedDate,
             loadHealthConnectSummary = ::loadHealthConnectSummary,
@@ -672,30 +691,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         if (_binding == null || !::sleepTrackingAction.isInitialized) return
 
         val sleepCardState = state ?: sleepTrackingAction.loadCard(currentEntryDate())
-
-        when (sleepCardState) {
-            DailySleepCardStateResolver.State.Empty -> {
-                binding.sleepValueText.text = getString(R.string.daily_no_sleep_data_short)
-                binding.sleepStatusText.text = getString(R.string.daily_no_sleep_data_desc)
-            }
-
-            is DailySleepCardStateResolver.State.Logged -> {
-                binding.sleepValueText.text = DailyValueFormatter.formatDuration(
-                    sleepCardState.durationMinutes
-                )
-                binding.sleepStatusText.text = getString(
-                    R.string.sleep_time_range_format,
-                    DailyValueFormatter.formatHourMinute(
-                        sleepCardState.selection.bedtimeHour,
-                        sleepCardState.selection.bedtimeMinute
-                    ),
-                    DailyValueFormatter.formatHourMinute(
-                        sleepCardState.selection.wakeHour,
-                        sleepCardState.selection.wakeMinute
-                    )
-                )
-            }
-        }
+        sleepWeightRenderer?.renderSleep(sleepCardState)
     }
 
     private fun renderWeeklyCalorieProgress() {
@@ -715,96 +711,21 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
             if (_binding == null || selectedDate != requestedDate) return@launch
 
-            val barViews: List<View> = listOf(
-                binding.weekBar1,
-                binding.weekBar2,
-                binding.weekBar3,
-                binding.weekBar4,
-                binding.weekBar5,
-                binding.weekBar6,
-                binding.weekBar7
-            )
-
-            val dayTexts: List<TextView> = listOf(
-                binding.weekDay1,
-                binding.weekDay2,
-                binding.weekDay3,
-                binding.weekDay4,
-                binding.weekDay5,
-                binding.weekDay6,
-                binding.weekDay7
-            )
-
-            val valueTexts: List<TextView> = listOf(
-                binding.weekValue1,
-                binding.weekValue2,
-                binding.weekValue3,
-                binding.weekValue4,
-                binding.weekValue5,
-                binding.weekValue6,
-                binding.weekValue7
-            )
-
-            val weeklyProgress = result.progress
-
-            binding.weeklyProgressDescriptionText.text = if (weeklyProgress.daysWithFood == 0) {
-                getString(R.string.daily_no_weekly_data)
-            } else {
-                getString(
-                    R.string.daily_weekly_calorie_summary,
-                    weeklyProgress.daysWithFood,
-                    weeklyProgress.averageProgress
-                )
-            }
-
-            binding.weeklyWaterProgress.progress = weeklyProgress.progressBarPercent
-
-            result.days.forEachIndexed { index, date ->
-                val dayProgress = weeklyProgress.days[index]
-
-                val params = barViews[index].layoutParams
-                params.height = dayProgress.heightPx
-                barViews[index].layoutParams = params
-
-                dayTexts[index].text = date.dayOfWeek.getDisplayName(
-                    TextStyle.SHORT,
-                    Locale.getDefault()
-                )
-
-                valueTexts[index].text = if (dayProgress.hasFood) {
-                    getString(R.string.daily_weekly_calorie_percent, dayProgress.progressPercent)
-                } else {
-                    "-"
-                }
-
-                barViews[index].alpha = dayProgress.alpha
-            }
+            weeklyProgressRenderer?.render(result)
         }
     }
+
     private fun renderSleepWeightSummary() {
         if (_binding == null) return
 
         renderSleepCard()
-
-        when (val state = DailyWeightCardStateResolver.resolve(currentProfileWeightKg)) {
-            DailyWeightCardStateResolver.State.Unknown -> {
-                binding.weightValueText.text = getString(R.string.daily_weight_unknown_short)
-                binding.weightStatusText.text = getString(R.string.daily_weight_not_saved)
-            }
-
-            is DailyWeightCardStateResolver.State.Available -> {
-                binding.weightValueText.text = getString(
-                    R.string.daily_weight_value_format,
-                    DailyValueFormatter.formatWeightValue(state.weightKg)
-                )
-                binding.weightStatusText.text = getString(R.string.daily_weight_from_profile)
-            }
-        }
+        sleepWeightRenderer?.renderWeight(
+            DailyWeightCardStateResolver.resolve(currentProfileWeightKg)
+        )
     }
 
     private fun renderWaterTracking(
-        scrollToEnd: Boolean = false,
-        scrollToStart: Boolean = false
+        scrollTarget: DailyWaterScrollTarget = DailyWaterScrollTarget.NONE
     ) {
         if (_binding == null || !::waterTrackingAction.isInitialized) return
 
@@ -814,114 +735,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 waterGoalMl = waterGoalMl
             )
         )
-        val waterState = result.waterState
-        this.currentWaterMl = waterState.normalizedWaterMl
+        currentWaterMl = result.waterState.normalizedWaterMl
 
-        binding.waterAmountText.text = getString(
-            R.string.daily_water_value_format,
-            waterState.normalizedWaterMl / 1000.0,
-            waterGoalMl / 1000.0
+        waterRenderer?.render(
+            result = result,
+            waterGoalMl = waterGoalMl,
+            scrollTarget = scrollTarget
         )
-
-        binding.waterBottleContainer.removeAllViews()
-
-        val waterBottleUiState = result.bottleUiState
-
-        binding.waterBottleContainer.addView(
-            createRemoveBottleView(waterBottleUiState.removeBottle)
-        )
-
-        waterBottleUiState.bottles.forEach { bottleState ->
-            binding.waterBottleContainer.addView(
-                createBottleView(bottleState)
-            )
-        }
-
-        if (scrollToEnd) {
-            binding.waterBottleScrollView.post {
-                binding.waterBottleScrollView.fullScroll(View.FOCUS_RIGHT)
-            }
-        }
-
-        if (scrollToStart) {
-            binding.waterBottleScrollView.post {
-                binding.waterBottleScrollView.fullScroll(View.FOCUS_LEFT)
-            }
-        }
 
         refreshDailyAiSnapshotForWater()
-    }
-
-    private fun createRemoveBottleView(
-        state: DailyWaterBottleUiStateResolver.RemoveBottleState
-    ): ImageView {
-        val context = requireContext()
-
-        return AppCompatImageView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(38.dp, 38.dp).apply {
-                marginEnd = 10.dp
-                topMargin = 8.dp
-                bottomMargin = 8.dp
-            }
-
-            background = ContextCompat.getDrawable(context, R.drawable.bg_fitto_chip)
-            setPadding(9.dp, 9.dp, 9.dp, 9.dp)
-
-            setImageResource(R.drawable.ic_remove)
-
-            imageTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(
-                    context,
-                    state.tintColorRes
-                )
-            )
-
-            alpha = state.alpha
-
-            contentDescription = getString(state.contentDescriptionRes)
-
-            setOnClickListener {
-                if (!state.isEnabled) return@setOnClickListener
-
-                val removed = waterTrackingAction.removeBottleSlot(
-                    date = selectedDate,
-                    state = state
-                )
-
-                if (removed) {
-                    renderWaterTracking(scrollToStart = true)
-                }
-            }
-        }
-    }
-
-    private fun createBottleView(
-        state: DailyWaterBottleUiStateResolver.BottleState
-    ): ImageView {
-        val context = requireContext()
-
-        return AppCompatImageView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(32.dp, 54.dp).apply {
-                marginEnd = 10.dp
-            }
-
-            setImageResource(R.drawable.ic_water_bottle)
-
-            imageTintList = ColorStateList.valueOf(
-                ContextCompat.getColor(
-                    context,
-                    state.tintColorRes
-                )
-            )
-
-            alpha = state.alpha
-
-            contentDescription = getString(state.contentDescriptionRes, state.number)
-
-            setOnClickListener {
-                toggleWaterBottle(state.isFilled)
-            }
-        }
     }
 
     private fun addWater(amountMl: Int) {
@@ -994,9 +816,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun renderActivityStepsOnly() {
         if (_binding == null) return
 
-        binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(
-            resolvedDisplaySteps()
-        )
+        summaryRenderer?.renderSteps(resolvedDisplaySteps())
     }
 
     private fun setupQuickActionResultListener() {
@@ -1519,88 +1339,22 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             currentFatTargetGrams = nutritionTargets.fatGrams
 
             val byMealType = result.mealSummariesByType
-            val mealCalories = result.mealCalories
-
-            binding.breakfastCaloriesText.text = getString(
-                R.string.daily_meal_calories_value,
-                mealCalories.breakfast
-            )
-
-            binding.snackCaloriesText.text = getString(
-                R.string.daily_meal_calories_value,
-                mealCalories.snack
-            )
-
-            binding.lunchCaloriesText.text = getString(
-                R.string.daily_meal_calories_value,
-                mealCalories.lunch
-            )
-
-            binding.dinnerCaloriesText.text = getString(
-                R.string.daily_meal_calories_value,
-                mealCalories.dinner
-            )
 
             currentProfileWeightKg = result.resolvedWeightKg
             currentWeightKg = result.displayWeightKg
 
             val summaryState = result.summaryState
             val energyBalance = summaryState.energyBalance
-
-            binding.remainingCaloriesText.text = energyBalance.remainingCalories.toString()
-
-            binding.dailyIntakeText.text = getString(
-                R.string.daily_summary_intake_value,
-                energyBalance.eatenCalories
-            )
-
-            binding.dailyBurnedText.text = getString(
-                R.string.daily_summary_burned_value,
-                energyBalance.burnedCalories
-            )
-            binding.activityBurnedCaloriesText.text = energyBalance.burnedCalories.toString()
-
-            renderActivitySourceStatus(
+            val activitySource = DailyActivityPresentationResolver.resolveSource(
+                healthConnectSummary = healthConnectSummary,
                 healthActiveCalories = energyBalance.syncedActivityCalories,
+                localSteps = localStepCount,
                 manualExerciseCalories = energyBalance.manualExerciseCalories
             )
-
-            binding.activityStepCountText.text = DailyValueFormatter.formatStepCount(
-                summaryState.displaySteps
+            summaryRenderer?.render(
+                result = result,
+                activitySource = activitySource
             )
-
-            binding.activityDurationText.text = getString(
-                R.string.exercise_duration_value,
-                summaryState.activityDurationMinutes
-            )
-
-            binding.dailyRemainingText.text = getString(
-                R.string.daily_summary_remaining_value,
-                energyBalance.remainingCalories
-            )
-
-            binding.dailyCalorieProgress.progress = summaryState.calorieProgressPercent
-            binding.dailyCarbValueText.text = getString(
-                R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(summaryState.carbs.currentGrams),
-                summaryState.carbs.targetGrams
-            )
-
-            binding.dailyProteinValueText.text = getString(
-                R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(summaryState.protein.currentGrams),
-                summaryState.protein.targetGrams
-            )
-
-            binding.dailyFatValueText.text = getString(
-                R.string.daily_macro_value,
-                DailyValueFormatter.formatGram(summaryState.fat.currentGrams),
-                summaryState.fat.targetGrams
-            )
-
-            binding.dailyCarbProgress.progress = summaryState.carbs.progressPercent
-            binding.dailyProteinProgress.progress = summaryState.protein.progressPercent
-            binding.dailyFatProgress.progress = summaryState.fat.progressPercent
 
             val dailyAiMeals = buildDailyAiMeals(
                 mealSummariesByType = byMealType,
@@ -1816,7 +1570,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 date = selectedDate,
                 waterGoalMl = waterGoalMl
             )
-            renderWaterTracking(scrollToEnd = true)
+            renderWaterTracking(DailyWaterScrollTarget.END)
         }
         activitySummaryCard.setOnClickListener {
             openAddExercise()
@@ -1975,25 +1729,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         )
     }
 
-    private fun renderActivitySourceStatus(
-        healthActiveCalories: Int,
-        manualExerciseCalories: Int
-    ) = with(binding) {
-        val source = DailyActivityPresentationResolver.resolveSource(
-            healthConnectSummary = healthConnectSummary,
-            healthActiveCalories = healthActiveCalories,
-            localSteps = localStepCount,
-            manualExerciseCalories = manualExerciseCalories
-        )
-
-        activitySyncStatusText.text = getString(
-            DailyActivitySourceTextResolver.resolveStatusTextRes(source)
-        )
-
-        activitySyncStatusText.setOnClickListener {
-            showHealthConnectBottomSheet()
-        }
-    }
     private fun openAddExercise() {
         navigator.openAddExercise(entryDate = currentEntryDate())
     }
@@ -2012,6 +1747,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             fastingCountdownCoordinator.stop()
         }
         stopHourglassAnimation()
+        sleepWeightRenderer = null
+        weeklyProgressRenderer = null
+        waterRenderer = null
+        summaryRenderer = null
         super.onDestroyView()
         _binding = null
     }
