@@ -84,7 +84,7 @@ import com.example.fitto.feature_meal.CameraFoodEntryFragment
 
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
-    private lateinit var healthConnectManager: HealthConnectManager
+    private lateinit var healthConnectSummaryAction: DailyHealthConnectSummaryAction
     private var healthConnectSummary: HealthConnectDailySummary = HealthConnectDailySummary()
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
@@ -115,7 +115,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var nutritionTargetStore: UserNutritionTargetStore
     private lateinit var mealRepository: MealRepository
-    private lateinit var stepCounterManager: FittoStepCounterManager
+    private lateinit var stepCounterAction: DailyStepCounterAction
     private var localStepCount: Long = 0L
     private var waterGoalMl: Int = 2500
     private val Int.dp: Int
@@ -268,8 +268,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
         )
 
-        healthConnectManager = HealthConnectManager(appContext)
-        stepCounterManager = FittoStepCounterManager(appContext)
+        val healthConnectManager = HealthConnectManager(appContext)
+        healthConnectSummaryAction = DailyHealthConnectSummaryAction(
+            readDailySummary = healthConnectManager::readDailySummary
+        )
+        val stepCounterManager = FittoStepCounterManager(appContext)
+        stepCounterAction = DailyStepCounterAction(
+            getCachedSteps = stepCounterManager::getCachedSteps,
+            isStepCounterAvailable = stepCounterManager::isStepCounterAvailable,
+            startStepCounter = stepCounterManager::start,
+            stopStepCounter = stepCounterManager::stop
+        )
         sleepLogStore = SleepLogStore(requireContext())
         dailyAiRepository = GeminiDailyAiRepository()
         dailyAiCache = AiDailyAnalysisCache(appContext)
@@ -1052,10 +1061,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun startLocalStepCounterIfNeeded() {
-        if (!::stepCounterManager.isInitialized) return
-
-        localStepCount = stepCounterManager.getCachedSteps(selectedDate)
-        renderActivityStepsOnly()
+        if (!::stepCounterAction.isInitialized) return
 
         val requiresActivityRecognitionPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         val hasActivityRecognitionPermission = !requiresActivityRecognitionPermission ||
@@ -1064,39 +1070,40 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 Manifest.permission.ACTIVITY_RECOGNITION
             ) == PackageManager.PERMISSION_GRANTED
 
-        when (
-            DailyStepCounterStartPolicy.resolve(
+        val effect = stepCounterAction.start(
+            request = DailyStepCounterRequest(
                 selectedDate = selectedDate,
                 today = LocalDate.now(),
-                isStepCounterAvailable = stepCounterManager.isStepCounterAvailable(),
                 requiresActivityRecognitionPermission = requiresActivityRecognitionPermission,
                 hasActivityRecognitionPermission = hasActivityRecognitionPermission
             )
-        ) {
-            DailyStepCounterStartPolicy.Decision.StopForPastDate -> stepCounterManager.stop()
-            DailyStepCounterStartPolicy.Decision.SensorUnavailable -> Toast.makeText(
+        ) { update ->
+            localStepCount = update.steps
+            renderActivityStepsOnly()
+
+            if (update.shouldRefreshSummary) {
+                renderMealTotals()
+            }
+        }
+
+        when (effect) {
+            DailyStepCounterEffect.None -> Unit
+            DailyStepCounterEffect.SensorUnavailable -> Toast.makeText(
                 requireContext(),
                 getString(R.string.step_counter_sensor_unavailable),
                 Toast.LENGTH_SHORT
             ).show()
-            DailyStepCounterStartPolicy.Decision.RequestActivityRecognitionPermission -> {
+            DailyStepCounterEffect.RequestActivityRecognitionPermission -> {
                 activityRecognitionPermissionLauncher.launch(
                     Manifest.permission.ACTIVITY_RECOGNITION
                 )
-            }
-            DailyStepCounterStartPolicy.Decision.Start -> stepCounterManager.start(selectedDate) { steps ->
-                localStepCount = steps
-                renderActivityStepsOnly()
-                renderMealTotals()
             }
         }
     }
 
     private fun resolvedDisplaySteps(): Long {
-        return DailyActivityPolicy.resolveDisplaySteps(
-            isHealthConnectAvailable = healthConnectSummary.isAvailable,
-            hasHealthConnectPermission = healthConnectSummary.hasPermission,
-            healthSteps = healthConnectSummary.steps,
+        return DailyActivityPresentationResolver.resolveDisplaySteps(
+            healthConnectSummary = healthConnectSummary,
             localSteps = localStepCount
         )
     }
@@ -1124,9 +1131,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun loadHealthConnectSummary() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            healthConnectSummary = healthConnectManager.readDailySummary(selectedDate)
+        if (!::healthConnectSummaryAction.isInitialized) return
 
+        viewLifecycleOwner.lifecycleScope.launch {
+            val requestedDate = selectedDate
+            val result = healthConnectSummaryAction.load(requestedDate)
+            if (_binding == null || selectedDate != result.requestedDate) return@launch
+
+            healthConnectSummary = result.summary
             renderHealthConnectSummary()
         }
     }
@@ -1164,8 +1176,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
     override fun onPause() {
-        if (::stepCounterManager.isInitialized) {
-            stepCounterManager.stop()
+        if (::stepCounterAction.isInitialized) {
+            stepCounterAction.stop()
         }
         super.onPause()
     }
@@ -2198,10 +2210,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         healthActiveCalories: Int,
         manualExerciseCalories: Int
     ) = with(binding) {
-        val source = DailyActivityPolicy.resolveActivitySource(
-            isHealthConnectAvailable = healthConnectSummary.isAvailable,
-            hasHealthConnectPermission = healthConnectSummary.hasPermission,
-            healthSteps = healthConnectSummary.steps,
+        val source = DailyActivityPresentationResolver.resolveSource(
+            healthConnectSummary = healthConnectSummary,
             healthActiveCalories = healthActiveCalories,
             localSteps = localStepCount,
             manualExerciseCalories = manualExerciseCalories
@@ -2246,8 +2256,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
 
     override fun onDestroyView() {
-        if (::stepCounterManager.isInitialized) {
-            stepCounterManager.stop()
+        if (::stepCounterAction.isInitialized) {
+            stepCounterAction.stop()
         }
 
         stopFastingTimer()
