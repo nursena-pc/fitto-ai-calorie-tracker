@@ -25,7 +25,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
-import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
@@ -60,16 +59,11 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.tasks.await
-import org.json.JSONArray
-import org.json.JSONObject
-import java.io.File
 import java.util.Locale
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
@@ -88,6 +82,8 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private var emailChangeWatcherJob: Job? = null
 
     private var photoAlbumCoordinator: ProfilePhotoAlbumCoordinator? = null
+    private var dataManagementCoordinator: ProfileDataManagementCoordinator? = null
+    private var dataExportShareCoordinator: ProfileDataExportShareCoordinator? = null
     private var selectedPhotoAlbumDateKey: String = ProfilePhotoAlbumFilter.ALL
     private var pendingPhotoDocumentItem: ProfilePhotoAlbumItem? = null
 
@@ -126,6 +122,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         super.onViewCreated(view, savedInstanceState)
 
         viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
+        setupDataManagement()
 
         val titleTextView = view.findViewById<TextView>(R.id.textProfileDetailTitle)
         val backButton = view.findViewById<TextView>(R.id.buttonProfileDetailBack)
@@ -196,7 +193,73 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         emailChangeWatcherJob = null
         photoAlbumCoordinator?.clear()
         photoAlbumCoordinator = null
+        dataManagementCoordinator?.clear()
+        dataManagementCoordinator = null
+        dataExportShareCoordinator = null
         super.onDestroyView()
+    }
+
+    private fun setupDataManagement() {
+        val appContext = requireContext().applicationContext
+
+        dataExportShareCoordinator = ProfileDataExportShareCoordinator(
+            context = requireContext(),
+            subject = getString(R.string.profile_export_data_subject),
+            chooserTitle = getString(R.string.profile_export_data_chooser),
+            launchIntent = ::startActivity
+        )
+
+        dataManagementCoordinator = ProfileDataManagementCoordinator(
+            scope = viewLifecycleOwner.lifecycleScope,
+            historyClearAction = ProfileHistoryClearAction(
+                clearRemoteHistory = accountSettingsRepository::clearCurrentUserHistory,
+                clearLocalHistory = { userId ->
+                    ProfileDataCleaner.clearCurrentUserData(appContext, userId)
+                },
+                clearNotifications = {
+                    FittoNotificationStore.clearCurrentAccountNotifications(appContext)
+                }
+            ),
+            dataExportAction = ProfileDataExportAction(appContext),
+            blockedUsersAction = ProfileBlockedUsersAction(
+                getBlockedUsers = socialRepository::getBlockedUsers,
+                unblockUser = { userId -> socialRepository.unblockUser(userId) }
+            ),
+            onHistoryCleared = {
+                showToast(R.string.profile_clear_history_success)
+                viewModel.refreshProfile()
+                bindRows()
+            },
+            onHistoryClearFailed = { error ->
+                Log.e(TAG, "Clear history failed", error)
+                showToast(R.string.profile_clear_history_error)
+            },
+            onExportReady = { file ->
+                dataExportShareCoordinator?.share(file)
+                showToast(R.string.profile_export_data_ready)
+            },
+            onExportFailed = { error ->
+                Log.e(TAG, "Profile export failed", error)
+                showToast(R.string.profile_export_data_error)
+            },
+            onBlockedUsersLoaded = { blockedUsers ->
+                latestBlockedUsers = blockedUsers
+                bindRows()
+            },
+            onBlockedUsersLoadFailed = { error ->
+                Log.e(TAG, "Blocked users could not be loaded", error)
+                showToast(R.string.profile_blocked_users_load_error)
+            },
+            onUserUnblocked = { result ->
+                showToast(R.string.profile_unblock_user_success)
+                latestBlockedUsers = result.remainingUsers
+                bindRows()
+            },
+            onUserUnblockFailed = { error ->
+                Log.e(TAG, "User could not be unblocked", error)
+                showToast(R.string.profile_unblock_user_error)
+            }
+        )
     }
 
     private fun refreshAccountDisplayFromAuth() {
@@ -406,108 +469,19 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
 
     private fun clearProfileHistory() {
-        val appContext = requireContext().applicationContext
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                val uid = accountSettingsRepository.clearCurrentUserHistory()
-                ProfileDataCleaner.clearCurrentUserData(appContext, uid)
-                FittoNotificationStore.clearCurrentAccountNotifications(appContext)
-            }.onSuccess {
-                showToast(R.string.profile_clear_history_success)
-                viewModel.refreshProfile()
-                bindRows()
-            }.onFailure { error ->
-                Log.e(TAG, "Clear history failed", error)
-                showToast(R.string.profile_clear_history_error)
-            }
-        }
+        dataManagementCoordinator?.clearHistory()
     }
 
     private fun exportProfileData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) { createProfileExportFile() }
-            }.onSuccess { file ->
-                shareProfileExportFile(file)
-            }.onFailure { error ->
-                Log.e(TAG, "Profile export failed", error)
-                showToast(R.string.profile_export_data_error)
-            }
-        }
-    }
-
-    private fun createProfileExportFile(): File {
-        val exportJson = JSONObject()
-            .put("exportedAt", System.currentTimeMillis())
-            .put("user", JSONObject()
-                .put("id", latestUser?.id.orEmpty())
-                .put("email", latestUser?.email.orEmpty())
-                .put("visibleName", latestUser?.userName.orEmpty())
-                .put("userPersonalName", latestUser?.personalName.orEmpty())
-                .put("photoUrl", latestUser?.photoUrl.orEmpty())
+        val state = viewModel.uiState.value
+        dataManagementCoordinator?.exportData(
+            ProfileDataExportRequest(
+                user = latestUser,
+                healthData = latestHealthData,
+                bodyMeasurements = state?.bodyMeasurements ?: BodyMeasurementsData(),
+                bodyMeasurementHistory = state?.bodyMeasurementsHistory.orEmpty()
             )
-            .put("health", JSONObject()
-                .put("currentWeightKg", latestHealthData.currentWeightKg)
-                .put("initialWeightKg", latestHealthData.initialWeightKg)
-                .put("targetWeightKg", latestHealthData.targetWeightKg)
-                .put("heightCm", latestHealthData.heightCm)
-                .put("age", latestHealthData.age)
-                .put("dailyTargetCalories", latestHealthData.dailyTargetCalories)
-                .put("waterTargetLiter", latestHealthData.waterTargetLiter)
-                .put("proteinGoalGrams", latestHealthData.proteinGoalGrams)
-                .put("carbGoalGrams", latestHealthData.carbGoalGrams)
-                .put("fatGoalGrams", latestHealthData.fatGoalGrams)
-            )
-            .put("bodyMeasurements", JSONObject(latestBodyMeasurementsMap()))
-            .put("bodyMeasurementHistory", JSONArray().apply {
-                (viewModel.uiState.value?.bodyMeasurementsHistory).orEmpty().forEach { item ->
-                    put(JSONObject()
-                        .put("id", item.id)
-                        .put("createdAt", item.createdAt)
-                        .put("measurements", JSONObject(item.data.toMap()))
-                    )
-                }
-            })
-            .put("notifications", JSONArray().apply {
-                FittoNotificationStore.getNotifications(requireContext()).forEach { notification ->
-                    put(JSONObject()
-                        .put("id", notification.id)
-                        .put("title", notification.title)
-                        .put("description", notification.description)
-                        .put("type", notification.type)
-                        .put("createdAt", notification.createdAt)
-                        .put("isRead", notification.isRead)
-                    )
-                }
-            })
-
-        val exportDir = File(requireContext().cacheDir, "exports").apply { mkdirs() }
-        val exportFile = File(exportDir, "fitto_profile_export_${System.currentTimeMillis()}.json")
-        exportFile.writeText(exportJson.toString(2))
-        return exportFile
-    }
-
-    private fun latestBodyMeasurementsMap(): Map<String, Any?> {
-        return viewModel.uiState.value?.bodyMeasurements?.toMap().orEmpty()
-    }
-
-    private fun shareProfileExportFile(file: File) {
-        val uri = FileProvider.getUriForFile(
-            requireContext(),
-            "${requireContext().packageName}.fileprovider",
-            file
         )
-
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "application/json"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.profile_export_data_subject))
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.profile_export_data_chooser)))
-        showToast(R.string.profile_export_data_ready)
     }
 
     private fun openNestedProfileDetail(targetMenuId: ProfileMenuId) {
@@ -963,17 +937,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     }
 
     private fun loadBlockedUsers() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                socialRepository.getBlockedUsers()
-            }.onSuccess { blockedUsers ->
-                latestBlockedUsers = blockedUsers
-                bindRows()
-            }.onFailure { exception ->
-                Log.e(TAG, "Blocked users could not be loaded", exception)
-                showToast(R.string.profile_blocked_users_load_error)
-            }
-        }
+        dataManagementCoordinator?.loadBlockedUsers()
     }
 
     private fun showUnblockUserDialog(item: ProfileDetailItem) {
@@ -1001,19 +965,10 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     }
 
     private fun unblockUser(userId: String) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                socialRepository.unblockUser(userId)
-            }.onSuccess {
-                showToast(R.string.profile_unblock_user_success)
-                latestBlockedUsers = latestBlockedUsers.filterNot { user -> user.id == userId }
-                bindRows()
-                loadBlockedUsers()
-            }.onFailure { exception ->
-                Log.e(TAG, "User could not be unblocked", exception)
-                showToast(R.string.profile_unblock_user_error)
-            }
-        }
+        dataManagementCoordinator?.unblockUser(
+            userId = userId,
+            currentUsers = latestBlockedUsers
+        )
     }
 
     private fun emailLanguageCode(): String {
