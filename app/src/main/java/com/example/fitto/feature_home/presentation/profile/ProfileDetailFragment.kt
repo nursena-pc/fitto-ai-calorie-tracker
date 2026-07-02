@@ -40,7 +40,6 @@ import com.example.fitto.feature_home.presentation.profile.reminders.alarm.Remin
 import com.example.fitto.R
 import com.example.fitto.databinding.BottomSheetCountryPickerBinding
 import com.example.fitto.databinding.ItemCountryBinding
-import com.example.fitto.feature_auth.login.GoogleSignInHelper
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
 import com.example.fitto.feature_home.presentation.social.SocialRepository
@@ -52,13 +51,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
-import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Locale
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
@@ -77,6 +69,8 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private var accountEditCoordinator: ProfileAccountEditCoordinator? = null
     private var accountDialogCoordinator: ProfileAccountDialogCoordinator? = null
     private var emailChangeDialogCoordinator: ProfileEmailChangeDialogCoordinator? = null
+    private var accountLifecycleCoordinator: ProfileAccountLifecycleCoordinator? = null
+    private var accountLifecycleDialogCoordinator: ProfileAccountLifecycleDialogCoordinator? = null
 
     private var photoAlbumCoordinator: ProfilePhotoAlbumCoordinator? = null
     private var dataManagementCoordinator: ProfileDataManagementCoordinator? = null
@@ -120,6 +114,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
         setupDataManagement()
         setupAccountEditing()
+        setupAccountLifecycle()
 
         val titleTextView = view.findViewById<TextView>(R.id.textProfileDetailTitle)
         val backButton = view.findViewById<TextView>(R.id.buttonProfileDetailBack)
@@ -192,6 +187,10 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         accountDialogCoordinator = null
         emailChangeDialogCoordinator?.clear()
         emailChangeDialogCoordinator = null
+        accountLifecycleCoordinator?.clear()
+        accountLifecycleCoordinator = null
+        accountLifecycleDialogCoordinator?.clear()
+        accountLifecycleDialogCoordinator = null
         photoAlbumCoordinator?.clear()
         photoAlbumCoordinator = null
         dataManagementCoordinator?.clear()
@@ -351,6 +350,78 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
+    private fun setupAccountLifecycle() {
+        if (menuId != ProfileMenuId.SETTINGS) return
+
+        accountLifecycleDialogCoordinator = ProfileAccountLifecycleDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater
+        )
+
+        accountLifecycleCoordinator = ProfileAccountLifecycleCoordinator(
+            scope = viewLifecycleOwner.lifecycleScope,
+            action = ProfileAccountLifecycleActionFactory(requireContext()).create(),
+            onSessionMissing = ::navigateToWelcome,
+            onPasswordAuthenticationRequired = {
+                accountLifecycleDialogCoordinator?.showPasswordReauthentication { password ->
+                    accountLifecycleCoordinator?.reauthenticatePassword(password)
+                }
+            },
+            onGoogleAuthenticationRequired = {
+                accountLifecycleDialogCoordinator?.showGoogleReauthentication {
+                    accountLifecycleCoordinator?.reauthenticateGoogle()
+                }
+            },
+            onUnsupportedProvider = {
+                showToast(R.string.profile_delete_account_provider_not_supported)
+            },
+            onReauthenticated = {
+                accountLifecycleDialogCoordinator?.showFinalDeleteConfirmation {
+                    accountLifecycleCoordinator?.deleteAccount(
+                        deletedUserName = getString(R.string.deleted_user_display_name),
+                        deletedMessageText = getString(R.string.deleted_message_text)
+                    )
+                }
+            },
+            onPasswordRejected = { error ->
+                Log.e(TAG, "Account delete reauth failed: wrong password", error)
+                showToast(R.string.profile_delete_account_wrong_password)
+            },
+            onPasswordAuthenticationFailed = { error ->
+                error?.let {
+                    Log.e(TAG, "Account delete password reauth failed", it)
+                }
+                showToast(
+                    if (error == null) {
+                        R.string.profile_delete_account_error
+                    } else {
+                        R.string.profile_delete_account_auth_error
+                    }
+                )
+            },
+            onGoogleAuthenticationFailed = { error ->
+                Log.e(TAG, "Account delete Google reauth failed", error)
+                showToast(R.string.profile_delete_account_google_error)
+            },
+            onAccountDeleted = {
+                accountLifecycleDialogCoordinator?.dismissDeleteConfirmation()
+                showToast(R.string.profile_delete_account_success)
+                navigateToWelcome()
+            },
+            onDeleteRequiresRecentLogin = { error ->
+                Log.e(TAG, "Firebase Auth account delete requires recent login", error)
+                accountLifecycleDialogCoordinator?.restoreDeleteConfirmation()
+                showToast(R.string.profile_delete_account_requires_recent_login)
+            },
+            onDeleteFailed = { error ->
+                Log.e(TAG, "Firebase Auth account delete failed", error)
+                accountLifecycleDialogCoordinator?.restoreDeleteConfirmation()
+                showToast(R.string.profile_delete_account_error)
+            },
+            onLoggedOut = ::navigateToWelcome
+        )
+    }
+
     private fun accountDisplayUser(): SocialUser? {
         return ProfileAccountDisplayResolver.resolve(
             user = latestUser,
@@ -476,15 +547,11 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
                     .show(childFragmentManager, "profile_health_connect")
             }
 
-            ProfileDetailAction.LOGOUT -> showConfirmDialog(
-                titleResId = R.string.profile_detail_settings_logout,
-                messageResId = R.string.profile_logout_confirm_message,
-                positiveResId = R.string.profile_detail_settings_logout,
-                iconResId = R.drawable.ic_logout,
-                iconColorResId = R.color.profile_subtext,
-                confirmTextColorResId = R.color.reminder_delete,
-                onConfirmed = ::performLogout
-            )
+            ProfileDetailAction.LOGOUT -> {
+                accountLifecycleDialogCoordinator?.showLogoutConfirmation {
+                    accountLifecycleCoordinator?.logout()
+                }
+            }
 
             ProfileDetailAction.CLEAR_HISTORY -> showConfirmDialog(
                 titleResId = R.string.profile_detail_clear_history,
@@ -496,7 +563,11 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             )
 
             ProfileDetailAction.EXPORT_DATA -> exportProfileData()
-            ProfileDetailAction.DELETE_ACCOUNT -> showDeleteAccountDialog()
+            ProfileDetailAction.DELETE_ACCOUNT -> {
+                accountLifecycleDialogCoordinator?.showDeleteIntroduction {
+                    accountLifecycleCoordinator?.beginDeleteAuthentication()
+                }
+            }
             ProfileDetailAction.RECALCULATE_GOALS -> showToast(R.string.profile_daily_goals_recalculate_coming_soon)
             ProfileDetailAction.NUTRITION_DIET_TYPES -> showNutritionDietTypesDialog()
             ProfileDetailAction.NUTRITION_ALLERGIES -> showNutritionTextDialog(
@@ -1379,220 +1450,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
-    private fun showDeleteAccountDialog() {
-        showFittoActionDialog(
-            titleResId = R.string.profile_detail_delete_account,
-            warningResId = R.string.profile_delete_account_warning,
-            messageResId = R.string.profile_delete_account_intro_message,
-            positiveResId = R.string.profile_delete_account_continue,
-            negativeResId = R.string.profile_delete_account_cancel,
-            iconResId = R.drawable.ic_warning,
-            iconColorResId = R.color.reminder_delete,
-            confirmTextColorResId = R.color.profile_subtext,
-            cancelTextColorResId = R.color.fitto_green,
-            showPasswordInput = false,
-            onConfirmed = {
-                continueDeleteAccountAuthentication()
-            }
-        )
-    }
-
-    private fun continueDeleteAccountAuthentication() {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        if (currentUser == null) {
-            navigateToWelcome()
-            return
-        }
-
-        val providerIds = currentUser.providerData
-            .map { providerInfo -> providerInfo.providerId }
-            .filterNot { providerId -> providerId == FIREBASE_PROVIDER_ID }
-            .toSet()
-
-        when {
-            providerIds.contains(EmailAuthProvider.PROVIDER_ID) -> showPasswordReauthDialog()
-            providerIds.contains(GoogleAuthProvider.PROVIDER_ID) -> showGoogleReauthDialog()
-            else -> showToast(R.string.profile_delete_account_provider_not_supported)
-        }
-    }
-
-    private fun showPasswordReauthDialog() {
-        showFittoActionDialog(
-            titleResId = R.string.profile_delete_account_auth_title,
-            warningResId = null,
-            messageResId = R.string.profile_delete_account_password_message,
-            positiveResId = R.string.profile_delete_account_auth_confirm,
-            negativeResId = R.string.profile_delete_account_cancel,
-            iconResId = R.drawable.ic_lock,
-            iconColorResId = R.color.fitto_green,
-            confirmTextColorResId = R.color.fitto_green,
-            showPasswordInput = true,
-            onConfirmed = { password ->
-                reauthenticateWithPassword(password.orEmpty())
-            }
-        )
-    }
-
-    private fun reauthenticateWithPassword(password: String) {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val email = currentUser?.email
-
-        if (currentUser == null || email.isNullOrBlank()) {
-            showToast(R.string.profile_delete_account_error)
-            return
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val credential = EmailAuthProvider.getCredential(email, password)
-                currentUser.reauthenticate(credential).await()
-                showFinalDeleteAccountConfirmDialog()
-            } catch (exception: FirebaseAuthInvalidCredentialsException) {
-                Log.e(TAG, "Account delete reauth failed: wrong password", exception)
-                showToast(R.string.profile_delete_account_wrong_password)
-            } catch (exception: Exception) {
-                Log.e(TAG, "Account delete password reauth failed", exception)
-                showToast(R.string.profile_delete_account_auth_error)
-            }
-        }
-    }
-
-    private fun showGoogleReauthDialog() {
-        showFittoActionDialog(
-            titleResId = R.string.profile_delete_account_auth_title,
-            warningResId = null,
-            messageResId = R.string.profile_delete_account_google_message,
-            positiveResId = R.string.profile_delete_account_google_confirm,
-            negativeResId = R.string.profile_delete_account_cancel,
-            iconResId = R.drawable.ic_google_g,
-            iconColorResId = R.color.fitto_green,
-            confirmTextColorResId = R.color.fitto_green,
-            showPasswordInput = false,
-            onConfirmed = {
-                reauthenticateWithGoogle()
-            }
-        )
-    }
-
-    private fun reauthenticateWithGoogle() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                GoogleSignInHelper.reauthenticateCurrentUser(requireContext())
-                showFinalDeleteAccountConfirmDialog()
-            } catch (exception: Exception) {
-                Log.e(TAG, "Account delete Google reauth failed", exception)
-                showToast(R.string.profile_delete_account_google_error)
-            }
-        }
-    }
-
-    private fun showFinalDeleteAccountConfirmDialog() {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_fitto_action,
-            null,
-            false
-        )
-
-        val iconImage = dialogView.findViewById<ImageView>(R.id.imageActionIcon)
-        val titleText = dialogView.findViewById<TextView>(R.id.textActionTitle)
-        val warningText = dialogView.findViewById<TextView>(R.id.textActionWarning)
-        val messageText = dialogView.findViewById<TextView>(R.id.textActionMessage)
-        val passwordArea = dialogView.findViewById<LinearLayout>(R.id.layoutPasswordArea)
-        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionCancel)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionConfirm)
-
-        titleText.setText(R.string.profile_delete_account_final_title)
-        messageText.setText(R.string.profile_delete_account_final_message)
-        warningText.isVisible = false
-        passwordArea.isVisible = false
-
-        cancelButton.setText(R.string.profile_delete_account_cancel)
-        confirmButton.setText(R.string.profile_delete_account_confirm)
-
-        iconImage.setImageResource(R.drawable.ic_warning)
-        iconImage.setColorFilter(requireContext().getColor(R.color.reminder_delete))
-        cancelButton.setTextColor(requireContext().getColor(R.color.profile_subtext))
-        confirmButton.setTextColor(requireContext().getColor(R.color.reminder_delete))
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        confirmButton.setOnClickListener {
-            confirmButton.isEnabled = false
-            cancelButton.isEnabled = false
-            confirmButton.setText(R.string.profile_delete_account_deleting)
-            performFinalAccountDelete(
-                dialog = dialog,
-                confirmButton = confirmButton,
-                cancelButton = cancelButton
-            )
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.setCanceledOnTouchOutside(false)
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
-
-    private fun performFinalAccountDelete(
-        dialog: Dialog,
-        confirmButton: MaterialButton,
-        cancelButton: MaterialButton
-    ) {
-        val appContext = requireContext().applicationContext
-        val deletedUserName = getString(R.string.deleted_user_display_name)
-        val deletedMessageText = getString(R.string.deleted_message_text)
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                AccountDeletionRepository().deleteCurrentAccount(
-                    deletedUserName = deletedUserName,
-                    deletedMessageText = deletedMessageText
-                )
-
-                ProfilePreferenceStore.clearAccountScopedPreferences(appContext)
-                ReminderPreferenceStore.clear(appContext)
-                FittoNotificationStore.cancelAllActiveSystemNotifications(appContext)
-                FittoNotificationStore.clearCurrentAccountNotifications(appContext)
-
-                dialog.dismiss()
-                showToast(R.string.profile_delete_account_success)
-                navigateToWelcome()
-            } catch (exception: FirebaseAuthRecentLoginRequiredException) {
-                Log.e(TAG, "Firebase Auth account delete requires recent login", exception)
-                confirmButton.isEnabled = true
-                cancelButton.isEnabled = true
-                confirmButton.setText(R.string.profile_delete_account_confirm)
-                showToast(R.string.profile_delete_account_requires_recent_login)
-            } catch (exception: Exception) {
-                Log.e(TAG, "Firebase Auth account delete failed", exception)
-                confirmButton.isEnabled = true
-                cancelButton.isEnabled = true
-                confirmButton.setText(R.string.profile_delete_account_confirm)
-                showToast(R.string.profile_delete_account_error)
-            }
-        }
-    }
-
-    private fun performLogout() {
-        val appContext = requireContext().applicationContext
-        FittoNotificationStore.cancelAllActiveSystemNotifications(appContext)
-        FittoNotificationStore.clearCurrentAccountNotifications(appContext)
-        FirebaseAuth.getInstance().signOut()
-        navigateToWelcome()
-    }
-
     private fun navigateToWelcome() {
         val navController = Navigation.findNavController(requireActivity(), R.id.mainNavHost)
         val navOptions = NavOptions.Builder()
@@ -1795,7 +1652,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         private const val ARG_MENU_ID = "menu_id"
         private const val TURKEY_CODE = "TR"
         private const val REGIONAL_INDICATOR_OFFSET = 0x1F1E6
-        private const val FIREBASE_PROVIDER_ID = "firebase"
         private const val MISSING_SESSION_ERROR_MESSAGE = "Oturum bilgisi bulunamadı."
         private const val TAG = "ProfileDetailFragment"
 
