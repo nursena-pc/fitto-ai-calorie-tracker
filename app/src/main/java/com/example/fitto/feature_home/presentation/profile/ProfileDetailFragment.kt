@@ -1,16 +1,11 @@
 package com.example.fitto.feature_home.presentation.profile
 
-import android.app.AlarmManager
 import android.app.Dialog
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
 import android.text.InputType
 import android.text.method.PasswordTransformationMethod
 import android.util.Log
@@ -36,21 +31,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
-import com.example.fitto.feature_home.presentation.profile.reminders.alarm.ReminderAlarmScheduler
 import com.example.fitto.R
 import com.example.fitto.databinding.BottomSheetCountryPickerBinding
 import com.example.fitto.databinding.ItemCountryBinding
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
+import com.example.fitto.feature_home.presentation.profile.reminders.alarm.ReminderAlarmScheduler
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_home.presentation.social.SocialUser
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
 import java.util.Locale
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
@@ -71,6 +63,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private var emailChangeDialogCoordinator: ProfileEmailChangeDialogCoordinator? = null
     private var accountLifecycleCoordinator: ProfileAccountLifecycleCoordinator? = null
     private var accountLifecycleDialogCoordinator: ProfileAccountLifecycleDialogCoordinator? = null
+    private var notificationSettingsCoordinator: ProfileNotificationSettingsCoordinator? = null
 
     private var photoAlbumCoordinator: ProfilePhotoAlbumCoordinator? = null
     private var dataManagementCoordinator: ProfileDataManagementCoordinator? = null
@@ -90,7 +83,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri ?: return@registerForActivityResult
-        saveCustomNotificationSound(uri)
+        notificationSettingsCoordinator?.saveCustomNotificationSound(uri)
     }
 
     private val photoDocumentSaverLauncher = registerForActivityResult(
@@ -115,6 +108,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         setupDataManagement()
         setupAccountEditing()
         setupAccountLifecycle()
+        setupNotificationSettings()
 
         val titleTextView = view.findViewById<TextView>(R.id.textProfileDetailTitle)
         val backButton = view.findViewById<TextView>(R.id.buttonProfileDetailBack)
@@ -191,6 +185,8 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         accountLifecycleCoordinator = null
         accountLifecycleDialogCoordinator?.clear()
         accountLifecycleDialogCoordinator = null
+        notificationSettingsCoordinator?.clear()
+        notificationSettingsCoordinator = null
         photoAlbumCoordinator?.clear()
         photoAlbumCoordinator = null
         dataManagementCoordinator?.clear()
@@ -422,6 +418,42 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
+    private fun setupNotificationSettings() {
+        if (menuId != ProfileMenuId.NOTIFICATION_PREFERENCES) return
+
+        val appContext = requireContext().applicationContext
+        val store = AndroidProfileNotificationSettingsStore(appContext)
+        val dialogCoordinator = ProfileNotificationSettingsDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater,
+            fragmentManager = childFragmentManager,
+            store = store,
+            openCustomSoundPicker = {
+                notificationSoundPickerLauncher.launch(arrayOf("audio/*"))
+            },
+            refreshRows = ::bindRows,
+            showMessage = ::showToast,
+            launchIntent = ::startActivity
+        )
+
+        notificationSettingsCoordinator = ProfileNotificationSettingsCoordinator(
+            action = ProfileNotificationSettingsAction(
+                store = store,
+                requestNotificationPermission = {
+                    FittoNotificationPermission.requestIfNeeded(requireActivity())
+                },
+                scheduleReminders = {
+                    ReminderAlarmScheduler.scheduleAll(appContext)
+                },
+                cancelReminders = {
+                    ReminderAlarmScheduler.cancelAll(appContext)
+                }
+            ),
+            dialogCoordinator = dialogCoordinator,
+            refreshRows = ::bindRows
+        )
+    }
+
     private fun accountDisplayUser(): SocialUser? {
         return ProfileAccountDisplayResolver.resolve(
             user = latestUser,
@@ -529,18 +561,18 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             ProfileDetailAction.EDIT_USERNAME -> showUpdateUsernameDialog()
             ProfileDetailAction.EDIT_DISPLAY_NAME -> showUpdateDisplayNameDialog()
             ProfileDetailAction.CHANGE_PASSWORD -> showChangePasswordDialog()
-            ProfileDetailAction.NOTIFICATION_SOUND -> showNotificationSoundDialog()
-            ProfileDetailAction.SILENT_HOURS -> showSilentHoursDialog()
+            ProfileDetailAction.NOTIFICATION_SOUND -> notificationSettingsCoordinator?.showNotificationSoundDialog()
+            ProfileDetailAction.SILENT_HOURS -> notificationSettingsCoordinator?.showSilentHoursDialog()
             ProfileDetailAction.TOGGLE_COMMENTS -> toggleComments()
             ProfileDetailAction.UNBLOCK_USER -> showUnblockUserDialog(item)
-            ProfileDetailAction.TOGGLE_NOTIFICATIONS_ALLOWED -> toggleNotificationsAllowed()
-            ProfileDetailAction.TOGGLE_ACHIEVEMENT_NOTIFICATIONS -> toggleAchievementNotifications()
-            ProfileDetailAction.TOGGLE_REMINDER_NOTIFICATIONS -> toggleReminderNotifications()
-            ProfileDetailAction.TOGGLE_SOCIAL_NOTIFICATIONS -> toggleSocialNotifications()
-            ProfileDetailAction.TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS -> toggleDirectMessageNotifications()
-            ProfileDetailAction.TOGGLE_GROUP_MESSAGE_NOTIFICATIONS -> toggleGroupMessageNotifications()
-            ProfileDetailAction.TOGGLE_VIBRATION -> toggleVibration()
-            ProfileDetailAction.EXACT_ALARM_PERMISSION -> showExactAlarmPermissionDialogFromSettings()
+            ProfileDetailAction.TOGGLE_NOTIFICATIONS_ALLOWED -> toggleNotification(ProfileNotificationToggle.MASTER)
+            ProfileDetailAction.TOGGLE_ACHIEVEMENT_NOTIFICATIONS -> toggleNotification(ProfileNotificationToggle.ACHIEVEMENT)
+            ProfileDetailAction.TOGGLE_REMINDER_NOTIFICATIONS -> toggleNotification(ProfileNotificationToggle.REMINDER)
+            ProfileDetailAction.TOGGLE_SOCIAL_NOTIFICATIONS -> toggleNotification(ProfileNotificationToggle.SOCIAL)
+            ProfileDetailAction.TOGGLE_DIRECT_MESSAGE_NOTIFICATIONS -> toggleNotification(ProfileNotificationToggle.DIRECT_MESSAGE)
+            ProfileDetailAction.TOGGLE_GROUP_MESSAGE_NOTIFICATIONS -> toggleNotification(ProfileNotificationToggle.GROUP_MESSAGE)
+            ProfileDetailAction.TOGGLE_VIBRATION -> toggleNotification(ProfileNotificationToggle.VIBRATION)
+            ProfileDetailAction.EXACT_ALARM_PERMISSION -> notificationSettingsCoordinator?.showExactAlarmPermissionDialog()
 
             ProfileDetailAction.CONNECT_HEALTH -> {
                 HealthConnectBottomSheetFragment()
@@ -886,180 +918,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         )
     }
 
-    private fun showNotificationSoundDialog() {
-        val currentSound = ProfilePreferenceStore.getNotificationSound(requireContext())
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_notifications_sound,
-            options = listOf(
-                ChoiceOption(
-                    title = getString(R.string.profile_notification_sound_soft),
-                    value = ProfileNotificationSound.SOFT,
-                    isSelected = currentSound == ProfileNotificationSound.SOFT
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_notification_sound_classic),
-                    value = ProfileNotificationSound.CLASSIC,
-                    isSelected = currentSound == ProfileNotificationSound.CLASSIC
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_notification_sound_nature),
-                    value = ProfileNotificationSound.NATURE,
-                    isSelected = currentSound == ProfileNotificationSound.NATURE
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_notification_sound_pick_from_device),
-                    value = ProfileNotificationSound.CUSTOM,
-                    isSelected = currentSound == ProfileNotificationSound.CUSTOM
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_notification_sound_silent),
-                    value = ProfileNotificationSound.SILENT,
-                    isSelected = currentSound == ProfileNotificationSound.SILENT
-                )
-            ),
-            onSelected = { selectedSound ->
-                if (selectedSound == ProfileNotificationSound.CUSTOM) {
-                    notificationSoundPickerLauncher.launch(arrayOf("audio/*"))
-                } else {
-                    ProfilePreferenceStore.setNotificationSound(requireContext(), selectedSound)
-                    bindRows()
-                }
-            }
-        )
-    }
-
-    private fun saveCustomNotificationSound(uri: Uri) {
-        runCatching {
-            requireContext().contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-        }
-
-        ProfilePreferenceStore.setCustomNotificationSound(
-            context = requireContext(),
-            uri = uri.toString(),
-            displayName = displayNameForUri(uri)
-        )
-        bindRows()
-    }
-
-    private fun displayNameForUri(uri: Uri): String {
-        val fallback = uri.lastPathSegment
-            ?.substringAfterLast('/')
-            ?.takeIf { it.isNotBlank() }
-            ?: getString(R.string.profile_notification_sound_custom)
-
-        return runCatching {
-            requireContext().contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                if (nameIndex >= 0 && cursor.moveToFirst()) {
-                    cursor.getString(nameIndex)?.takeIf { it.isNotBlank() } ?: fallback
-                } else {
-                    fallback
-                }
-            } ?: fallback
-        }.getOrDefault(fallback)
-    }
-
-    private fun showSilentHoursDialog() {
-        val currentSilentHours = ProfilePreferenceStore.silentHoursText(requireContext())
-        val defaultSilentHours = getString(R.string.profile_silent_hours_default)
-        val offSilentHours = getString(R.string.profile_silent_hours_off)
-        val chooseRangeValue = "__choose_range__"
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_notifications_silent_hours,
-            options = listOf(
-                ChoiceOption(
-                    title = defaultSilentHours,
-                    value = defaultSilentHours,
-                    isSelected = currentSilentHours == defaultSilentHours
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_silent_hours_choose_range),
-                    value = chooseRangeValue,
-                    isSelected = currentSilentHours != defaultSilentHours && currentSilentHours != offSilentHours
-                ),
-                ChoiceOption(
-                    title = offSilentHours,
-                    value = offSilentHours,
-                    isSelected = currentSilentHours == offSilentHours
-                )
-            ),
-            onSelected = { selectedSilentHours ->
-                if (selectedSilentHours == chooseRangeValue) {
-                    showSilentHoursRangePicker(currentSilentHours)
-                } else {
-                    ProfilePreferenceStore.setSilentHoursText(requireContext(), selectedSilentHours)
-                    bindRows()
-                }
-            }
-        )
-    }
-
-    private fun showSilentHoursRangePicker(currentValue: String) {
-        val startTime = silentHourPart(currentValue, startPart = true) ?: "22:00"
-        val endTime = silentHourPart(currentValue, startPart = false) ?: "07:00"
-        val startHour = startTime.substringBefore(":").toIntOrNull() ?: 22
-        val startMinute = startTime.substringAfter(":").toIntOrNull() ?: 0
-        val endHour = endTime.substringBefore(":").toIntOrNull() ?: 7
-        val endMinute = endTime.substringAfter(":").toIntOrNull() ?: 0
-
-        showTimePicker(
-            initialHour = startHour,
-            initialMinute = startMinute,
-            title = getString(R.string.profile_silent_hours_start_time)
-        ) { selectedStartHour, selectedStartMinute ->
-            val startText = formatSilentHour(selectedStartHour, selectedStartMinute)
-            showTimePicker(
-                initialHour = endHour,
-                initialMinute = endMinute,
-                title = getString(R.string.profile_silent_hours_end_time)
-            ) { selectedEndHour, selectedEndMinute ->
-                val endText = formatSilentHour(selectedEndHour, selectedEndMinute)
-                ProfilePreferenceStore.setSilentHoursText(requireContext(), "$startText - $endText")
-                bindRows()
-            }
-        }
-    }
-
-    private fun showTimePicker(
-        initialHour: Int,
-        initialMinute: Int,
-        title: String,
-        onTimeSelected: (hour: Int, minute: Int) -> Unit
-    ) {
-        val picker = MaterialTimePicker.Builder()
-            .setTimeFormat(TimeFormat.CLOCK_24H)
-            .setHour(initialHour)
-            .setMinute(initialMinute)
-            .setTitleText(title)
-            .setTheme(R.style.ThemeOverlay_Fitto_WhiteTimePicker)
-            .build()
-
-        picker.addOnPositiveButtonClickListener {
-            onTimeSelected(picker.hour, picker.minute)
-        }
-
-        picker.show(childFragmentManager, "fitto_silent_hours_time_picker")
-    }
-
-    private fun silentHourPart(value: String, startPart: Boolean): String? {
-        if (!value.contains("-")) return null
-        val part = if (startPart) {
-            value.substringBefore("-").trim()
-        } else {
-            value.substringAfter("-").trim()
-        }
-        return part.takeIf { it.matches(Regex("\\d{2}:\\d{2}")) }
-    }
-
-    private fun formatSilentHour(hour: Int, minute: Int): String {
-        return "%02d:%02d".format(Locale.US, hour, minute)
-    }
-
     private fun toggleComments() {
         val enabled = !ProfilePreferenceStore.areCommentsEnabled(requireContext())
         ProfilePreferenceStore.setCommentsEnabled(requireContext(), enabled)
@@ -1108,123 +966,8 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
     }
 
-    private fun showExactAlarmPermissionDialogFromSettings() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-            showToast(R.string.profile_notifications_exact_alarm_not_required)
-            return
-        }
-
-        val alarmManager = requireContext().getSystemService(AlarmManager::class.java)
-        if (alarmManager?.canScheduleExactAlarms() == true) {
-            showToast(R.string.profile_notifications_exact_alarm_already_enabled)
-            return
-        }
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.reminder_exact_alarm_permission_title)
-            .setMessage(R.string.reminder_exact_alarm_permission_message)
-            .setPositiveButton(R.string.reminder_exact_alarm_permission_action) { _, _ ->
-                ProfilePreferenceStore.setExactAlarmPromptSeen(requireContext())
-                openExactAlarmPermissionSettings()
-            }
-            .setNegativeButton(R.string.reminder_exact_alarm_permission_later) { _, _ ->
-                ProfilePreferenceStore.setExactAlarmPromptSeen(requireContext())
-            }
-            .show()
-    }
-
-    private fun openExactAlarmPermissionSettings() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        val intent = Intent(
-            Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-            Uri.parse("package:${requireContext().packageName}")
-        )
-        runCatching { startActivity(intent) }
-            .onFailure {
-                runCatching {
-                    startActivity(
-                        Intent(
-                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                            Uri.parse("package:${requireContext().packageName}")
-                        )
-                    )
-                }
-            }
-    }
-
-    private fun toggleNotificationsAllowed() {
-        val enabled = !ProfilePreferenceStore.areNotificationsAllowed(requireContext())
-        ProfilePreferenceStore.setNotificationsAllowed(requireContext(), enabled)
-
-        if (enabled) {
-            if (FittoNotificationPermission.requestIfNeeded(requireActivity())) {
-                ReminderAlarmScheduler.scheduleAll(requireContext())
-            }
-        } else {
-            ReminderAlarmScheduler.cancelAll(requireContext())
-        }
-
-        bindRows()
-    }
-
-    private fun toggleAchievementNotifications() {
-        val enabled = !ProfilePreferenceStore.areAchievementNotificationsEnabled(requireContext())
-        ProfilePreferenceStore.setAchievementNotificationsEnabled(requireContext(), enabled)
-        bindRows()
-    }
-
-    private fun toggleReminderNotifications() {
-        val enabled = !ProfilePreferenceStore.areReminderNotificationsEnabled(requireContext())
-        ProfilePreferenceStore.setReminderNotificationsEnabled(requireContext(), enabled)
-
-        if (enabled) {
-            if (FittoNotificationPermission.requestIfNeeded(requireActivity())) {
-                ReminderAlarmScheduler.scheduleAll(requireContext())
-            }
-        } else {
-            ReminderAlarmScheduler.cancelAll(requireContext())
-        }
-
-        bindRows()
-    }
-
-    private fun toggleSocialNotifications() {
-        val enabled = !ProfilePreferenceStore.areSocialNotificationsEnabled(requireContext())
-        ProfilePreferenceStore.setSocialNotificationsEnabled(requireContext(), enabled)
-
-        if (enabled) {
-            FittoNotificationPermission.requestIfNeeded(requireActivity())
-        }
-
-        bindRows()
-    }
-
-    private fun toggleDirectMessageNotifications() {
-        val enabled = !ProfilePreferenceStore.areDirectMessageNotificationsEnabled(requireContext())
-        ProfilePreferenceStore.setDirectMessageNotificationsEnabled(requireContext(), enabled)
-
-        if (enabled) {
-            FittoNotificationPermission.requestIfNeeded(requireActivity())
-        }
-
-        bindRows()
-    }
-
-    private fun toggleGroupMessageNotifications() {
-        val enabled = !ProfilePreferenceStore.areGroupMessageNotificationsEnabled(requireContext())
-        ProfilePreferenceStore.setGroupMessageNotificationsEnabled(requireContext(), enabled)
-
-        if (enabled) {
-            FittoNotificationPermission.requestIfNeeded(requireActivity())
-        }
-
-        bindRows()
-    }
-
-    private fun toggleVibration() {
-        val enabled = !ProfilePreferenceStore.isVibrationEnabled(requireContext())
-        ProfilePreferenceStore.setVibrationEnabled(requireContext(), enabled)
-        bindRows()
+    private fun toggleNotification(toggle: ProfileNotificationToggle) {
+        notificationSettingsCoordinator?.toggle(toggle)
     }
 
     private fun showConfirmDialog(
