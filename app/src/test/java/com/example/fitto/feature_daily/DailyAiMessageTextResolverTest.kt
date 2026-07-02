@@ -97,4 +97,20 @@ class DailyAiMessageTextResolverTest {
             DailyAiMessageTextResolver.resolveErrorMessageRes(RuntimeException("unknown"))
         )
     }
+
+    @Test
+    fun resolveErrorMessageRes_mapsFailureKinds() {
+        assertEquals(
+            R.string.daily_ai_error_network,
+            DailyAiMessageTextResolver.resolveErrorMessageRes(DailyAiFailureKind.NETWORK)
+        )
+        assertEquals(
+            R.string.daily_ai_error_rate_limited,
+            DailyAiMessageTextResolver.resolveErrorMessageRes(DailyAiFailureKind.RATE_LIMIT)
+        )
+        assertEquals(
+            R.string.daily_ai_error_general,
+            DailyAiMessageTextResolver.resolveErrorMessageRes(DailyAiFailureKind.GENERAL)
+        )
+    }
 }

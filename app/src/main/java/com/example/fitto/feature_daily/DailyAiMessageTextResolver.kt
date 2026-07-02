@@ -3,7 +3,6 @@ package com.example.fitto.feature_daily
 import androidx.annotation.StringRes
 import com.example.fitto.R
 import com.example.fitto.feature_daily.ai.AiDailyTriggerType
-import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
 
 object DailyAiMessageTextResolver {
 
@@ -38,16 +37,15 @@ object DailyAiMessageTextResolver {
 
     @StringRes
     fun resolveErrorMessageRes(throwable: Throwable): Int {
-        val message = throwable.message.orEmpty()
-        return when {
-            message.contains(GeminiDailyAiRepository.ERROR_NETWORK) -> {
-                R.string.daily_ai_error_network
-            }
-            message.contains(GeminiDailyAiRepository.ERROR_RATE_LIMIT) ||
-                message.contains("429") -> {
-                R.string.daily_ai_error_rate_limited
-            }
-            else -> R.string.daily_ai_error_general
+        return resolveErrorMessageRes(DailyAiFailureResolver.resolve(throwable))
+    }
+
+    @StringRes
+    fun resolveErrorMessageRes(failureKind: DailyAiFailureKind): Int {
+        return when (failureKind) {
+            DailyAiFailureKind.NETWORK -> R.string.daily_ai_error_network
+            DailyAiFailureKind.RATE_LIMIT -> R.string.daily_ai_error_rate_limited
+            DailyAiFailureKind.GENERAL -> R.string.daily_ai_error_general
         }
     }
 }

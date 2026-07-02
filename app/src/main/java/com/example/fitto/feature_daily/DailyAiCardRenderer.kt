@@ -6,7 +6,6 @@ import androidx.core.view.isVisible
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDailyBinding
 import com.example.fitto.feature_daily.ai.AiDailyAnalysisResult
-import com.example.fitto.feature_daily.ai.AiDailyMealComment
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 
 class DailyAiCardRenderer(
@@ -66,70 +65,17 @@ class DailyAiCardRenderer(
     }
 
     fun buildStructuredMessage(analysis: AiDailyAnalysisResult): String {
-        return buildStructuredMessage(
-            mealComments = analysis.mealComments,
-            waterComment = analysis.waterComment,
-            exerciseComment = analysis.exerciseComment,
-            generalComment = analysis.generalComment,
-            suggestion = analysis.suggestion,
-            plainText = analysis.plainText
+        return DailyAiStructuredMessageBuilder.build(
+            analysis = analysis,
+            labels = DailyAiStructuredMessageBuilder.Labels(
+                mealComments = context.getString(R.string.daily_ai_meal_comments_label),
+                unknownEntry = context.getString(R.string.daily_ai_entry_unknown),
+                water = context.getString(R.string.daily_ai_water_label),
+                exercise = context.getString(R.string.daily_ai_exercise_label),
+                generalComment = context.getString(R.string.daily_ai_general_comment_label),
+                suggestion = context.getString(R.string.daily_ai_suggestion_label)
+            )
         )
-    }
-
-    private fun buildStructuredMessage(
-        mealComments: List<AiDailyMealComment>,
-        waterComment: String,
-        exerciseComment: String,
-        generalComment: String,
-        suggestion: String,
-        plainText: String? = null
-    ): String {
-        plainText
-            ?.trim()
-            ?.takeIf { it.isNotBlank() }
-            ?.let { return it }
-
-        val builder = StringBuilder()
-
-        val usefulMealComments = mealComments.filter { it.comment.isNotBlank() }
-        if (usefulMealComments.isNotEmpty()) {
-            builder.append(context.getString(R.string.daily_ai_meal_comments_label)).append('\n')
-            usefulMealComments.forEach { meal ->
-                val name = meal.mealName.trim()
-                    .ifBlank { context.getString(R.string.daily_ai_entry_unknown) }
-                builder.append("\u2022 ")
-                    .append(name)
-                    .append(": ")
-                    .append(meal.comment.trim())
-                    .append('\n')
-            }
-        }
-
-        waterComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(context.getString(R.string.daily_ai_water_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        exerciseComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(context.getString(R.string.daily_ai_exercise_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        generalComment.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(context.getString(R.string.daily_ai_general_comment_label)).append('\n')
-            builder.append(comment).append('\n')
-        }
-
-        suggestion.trim().takeIf { it.isNotBlank() }?.let { comment ->
-            if (builder.isNotEmpty()) builder.append('\n')
-            builder.append(context.getString(R.string.daily_ai_suggestion_label)).append('\n')
-            builder.append(comment)
-        }
-
-        return builder.toString().trim()
     }
 
     private fun applyStatusStyle(status: AiDailyStatusLevel) = with(binding) {
