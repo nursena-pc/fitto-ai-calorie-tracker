@@ -26,7 +26,6 @@ import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
 import com.example.fitto.feature_dietplans.planning.DailyPlannedMealsUiModel
 import com.example.fitto.feature_dietplans.planning.DietMealPlanCatalog
-import com.example.fitto.feature_dietplans.planning.PlannedMealProgressResolver
 import com.example.fitto.feature_meal.AddMealFragment
 import com.example.fitto.feature_meal.MealDetailFragment
 import com.example.fitto.feature_meal.model.MealType
@@ -103,6 +102,8 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var dailySummaryLoadAction: DailySummaryLoadAction
     private lateinit var weeklyProgressLoadAction: DailyWeeklyProgressLoadAction
     private lateinit var waterTrackingAction: DailyWaterTrackingAction
+    private lateinit var activePlanLoadAction: DailyActivePlanLoadAction
+    private lateinit var plannedMealAction: DailyPlannedMealAction
 
     private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
@@ -114,7 +115,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var nutritionTargetStore: UserNutritionTargetStore
     private lateinit var mealRepository: MealRepository
-    private lateinit var dietPlanSeedRepository: DietPlanSeedRepository
     private lateinit var stepCounterManager: FittoStepCounterManager
     private var localStepCount: Long = 0L
     private var waterGoalMl: Int = 2500
@@ -146,6 +146,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private var currentActivePlan: ActiveDietPlanUiModel? = null
     private var currentDailyMealPlan: DailyPlannedMealsUiModel? = null
+    private var activePlanLoadGeneration: Long = 0L
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -156,7 +157,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         dietPlanStore = DietPlanPreferenceStore(requireContext())
         nutritionTargetStore = UserNutritionTargetStore(requireContext())
         mealRepository = MealRepository(appContext)
-        dietPlanSeedRepository = DietPlanSeedRepository(appContext)
+        val dietPlanSeedRepository = DietPlanSeedRepository(appContext)
         val profileCacheRepository = ProfileCacheRepository(appContext)
         val waterTrackingStore = WaterTrackingStore(appContext)
         customDietPlanStore = CustomDietPlanStore(appContext)
@@ -190,6 +191,81 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             getVisibleBottleCount = waterTrackingStore::getVisibleBottleCount,
             increaseVisibleBottleCount = waterTrackingStore::increaseVisibleBottleCount,
             decreaseVisibleBottleCount = waterTrackingStore::decreaseVisibleBottleCount
+        )
+
+        val customMealPlanGenerator = CustomDietMealPlanGenerator(requireContext())
+        val customPlanLoadAction = DailyCustomPlanLoadAction(
+            getAllFoods = mealRepository::getAllFoods,
+            getCurrentPlanDay = dietPlanStore::getCurrentPlanDay,
+            getCompletedMealIds = dietPlanStore::getCompletedPlannedMealIds,
+            createActivePlan = customMealPlanGenerator::createActivePlan,
+            buildDailyPlan = customMealPlanGenerator::buildDailyPlan
+        )
+        val seedPlanLoadAction = DailySeedPlanLoadAction(
+            getDietPlanById = dietPlanSeedRepository::getDietPlanById,
+            getPlannedMealsForDay = dietPlanSeedRepository::getPlannedMealUiModelsForDay,
+            getCurrentPlanDay = dietPlanStore::getCurrentPlanDay,
+            getCompletedMealIds = dietPlanStore::getCompletedPlannedMealIds
+        )
+        val catalogPlanLoadAction = DailyCatalogPlanLoadAction(
+            getPlanDurationDays = DietMealPlanCatalog::getPlanDurationDays,
+            getCurrentPlanDay = dietPlanStore::getCurrentPlanDay,
+            getMealsForDay = DietMealPlanCatalog::getMealsForDay,
+            getCompletedMealIds = dietPlanStore::getCompletedPlannedMealIds,
+            getPlanTitle = { planId ->
+                DietMealPlanCatalog.getPlanTitle(
+                    requireContext(),
+                    planId
+                )
+            },
+            getPlanBadge = { planId ->
+                DietMealPlanCatalog.getPlanBadge(
+                    requireContext(),
+                    planId
+                )
+            },
+            getPlanIcon = DietMealPlanCatalog::getPlanIcon
+        )
+        activePlanLoadAction = DailyActivePlanLoadAction(
+            getActivePlanId = dietPlanStore::getActivePlanId,
+            getActiveFastingType = dietPlanStore::getActiveFastingType,
+            getCustomFastingHours = dietPlanStore::getCustomFastingHours,
+            getCustomPlan = customDietPlanStore::getPlan,
+            createEmptyActivePlan = {
+                DietPlanCatalog.createEmptyActivePlan(requireContext())
+            },
+            createCatalogActivePlan = { planId, fastingType, customFastingHours ->
+                DietPlanCatalog.getActivePlan(
+                    context = requireContext(),
+                    planId = planId,
+                    fastingType = fastingType,
+                    customFastingHours = customFastingHours
+                )
+            },
+            loadCustomPlan = customPlanLoadAction::load,
+            loadSeedPlan = seedPlanLoadAction::load,
+            loadCatalogPlan = catalogPlanLoadAction::load
+        )
+        plannedMealAction = DailyPlannedMealAction(
+            addPlannedMealEntry = { request, entryDate ->
+                mealRepository.addPlannedMealEntry(
+                    mealType = request.mealType,
+                    title = request.title,
+                    targetCalories = request.targetCalories,
+                    plannedMealCalories = request.plannedMealCalories,
+                    suggestedFoodNames = request.suggestedFoodNames,
+                    planId = request.planId,
+                    plannedMealId = request.plannedMealId,
+                    entryDate = entryDate
+                )
+            },
+            markPlannedMealCompleted = { completion ->
+                dietPlanStore.markPlannedMealCompleted(
+                    planId = completion.planId,
+                    dayNumber = completion.dayNumber,
+                    plannedMealId = completion.plannedMealId
+                )
+            }
         )
 
         healthConnectManager = HealthConnectManager(appContext)
@@ -1240,59 +1316,26 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderActivePlan() {
-        if (_binding == null || !::dietPlanStore.isInitialized) return
+        if (_binding == null || !::activePlanLoadAction.isInitialized) return
 
-        val activePlanId = dietPlanStore.getActivePlanId()
-        if (activePlanId?.let(DailyActivePlanPolicy::isCustomPlan) == true) {
-            val customPlan = customDietPlanStore.getPlan(activePlanId)
-
-            if (customPlan != null) {
-                renderGeneratedCustomPlan(customPlan)
-                return
-            }
-        }
-
-        val activePlan = if (activePlanId == null) {
-            DietPlanCatalog.createEmptyActivePlan(requireContext())
-        } else {
-            DietPlanCatalog.getActivePlan(
-                context = requireContext(),
-                planId = activePlanId,
-                fastingType = dietPlanStore.getActiveFastingType(),
-                customFastingHours = dietPlanStore.getCustomFastingHours()
-            )
-        }
-
-        currentActivePlan = activePlan.takeUnless { plan ->
-            DailyActivePlanPolicy.isEmptyPlan(plan.id)
-        }
-
-        if (DailyActivePlanPolicy.shouldUseBasicPlanRenderer(activePlan.id)) {
-            currentDailyMealPlan = null
-            renderBasicActivePlan(activePlan)
-            return
-        }
-
-        val targetCalories = currentDailyTargetCalories.coerceAtLeast(1)
+        val loadGeneration = ++activePlanLoadGeneration
+        val targetCalories = currentDailyTargetCalories
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val dailyPlan = withContext(Dispatchers.IO) {
-                buildDailyMealPlanFromRoom(activePlan, targetCalories)
+            val result = withContext(Dispatchers.IO) {
+                activePlanLoadAction.load(targetCalories)
             }
 
-            if (_binding == null) return@launch
+            if (_binding == null || loadGeneration != activePlanLoadGeneration) {
+                return@launch
+            }
 
-            val safeDailyPlan = dailyPlan ?: buildDailyMealPlanFromCatalog(
-                activePlan = activePlan,
-                targetCalories = targetCalories
-            )
+            currentActivePlan = result.activePlan
+            currentDailyMealPlan = result.dailyPlan
 
-            if (safeDailyPlan == null) {
-                currentDailyMealPlan = null
-                renderBasicActivePlan(activePlan)
-            } else {
-                currentDailyMealPlan = safeDailyPlan
-                renderDailyMealPlan(safeDailyPlan)
+            when (result) {
+                is DailyActivePlanLoadResult.Basic -> renderBasicActivePlan(result.displayPlan)
+                is DailyActivePlanLoadResult.Planned -> renderDailyMealPlan(result.dailyPlan)
             }
         }
     }
@@ -1495,114 +1538,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         return DailyFastingPolicy.resolveFastingHours(
             fastingTypeName = dietPlanStore.getActiveFastingType()?.name,
             customFastingHours = dietPlanStore.getCustomFastingHours()
-        )
-    }
-
-    private fun renderGeneratedCustomPlan(
-        customPlan: CustomDietPlanLocalModel
-    ) {
-        val generator = CustomDietMealPlanGenerator(requireContext())
-        val activePlan = generator.createActivePlan(customPlan)
-        currentActivePlan = activePlan
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val foods = withContext(Dispatchers.IO) {
-                mealRepository.getAllFoods()
-            }
-
-            if (_binding == null) return@launch
-
-            val dayNumber = dietPlanStore.getCurrentPlanDay(customPlan.durationDays)
-            val completedMealIds = dietPlanStore.getCompletedPlannedMealIds(
-                planId = customPlan.id,
-                dayNumber = dayNumber
-            )
-            val dailyPlan = generator.buildDailyPlan(
-                plan = customPlan,
-                allFoods = foods,
-                dayNumber = dayNumber,
-                completedMealIds = completedMealIds
-            )
-
-            currentDailyMealPlan = dailyPlan
-
-            if (dailyPlan.meals.isEmpty()) {
-                renderBasicActivePlan(activePlan)
-            } else {
-                renderDailyMealPlan(dailyPlan)
-            }
-        }
-    }
-
-    private suspend fun buildDailyMealPlanFromRoom(
-        activePlan: ActiveDietPlanUiModel,
-        targetCalories: Int
-    ): DailyPlannedMealsUiModel? {
-        val roomPlan = dietPlanSeedRepository.getDietPlanById(activePlan.id) ?: return null
-        if (roomPlan.durationDays <= 0) return null
-
-        val dayNumber = dietPlanStore.getCurrentPlanDay(roomPlan.durationDays)
-        val plannedMeals = dietPlanSeedRepository.getPlannedMealUiModelsForDay(
-            planId = activePlan.id,
-            dayNumber = dayNumber
-        )
-
-        val completedMealIds = dietPlanStore.getCompletedPlannedMealIds(
-            activePlan.id,
-            dayNumber
-        )
-
-        val nextMeal = PlannedMealProgressResolver.nextMeal(
-            meals = plannedMeals,
-            completedMealIds = completedMealIds
-        )
-
-        return DailyPlannedMealsUiModel(
-            planId = activePlan.id,
-            planTitle = roomPlan.nameTr,
-            planBadge = activePlan.badge,
-            planIcon = roomPlan.icon.ifBlank { activePlan.icon },
-            dayNumber = dayNumber,
-            durationDays = roomPlan.durationDays,
-            targetCalories = targetCalories,
-            meals = plannedMeals,
-            nextMeal = nextMeal,
-            completedMealIds = completedMealIds
-        )
-    }
-
-    private fun buildDailyMealPlanFromCatalog(
-        activePlan: ActiveDietPlanUiModel,
-        targetCalories: Int
-    ): DailyPlannedMealsUiModel? {
-        val durationDays = DietMealPlanCatalog.getPlanDurationDays(activePlan.id)
-        if (durationDays <= 0) return null
-
-        val dayNumber = dietPlanStore.getCurrentPlanDay(durationDays)
-        val plannedMeals = DietMealPlanCatalog.getMealsForDay(activePlan.id, dayNumber)
-        if (plannedMeals.isEmpty()) return null
-
-        val completedMealIds = dietPlanStore.getCompletedPlannedMealIds(
-            activePlan.id,
-            dayNumber
-        )
-
-        val nextMeal = PlannedMealProgressResolver.nextMeal(
-            meals = plannedMeals,
-            completedMealIds = completedMealIds
-        )
-
-        return DailyPlannedMealsUiModel(
-            planId = activePlan.id,
-            planTitle = DietMealPlanCatalog.getPlanTitle(requireContext(), activePlan.id),
-            planBadge = DietMealPlanCatalog.getPlanBadge(requireContext(), activePlan.id),
-            planIcon = DietMealPlanCatalog.getPlanIcon(activePlan.id),
-            dayNumber = dayNumber,
-            durationDays = durationDays,
-            targetCalories = targetCalories,
-            meals = plannedMeals,
-            nextMeal = nextMeal,
-            completedMealIds = completedMealIds
         )
     }
 
@@ -2122,47 +2057,40 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun applyNextPlannedMeal() {
-        val applyRequest = DailyPlannedMealActionResolver.resolveApplyRequest(
-            currentDailyMealPlan
-        ) ?: return
+        val applyRequest = plannedMealAction.prepare(currentDailyMealPlan) ?: return
+        val entryDate = selectedDateIso
 
         binding.applyPlannedMealButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    mealRepository.addPlannedMealEntry(
-                        mealType = applyRequest.mealType,
-                        title = applyRequest.title,
-                        targetCalories = applyRequest.targetCalories,
-                        plannedMealCalories = applyRequest.plannedMealCalories,
-                        suggestedFoodNames = applyRequest.suggestedFoodNames,
-                        planId = applyRequest.planId,
-                        plannedMealId = applyRequest.plannedMealId,
-                        entryDate = selectedDateIso
-                    )
+            val result = withContext(Dispatchers.IO) {
+                plannedMealAction.execute(
+                    request = applyRequest,
+                    entryDate = entryDate
+                )
+            }
+
+            when (result) {
+                is DailyPlannedMealExecutionResult.Success -> {
+                    val effect = result.effect
+
+                    Toast.makeText(
+                        requireContext(),
+                        getString(effect.messageRes, getString(effect.mealTypeTitleRes)),
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    if (effect.refreshMealTotals) renderMealTotals()
+                    if (effect.refreshActivePlan) renderActivePlan()
                 }
-            }.onSuccess {
-                val effect = DailyPlannedMealApplyResultResolver.resolveSuccess(applyRequest)
 
-                markPlannedMealCompleted(applyRequest.completion)
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(effect.messageRes, getString(effect.mealTypeTitleRes)),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                if (effect.refreshMealTotals) renderMealTotals()
-                if (effect.refreshActivePlan) renderActivePlan()
-            }.onFailure {
-                val effect = DailyPlannedMealApplyResultResolver.resolveFailure()
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(effect.messageRes),
-                    Toast.LENGTH_SHORT
-                ).show()
+                is DailyPlannedMealExecutionResult.Failure -> {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(result.effect.messageRes),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
 
             if (_binding != null) {
@@ -2172,23 +2100,14 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun markNextPlannedMealCompletedIfMatches(mealType: MealType) {
-        val completion = DailyPlannedMealActionResolver.resolveCompletionForMealType(
+        val wasCompleted = plannedMealAction.completeNextMealIfMatches(
             dailyPlan = currentDailyMealPlan,
             mealType = mealType
-        ) ?: return
-
-        markPlannedMealCompleted(completion)
-        renderActivePlan()
-    }
-
-    private fun markPlannedMealCompleted(
-        completion: DailyPlannedMealActionResolver.Completion
-    ) {
-        dietPlanStore.markPlannedMealCompleted(
-            planId = completion.planId,
-            dayNumber = completion.dayNumber,
-            plannedMealId = completion.plannedMealId
         )
+
+        if (wasCompleted) {
+            renderActivePlan()
+        }
     }
 
     fun openDietPlans() {
