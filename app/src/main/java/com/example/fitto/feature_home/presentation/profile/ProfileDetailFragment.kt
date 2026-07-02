@@ -2,17 +2,14 @@ package com.example.fitto.feature_home.presentation.profile
 
 import android.app.AlarmManager
 import android.app.Dialog
-import android.content.ContentValues
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import android.content.Intent
-import android.os.Environment
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.provider.Settings
 import android.text.InputType
 import android.text.method.PasswordTransformationMethod
@@ -27,7 +24,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import coil.load
 import androidx.annotation.StringRes
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
@@ -37,7 +33,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
@@ -47,14 +42,13 @@ import com.example.fitto.R
 import com.example.fitto.databinding.BottomSheetCountryPickerBinding
 import com.example.fitto.databinding.ItemCountryBinding
 import com.example.fitto.feature_auth.login.GoogleSignInHelper
+import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
-import com.example.fitto.feature_home.presentation.social.SocialPost
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_home.presentation.social.SocialUser
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -76,13 +70,7 @@ import kotlinx.coroutines.tasks.await
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.net.URL
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
-import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
     private val menuId: ProfileMenuId by lazy {
@@ -99,16 +87,9 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private val socialRepository = SocialRepository()
     private var emailChangeWatcherJob: Job? = null
 
-    private lateinit var photoAlbumContent: View
-    private lateinit var photoAlbumRecyclerView: RecyclerView
-    private lateinit var photoAlbumEmptyTextView: TextView
-    private lateinit var photoAlbumDateFilterHintTextView: TextView
-    private lateinit var photoAlbumDateFilterButton: MaterialButton
-    private lateinit var photoAlbumDateClearButton: MaterialButton
-
-    private val photoAlbumAdapter: ProfilePhotoAlbumAdapter by lazy {
-        ProfilePhotoAlbumAdapter { item -> showPhotoPreviewDialog(item) }
-    }
+    private var photoAlbumCoordinator: ProfilePhotoAlbumCoordinator? = null
+    private var selectedPhotoAlbumDateKey: String = ProfilePhotoAlbumFilter.ALL
+    private var pendingPhotoDocumentItem: ProfilePhotoAlbumItem? = null
 
     private val achievementAdapter: ProfileAchievementAdapter by lazy {
         ProfileAchievementAdapter { item ->
@@ -116,10 +97,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
     }
 
-    private var allPhotoAlbumItems: List<ProfilePhotoAlbumItem> = emptyList()
-    private var latestPhotoAlbumPosts: List<SocialPost> = emptyList()
-    private var selectedPhotoAlbumDateKey: String = PHOTO_FILTER_ALL
-    private var pendingDownloadItem: ProfilePhotoAlbumItem? = null
     private var lastProfileErrorMessage: String? = null
     private var isEmailChangeRecoveryActive: Boolean = false
 
@@ -133,11 +110,11 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private val photoDocumentSaverLauncher = registerForActivityResult(
         ActivityResultContracts.CreateDocument("image/jpeg")
     ) { uri ->
-        val item = pendingDownloadItem
-        pendingDownloadItem = null
+        val item = pendingPhotoDocumentItem
+        pendingPhotoDocumentItem = null
 
         if (uri != null && item != null) {
-            copyPhotoToPickedDocument(item, uri)
+            photoAlbumCoordinator?.copyToDocument(item, uri)
         }
     }
 
@@ -154,12 +131,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         val backButton = view.findViewById<TextView>(R.id.buttonProfileDetailBack)
 
         recyclerView = view.findViewById(R.id.profileDetailRecyclerView)
-        photoAlbumContent = view.findViewById(R.id.profilePhotoAlbumContent)
-        photoAlbumRecyclerView = view.findViewById(R.id.recyclerProfilePhotoAlbum)
-        photoAlbumEmptyTextView = view.findViewById(R.id.textProfileAlbumEmpty)
-        photoAlbumDateFilterHintTextView = view.findViewById(R.id.textProfileAlbumDateFilterHint)
-        photoAlbumDateFilterButton = view.findViewById(R.id.buttonProfileAlbumDateFilter)
-        photoAlbumDateClearButton = view.findViewById(R.id.buttonProfileAlbumDateClear)
+        val photoAlbumContent = view.findViewById<View>(R.id.profilePhotoAlbumContent)
 
         titleTextView.setText(ProfileDetailContent.titleFor(menuId))
 
@@ -168,32 +140,37 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        photoAlbumRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        photoAlbumRecyclerView.adapter = photoAlbumAdapter
-
-        photoAlbumDateFilterButton.setOnClickListener {
-            showPhotoAlbumDatePicker()
-        }
-        photoAlbumDateClearButton.setOnClickListener {
-            selectedPhotoAlbumDateKey = PHOTO_FILTER_ALL
-            bindPhotoAlbum()
-        }
 
         if (menuId == ProfileMenuId.PHOTO_ALBUM) {
             recyclerView.isVisible = false
-            photoAlbumContent.isVisible = true
-            photoAlbumDateFilterButton.isVisible = true
-            observePhotoAlbum()
+            photoAlbumCoordinator = ProfilePhotoAlbumCoordinator(
+                context = requireContext(),
+                fragmentManager = childFragmentManager,
+                scope = viewLifecycleOwner.lifecycleScope,
+                posts = socialRepository.observeMyProfilePosts(),
+                contentView = photoAlbumContent,
+                recyclerView = view.findViewById(R.id.recyclerProfilePhotoAlbum),
+                emptyTextView = view.findViewById(R.id.textProfileAlbumEmpty),
+                dateFilterHintTextView = view.findViewById(R.id.textProfileAlbumDateFilterHint),
+                dateFilterButton = view.findViewById(R.id.buttonProfileAlbumDateFilter),
+                dateClearButton = view.findViewById(R.id.buttonProfileAlbumDateClear),
+                initialSelectedDateKey = selectedPhotoAlbumDateKey,
+                onSelectedDateKeyChanged = { dateKey -> selectedPhotoAlbumDateKey = dateKey },
+                requestDocumentSave = { item, fileName ->
+                    pendingPhotoDocumentItem = item
+                    photoDocumentSaverLauncher.launch(fileName)
+                },
+                showMessage = ::showToast
+            ).also { coordinator ->
+                coordinator.start()
+            }
         } else {
             recyclerView.isVisible = true
             photoAlbumContent.isVisible = false
-            photoAlbumDateFilterButton.isVisible = false
         }
 
         observeProfileData()
-        if (menuId == ProfileMenuId.PHOTO_ALBUM) {
-            bindPhotoAlbum()
-        } else {
+        if (menuId != ProfileMenuId.PHOTO_ALBUM) {
             bindRows()
         }
         viewModel.loadProfile()
@@ -217,6 +194,8 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     override fun onDestroyView() {
         emailChangeWatcherJob?.cancel()
         emailChangeWatcherJob = null
+        photoAlbumCoordinator?.clear()
+        photoAlbumCoordinator = null
         super.onDestroyView()
     }
 
@@ -264,8 +243,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             latestUser = accountDisplayUser()
 
             if (menuId == ProfileMenuId.PHOTO_ALBUM) {
-                allPhotoAlbumItems = buildPhotoAlbumItems(latestPhotoAlbumPosts)
-                bindPhotoAlbum()
+                photoAlbumCoordinator?.updateProfilePhoto(latestUser?.photoUrl)
             } else {
                 bindRows()
             }
@@ -426,259 +404,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
     }
 
-
-    private fun observePhotoAlbum() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            socialRepository.observeMyProfilePosts().collect { posts ->
-                latestPhotoAlbumPosts = posts
-                allPhotoAlbumItems = buildPhotoAlbumItems(posts)
-                bindPhotoAlbum()
-            }
-        }
-    }
-
-    private fun buildPhotoAlbumItems(
-        posts: List<SocialPost>
-    ): List<ProfilePhotoAlbumItem> {
-        val items = mutableListOf<ProfilePhotoAlbumItem>()
-
-        latestUser?.photoUrl
-            ?.takeIf { it.isNotBlank() }
-            ?.let { photoUrl ->
-                items += ProfilePhotoAlbumItem(
-                    id = "profile_photo",
-                    imageUrl = photoUrl,
-                    sourceTitle = getString(R.string.profile_album_source_profile_photo),
-                    dateKey = PHOTO_FILTER_UNDATED,
-                    dateText = getString(R.string.profile_album_undated),
-                    createdAt = 0L
-                )
-            }
-
-        posts
-            .filter { post -> !post.imageUrl.isNullOrBlank() }
-            .forEach { post ->
-                val createdAt = post.createdAt.takeIf { it > 0L } ?: 0L
-                items += ProfilePhotoAlbumItem(
-                    id = post.id,
-                    imageUrl = post.imageUrl.orEmpty(),
-                    sourceTitle = post.mealInfo?.takeIf { it.isNotBlank() }
-                        ?: getString(R.string.profile_album_source_post_photo),
-                    dateKey = dateKeyFor(createdAt),
-                    dateText = dateTextFor(createdAt),
-                    createdAt = createdAt
-                )
-            }
-
-        return items.sortedWith(
-            compareByDescending<ProfilePhotoAlbumItem> { it.createdAt }
-                .thenBy { item -> item.sourceTitle }
-        )
-    }
-
-    private fun bindPhotoAlbum() {
-        if (!::photoAlbumRecyclerView.isInitialized) return
-
-        bindPhotoAlbumDateFilterBar()
-
-        val filteredItems = if (selectedPhotoAlbumDateKey == PHOTO_FILTER_ALL) {
-            allPhotoAlbumItems
-        } else {
-            allPhotoAlbumItems.filter { item -> item.dateKey == selectedPhotoAlbumDateKey }
-        }
-
-        photoAlbumAdapter.submitList(filteredItems)
-        photoAlbumEmptyTextView.isVisible = filteredItems.isEmpty()
-        photoAlbumRecyclerView.isVisible = filteredItems.isNotEmpty()
-    }
-
-    private fun bindPhotoAlbumDateFilterBar() {
-        photoAlbumDateFilterButton.isVisible = true
-        photoAlbumDateFilterButton.text = ""
-
-        if (selectedPhotoAlbumDateKey == PHOTO_FILTER_ALL) {
-            photoAlbumDateClearButton.isVisible = false
-            photoAlbumDateFilterHintTextView.isVisible = false
-            photoAlbumDateFilterHintTextView.text = ""
-        } else {
-            photoAlbumDateClearButton.isVisible = true
-            photoAlbumDateFilterHintTextView.isVisible = true
-            photoAlbumDateFilterHintTextView.text = getString(
-                R.string.profile_album_filter_date_selected,
-                dateTextForDateKey(selectedPhotoAlbumDateKey)
-            )
-        }
-    }
-
-    private fun showPhotoAlbumDatePicker() {
-        val builder = MaterialDatePicker.Builder.datePicker()
-            .setTitleText(getString(R.string.profile_album_date_picker_title))
-            .setTheme(R.style.ThemeOverlay_Fitto_MaterialDatePicker)
-
-        pickerUtcMillisForDateKey(selectedPhotoAlbumDateKey)?.let { selectedMillis ->
-            builder.setSelection(selectedMillis)
-        }
-
-        val picker = builder.build()
-        picker.addOnPositiveButtonClickListener { selectedUtcMillis ->
-            selectedPhotoAlbumDateKey = dateKeyForPickerSelection(selectedUtcMillis)
-            bindPhotoAlbum()
-        }
-        picker.show(childFragmentManager, "profile_album_date_picker")
-    }
-
-    private fun showPhotoPreviewDialog(item: ProfilePhotoAlbumItem) {
-        val dialogView = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_profile_photo_preview, null, false)
-
-        val imageView = dialogView.findViewById<ImageView>(R.id.imageProfilePhotoPreview)
-        val titleTextView = dialogView.findViewById<TextView>(R.id.textProfilePhotoPreviewTitle)
-        val dateTextView = dialogView.findViewById<TextView>(R.id.textProfilePhotoPreviewDate)
-        val closeButton = dialogView.findViewById<MaterialButton>(R.id.buttonProfilePhotoPreviewClose)
-        val downloadButton = dialogView.findViewById<MaterialButton>(R.id.buttonProfilePhotoPreviewDownload)
-
-        imageView.load(item.imageUrl) {
-            crossfade(true)
-            placeholder(R.drawable.bg_create_post_image_placeholder)
-            error(R.drawable.bg_create_post_image_placeholder)
-        }
-        titleTextView.text = item.sourceTitle
-        dateTextView.text = item.dateText
-
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        closeButton.setOnClickListener { dialog.dismiss() }
-        downloadButton.setOnClickListener {
-            downloadProfilePhoto(item)
-            dialog.dismiss()
-        }
-
-        dialog.show()
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.92f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
-
-    private fun downloadProfilePhoto(item: ProfilePhotoAlbumItem) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                runCatching {
-                    savePhotoToGallery(item)
-                }.onSuccess {
-                    showToast(R.string.profile_album_download_success)
-                }.onFailure { error ->
-                    Log.e(TAG, "Photo download failed", error)
-                    showToast(R.string.profile_album_download_error)
-                }
-            }
-        } else {
-            pendingDownloadItem = item
-            photoDocumentSaverLauncher.launch(fileNameForPhoto(item))
-        }
-    }
-
-    private fun copyPhotoToPickedDocument(item: ProfilePhotoAlbumItem, targetUri: Uri) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                withContext(Dispatchers.IO) {
-                    requireContext().contentResolver.openOutputStream(targetUri)?.use { output ->
-                        openPhotoInputStream(item.imageUrl).use { input ->
-                            input.copyTo(output)
-                        }
-                    } ?: error("Output stream could not be opened")
-                }
-            }.onSuccess {
-                showToast(R.string.profile_album_download_success)
-            }.onFailure { error ->
-                Log.e(TAG, "Photo export failed", error)
-                showToast(R.string.profile_album_download_error)
-            }
-        }
-    }
-
-    private suspend fun savePhotoToGallery(item: ProfilePhotoAlbumItem): Uri = withContext(Dispatchers.IO) {
-        val resolver = requireContext().contentResolver
-        val fileName = fileNameForPhoto(item)
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Fitto")
-            put(MediaStore.Images.Media.IS_PENDING, 1)
-        }
-
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            ?: error("MediaStore insert failed")
-
-        try {
-            resolver.openOutputStream(uri)?.use { output ->
-                openPhotoInputStream(item.imageUrl).use { input ->
-                    input.copyTo(output)
-                }
-            } ?: error("Output stream could not be opened")
-
-            values.clear()
-            values.put(MediaStore.Images.Media.IS_PENDING, 0)
-            resolver.update(uri, values, null, null)
-            uri
-        } catch (exception: Exception) {
-            resolver.delete(uri, null, null)
-            throw exception
-        }
-    }
-
-    private fun openPhotoInputStream(imageUrl: String) = when (val scheme = Uri.parse(imageUrl).scheme.orEmpty()) {
-        "content" -> requireContext().contentResolver.openInputStream(Uri.parse(imageUrl))
-            ?: error("Content uri could not be opened")
-        "file" -> File(Uri.parse(imageUrl).path.orEmpty()).inputStream()
-        "http", "https" -> URL(imageUrl).openStream()
-        else -> URL(imageUrl).openStream()
-    }
-
-    private fun fileNameForPhoto(item: ProfilePhotoAlbumItem): String {
-        val suffix = item.id.replace(Regex("[^A-Za-z0-9_-]"), "_").take(24)
-        return "fitto_${System.currentTimeMillis()}_$suffix.jpg"
-    }
-
-    private fun dateKeyFor(createdAt: Long): String {
-        if (createdAt <= 0L) return PHOTO_FILTER_UNDATED
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(createdAt))
-    }
-
-    private fun dateTextFor(createdAt: Long): String {
-        if (createdAt <= 0L) return getString(R.string.profile_album_undated)
-        return DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(createdAt))
-    }
-
-    private fun dateKeyForPickerSelection(utcMillis: Long): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }.format(Date(utcMillis))
-    }
-
-    private fun pickerUtcMillisForDateKey(dateKey: String): Long? {
-        if (dateKey == PHOTO_FILTER_ALL || dateKey == PHOTO_FILTER_UNDATED) return null
-        return runCatching {
-            SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }.parse(dateKey)?.time
-        }.getOrNull()
-    }
-
-    private fun dateTextForDateKey(dateKey: String): String {
-        if (dateKey == PHOTO_FILTER_ALL) return getString(R.string.profile_album_filter_all)
-        if (dateKey == PHOTO_FILTER_UNDATED) return getString(R.string.profile_album_undated)
-
-        val selectedDate = pickerUtcMillisForDateKey(dateKey)?.let { Date(it) }
-            ?: return dateKey
-
-        return DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }.format(selectedDate)
-    }
 
     private fun clearProfileHistory() {
         val appContext = requireContext().applicationContext
@@ -2762,8 +2487,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         private const val REGIONAL_INDICATOR_OFFSET = 0x1F1E6
         private const val FIREBASE_PROVIDER_ID = "firebase"
         private const val MISSING_SESSION_ERROR_MESSAGE = "Oturum bilgisi bulunamadı."
-        private const val PHOTO_FILTER_ALL = "all"
-        private const val PHOTO_FILTER_UNDATED = "undated"
         private const val TAG = "ProfileDetailFragment"
         private const val EMAIL_CHANGE_RESEND_COOLDOWN_MS = 30_000L
 
