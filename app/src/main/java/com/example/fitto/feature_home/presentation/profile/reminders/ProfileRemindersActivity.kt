@@ -122,6 +122,11 @@ class ProfileRemindersActivity : AppCompatActivity() {
             }
     }
 
+    override fun onDestroy() {
+        ProfileRemindersBinder.clear()
+        super.onDestroy()
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
