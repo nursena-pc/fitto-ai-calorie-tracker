@@ -6,7 +6,6 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -41,11 +40,7 @@ import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
 import android.animation.ObjectAnimator
 import android.view.animation.LinearInterpolator
 import com.example.fitto.feature_daily.data.FastingSessionStore
-import com.example.fitto.feature_daily.ai.AiDailyAnalysisCache
-import com.example.fitto.feature_daily.ai.AiDailyPromptBuilder
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
-import com.example.fitto.feature_daily.ai.CachedDailyAiMessage
-import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.example.fitto.feature_meal.model.MealEntryDetailUiModel
 import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
@@ -96,8 +91,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var selectedDateIso: String = LocalDate.now().toString()
     private var currentProfileWeightKg: Double? = null
     private lateinit var sleepTrackingAction: DailySleepTrackingAction
-    private lateinit var dailyAiRepository: GeminiDailyAiRepository
-    private lateinit var dailyAiCache: AiDailyAnalysisCache
+    private lateinit var dailyAiAnalysisAction: DailyAiAnalysisAction
     private lateinit var profileLoadAction: DailyProfileLoadAction
     private lateinit var profileMetricsLoadAction: DailyProfileMetricsLoadAction
     private lateinit var dailySummaryLoadAction: DailySummaryLoadAction
@@ -109,9 +103,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
     private var currentDailyAiSnapshot: DailyAiSnapshot? = null
-    private var dailyAiLoading: Boolean = false
-    private var dailyAiRequestInFlightKey: String? = null
-    private var pendingDailyAiManualRequest: Boolean = false
     private lateinit var customDietPlanStore: CustomDietPlanStore
     private lateinit var dietPlanStore: DietPlanPreferenceStore
     private lateinit var nutritionTargetStore: UserNutritionTargetStore
@@ -288,8 +279,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             getLogForDate = sleepLogStore::getLogForDate,
             saveLog = sleepLogStore::saveLog
         )
-        dailyAiRepository = GeminiDailyAiRepository()
-        dailyAiCache = AiDailyAnalysisCache(appContext)
+        dailyAiAnalysisAction = DailyAiAnalysisActionFactory.create(appContext)
 
         currentDailyTargetCalories = nutritionTargetStore
             .getDailyTargetCalories()
@@ -355,20 +345,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
     private fun setupDailyAiCard() {
         binding.dailyAiCard.setOnClickListener {
-            val snapshot = currentDailyAiSnapshot
-            Log.d(
-                FITTO_AI_LOG_TAG,
-                "Daily AI card clicked. snapshotReady=${snapshot != null}, loading=$dailyAiLoading"
-            )
+            when (
+                val decision = dailyAiAnalysisAction.onCardClicked(currentDailyAiSnapshot)
+            ) {
+                DailyAiAnalysisAction.CardClickDecision.PrepareSnapshot -> {
+                    renderDailyAiPreparingState()
+                    renderMealTotals()
+                }
 
-            if (snapshot == null) {
-                pendingDailyAiManualRequest = true
-                renderDailyAiPreparingState()
-                renderMealTotals()
-            } else {
-                // Kullanıcı dokunduğunda kart sessiz kalmasın; cache/cooldown varsa hemen sonra güncellenir.
-                renderDailyAiLoading()
-                requestDailyAiAnalysis(snapshot, isAuto = false)
+                is DailyAiAnalysisAction.CardClickDecision.Request -> {
+                    launchDailyAiRequest(decision.intent)
+                }
             }
         }
     }
@@ -386,58 +373,113 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun renderDailyAiState(snapshot: DailyAiSnapshot?) {
-        if (_binding == null || dailyAiLoading) return
+        if (_binding == null || !::dailyAiAnalysisAction.isInitialized) return
 
-        if (snapshot == null) {
-            renderDailyAiDefaultState()
-            return
-        }
-
-        currentDailyAiSnapshot = snapshot
-
-        if (pendingDailyAiManualRequest) {
-            pendingDailyAiManualRequest = false
-            requestDailyAiAnalysis(snapshot, isAuto = false)
-            return
-        }
-
-        val cachedMessage = dailyAiCache.get(snapshot.dateIso, snapshot.triggerType)
-        if (cachedMessage != null) {
-            val cachedAiMessage = cachedMessage.aiMessage.trim()
-            if (isUsableDailyAiCachedMessage(cachedMessage, snapshot)) {
-                Log.d(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI render cache hit. trigger=${snapshot.triggerType.name}, date=${snapshot.dateIso}, message=${cachedAiMessage.take(80)}"
-                )
-                renderDailyAiMessage(
-                    message = cachedAiMessage,
-                    subtitle = getString(R.string.daily_ai_result_subtitle)
-                )
-                return
-            } else {
-                Log.w(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI stale cache ignored in render. trigger=${snapshot.triggerType.name}, date=${snapshot.dateIso}, source=${cachedMessage.source}, message=${cachedAiMessage.take(80)}"
-                )
-                dailyAiCache.clear(snapshot.dateIso, snapshot.triggerType)
-            }
-        }
-
-        val localMessage = localDailyAiMessage(snapshot)
-        renderDailyAiMessage(
-            message = localMessage,
-            subtitle = getString(R.string.daily_ai_default_subtitle)
+        val resolution = dailyAiAnalysisAction.resolveSnapshot(
+            snapshot = snapshot,
+            selectedDate = selectedDate,
+            today = LocalDate.now()
         )
+        renderDailyAiSnapshotPresentation(resolution.presentation)
+        resolution.request?.let(::launchDailyAiRequest)
+    }
 
-        if (shouldAutoRequestDailyAi(snapshot) && !dailyAiCache.hasAutoAttempted(snapshot.dateIso, snapshot.triggerType)) {
-            requestDailyAiAnalysis(snapshot, isAuto = true)
+    private fun renderDailyAiSnapshotPresentation(
+        presentation: DailyAiAnalysisAction.SnapshotPresentation
+    ) {
+        when (presentation) {
+            DailyAiAnalysisAction.SnapshotPresentation.NoChange -> Unit
+            DailyAiAnalysisAction.SnapshotPresentation.Default -> renderDailyAiDefaultState()
+            is DailyAiAnalysisAction.SnapshotPresentation.Message -> {
+                val subtitle = when (presentation.subtitle) {
+                    DailyAiAnalysisAction.MessageSubtitle.DEFAULT -> {
+                        getString(R.string.daily_ai_default_subtitle)
+                    }
+
+                    DailyAiAnalysisAction.MessageSubtitle.RESULT -> {
+                        getString(R.string.daily_ai_result_subtitle)
+                    }
+                }
+                renderDailyAiMessage(
+                    message = presentation.message,
+                    subtitle = subtitle,
+                    status = presentation.status
+                )
+            }
         }
     }
 
-    private fun renderDailyAiLoading() {
-        val status = currentDailyAiSnapshot?.let { snapshot ->
+    private fun launchDailyAiRequest(
+        intent: DailyAiAnalysisAction.RequestIntent
+    ) {
+        if (_binding == null || !::dailyAiAnalysisAction.isInitialized) return
+
+        when (val preparation = dailyAiAnalysisAction.prepareRequest(intent)) {
+            is DailyAiAnalysisAction.RequestPreparation.Cached -> {
+                renderDailyAiMessage(
+                    message = preparation.message,
+                    subtitle = getString(R.string.daily_ai_result_subtitle),
+                    status = preparation.status
+                )
+            }
+
+            is DailyAiAnalysisAction.RequestPreparation.BlockedByCooldown -> {
+                renderDailyAiMessage(
+                    message = getString(R.string.daily_ai_error_rate_limited),
+                    subtitle = preparation.localMessage,
+                    status = preparation.status
+                )
+            }
+
+            is DailyAiAnalysisAction.RequestPreparation.AlreadyLoading -> {
+                renderDailyAiLoading(preparation.status)
+            }
+
+            is DailyAiAnalysisAction.RequestPreparation.Start -> {
+                renderDailyAiLoading(
+                    DailyAiPromptDataMapper.localStatus(preparation.request.snapshot.triggerType)
+                )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = dailyAiAnalysisAction.execute(preparation.request)
+                    if (_binding == null) return@launch
+
+                    when (result) {
+                        is DailyAiAnalysisAction.RequestResult.Success -> {
+                            renderDailyAiStructuredResult(
+                                analysis = result.analysis,
+                                snapshot = result.snapshot,
+                                subtitle = getString(R.string.daily_ai_result_subtitle)
+                            )
+                        }
+
+                        is DailyAiAnalysisAction.RequestResult.Failure -> {
+                            renderDailyAiMessage(
+                                message = result.localMessage,
+                                subtitle = getString(
+                                    DailyAiMessageTextResolver.resolveErrorMessageRes(
+                                        result.failureKind
+                                    )
+                                ),
+                                status = DailyAiPromptDataMapper.localStatus(
+                                    result.snapshot.triggerType
+                                )
+                            )
+                        }
+
+                        DailyAiAnalysisAction.RequestResult.Stale -> {
+                            renderDailyAiState(currentDailyAiSnapshot)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun renderDailyAiLoading(
+        status: AiDailyStatusLevel = currentDailyAiSnapshot?.let { snapshot ->
             DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
         } ?: AiDailyStatusLevel.GREEN
+    ) {
         dailyAiCardRenderer().renderLoading(status)
     }
 
@@ -462,211 +504,13 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     ) {
         dailyAiCardRenderer().renderStructuredResult(
             analysis = analysis,
-            fallbackMessage = localDailyAiMessage(snapshot),
+            fallbackMessage = getString(
+                DailyAiMessageTextResolver.resolveLocalMessageRes(snapshot.triggerType)
+            ),
             subtitle = subtitle,
             status = DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
         )
     }
-
-    private fun requestDailyAiAnalysis(
-        snapshot: DailyAiSnapshot,
-        isAuto: Boolean
-    ) {
-        if (_binding == null) {
-            Log.w(FITTO_AI_LOG_TAG, "Daily AI request ignored: binding is null.")
-            return
-        }
-
-        if (!::dailyAiRepository.isInitialized || !::dailyAiCache.isInitialized) {
-            Log.w(FITTO_AI_LOG_TAG, "Daily AI request ignored: repository/cache is not ready.")
-            renderDailyAiMessage(
-                message = localDailyAiMessage(snapshot),
-                subtitle = getString(R.string.daily_ai_error_general)
-            )
-            return
-        }
-
-        dailyAiCache.get(snapshot.dateIso, snapshot.triggerType)?.let { cached ->
-            val cachedAiMessage = cached.aiMessage.trim()
-            if (isUsableDailyAiCachedMessage(cached, snapshot)) {
-                Log.d(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI cache hit. trigger=${snapshot.triggerType.name}, date=${snapshot.dateIso}, message=${cachedAiMessage.take(80)}"
-                )
-                renderDailyAiMessage(
-                    message = cachedAiMessage,
-                    subtitle = getString(R.string.daily_ai_result_subtitle)
-                )
-                return
-            } else {
-                Log.w(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI stale cache cleared. trigger=${snapshot.triggerType.name}, date=${snapshot.dateIso}, source=${cached.source}, message=${cachedAiMessage.take(80)}"
-                )
-                dailyAiCache.clear(snapshot.dateIso, snapshot.triggerType)
-            }
-        }
-
-        val requestKey = DailyAiCachePolicy.requestKey(snapshot)
-        when (
-            val decision = DailyAiRequestPolicy.resolve(
-                cooldownUntilMillis = dailyAiCache.getCooldownUntil(),
-                nowMillis = System.currentTimeMillis(),
-                isLoading = dailyAiLoading,
-                inFlightRequestKey = dailyAiRequestInFlightKey,
-                requestKey = requestKey
-            )
-        ) {
-            is DailyAiRequestPolicy.Decision.BlockedByCooldown -> {
-                Log.d(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI request blocked by cooldown. remaining=${decision.remainingSeconds}s"
-                )
-                renderDailyAiMessage(
-                    message = getString(R.string.daily_ai_error_rate_limited),
-                    subtitle = localDailyAiMessage(snapshot)
-                )
-                return
-            }
-
-            DailyAiRequestPolicy.Decision.AlreadyLoading -> {
-                Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: already loading.")
-                renderDailyAiLoading()
-                return
-            }
-
-            DailyAiRequestPolicy.Decision.SameRequestInFlight -> {
-                Log.d(FITTO_AI_LOG_TAG, "Daily AI request ignored: same request is already in flight.")
-                renderDailyAiLoading()
-                return
-            }
-
-            DailyAiRequestPolicy.Decision.Start -> Unit
-        }
-
-        if (isAuto) {
-            dailyAiCache.markAutoAttempted(snapshot.dateIso, snapshot.triggerType)
-        }
-
-        Log.d(
-            FITTO_AI_LOG_TAG,
-            "Daily AI request started. trigger=${snapshot.triggerType.name}, date=${snapshot.dateIso}, isAuto=$isAuto"
-        )
-
-        dailyAiLoading = true
-        dailyAiRequestInFlightKey = requestKey
-        renderDailyAiLoading()
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            val result = runCatching {
-                val language = currentAppLanguage()
-                val prompt = AiDailyPromptBuilder.build(toPromptData(snapshot, language))
-                dailyAiRepository.requestDailyAnalysis(prompt, language)
-            }
-
-            if (_binding == null) {
-                dailyAiLoading = false
-                dailyAiRequestInFlightKey = null
-                return@launch
-            }
-
-            result.onSuccess { analysis ->
-                Log.d(
-                    FITTO_AI_LOG_TAG,
-                    "Daily AI request succeeded. localStatus=${DailyAiPromptDataMapper.localStatus(snapshot.triggerType).name}, aiStatus=${analysis.status.name}"
-                )
-
-                val message = dailyAiCardRenderer()
-                    .buildStructuredMessage(analysis)
-                    .ifBlank { localDailyAiMessage(snapshot) }
-
-                dailyAiCache.save(
-                    dateIso = snapshot.dateIso,
-                    triggerType = snapshot.triggerType,
-                    aiMessage = message,
-                    totalCalories = snapshot.totalCalories,
-                    mealCount = snapshot.meals.size,
-                    waterMl = snapshot.waterMl,
-                    proteinGrams = snapshot.proteinGrams,
-                    exerciseSignature = DailyAiCachePolicy.exerciseSignature(snapshot),
-                    nutritionPreferenceSignature = DailyAiCachePolicy.nutritionPreferenceSignature(snapshot)
-                )
-
-                renderDailyAiStructuredResult(
-                    analysis = analysis,
-                    snapshot = snapshot,
-                    subtitle = getString(R.string.daily_ai_result_subtitle)
-                )
-            }.onFailure { throwable ->
-                Log.w(FITTO_AI_LOG_TAG, "Daily AI request failed: ${throwable.message}")
-
-                if (throwable.message.orEmpty().contains(GeminiDailyAiRepository.ERROR_RATE_LIMIT)) {
-                    dailyAiCache.setCooldownFor(DAILY_AI_RATE_LIMIT_COOLDOWN_MS)
-                }
-
-                renderDailyAiMessage(
-                    message = localDailyAiMessage(snapshot),
-                    subtitle = getString(DailyAiMessageTextResolver.resolveErrorMessageRes(throwable))
-                )
-            }
-
-            dailyAiLoading = false
-            dailyAiRequestInFlightKey = null
-        }
-    }
-
-    private fun localDailyAiMessage(snapshot: DailyAiSnapshot): String {
-        return getString(DailyAiMessageTextResolver.resolveLocalMessageRes(snapshot.triggerType))
-    }
-
-    private fun isUsableDailyAiCachedMessage(
-        cachedMessage: CachedDailyAiMessage,
-        snapshot: DailyAiSnapshot
-    ): Boolean {
-        if (!DailyAiCachePolicy.matchesSnapshot(cachedMessage, snapshot)) {
-            Log.d(
-                FITTO_AI_LOG_TAG,
-                "Daily AI cache data mismatch. cached=${DailyAiCachePolicy.cachedMessageDebugText(cachedMessage)}, current=${DailyAiCachePolicy.snapshotDebugText(snapshot)}"
-            )
-        }
-
-        val localTexts = DailyAiMessageTextResolver
-            .resolveCacheLocalMessageResList(snapshot.triggerType)
-            .map(::getString)
-
-        return DailyAiCachePolicy.isUsableCachedMessage(
-            cachedMessage = cachedMessage,
-            snapshot = snapshot,
-            localMessages = localTexts
-        )
-    }
-
-    private fun currentAppLanguage(): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            resources.configuration.locales[0]?.language ?: Locale.getDefault().language
-        } else {
-            @Suppress("DEPRECATION")
-            resources.configuration.locale.language ?: Locale.getDefault().language
-        }
-    }
-
-    private fun shouldAutoRequestDailyAi(snapshot: DailyAiSnapshot): Boolean {
-        return DailyAiPromptDataMapper.shouldAutoRequestAi(
-            snapshot = snapshot,
-            selectedDate = selectedDate,
-            today = LocalDate.now()
-        )
-    }
-
-    private fun toPromptData(
-        snapshot: DailyAiSnapshot,
-        appLanguage: String
-    ) = DailyAiPromptDataMapper.toPromptData(
-        snapshot = snapshot,
-        appLanguage = appLanguage,
-        goalLabel = getString(DailyAiGoalTextResolver.resolveLabelRes(snapshot.goalType)),
-        goalGuidance = DailyAiGoalTextResolver.resolveGuidance(snapshot.goalType, appLanguage)
-    )
 
     private fun showSleepTimeDialog() {
         if (!::sleepTrackingAction.isInitialized) return
@@ -2273,7 +2117,5 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         private const val DEFAULT_FAT_TARGET_GRAMS = 70
         private const val DEFAULT_PROFILE_WEIGHT_KG = 70.0
         private const val DAILY_AI_MEAL_SUMMARY_MAX_CHARS = 360
-        private const val DAILY_AI_RATE_LIMIT_COOLDOWN_MS = 60_000L
-        private const val FITTO_AI_LOG_TAG = "FittoAI"
     }
 }
