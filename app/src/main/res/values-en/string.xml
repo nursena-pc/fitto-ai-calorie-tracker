@@ -55,7 +55,7 @@
     <string name="meal_entry_edit_updated_message">Meal entry updated.</string>
     <string name="meal_entry_edit_error_message">Could not update meal entry.</string>
     <string name="meal_entry_food_kcal_value">%1$d kcal</string>
-    <string name="meal_entry_food_macro_value">P %.1f g · C %.1f g · F %.1f g</string>
+    <string name="meal_entry_food_macro_value">P %1$.1f g · C %2$.1f g · F %3$.1f g</string>
     <string name="meal_entry_foods_title">Foods in meal</string>
     <string name="meal_entry_foods_subtitle">You can edit or delete foods individually.</string>
     <string name="meal_entry_foods_empty">No foods found in this meal entry.</string>
