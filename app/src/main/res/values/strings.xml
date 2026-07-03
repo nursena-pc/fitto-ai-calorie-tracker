@@ -49,7 +49,7 @@
     <string name="meal_entry_edit_updated_message">Öğün kaydı güncellendi.</string>
     <string name="meal_entry_edit_error_message">Öğün kaydı güncellenemedi.</string>
     <string name="meal_entry_food_kcal_value">%1$d kcal</string>
-    <string name="meal_entry_food_macro_value">P %.1f g · K %.1f g · Y %.1f g</string>
+    <string name="meal_entry_food_macro_value">P %1$.1f g · K %2$.1f g · Y %3$.1f g</string>
     <string name="meal_entry_foods_title">Öğündeki besinler</string>
     <string name="meal_entry_foods_subtitle">Besinleri tek tek düzenleyebilir veya silebilirsin.</string>
     <string name="meal_entry_foods_empty">Bu öğün kaydında besin bulunamadı.</string>

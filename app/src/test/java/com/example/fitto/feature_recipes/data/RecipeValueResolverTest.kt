@@ -37,4 +37,16 @@ class RecipeValueResolverTest {
         assertEquals(75, RecipeValueResolver.representativeMinutes("60 dk üzeri"))
         assertEquals(30, RecipeValueResolver.representativeMinutes("bilinmeyen"))
     }
+
+    @Test
+    fun representativeMinutes_resolvesCustomRangesToRoundedMidpoint() {
+        assertEquals(40, RecipeValueResolver.representativeMinutes("30-45 dk"))
+        assertEquals(40, RecipeValueResolver.representativeMinutes(" 30 – 45 DK "))
+    }
+
+    @Test
+    fun representativeMinutes_fallsBackForInvalidRanges() {
+        assertEquals(30, RecipeValueResolver.representativeMinutes("45-30 dk"))
+        assertEquals(30, RecipeValueResolver.representativeMinutes("30 dk"))
+    }
 }

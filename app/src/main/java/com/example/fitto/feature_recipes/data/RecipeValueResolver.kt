@@ -1,6 +1,7 @@
 package com.example.fitto.feature_recipes.data
 
 import java.util.Locale
+import kotlin.math.roundToInt
 
 object RecipeValueResolver {
 
@@ -40,18 +41,35 @@ object RecipeValueResolver {
     }
 
     fun representativeMinutes(durationLabel: String): Int {
-        return when (durationLabel) {
-            "15 dk altı" -> 10
-            "15-30 dk" -> 25
-            "30-60 dk" -> 45
-            "60 dk üzeri" -> 75
-            else -> 30
-        }
+        val normalizedLabel = durationLabel.trim().lowercase(TURKISH_LOCALE)
+        return FIXED_DURATION_MINUTES[normalizedLabel]
+            ?: representativeRangeMinutes(normalizedLabel)
+            ?: DEFAULT_DURATION_MINUTES
+    }
+
+    private fun representativeRangeMinutes(durationLabel: String): Int? {
+        val match = DURATION_RANGE_REGEX.matchEntire(durationLabel) ?: return null
+        val startMinutes = match.groupValues[1].toIntOrNull() ?: return null
+        val endMinutes = match.groupValues[2].toIntOrNull() ?: return null
+        if (startMinutes > endMinutes) return null
+
+        val midpoint = (startMinutes.toLong() + endMinutes.toLong()) / 2.0
+        return (midpoint / DURATION_ROUNDING_STEP_MINUTES).roundToInt() *
+            DURATION_ROUNDING_STEP_MINUTES
     }
 
     private const val MAX_AMOUNT_TOKEN_SCAN_COUNT = 5
+    private const val DEFAULT_DURATION_MINUTES = 30
+    private const val DURATION_ROUNDING_STEP_MINUTES = 5
 
     private val TURKISH_LOCALE = Locale("tr", "TR")
+
+    private val DURATION_RANGE_REGEX = Regex("""^(\d+)\s*[-–—]\s*(\d+)\s*dk$""")
+
+    private val FIXED_DURATION_MINUTES = mapOf(
+        "15 dk altı" to 10,
+        "60 dk üzeri" to 75
+    )
 
     private val INGREDIENT_AMOUNT_WORDS = setOf(
         "adet", "g", "gr", "gram", "kg", "ml", "lt", "litre", "su", "bardağı", "bardak",
