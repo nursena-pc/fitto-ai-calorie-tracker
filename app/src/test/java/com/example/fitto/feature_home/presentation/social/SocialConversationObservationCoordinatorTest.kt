@@ -32,6 +32,22 @@ class SocialConversationObservationCoordinatorTest {
         linkCount = 1,
         fileCount = 3
     )
+    private val messageThread = MessageThreadUiModel(
+        id = "thread-1",
+        title = "Nursena",
+        lastMessage = "Merhaba",
+        timeText = "10:30",
+        isGroup = false,
+        initials = "N"
+    )
+    private val chatMessage = ChatMessageUiModel(
+        id = "message-1",
+        text = "Merhaba",
+        timeText = "10:30",
+        senderId = "user-2",
+        senderName = "Nursena",
+        isFromMe = false
+    )
 
     @Test
     fun observeUserPresence_routesToRealtimeSource() = runBlocking {
@@ -63,6 +79,24 @@ class SocialConversationObservationCoordinatorTest {
 
         assertEquals("thread-1", realtimeSource.updatedTypingThreadId)
         assertEquals(true, realtimeSource.updatedTypingState)
+    }
+
+    @Test
+    fun observeMessageThreads_routesToThreadSource() = runBlocking {
+        val threadSource = FakeThreadSource(messageThreads = listOf(messageThread))
+        val coordinator = createCoordinator(threadSource = threadSource)
+
+        assertEquals(listOf(messageThread), coordinator.observeMessageThreads().first())
+        assertEquals(1, threadSource.messageThreadObservationCount)
+    }
+
+    @Test
+    fun observeMessages_routesThreadToThreadSource() = runBlocking {
+        val threadSource = FakeThreadSource(messages = listOf(chatMessage))
+        val coordinator = createCoordinator(threadSource = threadSource)
+
+        assertEquals(listOf(chatMessage), coordinator.observeMessages("thread-1").first())
+        assertEquals("thread-1", threadSource.observedMessagesThreadId)
     }
 
     @Test
@@ -138,13 +172,27 @@ class SocialConversationObservationCoordinatorTest {
     }
 
     private class FakeThreadSource(
+        private val messageThreads: List<MessageThreadUiModel> = emptyList(),
+        private val messages: List<ChatMessageUiModel> = emptyList(),
         private val searchResults: List<GroupMessageSearchResultUiModel> = emptyList(),
         private val sharedContentSummary: ThreadSharedContentSummary = ThreadSharedContentSummary(),
         private val unreadCount: Int = 0
     ) : SocialThreadObservationSource {
+        var messageThreadObservationCount: Int = 0
+        var observedMessagesThreadId: String? = null
         var searchedThreadId: String? = null
         var sharedContentThreadId: String? = null
         var unreadObservationCount: Int = 0
+
+        override fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> {
+            messageThreadObservationCount += 1
+            return flowOf(messageThreads)
+        }
+
+        override fun observeMessages(threadId: String): Flow<List<ChatMessageUiModel>> {
+            observedMessagesThreadId = threadId
+            return flowOf(messages)
+        }
 
         override fun observeThreadMessagesForSearch(
             threadId: String

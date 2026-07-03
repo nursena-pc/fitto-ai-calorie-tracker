@@ -6,6 +6,14 @@ internal class SocialConversationObservationCoordinator(
     private val realtimeSource: SocialRealtimeObservationSource,
     private val threadSource: SocialThreadObservationSource
 ) {
+    fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> {
+        return threadSource.observeMessageThreads()
+    }
+
+    fun observeMessages(threadId: String): Flow<List<ChatMessageUiModel>> {
+        return threadSource.observeMessages(threadId)
+    }
+
     fun observeThreadMessagesForSearch(
         threadId: String
     ): Flow<List<GroupMessageSearchResultUiModel>> {
