@@ -1,27 +1,13 @@
 package com.example.fitto.feature_home.presentation.profile
 
-import android.app.Dialog
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.text.InputType
-import android.text.method.PasswordTransformationMethod
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -29,21 +15,15 @@ import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.fitto.R
+import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
-import com.example.fitto.R
-import com.example.fitto.databinding.BottomSheetCountryPickerBinding
-import com.example.fitto.databinding.ItemCountryBinding
-import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
 import com.example.fitto.feature_home.presentation.profile.reminders.alarm.ReminderAlarmScheduler
 import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_home.presentation.social.SocialUser
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.textfield.TextInputLayout
-import java.util.Locale
+
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
     private val menuId: ProfileMenuId by lazy {
@@ -71,11 +51,9 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     private var selectedPhotoAlbumDateKey: String = ProfilePhotoAlbumFilter.ALL
     private var pendingPhotoDocumentItem: ProfilePhotoAlbumItem? = null
 
-    private val achievementAdapter: ProfileAchievementAdapter by lazy {
-        ProfileAchievementAdapter { item ->
-            item.targetMenuId?.let { targetMenuId -> openNestedProfileDetail(targetMenuId) }
-        }
-    }
+    private var detailListRenderer: ProfileDetailListRenderer? = null
+    private var preferenceDialogCoordinator: ProfilePreferenceDialogCoordinator? = null
+    private var actionDialogCoordinator: ProfileActionDialogCoordinator? = null
 
     private var lastProfileErrorMessage: String? = null
 
@@ -123,6 +101,21 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        detailListRenderer = ProfileDetailListRenderer(
+            context = requireContext(),
+            recyclerView = recyclerView,
+            onItemClick = ::handleDetailItemClick,
+            onAchievementTarget = ::openNestedProfileDetail
+        )
+        preferenceDialogCoordinator = ProfilePreferenceDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater,
+            refreshRows = ::bindRows
+        )
+        actionDialogCoordinator = ProfileActionDialogCoordinator(
+            context = requireContext(),
+            inflater = layoutInflater
+        )
 
         if (menuId == ProfileMenuId.PHOTO_ALBUM) {
             recyclerView.isVisible = false
@@ -192,6 +185,12 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         dataManagementCoordinator?.clear()
         dataManagementCoordinator = null
         dataExportShareCoordinator = null
+        preferenceDialogCoordinator?.clear()
+        preferenceDialogCoordinator = null
+        actionDialogCoordinator?.clear()
+        actionDialogCoordinator = null
+        detailListRenderer?.clear()
+        detailListRenderer = null
         super.onDestroyView()
     }
 
@@ -490,59 +489,11 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     }
 
     private fun bindRows() {
-        if (!::recyclerView.isInitialized) return
-
-        if (isAchievementMenu(menuId)) {
-            bindAchievementRows()
-            return
-        }
-
-        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
-        val firstVisiblePosition = layoutManager?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
-        val firstVisibleTop = if (firstVisiblePosition != RecyclerView.NO_POSITION) {
-            layoutManager?.findViewByPosition(firstVisiblePosition)?.top ?: 0
-        } else {
-            0
-        }
-
-        val rows = ProfileDetailContent.rowsFor(
-            context = requireContext(),
+        detailListRenderer?.render(
             menuId = menuId,
             healthData = latestHealthData,
             user = accountDisplayUser(),
             blockedUsers = latestBlockedUsers
-        )
-
-        val currentAdapter = recyclerView.adapter as? ProfileDetailAdapter
-        if (currentAdapter == null) {
-            recyclerView.adapter = ProfileDetailAdapter(
-                items = rows,
-                onItemClick = { item -> handleDetailItemClick(item) }
-            )
-        } else {
-            currentAdapter.updateItems(rows)
-        }
-
-        if (firstVisiblePosition != RecyclerView.NO_POSITION) {
-            recyclerView.post {
-                (recyclerView.layoutManager as? LinearLayoutManager)
-                    ?.scrollToPositionWithOffset(firstVisiblePosition, firstVisibleTop)
-            }
-        }
-    }
-
-
-    private fun bindAchievementRows() {
-        if (recyclerView.adapter !== achievementAdapter) {
-            recyclerView.adapter = achievementAdapter
-        }
-
-        achievementAdapter.submitList(
-            ProfileAchievementContent.itemsFor(
-                context = requireContext(),
-                menuId = menuId,
-                healthData = latestHealthData
-            )
         )
     }
 
@@ -553,10 +504,10 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
 
         when (item.action) {
-            ProfileDetailAction.REGION -> showRegionDialog()
-            ProfileDetailAction.LANGUAGE -> showLanguageDialog()
-            ProfileDetailAction.THEME -> showThemeDialog()
-            ProfileDetailAction.ACCOUNT_VISIBILITY -> showAccountVisibilityDialog()
+            ProfileDetailAction.REGION -> preferenceDialogCoordinator?.showRegion()
+            ProfileDetailAction.LANGUAGE -> preferenceDialogCoordinator?.showLanguage()
+            ProfileDetailAction.THEME -> preferenceDialogCoordinator?.showTheme()
+            ProfileDetailAction.ACCOUNT_VISIBILITY -> preferenceDialogCoordinator?.showAccountVisibility()
             ProfileDetailAction.EDIT_EMAIL -> showUpdateEmailDialog()
             ProfileDetailAction.EDIT_USERNAME -> showUpdateUsernameDialog()
             ProfileDetailAction.EDIT_DISPLAY_NAME -> showUpdateDisplayNameDialog()
@@ -585,7 +536,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
                 }
             }
 
-            ProfileDetailAction.CLEAR_HISTORY -> showConfirmDialog(
+            ProfileDetailAction.CLEAR_HISTORY -> actionDialogCoordinator?.showConfirmation(
                 titleResId = R.string.profile_detail_clear_history,
                 messageResId = R.string.profile_clear_history_confirm_message,
                 positiveResId = R.string.profile_detail_clear_history,
@@ -601,30 +552,12 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
                 }
             }
             ProfileDetailAction.RECALCULATE_GOALS -> showToast(R.string.profile_daily_goals_recalculate_coming_soon)
-            ProfileDetailAction.NUTRITION_DIET_TYPES -> showNutritionDietTypesDialog()
-            ProfileDetailAction.NUTRITION_ALLERGIES -> showNutritionTextDialog(
-                titleResId = R.string.nutrition_pref_allergies_title,
-                messageResId = R.string.nutrition_pref_allergies_desc,
-                labelResId = R.string.nutrition_pref_allergies_title,
-                hintResId = R.string.nutrition_pref_allergies_hint,
-                initialValue = ProfilePreferenceStore.getNutritionAllergies(requireContext()),
-                onConfirmed = { value ->
-                    ProfilePreferenceStore.setNutritionAllergies(requireContext(), value)
-                    bindRows()
-                }
-            )
-            ProfileDetailAction.NUTRITION_DISLIKED_FOODS -> showNutritionTextDialog(
-                titleResId = R.string.nutrition_pref_disliked_title,
-                messageResId = R.string.nutrition_pref_disliked_desc,
-                labelResId = R.string.nutrition_pref_disliked_title,
-                hintResId = R.string.nutrition_pref_disliked_hint,
-                initialValue = ProfilePreferenceStore.getNutritionDislikedFoods(requireContext()),
-                onConfirmed = { value ->
-                    ProfilePreferenceStore.setNutritionDislikedFoods(requireContext(), value)
-                    bindRows()
-                }
-            )
-            ProfileDetailAction.NUTRITION_MEAL_ROUTINE -> showNutritionMealRoutineDialog()
+            ProfileDetailAction.NUTRITION_DIET_TYPES -> preferenceDialogCoordinator?.showNutritionDietTypes()
+            ProfileDetailAction.NUTRITION_ALLERGIES ->
+                preferenceDialogCoordinator?.showNutritionAllergies()
+            ProfileDetailAction.NUTRITION_DISLIKED_FOODS ->
+                preferenceDialogCoordinator?.showNutritionDislikedFoods()
+            ProfileDetailAction.NUTRITION_MEAL_ROUTINE -> preferenceDialogCoordinator?.showNutritionMealRoutine()
             null -> showToast(item.titleResId)
         }
     }
@@ -651,273 +584,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             ?.openProfileDetailScreen(targetMenuId)
     }
 
-    private fun showNutritionDietTypesDialog() {
-        val current = ProfilePreferenceStore.getNutritionDietPreferences(requireContext()).toMutableSet()
-        val options = NutritionDietPreference.entries
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val dialogView = layoutInflater.inflate(R.layout.dialog_profile_choice, null, false)
-        val titleTextView = dialogView.findViewById<TextView>(R.id.textChoiceDialogTitle)
-        val optionsLayout = dialogView.findViewById<LinearLayout>(R.id.layoutChoiceOptions)
-        val cancelButton = dialogView.findViewById<TextView>(R.id.buttonChoiceDialogCancel)
-
-        titleTextView.setText(R.string.nutrition_pref_diet_type_title)
-        cancelButton.setText(R.string.common_save)
-        cancelButton.setTextColor(requireContext().getColor(R.color.fitto_green))
-        optionsLayout.removeAllViews()
-
-        fun refresh() {
-            optionsLayout.removeAllViews()
-            options.forEach { option ->
-                val optionView = LayoutInflater.from(requireContext())
-                    .inflate(R.layout.item_profile_choice, optionsLayout, false)
-                val optionTitle = optionView.findViewById<TextView>(R.id.textChoiceTitle)
-                val checkText = optionView.findViewById<TextView>(R.id.textChoiceCheck)
-                optionTitle.text = ProfilePreferenceStore.nutritionDietPreferenceText(requireContext(), option)
-                checkText.visibility = if (current.contains(option)) View.VISIBLE else View.INVISIBLE
-                optionView.setOnClickListener {
-                    if (option == NutritionDietPreference.STANDARD) {
-                        current.clear()
-                        current += NutritionDietPreference.STANDARD
-                    } else {
-                        current.remove(NutritionDietPreference.STANDARD)
-                        if (current.contains(option)) current.remove(option) else current.add(option)
-                        if (current.isEmpty()) current += NutritionDietPreference.STANDARD
-                    }
-                    refresh()
-                }
-                optionsLayout.addView(optionView)
-            }
-        }
-
-        cancelButton.setOnClickListener {
-            ProfilePreferenceStore.setNutritionDietPreferences(requireContext(), current)
-            dialog.dismiss()
-            bindRows()
-        }
-
-        refresh()
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.show()
-        dialog.window?.setLayout((resources.displayMetrics.widthPixels * 0.90f).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
-    }
-
-    private fun showNutritionMealRoutineDialog() {
-        val current = ProfilePreferenceStore.getNutritionMealRoutine(requireContext())
-        showFittoChoiceDialog(
-            titleResId = R.string.nutrition_pref_meal_routine_title,
-            options = listOf(
-                ChoiceOption(
-                    title = getString(R.string.nutrition_pref_routine_three_meals),
-                    value = NutritionMealRoutine.THREE_MEALS,
-                    isSelected = current == NutritionMealRoutine.THREE_MEALS
-                ),
-                ChoiceOption(
-                    title = getString(R.string.nutrition_pref_routine_two_meals_snacks),
-                    value = NutritionMealRoutine.TWO_MEALS_SNACKS,
-                    isSelected = current == NutritionMealRoutine.TWO_MEALS_SNACKS
-                ),
-                ChoiceOption(
-                    title = getString(R.string.nutrition_pref_routine_flexible),
-                    value = NutritionMealRoutine.FLEXIBLE,
-                    isSelected = current == NutritionMealRoutine.FLEXIBLE
-                )
-            ),
-            onSelected = { routine ->
-                ProfilePreferenceStore.setNutritionMealRoutine(requireContext(), routine)
-                bindRows()
-            }
-        )
-    }
-
-    private fun showNutritionTextDialog(
-        @StringRes titleResId: Int,
-        @StringRes messageResId: Int,
-        @StringRes labelResId: Int,
-        @StringRes hintResId: Int,
-        initialValue: String,
-        onConfirmed: (String) -> Unit
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val dialogView = layoutInflater.inflate(R.layout.dialog_fitto_action, null, false)
-
-        val iconImage = dialogView.findViewById<ImageView>(R.id.imageActionIcon)
-        val titleText = dialogView.findViewById<TextView>(R.id.textActionTitle)
-        val warningText = dialogView.findViewById<TextView>(R.id.textActionWarning)
-        val messageText = dialogView.findViewById<TextView>(R.id.textActionMessage)
-        val inputArea = dialogView.findViewById<LinearLayout>(R.id.layoutPasswordArea)
-        val inputLabel = dialogView.findViewById<TextView>(R.id.textPasswordLabel)
-        val inputLayout = dialogView.findViewById<TextInputLayout>(R.id.layoutPasswordInput)
-        val inputEditText = dialogView.findViewById<EditText>(R.id.editActionPassword)
-        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionCancel)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionConfirm)
-
-        iconImage.setImageResource(R.drawable.ic_nutrition_fork)
-        iconImage.setColorFilter(requireContext().getColor(R.color.fitto_green))
-        titleText.setText(titleResId)
-        messageText.setText(messageResId)
-        warningText.isVisible = false
-        inputArea.isVisible = true
-        inputLabel.setText(labelResId)
-        inputLayout.hint = getString(hintResId)
-        inputLayout.endIconMode = TextInputLayout.END_ICON_CLEAR_TEXT
-        inputEditText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
-        inputEditText.setSingleLine(false)
-        inputEditText.minLines = 1
-        inputEditText.maxLines = 3
-        applySoftInputHintStyle(inputLayout, inputEditText)
-        inputEditText.setText(initialValue)
-        inputEditText.setSelection(inputEditText.text?.length ?: 0)
-
-        cancelButton.setText(R.string.common_clear)
-        confirmButton.setText(R.string.common_save)
-        cancelButton.setTextColor(requireContext().getColor(R.color.profile_subtext))
-        confirmButton.setTextColor(requireContext().getColor(R.color.fitto_green))
-
-        cancelButton.setOnClickListener {
-            inputEditText.setText("")
-        }
-        confirmButton.setOnClickListener {
-            dialog.dismiss()
-            onConfirmed(inputEditText.text?.toString().orEmpty())
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.show()
-        dialog.window?.setLayout((resources.displayMetrics.widthPixels * 0.90f).toInt(), ViewGroup.LayoutParams.WRAP_CONTENT)
-    }
-
-    private fun showRegionDialog() {
-        val currentRegion = ProfilePreferenceStore.getRegion(requireContext())
-
-        val turkey = getString(R.string.region_suggested_turkey)
-        val english = getString(R.string.region_suggested_english)
-        val other = getString(R.string.region_other)
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_detail_settings_region,
-            options = listOf(
-                ChoiceOption(
-                    title = turkey,
-                    value = turkey,
-                    isSelected = currentRegion == turkey
-                ),
-                ChoiceOption(
-                    title = english,
-                    value = english,
-                    isSelected = currentRegion == english
-                ),
-                ChoiceOption(
-                    title = other,
-                    value = other,
-                    isSelected = currentRegion != turkey && currentRegion != english
-                )
-            ),
-            onSelected = { selectedRegion ->
-                if (selectedRegion == other) {
-                    showCountryPickerSheet()
-                } else {
-                    ProfilePreferenceStore.setRegion(
-                        context = requireContext(),
-                        region = selectedRegion
-                    )
-                    bindRows()
-                }
-            }
-        )
-    }
-
-    private fun showLanguageDialog() {
-        val currentLanguage = ProfilePreferenceStore.getLanguage(requireContext())
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_detail_settings_language,
-            options = listOf(
-                ChoiceOption(
-                    title = getString(R.string.language_turkish),
-                    value = ProfileLanguage.TURKISH,
-                    isSelected = currentLanguage == ProfileLanguage.TURKISH
-                ),
-                ChoiceOption(
-                    title = getString(R.string.language_english),
-                    value = ProfileLanguage.ENGLISH,
-                    isSelected = currentLanguage == ProfileLanguage.ENGLISH
-                )
-            ),
-            onSelected = { selectedLanguage ->
-                ProfilePreferenceStore.setLanguage(
-                    context = requireContext(),
-                    language = selectedLanguage
-                )
-                bindRows()
-            }
-        )
-    }
-
-    private fun showThemeDialog() {
-        val currentTheme = ProfilePreferenceStore.getTheme(requireContext())
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_detail_settings_theme,
-            options = listOf(
-                ChoiceOption(
-                    title = getString(R.string.profile_theme_system),
-                    value = FittoThemeMode.SYSTEM,
-                    isSelected = currentTheme == FittoThemeMode.SYSTEM
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_theme_light),
-                    value = FittoThemeMode.LIGHT,
-                    isSelected = currentTheme == FittoThemeMode.LIGHT
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_theme_dark),
-                    value = FittoThemeMode.DARK,
-                    isSelected = currentTheme == FittoThemeMode.DARK
-                )
-            ),
-            onSelected = { selectedTheme ->
-                ProfilePreferenceStore.setTheme(
-                    context = requireContext(),
-                    theme = selectedTheme
-                )
-                bindRows()
-            }
-        )
-    }
-
-    private fun showAccountVisibilityDialog() {
-        val currentVisibility = ProfilePreferenceStore.getAccountVisibility(requireContext())
-
-        showFittoChoiceDialog(
-            titleResId = R.string.profile_detail_privacy_visibility,
-            options = listOf(
-                ChoiceOption(
-                    title = getString(R.string.profile_visibility_public),
-                    value = ProfileAccountVisibility.PUBLIC,
-                    isSelected = currentVisibility == ProfileAccountVisibility.PUBLIC
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_visibility_followers),
-                    value = ProfileAccountVisibility.FOLLOWERS,
-                    isSelected = currentVisibility == ProfileAccountVisibility.FOLLOWERS
-                ),
-                ChoiceOption(
-                    title = getString(R.string.profile_visibility_private),
-                    value = ProfileAccountVisibility.PRIVATE,
-                    isSelected = currentVisibility == ProfileAccountVisibility.PRIVATE
-                )
-            ),
-            onSelected = { selectedVisibility ->
-                ProfilePreferenceStore.setAccountVisibility(requireContext(), selectedVisibility)
-                bindRows()
-            }
-        )
-    }
-
     private fun toggleComments() {
         val enabled = !ProfilePreferenceStore.areCommentsEnabled(requireContext())
         ProfilePreferenceStore.setCommentsEnabled(requireContext(), enabled)
@@ -936,7 +602,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
             return
         }
 
-        showFittoActionDialog(
+        actionDialogCoordinator?.show(
             titleResId = R.string.profile_unblock_user_title,
             warningResId = null,
             messageResId = R.string.profile_unblock_user_message,
@@ -968,114 +634,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
     private fun toggleNotification(toggle: ProfileNotificationToggle) {
         notificationSettingsCoordinator?.toggle(toggle)
-    }
-
-    private fun showConfirmDialog(
-        @StringRes titleResId: Int,
-        @StringRes messageResId: Int,
-        @StringRes positiveResId: Int,
-        iconResId: Int,
-        iconColorResId: Int = R.color.profile_subtext,
-        confirmTextColorResId: Int = R.color.profile_subtext,
-        onConfirmed: () -> Unit
-    ) {
-        showFittoActionDialog(
-            titleResId = titleResId,
-            warningResId = null,
-            messageResId = messageResId,
-            positiveResId = positiveResId,
-            negativeResId = R.string.profile_dialog_cancel,
-            iconResId = iconResId,
-            iconColorResId = iconColorResId,
-            confirmTextColorResId = confirmTextColorResId,
-            showPasswordInput = false,
-            onConfirmed = { onConfirmed() }
-        )
-    }
-
-    private fun showFittoActionDialog(
-        @StringRes titleResId: Int,
-        @StringRes warningResId: Int?,
-        @StringRes messageResId: Int,
-        @StringRes positiveResId: Int,
-        @StringRes negativeResId: Int,
-        iconResId: Int,
-        iconColorResId: Int,
-        confirmTextColorResId: Int = R.color.profile_subtext,
-        cancelTextColorResId: Int = R.color.profile_subtext,
-        showPasswordInput: Boolean,
-        onConfirmed: (String?) -> Unit
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_fitto_action,
-            null,
-            false
-        )
-
-        val iconImage = dialogView.findViewById<ImageView>(R.id.imageActionIcon)
-        val titleText = dialogView.findViewById<TextView>(R.id.textActionTitle)
-        val warningText = dialogView.findViewById<TextView>(R.id.textActionWarning)
-        val messageText = dialogView.findViewById<TextView>(R.id.textActionMessage)
-        val passwordArea = dialogView.findViewById<LinearLayout>(R.id.layoutPasswordArea)
-        val passwordLabel = dialogView.findViewById<TextView>(R.id.textPasswordLabel)
-        val passwordInputLayout = dialogView.findViewById<TextInputLayout>(R.id.layoutPasswordInput)
-        val passwordEditText = dialogView.findViewById<EditText>(R.id.editActionPassword)
-        val cancelButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionCancel)
-        val confirmButton = dialogView.findViewById<MaterialButton>(R.id.buttonActionConfirm)
-
-        titleText.setText(titleResId)
-        messageText.setText(messageResId)
-        cancelButton.setText(negativeResId)
-        confirmButton.setText(positiveResId)
-
-        warningText.isVisible = warningResId != null
-        warningResId?.let { warningText.setText(it) }
-
-        passwordArea.isVisible = showPasswordInput
-        passwordLabel.setText(R.string.profile_delete_account_password_label)
-
-        if (showPasswordInput) {
-            passwordInputLayout.hint = getString(R.string.profile_delete_account_password_hint)
-            configurePasswordInput(passwordInputLayout, passwordEditText)
-            applySoftInputHintStyle(passwordInputLayout, passwordEditText)
-        } else {
-            passwordInputLayout.endIconMode = TextInputLayout.END_ICON_NONE
-        }
-
-        iconImage.setImageResource(iconResId)
-        iconImage.setColorFilter(requireContext().getColor(iconColorResId))
-        cancelButton.setTextColor(requireContext().getColor(cancelTextColorResId))
-        confirmButton.setTextColor(requireContext().getColor(confirmTextColorResId))
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        confirmButton.setOnClickListener {
-            val password = passwordEditText.text?.toString().orEmpty()
-
-            if (showPasswordInput && password.isBlank()) {
-                passwordInputLayout.error = getString(R.string.profile_delete_account_empty_password)
-                return@setOnClickListener
-            }
-
-            passwordInputLayout.error = null
-            dialog.dismiss()
-            onConfirmed(password.takeIf { showPasswordInput })
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
     }
 
     private fun showUpdateDisplayNameDialog() {
@@ -1152,47 +710,6 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
     }
 
-    private fun configurePasswordInput(
-        inputLayout: TextInputLayout,
-        editText: EditText
-    ) {
-        inputLayout.endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
-
-        editText.inputType =
-            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-
-        editText.transformationMethod = PasswordTransformationMethod.getInstance()
-        editText.typeface = Typeface.DEFAULT
-        editText.maxLines = 1
-        editText.isSingleLine = true
-    }
-
-    private fun applySoftInputHintStyle(
-        inputLayout: TextInputLayout,
-        editText: EditText
-    ) {
-        val hintColor = colorWithAlpha(
-            color = requireContext().getColor(R.color.profile_subtext),
-            alpha = 0.58f
-        )
-
-        inputLayout.defaultHintTextColor = ColorStateList.valueOf(hintColor)
-        editText.setHintTextColor(hintColor)
-    }
-
-    private fun colorWithAlpha(
-        color: Int,
-        alpha: Float
-    ): Int {
-        val boundedAlpha = alpha.coerceIn(0f, 1f)
-        return Color.argb(
-            (Color.alpha(color) * boundedAlpha).toInt().coerceIn(0, 255),
-            Color.red(color),
-            Color.green(color),
-            Color.blue(color)
-        )
-    }
-
     private fun navigateToWelcome() {
         val navController = Navigation.findNavController(requireActivity(), R.id.mainNavHost)
         val navOptions = NavOptions.Builder()
@@ -1206,195 +723,9 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         Toast.makeText(requireContext(), messageResId, Toast.LENGTH_SHORT).show()
     }
 
-    private fun showCountryPickerSheet() {
-        val dialog = BottomSheetDialog(requireContext())
-        val sheetBinding = BottomSheetCountryPickerBinding.inflate(layoutInflater)
-
-        val countries = createCountryList()
-        var temporarySelectedCountry = countries.firstOrNull {
-            it.name == ProfilePreferenceStore.getRegion(requireContext())
-        } ?: countries.firstOrNull { it.code == TURKEY_CODE }
-        ?: countries.first()
-
-        val countryAdapter = CountryAdapter(
-            selectedCountryCode = temporarySelectedCountry.code,
-            onCountryClick = { country ->
-                temporarySelectedCountry = country
-            }
-        )
-
-        sheetBinding.countryRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = countryAdapter
-            setHasFixedSize(false)
-        }
-
-        fun submitCountries(query: String = "") {
-            val cleanQuery = query.trim()
-
-            val filteredCountries = if (cleanQuery.isBlank()) {
-                countries
-            } else {
-                countries.filter { country ->
-                    country.name.contains(cleanQuery, ignoreCase = true) ||
-                            country.code.contains(cleanQuery, ignoreCase = true)
-                }
-            }
-
-            countryAdapter.submitList(filteredCountries)
-        }
-
-        sheetBinding.countrySearchEditText.doAfterTextChanged { editable ->
-            submitCountries(editable?.toString().orEmpty())
-        }
-
-        sheetBinding.countryPickerDoneText.setOnClickListener {
-            ProfilePreferenceStore.setRegion(
-                context = requireContext(),
-                region = temporarySelectedCountry.name
-            )
-            bindRows()
-            dialog.dismiss()
-        }
-
-        submitCountries()
-
-        dialog.setContentView(sheetBinding.root)
-
-        dialog.setOnShowListener {
-            val bottomSheet = sheetBinding.root.parent as? View
-
-            bottomSheet?.let { sheet ->
-                val behavior = BottomSheetBehavior.from(sheet)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                behavior.skipCollapsed = true
-            }
-        }
-
-        dialog.show()
-    }
-
-    private fun createCountryList(): List<CountryUiModel> {
-        val displayLocale = when (ProfilePreferenceStore.getLanguage(requireContext())) {
-            ProfileLanguage.TURKISH -> Locale("tr", "TR")
-            ProfileLanguage.ENGLISH -> Locale.ENGLISH
-        }
-
-        return Locale.getISOCountries()
-            .mapNotNull { code ->
-                val countryLocale = Locale("", code)
-                val countryName = countryLocale.getDisplayCountry(displayLocale)
-
-                if (countryName.isBlank()) {
-                    null
-                } else {
-                    CountryUiModel(
-                        code = code,
-                        name = countryName,
-                        flagEmoji = code.toFlagEmoji(),
-                        isRecommended = code == TURKEY_CODE
-                    )
-                }
-            }
-            .sortedWith(
-                compareBy<CountryUiModel> {
-                    if (it.code == TURKEY_CODE) 0 else 1
-                }.thenBy {
-                    it.name.lowercase(displayLocale)
-                }
-            )
-    }
-
-    private fun String.toFlagEmoji(): String {
-        val countryCode = uppercase(Locale.US)
-
-        if (countryCode.length != 2) return "🌍"
-
-        val firstLetter =
-            Character.codePointAt(countryCode, 0) - 'A'.code + REGIONAL_INDICATOR_OFFSET
-
-        val secondLetter =
-            Character.codePointAt(countryCode, 1) - 'A'.code + REGIONAL_INDICATOR_OFFSET
-
-        return String(Character.toChars(firstLetter)) +
-                String(Character.toChars(secondLetter))
-    }
-
-    private data class CountryUiModel(
-        val code: String,
-        val name: String,
-        val flagEmoji: String,
-        val isRecommended: Boolean = false
-    )
-
-    private class CountryAdapter(
-        selectedCountryCode: String,
-        private val onCountryClick: (CountryUiModel) -> Unit
-    ) : RecyclerView.Adapter<CountryAdapter.CountryViewHolder>() {
-
-        private var countries: List<CountryUiModel> = emptyList()
-        private var selectedCountryCode: String = selectedCountryCode
-
-        fun submitList(newCountries: List<CountryUiModel>) {
-            countries = newCountries
-            notifyDataSetChanged()
-        }
-
-        override fun onCreateViewHolder(
-            parent: ViewGroup,
-            viewType: Int
-        ): CountryViewHolder {
-            val binding = ItemCountryBinding.inflate(
-                LayoutInflater.from(parent.context),
-                parent,
-                false
-            )
-
-            return CountryViewHolder(binding)
-        }
-
-        override fun getItemCount(): Int = countries.size
-
-        override fun onBindViewHolder(
-            holder: CountryViewHolder,
-            position: Int
-        ) {
-            holder.bind(countries[position])
-        }
-
-        inner class CountryViewHolder(
-            private val binding: ItemCountryBinding
-        ) : RecyclerView.ViewHolder(binding.root) {
-
-            fun bind(country: CountryUiModel) = with(binding) {
-                val isSelected = selectedCountryCode == country.code
-
-                countryFlagText.text = country.flagEmoji
-                countryNameText.text = country.name
-
-                countryCheckContainer.isVisible = isSelected
-                countryChevronIcon.isVisible = !isSelected
-
-                root.setOnClickListener {
-                    selectedCountryCode = country.code
-                    onCountryClick(country)
-                    notifyDataSetChanged()
-                }
-            }
-        }
-    }
-
-    private fun isAchievementMenu(menuId: ProfileMenuId): Boolean {
-        return menuId == ProfileMenuId.ACHIEVEMENTS ||
-                menuId == ProfileMenuId.ACHIEVEMENT_BADGES ||
-                menuId == ProfileMenuId.ACHIEVEMENT_STREAK ||
-                menuId == ProfileMenuId.ACHIEVEMENT_WATER
-    }
 
     companion object {
         private const val ARG_MENU_ID = "menu_id"
-        private const val TURKEY_CODE = "TR"
-        private const val REGIONAL_INDICATOR_OFFSET = 0x1F1E6
         private const val MISSING_SESSION_ERROR_MESSAGE = "Oturum bilgisi bulunamadı."
         private const val TAG = "ProfileDetailFragment"
 
@@ -1407,63 +738,4 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
         }
     }
 
-    private data class ChoiceOption<T>(
-        val title: String,
-        val value: T,
-        val isSelected: Boolean
-    )
-
-    private fun <T> showFittoChoiceDialog(
-        @StringRes titleResId: Int,
-        options: List<ChoiceOption<T>>,
-        onSelected: (T) -> Unit
-    ) {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        val dialogView = layoutInflater.inflate(
-            R.layout.dialog_profile_choice,
-            null,
-            false
-        )
-
-        val titleTextView = dialogView.findViewById<TextView>(R.id.textChoiceDialogTitle)
-        val optionsLayout = dialogView.findViewById<LinearLayout>(R.id.layoutChoiceOptions)
-        val cancelButton = dialogView.findViewById<TextView>(R.id.buttonChoiceDialogCancel)
-
-        titleTextView.setText(titleResId)
-        optionsLayout.removeAllViews()
-
-        options.forEach { option ->
-            val optionView = LayoutInflater.from(requireContext())
-                .inflate(R.layout.item_profile_choice, optionsLayout, false)
-
-            val optionTitle = optionView.findViewById<TextView>(R.id.textChoiceTitle)
-            val checkText = optionView.findViewById<TextView>(R.id.textChoiceCheck)
-
-            optionTitle.text = option.title
-            checkText.visibility = if (option.isSelected) View.VISIBLE else View.INVISIBLE
-
-            optionView.setOnClickListener {
-                onSelected(option.value)
-                dialog.dismiss()
-            }
-
-            optionsLayout.addView(optionView)
-        }
-
-        cancelButton.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        dialog.setContentView(dialogView)
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        dialog.show()
-
-        dialog.window?.setLayout(
-            (resources.displayMetrics.widthPixels * 0.90f).toInt(),
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
 }
