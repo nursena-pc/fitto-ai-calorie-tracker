@@ -41,17 +41,20 @@ class SocialRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val realtimeDatabase = FirebaseDatabase.getInstance()
     private val storage = FirebaseStorage.getInstance()
-    private val conversationObservationCoordinator = SocialConversationObservationCoordinator(
-        realtimeSource = FirebaseSocialRealtimeObservationSource(
-            auth = auth,
-            firestore = firestore,
-            realtimeDatabase = realtimeDatabase
-        ),
-        threadSource = FirebaseSocialThreadObservationSource(
-            auth = auth,
-            firestore = firestore
+    private val conversationObservationCoordinator by lazy {
+        SocialConversationObservationCoordinator(
+            realtimeSource = FirebaseSocialRealtimeObservationSource(
+                auth = auth,
+                firestore = firestore,
+                realtimeDatabase = realtimeDatabase
+            ),
+            threadSource = FirebaseSocialThreadObservationSource(
+                auth = auth,
+                firestore = firestore,
+                loadUsersByIds = ::getUsersByIds
+            )
         )
-    )
+    }
 
     fun currentUserId(): String {
         return auth.currentUser?.uid.orEmpty()
@@ -283,162 +286,14 @@ class SocialRepository {
         awaitClose { listener.remove() }
     }
 
-    private suspend fun hydrateMessageThreads(threads: List<MessageThreadUiModel>): List<MessageThreadUiModel> {
-        val users = getUsersByIds(SocialAuthorHydrationResolver.messageThreadParticipantIds(threads))
-        return SocialAuthorHydrationResolver.hydrateMessageThreads(threads, users)
+    fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> {
+        return conversationObservationCoordinator.observeMessageThreads()
     }
 
-    fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid
-
-        if (SocialMessageThreadListResolver.shouldSkipThreadList(currentUserId)) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val activeUserId = currentUserId.orEmpty()
-        var threadDocuments: List<DocumentSnapshot> = emptyList()
-        var blockedUserIds: Set<String> = emptySet()
-        var blockedThreadPreviews: Map<String, BlockedThreadPreview> = emptyMap()
-
-        fun emitThreads() {
-            val threadItems = threadDocuments
-                .mapNotNull { document ->
-                    val thread = mapMessageThreadDocument(
-                        document = document,
-                        currentUserId = activeUserId
-                    ) ?: return@mapNotNull null
-
-                    SocialMessageThreadListItem(
-                        thread = thread,
-                        updatedAt = document.getLong("updatedAt") ?: 0L
-                    )
-                }
-
-            val threads = SocialMessageThreadListResolver.resolveThreads(
-                items = threadItems,
-                blockedUserIds = blockedUserIds,
-                blockedThreadPreviews = blockedThreadPreviews
-            )
-
-            launch {
-                trySend(hydrateMessageThreads(threads))
-            }
-        }
-
-        val threadsListener = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .whereArrayContains("participantIds", activeUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                threadDocuments = snapshot?.documents.orEmpty()
-                emitThreads()
-            }
-
-        val userListener = firestore.collection("users")
-            .document(activeUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    blockedUserIds = emptySet()
-                    blockedThreadPreviews = emptyMap()
-                    emitThreads()
-                    return@addSnapshotListener
-                }
-
-                blockedUserIds = SocialMessageThreadListResolver.blockedUserIds(
-                    snapshot?.get("blockedUserIds")
-                )
-
-                blockedThreadPreviews = SocialMessageHiddenRangeResolver.readBlockedThreadPreviews(
-                    snapshot?.get("blockedThreadPreviews")
-                )
-
-                emitThreads()
-            }
-
-        awaitClose {
-            threadsListener.remove()
-            userListener.remove()
-        }
+    fun observeMessages(threadId: String): Flow<List<ChatMessageUiModel>> {
+        return conversationObservationCoordinator.observeMessages(threadId)
     }
 
-    fun observeMessages(threadId: String): Flow<List<ChatMessageUiModel>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (SocialMessageListResolver.shouldSkipMessageList(currentUserId, threadId)) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val threadSnapshot = threadRef.get().await()
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        val participants = threadSnapshot.get("participants") as? Map<*, *>
-        val participantNames = SocialMessageListResolver.participantNames(
-            participantIds = participantIds,
-            participants = participants
-        )
-        val latestParticipants = getUsersByIds(participantIds)
-            .associateBy { user -> user.id }
-        val participantPhotoUrls = SocialMessageListResolver.participantPhotoUrls(
-            participantIds = participantIds,
-            participants = participants,
-            latestParticipants = latestParticipants
-        )
-
-        val totalRecipientCount = SocialMessageListResolver.totalRecipientCount(participantIds)
-        val currentUserClearedAt = SocialMessageListResolver.currentUserClearedAt(
-            clearedAt = threadSnapshot.get("clearedAt"),
-            currentUserId = currentUserId
-        )
-        val listener = threadRef
-            .collection(MESSAGES_SUBCOLLECTION)
-            .orderBy("createdAt", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val messages = snapshot?.documents?.mapNotNull { document ->
-                    SocialChatMessageDocumentResolver.resolve(
-                        id = document.id,
-                        createdAt = document.getLong("createdAt") ?: 0L,
-                        currentUserId = currentUserId,
-                        currentUserClearedAt = currentUserClearedAt,
-                        deletedFor = document.getStringListCompat("deletedFor"),
-                        senderId = document.getString("senderId").orEmpty(),
-                        senderName = document.getString("senderName"),
-                        senderPhotoUrl = document.getString("senderPhotoUrl"),
-                        fallbackPhotoUrl = document.getString("photoUrl"),
-                        participantNames = participantNames,
-                        participantPhotoUrls = participantPhotoUrls,
-                        readBy = SocialReadReceiptResolver.readByMap(document.get("readBy")),
-                        totalRecipientCount = totalRecipientCount,
-                        isDeleted = document.getBoolean("isDeleted") == true,
-                        messageType = document.getString("type"),
-                        text = document.getString("text"),
-                        fileName = document.getString("fileName"),
-                        fileUrl = document.getString("fileUrl"),
-                        fileMimeType = document.getString("fileMimeType"),
-                        fileSizeBytes = document.getLong("fileSizeBytes") ?: 0L,
-                        audioDurationMillis = document.getLong("audioDurationMillis") ?: 0L,
-                        deliveredAt = document.getLong("deliveredAt"),
-                        deletedAt = document.getLong("deletedAt") ?: 0L,
-                        deletedBy = document.getString("deletedBy")
-                    )
-                }.orEmpty()
-
-                trySend(messages)
-            }
-
-        awaitClose { listener.remove() }
-    }
     suspend fun clearChatForMe(threadId: String) {
         val currentUserId = auth.currentUser?.uid ?: return
         if (threadId.isBlank()) return
@@ -663,7 +518,7 @@ class SocialRepository {
         }.await()
 
         val threadSnapshot = threadRef.get().await()
-        return mapMessageThreadDocument(
+        return SocialMessageThreadSnapshotMapper.map(
             document = threadSnapshot,
             currentUserId = currentUser.uid,
             includeClearedThread = true
@@ -708,7 +563,7 @@ class SocialRepository {
             )
         ).await()
 
-        return mapMessageThreadDocument(threadRef.get().await(), currentUser.uid)
+        return SocialMessageThreadSnapshotMapper.map(threadRef.get().await(), currentUser.uid)
     }
 
     suspend fun updateGroupTitle(threadId: String, newTitle: String) {
@@ -988,7 +843,7 @@ class SocialRepository {
         val currentUserId = auth.currentUser?.uid ?: return null
         if (threadId.isBlank()) return null
 
-        return mapMessageThreadDocument(
+        return SocialMessageThreadSnapshotMapper.map(
             document = firestore.collection(MESSAGE_THREADS_COLLECTION)
                 .document(threadId)
                 .get()
@@ -2774,32 +2629,6 @@ class SocialRepository {
             null
         }
     }
-
-    private fun mapMessageThreadDocument(
-        document: DocumentSnapshot,
-        currentUserId: String,
-        includeClearedThread: Boolean = false
-    ): MessageThreadUiModel? {
-        if (!document.exists()) return null
-
-        return SocialMessageThreadDocumentResolver.resolve(
-            id = document.id,
-            type = document.getString("type"),
-            currentUserId = currentUserId,
-            participantIds = document.getStringListCompat("participantIds"),
-            participants = document.get("participants") as? Map<*, *>,
-            groupTitle = document.getString("title"),
-            groupPhotoUrl = document.getString("photoUrl"),
-            lastMessageText = document.getString("lastMessageText"),
-            lastMessageCreatedAt = document.getLong("lastMessageCreatedAt"),
-            updatedAt = document.getLong("updatedAt"),
-            clearedAt = document.get("clearedAt") as? Map<*, *>,
-            unreadCounts = document.get("unreadCounts") as? Map<*, *>,
-            memberCount = document.getLong("memberCount")?.toInt(),
-            includeClearedThread = includeClearedThread
-        )
-    }
-
 
     private fun DocumentSnapshot.getStringListCompat(field: String): List<String> {
         return (get(field) as? List<*>)
