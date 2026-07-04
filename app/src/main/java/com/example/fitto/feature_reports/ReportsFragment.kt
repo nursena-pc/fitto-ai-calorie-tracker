@@ -22,25 +22,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.fitto.R
-import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
 import com.example.fitto.feature_home.presentation.social.NotificationsFragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.Legend
-import com.github.mikephil.charting.components.LimitLine
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.data.PieData
-import com.github.mikephil.charting.data.PieDataSet
-import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.formatter.PercentFormatter
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.google.android.material.divider.MaterialDivider
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textview.MaterialTextView
@@ -50,7 +37,6 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
 class ReportsFragment : Fragment() {
 
@@ -60,17 +46,12 @@ class ReportsFragment : Fragment() {
     private lateinit var caloriePage: CaloriePageRefs
     private lateinit var macroPage: MacroPageRefs
     private lateinit var weightPage: WeightPageRefs
+    private lateinit var pageRenderer: ReportsPageRenderer
 
     private var lastReportPageIndex = 0
 
     private val selectedDate: LocalDate
         get() = dataCoordinator.state.selectedDate
-
-    private val nutritionDays: List<ReportDay>
-        get() = dataCoordinator.state.nutritionDays
-
-    private val healthData: ProfileHealthData
-        get() = dataCoordinator.state.healthData
 
     private val tabTitleResIds = intArrayOf(
         R.string.reports_tab_calorie,
@@ -137,6 +118,12 @@ class ReportsFragment : Fragment() {
         caloriePage = createCaloriePage(context)
         macroPage = createMacroPage(context)
         weightPage = createWeightPage(context)
+        pageRenderer = ReportsPageRenderer(
+            context = context,
+            caloriePage = caloriePage,
+            macroPage = macroPage,
+            weightPage = weightPage
+        )
 
         viewPager = ViewPager2(context).apply {
             adapter = StaticViewPagerAdapter(
@@ -172,7 +159,7 @@ class ReportsFragment : Fragment() {
             }
         )
         updateDateButtonText()
-        setupCharts()
+        pageRenderer.setupCharts()
         loadReportData()
 
         return root
@@ -475,79 +462,6 @@ class ReportsFragment : Fragment() {
         )
     }
 
-    private fun setupCharts() {
-        setupLineChart(
-            chart = caloriePage.chart,
-            noDataText = getString(R.string.reports_no_calorie_data)
-        )
-        setupPieChart(macroPage.chart)
-        setupLineChart(
-            chart = weightPage.chart,
-            noDataText = getString(R.string.reports_no_weight_data)
-        )
-    }
-
-    private fun setupLineChart(
-        chart: LineChart,
-        noDataText: String
-    ) {
-        chart.apply {
-            setBackgroundColor(color(R.color.reports_chart_background))
-            description.isEnabled = false
-            setNoDataText(noDataText)
-            setNoDataTextColor(color(R.color.reports_text_secondary))
-
-            setTouchEnabled(true)
-            setScaleEnabled(true)
-            setPinchZoom(true)
-            setDrawGridBackground(false)
-
-            extraBottomOffset = chartDp(R.dimen.reports_chart_extra_bottom_offset)
-            extraTopOffset = chartDp(R.dimen.reports_chart_extra_top_offset)
-
-            axisRight.isEnabled = false
-
-            axisLeft.textColor = color(R.color.reports_chart_axis_text)
-            axisLeft.gridColor = color(R.color.reports_chart_grid)
-            axisLeft.axisLineColor = color(R.color.reports_chart_grid)
-
-            xAxis.position = XAxis.XAxisPosition.BOTTOM
-            xAxis.granularity = resources.getInteger(R.integer.reports_chart_x_granularity).toFloat()
-            xAxis.textColor = color(R.color.reports_chart_axis_text)
-            xAxis.axisLineColor = color(R.color.reports_chart_grid)
-            xAxis.setDrawGridLines(false)
-
-            legend.isEnabled = false
-        }
-    }
-
-    private fun setupPieChart(chart: PieChart) {
-        chart.apply {
-            setBackgroundColor(color(R.color.reports_chart_background))
-            description.isEnabled = false
-            setNoDataText(getString(R.string.reports_no_macro_data))
-            setNoDataTextColor(color(R.color.reports_text_secondary))
-
-            setUsePercentValues(true)
-            setDrawEntryLabels(false)
-            isDrawHoleEnabled = true
-            holeRadius = resources.getInteger(R.integer.reports_pie_hole_radius_percent).toFloat()
-            transparentCircleRadius = resources.getInteger(R.integer.reports_pie_transparent_radius_percent).toFloat()
-            setHoleColor(color(R.color.reports_chart_background))
-            centerText = getString(R.string.reports_macro_center_text)
-            setCenterTextSize(chartSp(R.dimen.reports_pie_center_text_size))
-            setCenterTextColor(color(R.color.reports_text_primary))
-
-            legend.isEnabled = true
-            legend.verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-            legend.horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-            legend.orientation = Legend.LegendOrientation.HORIZONTAL
-            legend.setDrawInside(false)
-            legend.textColor = color(R.color.reports_text_secondary)
-            legend.textSize = chartSp(R.dimen.reports_chart_legend_text_size)
-        }
-    }
-
     private fun loadReportData() {
         loadNutritionData()
         loadProfileData()
@@ -584,275 +498,24 @@ class ReportsFragment : Fragment() {
     }
 
     private fun renderAll() {
-        renderCaloriePage()
-        renderMacroPage()
-        renderWeightPage()
-    }
+        if (!::pageRenderer.isInitialized) return
 
-    private fun renderCaloriePage() {
-        if (!::caloriePage.isInitialized || nutritionDays.isEmpty()) return
-
-        val calorieState = ReportCalorieSummaryResolver.resolve(
-            days = nutritionDays,
-            profileTargetCalories = healthData.dailyTargetCalories,
-            defaultTargetCalories = resources.getInteger(
-                R.integer.reports_default_daily_calorie_target
+        val renderState = ReportsRenderStateResolver.resolve(
+            dataState = dataCoordinator.state,
+            config = ReportsRenderConfig(
+                defaultTargetCalories = resources.getInteger(
+                    R.integer.reports_default_daily_calorie_target
+                ),
+                weightVisiblePointCount = resources.getInteger(
+                    R.integer.reports_weight_visible_point_count
+                ),
+                weightAxisPaddingKg = resources.getInteger(
+                    R.integer.reports_weight_axis_padding_kg
+                ).toDouble()
             )
         )
 
-        caloriePage.valueText.text = getString(
-            R.string.reports_format_kcal,
-            calorieState.todayCalories
-        )
-        caloriePage.infoText.text = getString(R.string.reports_calorie_info_selected_date)
-        caloriePage.todayStat.text = getString(
-            R.string.reports_format_kcal,
-            calorieState.todayCalories
-        )
-        caloriePage.averageStat.text = getString(
-            R.string.reports_format_kcal,
-            calorieState.averageCalories
-        )
-        caloriePage.targetStat.text = getString(
-            R.string.reports_format_kcal,
-            calorieState.targetCalories
-        )
-
-        val entries = calorieState.days.mapIndexed { index, day ->
-            Entry(index.toFloat(), day.calories.toFloat())
-        }
-
-        val labels = calorieState.days.map { it.label }
-
-        val dataSet = LineDataSet(entries, getString(R.string.reports_calorie_title)).apply {
-            color = color(R.color.reports_calorie_line)
-            lineWidth = chartDp(R.dimen.reports_chart_line_width)
-            circleRadius = chartDp(R.dimen.reports_chart_circle_radius)
-            circleHoleRadius = chartDp(R.dimen.reports_chart_circle_hole_radius)
-            setCircleColor(color(R.color.reports_calorie_line))
-            valueTextColor = color(R.color.reports_chart_value_text)
-            valueTextSize = chartSp(R.dimen.reports_chart_value_text_size)
-            mode = LineDataSet.Mode.CUBIC_BEZIER
-            setDrawFilled(true)
-            fillColor = color(R.color.reports_calorie_fill)
-            fillAlpha = resources.getInteger(R.integer.reports_chart_fill_alpha)
-        }
-
-        caloriePage.chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        caloriePage.chart.axisLeft.removeAllLimitLines()
-
-        caloriePage.chart.axisLeft.addLimitLine(
-            LimitLine(
-                calorieState.targetCalories.toFloat(),
-                getString(R.string.reports_chart_target_label)
-            ).apply {
-                lineColor = color(R.color.reports_target_line)
-                lineWidth = chartDp(R.dimen.reports_chart_limit_line_width)
-                textColor = color(R.color.reports_target_line)
-                textSize = chartSp(R.dimen.reports_chart_value_text_size)
-                enableDashedLine(
-                    chartDp(R.dimen.reports_chart_dash_line_length),
-                    chartDp(R.dimen.reports_chart_dash_gap_length),
-                    0f
-                )
-            }
-        )
-
-        val axisMultiplier = resources.getFraction(
-            R.fraction.reports_axis_max_padding_multiplier,
-            1,
-            1
-        )
-
-        caloriePage.chart.axisLeft.axisMinimum = 0f
-        caloriePage.chart.axisLeft.axisMaximum = maxOf(
-            calorieState.targetCalories.toFloat(),
-            calorieState.maxCalories.toFloat(),
-            resources.getInteger(R.integer.reports_chart_min_axis_max).toFloat()
-        ) * axisMultiplier
-
-        caloriePage.chart.data = LineData(dataSet)
-        caloriePage.chart.invalidate()
-
-        caloriePage.detailsContainer.removeAllViews()
-        calorieState.days.forEach { day ->
-            caloriePage.detailsContainer.addView(
-                detailRow(
-                    title = day.date.displayDate(),
-                    subtitle = getString(
-                        R.string.reports_format_macro_detail,
-                        day.protein.roundToInt(),
-                        day.carbs.roundToInt(),
-                        day.fat.roundToInt()
-                    ),
-                    value = getString(R.string.reports_format_kcal, day.calories)
-                )
-            )
-        }
-    }
-
-    private fun renderMacroPage() {
-        if (!::macroPage.isInitialized) return
-
-        val macroState = ReportMacroSummaryResolver.resolve(nutritionDays)
-
-        macroPage.valueText.text = getString(
-            R.string.reports_format_gram,
-            macroState.total.roundToInt()
-        )
-        macroPage.infoText.text = getString(R.string.reports_macro_info_from_meals)
-        macroPage.proteinStat.text = getString(
-            R.string.reports_format_gram,
-            macroState.protein.roundToInt()
-        )
-        macroPage.carbStat.text = getString(
-            R.string.reports_format_gram,
-            macroState.carbs.roundToInt()
-        )
-        macroPage.fatStat.text = getString(
-            R.string.reports_format_gram,
-            macroState.fat.roundToInt()
-        )
-
-        macroPage.detailsContainer.removeAllViews()
-
-        if (!macroState.hasData) {
-            macroPage.chart.clear()
-            macroPage.chart.invalidate()
-            macroPage.detailsContainer.addView(emptyDetailRow())
-            return
-        }
-
-        val entries = macroState.chartEntries.map { entry ->
-            PieEntry(entry.grams.toFloat(), macroLabel(entry.type))
-        }
-
-        val dataSet = PieDataSet(entries, getString(R.string.reports_macro_title)).apply {
-            setColors(
-                listOf(
-                    color(R.color.reports_macro_protein),
-                    color(R.color.reports_macro_carbs),
-                    color(R.color.reports_macro_fat)
-                )
-            )
-            sliceSpace = chartDp(R.dimen.reports_pie_slice_space)
-            valueTextColor = color(R.color.reports_text_primary)
-            valueTextSize = chartSp(R.dimen.reports_pie_value_text_size)
-        }
-
-        val data = PieData(dataSet).apply {
-            setValueFormatter(PercentFormatter(macroPage.chart))
-        }
-
-        macroPage.chart.data = data
-        macroPage.chart.invalidate()
-
-        macroState.days.forEach { day ->
-            val dayTotal = day.protein + day.carbs + day.fat
-
-            macroPage.detailsContainer.addView(
-                detailRow(
-                    title = day.date.displayDate(),
-                    subtitle = getString(
-                        R.string.reports_format_macro_detail,
-                        day.protein.roundToInt(),
-                        day.carbs.roundToInt(),
-                        day.fat.roundToInt()
-                    ),
-                    value = getString(R.string.reports_format_gram, dayTotal.roundToInt())
-                )
-            )
-        }
-    }
-
-    private fun renderWeightPage() {
-        if (!::weightPage.isInitialized) return
-
-        val weightState = ReportWeightSummaryResolver.resolve(
-            healthData = healthData,
-            visibleCount = resources.getInteger(R.integer.reports_weight_visible_point_count),
-            axisPaddingKg = resources.getInteger(
-                R.integer.reports_weight_axis_padding_kg
-            ).toDouble()
-        )
-
-        if (!weightState.hasData) {
-            weightPage.valueText.text = getString(R.string.reports_value_empty)
-            weightPage.infoText.text = getString(R.string.reports_weight_missing)
-            weightPage.startStat.text = getString(R.string.reports_value_empty)
-            weightPage.currentStat.text = getString(R.string.reports_value_empty)
-            weightPage.targetStat.text = formatWeightOrDash(weightState.targetWeight)
-            weightPage.detailsContainer.removeAllViews()
-            weightPage.detailsContainer.addView(emptyDetailRow())
-
-            weightPage.chart.clear()
-            weightPage.chart.invalidate()
-            return
-        }
-
-        weightPage.valueText.text = formatWeightOrDash(weightState.currentWeight)
-        weightPage.infoText.text = if (weightState.targetWeight > 0.0) {
-            getString(R.string.reports_weight_goal_info)
-        } else {
-            getString(R.string.reports_weight_subtitle)
-        }
-        weightPage.startStat.text = formatWeightOrDash(weightState.firstWeight)
-        weightPage.currentStat.text = formatWeightOrDash(weightState.currentWeight)
-        weightPage.targetStat.text = formatWeightOrDash(weightState.targetWeight)
-
-        val entries = weightState.visiblePoints.mapIndexed { index, point ->
-            Entry(index.toFloat(), point.weightKg.toFloat())
-        }
-
-        val labels = weightState.visiblePoints.map { point ->
-            point.label.ifBlank { getString(R.string.reports_value_empty) }
-        }
-
-        val dataSet = LineDataSet(entries, getString(R.string.reports_weight_title)).apply {
-            color = color(R.color.reports_weight_line)
-            lineWidth = chartDp(R.dimen.reports_chart_line_width)
-            circleRadius = chartDp(R.dimen.reports_chart_circle_radius)
-            circleHoleRadius = chartDp(R.dimen.reports_chart_circle_hole_radius)
-            setCircleColor(color(R.color.reports_weight_line))
-            valueTextColor = color(R.color.reports_chart_value_text)
-            valueTextSize = chartSp(R.dimen.reports_chart_value_text_size)
-            mode = LineDataSet.Mode.CUBIC_BEZIER
-            setDrawFilled(true)
-            fillColor = color(R.color.reports_weight_fill)
-            fillAlpha = resources.getInteger(R.integer.reports_chart_fill_alpha)
-        }
-
-        weightPage.chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        weightPage.chart.axisLeft.axisMinimum = weightState.axisMin
-        weightPage.chart.axisLeft.axisMaximum = weightState.axisMax
-
-        weightPage.chart.data = LineData(dataSet)
-        weightPage.chart.invalidate()
-
-        weightPage.detailsContainer.removeAllViews()
-        weightState.visiblePoints.reversed().forEach { point ->
-            weightPage.detailsContainer.addView(
-                detailRow(
-                    title = point.label,
-                    subtitle = getString(R.string.reports_weight_detail_measurement),
-                    value = formatWeightOrDash(point.weightKg)
-                )
-            )
-        }
-    }
-
-    private fun macroLabel(type: ReportMacroSummaryResolver.MacroType): String {
-        return when (type) {
-            ReportMacroSummaryResolver.MacroType.PROTEIN -> {
-                getString(R.string.reports_stat_protein)
-            }
-            ReportMacroSummaryResolver.MacroType.CARBS -> {
-                getString(R.string.reports_stat_carbs)
-            }
-            ReportMacroSummaryResolver.MacroType.FAT -> {
-                getString(R.string.reports_stat_fat)
-            }
-        }
+        pageRenderer.render(renderState)
     }
 
     private fun pageScroll(context: Context): NestedScrollView {
@@ -937,88 +600,6 @@ class ReportsFragment : Fragment() {
             LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             topMargin = px(R.dimen.reports_detail_card_top_margin)
-        }
-    }
-
-    private fun detailRow(
-        title: String,
-        subtitle: String,
-        value: String
-    ): View {
-        val context = requireContext()
-        val row = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(
-                0,
-                px(R.dimen.reports_detail_row_vertical_padding),
-                0,
-                px(R.dimen.reports_detail_row_vertical_padding)
-            )
-        }
-
-        val textColumn = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-
-        textColumn.addView(
-            MaterialTextView(context).apply {
-                text = title
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge)
-                setTextColor(color(R.color.reports_text_primary))
-            }
-        )
-
-        textColumn.addView(
-            MaterialTextView(context).apply {
-                text = subtitle
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodySmall)
-                setTextColor(color(R.color.reports_text_secondary))
-            }
-        )
-
-        row.addView(
-            textColumn,
-            LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1f
-            )
-        )
-
-        row.addView(
-            MaterialTextView(context).apply {
-                text = value
-                setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_TitleSmall)
-                setTextColor(color(R.color.reports_tab_selected))
-                gravity = Gravity.END
-            }
-        )
-
-        val wrapper = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(row)
-            addView(
-                MaterialDivider(context).apply {
-                    setDividerColor(color(R.color.reports_divider))
-                },
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    px(R.dimen.reports_detail_divider_height)
-                )
-            )
-        }
-
-        return wrapper
-    }
-
-    private fun emptyDetailRow(): View {
-        return MaterialTextView(requireContext()).apply {
-            text = getString(R.string.reports_detail_no_data)
-            setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
-            setTextColor(color(R.color.reports_text_secondary))
-            gravity = Gravity.CENTER
-            setPadding(0, px(R.dimen.reports_detail_empty_vertical_padding), 0, px(R.dimen.reports_detail_empty_vertical_padding))
         }
     }
 
@@ -1130,34 +711,12 @@ class ReportsFragment : Fragment() {
         )
     }
 
-    private fun LocalDate.displayDate(): String {
-        val pattern = getString(R.string.reports_short_date_format_pattern)
-        val formatter = DateTimeFormatter.ofPattern(pattern, Locale.getDefault())
-        return format(formatter)
-    }
-
     private fun LocalDate.toUtcStartMillis(): Long {
         return atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
     }
 
     private fun Long.toUtcLocalDate(): LocalDate {
         return Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
-    }
-
-    private fun formatWeightOrDash(value: Double): String {
-        if (value <= 0.0) return getString(R.string.reports_value_empty)
-
-        val formattedValue = if (value % 1.0 == 0.0) {
-            value.toInt().toString()
-        } else {
-            String.format(
-                Locale.getDefault(),
-                getString(R.string.reports_decimal_one_pattern),
-                value
-            )
-        }
-
-        return getString(R.string.reports_format_kg, formattedValue)
     }
 
     private fun resolveSelectableBorderless(): Int {
@@ -1178,15 +737,6 @@ class ReportsFragment : Fragment() {
         return resources.getDimensionPixelSize(dimenResId)
     }
 
-    private fun chartDp(@DimenRes dimenResId: Int): Float {
-        return resources.getDimension(dimenResId) / resources.displayMetrics.density
-    }
-
-    private fun chartSp(@DimenRes dimenResId: Int): Float {
-        val scaledDensity = resources.displayMetrics.density * resources.configuration.fontScale
-        return resources.getDimension(dimenResId) / scaledDensity
-    }
-
     private data class SmallStatRefs(
         val root: View,
         val valueText: MaterialTextView
@@ -1195,39 +745,6 @@ class ReportsFragment : Fragment() {
     private data class DetailCardRefs(
         val root: View,
         val container: LinearLayout
-    )
-
-    private data class CaloriePageRefs(
-        val root: View,
-        val valueText: MaterialTextView,
-        val infoText: MaterialTextView,
-        val todayStat: MaterialTextView,
-        val averageStat: MaterialTextView,
-        val targetStat: MaterialTextView,
-        val chart: LineChart,
-        val detailsContainer: LinearLayout
-    )
-
-    private data class MacroPageRefs(
-        val root: View,
-        val valueText: MaterialTextView,
-        val infoText: MaterialTextView,
-        val proteinStat: MaterialTextView,
-        val carbStat: MaterialTextView,
-        val fatStat: MaterialTextView,
-        val chart: PieChart,
-        val detailsContainer: LinearLayout
-    )
-
-    private data class WeightPageRefs(
-        val root: View,
-        val valueText: MaterialTextView,
-        val infoText: MaterialTextView,
-        val startStat: MaterialTextView,
-        val currentStat: MaterialTextView,
-        val targetStat: MaterialTextView,
-        val chart: LineChart,
-        val detailsContainer: LinearLayout
     )
 
     private class StaticViewPagerAdapter(
