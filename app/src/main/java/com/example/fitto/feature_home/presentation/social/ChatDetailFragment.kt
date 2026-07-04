@@ -52,6 +52,9 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
     private val handler = Handler(Looper.getMainLooper())
     private val messageComposerController = ChatMessageComposerController()
+    private val conversationAccessController by lazy(LazyThreadSafetyMode.NONE) {
+        ChatConversationAccessController(isGroup = isCurrentGroupChat)
+    }
     private val headerPresentationController by lazy(LazyThreadSafetyMode.NONE) {
         ChatHeaderPresentationController(
             isGroup = isGroup,
@@ -64,14 +67,13 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private lateinit var mediaController: ChatMediaController
     private var _headerRenderer: ChatHeaderRenderer? = null
     private val headerRenderer get() = _headerRenderer!!
+    private var _conversationAccessRenderer: ChatConversationAccessRenderer? = null
+    private val conversationAccessRenderer get() = _conversationAccessRenderer!!
     private val messagePresentationController by lazy(LazyThreadSafetyMode.NONE) {
         ChatMessagePresentationController(highlightMessageId)
     }
     private var latestThread: MessageThreadUiModel? = null
-    private var isCurrentChatBlocked = false
-    private var isOtherUserDeleted = false
     private var latestMessages: List<ChatMessageUiModel> = emptyList()
-    private var hiddenMessageRanges: List<MessageHiddenRange> = emptyList()
     private val stopTypingRunnable = Runnable {
         repository.setTyping(threadId, false)
     }
@@ -123,6 +125,10 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         requireArguments().getBoolean(ARG_IS_GROUP, false)
     }
 
+    private val isCurrentGroupChat: Boolean by lazy {
+        isGroup || threadId.startsWith("group_")
+    }
+
     private val otherParticipantId: String? by lazy {
         requireArguments().getString(ARG_OTHER_PARTICIPANT_ID)
     }
@@ -165,6 +171,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
         _binding = FragmentChatDetailBinding.bind(view)
         _headerRenderer = ChatHeaderRenderer(binding)
+        _conversationAccessRenderer = ChatConversationAccessRenderer(binding)
         mediaController = createMediaController()
 
         setupHeader()
@@ -297,7 +304,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             }
         }
         chatMoreButton.setOnClickListener { view ->
-            if (!isCurrentGroupChat()) {
+            if (!isCurrentGroupChat) {
                 showChatMoreMenu(view)
             }
         }
@@ -468,24 +475,19 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         }
     }
     private fun blockUser(targetUserId: String) {
-        val lastVisibleMessage = latestMessages.lastOrNull { message ->
-            !message.isDeleted
-        }
-
-        val previewText = lastVisibleMessage?.text
-            ?.takeIf { it.isNotBlank() }
-            ?: "Henüz mesaj yok."
-
-        val previewCreatedAt = lastVisibleMessage?.createdAt
-            ?: System.currentTimeMillis()
+        val preview = conversationAccessController.resolveBlockPreview(
+            messages = latestMessages,
+            emptyPreviewText = "Henüz mesaj yok.",
+            fallbackCreatedAt = System.currentTimeMillis()
+        )
 
         viewLifecycleOwner.lifecycleScope.launch {
             runCatching {
                 repository.blockUser(
                     targetUserId = targetUserId,
                     threadId = threadId,
-                    previewText = previewText,
-                    previewCreatedAt = previewCreatedAt
+                    previewText = preview.text,
+                    previewCreatedAt = preview.createdAt
                 )
             }.onSuccess {
                 checkBlockState()
@@ -560,17 +562,13 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                     threadId = threadId,
                     targetUserId = targetUserId
                 ).collect { blockState ->
-                    isCurrentChatBlocked = blockState.isBlocked
-                    hiddenMessageRanges = blockState.hiddenRanges
+                    val accessState = conversationAccessController.onBlockStateChanged(blockState)
 
                     if (_binding != null) {
-                        if (isCurrentChatBlocked) {
-                            applyBlockedChatUi()
+                        renderConversationAccessState(accessState)
+                        if (accessState.isBlocked) {
                             repository.setTyping(threadId, false)
-                        } else {
-                            applyUnblockedChatUi()
                         }
-
                         submitMessages(latestMessages)
                     }
                 }
@@ -589,16 +587,10 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                 targetUserId = targetUserId
             )
 
-            isCurrentChatBlocked = blockState.isBlocked
-            hiddenMessageRanges = blockState.hiddenRanges
+            val accessState = conversationAccessController.onBlockStateChanged(blockState)
 
             if (_binding != null) {
-                if (isCurrentChatBlocked) {
-                    applyBlockedChatUi()
-                } else {
-                    applyUnblockedChatUi()
-                }
-
+                renderConversationAccessState(accessState)
                 submitMessages(latestMessages)
             }
         }
@@ -616,56 +608,22 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
             if (_binding == null) return@launch
 
-            isOtherUserDeleted = deleted
+            val accessState = conversationAccessController.onDeletedUserChanged(deleted)
 
             if (deleted) {
-                applyDeletedDirectUserUi()
+                renderConversationAccessState(accessState)
             }
         }
     }
 
-    private fun applyDeletedDirectUserUi() = with(binding) {
-        chatTitleText.setText(R.string.deleted_user_display_name)
-        chatSubtitleText.setText(R.string.social_deleted_user_unavailable)
+    private fun renderConversationAccessState(state: ChatConversationAccessState) {
+        if (_binding == null) return
 
-        chatMoreButton.isVisible = false
-
-        chatAvatarImage.setImageDrawable(null)
-        chatAvatarImage.isVisible = false
-        chatGroupIcon.isVisible = false
-        chatInitialsText.isVisible = true
-        chatInitialsText.text = getString(R.string.deleted_user_display_name)
-            .firstOrNull()
-            ?.uppercase()
-            ?: "S"
-
-        chatMessageEditText.setText("")
-        chatMessageEditText.hint = getString(R.string.social_deleted_user_unavailable)
-        chatMessageEditText.isEnabled = false
-
-        chatSendButton.isEnabled = false
-        chatVoiceButton.isEnabled = false
-        chatAttachButton.isEnabled = false
-    }
-
-    private fun applyBlockedChatUi() = with(binding) {
-        chatMessageEditText.setText("")
-        chatMessageEditText.hint = getString(R.string.chat_blocked_input_hint)
-        chatMessageEditText.isEnabled = false
-
-        chatSendButton.isEnabled = false
-        chatVoiceButton.isEnabled = false
-        chatAttachButton.isEnabled = false
-    }
-
-    private fun applyUnblockedChatUi() = with(binding) {
-        chatMessageEditText.hint = getString(R.string.chat_message_hint)
-        chatMessageEditText.isEnabled = true
-
-        chatVoiceButton.isEnabled = true
-        chatAttachButton.isEnabled = true
-
-        renderComposerUiState()
+        conversationAccessRenderer.render(state)
+        if (state.isInteractionEnabled) {
+            renderComposerUiState()
+        }
+        updateMoreButtonVisibility()
     }
 
     private fun showChatMoreMenu(anchor: View) {
@@ -685,7 +643,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         popupMenu.setForceShowIcon(true)
 
         popupMenu.menu.findItem(R.id.action_block_user)?.title =
-            if (isCurrentChatBlocked) {
+            if (conversationAccessController.currentState.isBlocked) {
                 getString(R.string.chat_unblock_user)
             } else {
                 getString(R.string.chat_block_user)
@@ -707,7 +665,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                 }
 
                 R.id.action_block_user -> {
-                    if (isCurrentChatBlocked) {
+                    if (conversationAccessController.currentState.isBlocked) {
                         showUnblockUserDialog()
                     } else {
                         showBlockUserDialog()
@@ -760,24 +718,28 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             .show(parentFragmentManager, "GroupInfoFragment")
     }
     private fun openDirectUserSocialProfile() {
-        val targetUserId = otherParticipantId
+        val targetUserId = when (
+            val decision = conversationAccessController.resolveDirectProfileOpen(otherParticipantId)
+        ) {
+            ChatDirectProfileOpenDecision.MissingParticipant -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_user_profile_open_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
 
-        if (targetUserId.isNullOrBlank()) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_user_profile_open_error),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+            ChatDirectProfileOpenDecision.DeletedUser -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.social_deleted_user_unavailable),
+                    Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
 
-        if (isOtherUserDeleted) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.social_deleted_user_unavailable),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+            is ChatDirectProfileOpenDecision.Open -> decision.userId
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -788,8 +750,8 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             if (_binding == null) return@launch
 
             if (deleted) {
-                isOtherUserDeleted = true
-                applyDeletedDirectUserUi()
+                val accessState = conversationAccessController.onDeletedUserChanged(true)
+                renderConversationAccessState(accessState)
 
                 Toast.makeText(
                     requireContext(),
@@ -844,7 +806,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private fun sendMessage() {
         val decision = messageComposerController.beginTextSend(
             text = binding.chatMessageEditText.text,
-            isChatBlocked = isCurrentChatBlocked
+            isChatBlocked = conversationAccessController.currentState.isBlocked
         )
 
         when (decision) {
@@ -873,7 +835,9 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
 
     private fun sendFileMessage(fileUri: Uri) {
-        when (val decision = messageComposerController.beginAttachmentSend(isCurrentChatBlocked)) {
+        when (val decision = messageComposerController.beginAttachmentSend(
+            conversationAccessController.currentState.isBlocked
+        )) {
             ChatMediaSendDecision.Send -> {
                 launchComposerDelivery(
                     delivery = {
@@ -936,7 +900,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private fun toggleVoiceRecording() {
         when (
             messageComposerController.resolveVoiceToggle(
-                isChatBlocked = isCurrentChatBlocked,
+                isChatBlocked = conversationAccessController.currentState.isBlocked,
                 isVoiceRecording = mediaController.isVoiceRecording
             )
         ) {
@@ -1107,8 +1071,8 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                 messages = messages,
                 isGroup = isGroup,
                 hiddenSenderId = otherParticipantId,
-                isCurrentChatBlocked = isCurrentChatBlocked,
-                hiddenMessageRanges = hiddenMessageRanges
+                isCurrentChatBlocked = conversationAccessController.currentState.isBlocked,
+                hiddenMessageRanges = conversationAccessController.currentState.hiddenMessageRanges
             )
         )
 
@@ -1179,15 +1143,13 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         messageAdapter.setSelectedMessage(null)
         updateSelectionUi()
     }
-    private fun isCurrentGroupChat(): Boolean {
-        return isGroup || threadId.startsWith("group_")
-    }
 
     private fun updateMoreButtonVisibility() {
         if (_binding == null) return
 
-        binding.chatMoreButton.isVisible =
-            !isCurrentGroupChat() && selectedMessage == null
+        binding.chatMoreButton.isVisible = conversationAccessController.shouldShowMoreButton(
+            hasSelectedMessage = selectedMessage != null
+        )
     }
     private fun updateSelectionUi() = with(binding) {
         val hasSelection = selectedMessage != null
@@ -1365,6 +1327,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         repository.setTyping(threadId, false)
         binding.chatMessagesRecyclerView.adapter = null
         _headerRenderer = null
+        _conversationAccessRenderer = null
         _binding = null
         super.onDestroyView()
     }
