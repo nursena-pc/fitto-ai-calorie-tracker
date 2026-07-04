@@ -32,10 +32,6 @@ import java.util.Date
 import java.util.Locale
 import android.Manifest
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
-import android.media.MediaPlayer
-import android.media.MediaRecorder
-import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -58,13 +54,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private var isSending = false
     private var typingDotIndex = 0
     private var currentTypingUsers: List<TypingUserUiModel> = emptyList()
-    private var mediaRecorder: MediaRecorder? = null
-    private var currentVoiceFile: File? = null
-    private var voiceRecordStartedAt: Long = 0L
-    private var isRecordingVoice = false
-
-    private var mediaPlayer: MediaPlayer? = null
-    private var playingAudioUrl: String? = null
+    private lateinit var mediaController: ChatMediaController
     private var latestThread: MessageThreadUiModel? = null
     private var currentThreadPhotoUrl: String? = null
     private var lastPresence: PresenceStatusUiModel? = null
@@ -164,6 +154,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
         _binding = FragmentChatDetailBinding.bind(view)
         currentThreadPhotoUrl = threadPhotoUrl
+        mediaController = createMediaController()
 
         setupHeader()
         setupRecyclerView()
@@ -941,6 +932,45 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             if (_binding != null) updateSendButton()
         }
     }
+    private fun createMediaController(): ChatMediaController {
+        return ChatMediaController(
+            voiceFileFactory = {
+                File(
+                    requireContext().cacheDir,
+                    "voice_${System.currentTimeMillis()}.m4a"
+                )
+            },
+            voiceRecorderFactory = AndroidChatVoiceRecorderFactory(
+                context = requireContext(),
+                maximumDurationMillis = MAX_VOICE_DURATION_MILLIS
+            ),
+            audioPlayerFactory = AndroidChatAudioPlayerFactory(),
+            elapsedRealtime = SystemClock::elapsedRealtime,
+            minimumVoiceDurationMillis = MIN_VOICE_DURATION_MILLIS,
+            onVoiceRecordingStateChanged = { isRecording ->
+                if (_binding != null) {
+                    renderVoiceRecordingState(isRecording)
+                }
+            },
+            onAudioPlaybackStateChanged = { audioUrl ->
+                if (::messageAdapter.isInitialized) {
+                    messageAdapter.setPlayingAudioUrl(audioUrl)
+                }
+            },
+            onAudioPlaybackError = { error ->
+                Log.e("FittoAudio", "Audio play failed: ${error.message}", error)
+
+                if (_binding != null) {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.chat_voice_play_error),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        )
+    }
+
     private fun toggleVoiceRecording() {
         if (isCurrentChatBlocked) {
             Toast.makeText(
@@ -951,115 +981,40 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             return
         }
 
-        if (isRecordingVoice) {
-            stopVoiceRecordingAndSend()
-        } else {
-            startVoiceRecording()
+        if (isSending && !mediaController.isVoiceRecording) return
+
+        when (val result = mediaController.toggleVoiceRecording()) {
+            ChatVoiceRecordingActionResult.Started -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_recording_started),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is ChatVoiceRecordingActionResult.ReadyToSend -> {
+                sendAudioMessage(
+                    audioFile = result.audioFile,
+                    durationMillis = result.durationMillis
+                )
+            }
+
+            ChatVoiceRecordingActionResult.TooShort -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_too_short),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            is ChatVoiceRecordingActionResult.Failed -> {
+                Toast.makeText(
+                    requireContext(),
+                    getString(R.string.chat_voice_recording_error),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
-    }
-
-    private fun startVoiceRecording() {
-        if (isSending || isRecordingVoice) return
-
-        val outputFile = File(
-            requireContext().cacheDir,
-            "voice_${System.currentTimeMillis()}.m4a"
-        )
-
-        currentVoiceFile = outputFile
-        voiceRecordStartedAt = SystemClock.elapsedRealtime()
-
-        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MediaRecorder(requireContext())
-        } else {
-            @Suppress("DEPRECATION")
-            MediaRecorder()
-        }
-
-        mediaRecorder = recorder
-
-        runCatching {
-            recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
-            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            recorder.setAudioEncodingBitRate(128_000)
-            recorder.setAudioSamplingRate(44_100)
-            recorder.setMaxDuration(MAX_VOICE_DURATION_MILLIS.toInt())
-            recorder.setOutputFile(outputFile.absolutePath)
-            recorder.prepare()
-            recorder.start()
-
-            isRecordingVoice = true
-            renderVoiceRecordingState(true)
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_voice_recording_started),
-                Toast.LENGTH_SHORT
-            ).show()
-        }.onFailure {
-            releaseVoiceRecorder()
-            outputFile.delete()
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_voice_recording_error),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    private fun stopVoiceRecordingAndSend() {
-        if (!isRecordingVoice) return
-
-        val recordedFile = currentVoiceFile
-        val duration = SystemClock.elapsedRealtime() - voiceRecordStartedAt
-
-        runCatching {
-            mediaRecorder?.stop()
-        }.onFailure {
-            recordedFile?.delete()
-        }
-
-        releaseVoiceRecorder()
-        renderVoiceRecordingState(false)
-
-        if (recordedFile == null || !recordedFile.exists() || recordedFile.length() <= 0L) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_voice_recording_error),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        if (duration < MIN_VOICE_DURATION_MILLIS) {
-            recordedFile.delete()
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_voice_too_short),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        sendAudioMessage(recordedFile, duration)
-    }
-
-    private fun releaseVoiceRecorder() {
-        runCatching {
-            mediaRecorder?.reset()
-        }
-
-        runCatching {
-            mediaRecorder?.release()
-        }
-
-        mediaRecorder = null
-        currentVoiceFile = null
-        voiceRecordStartedAt = 0L
-        isRecordingVoice = false
     }
 
     private fun renderVoiceRecordingState(isRecording: Boolean) = with(binding) {
@@ -1196,85 +1151,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         )
     }
     private fun playOrStopAudio(url: String) {
-        if (url.isBlank()) return
-
-        if (playingAudioUrl == url && mediaPlayer?.isPlaying == true) {
-            stopAudioPlayback()
-            return
-        }
-
-        stopAudioPlayback()
-        messageAdapter.setPlayingAudioUrl(url)
-
-        runCatching {
-            mediaPlayer = MediaPlayer().apply {
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build()
-                )
-
-                setDataSource(url)
-
-                setOnPreparedListener { player ->
-                    playingAudioUrl = url
-                    messageAdapter.setPlayingAudioUrl(url)
-                    player.start()
-                }
-                setOnCompletionListener {
-                    stopAudioPlayback()
-                }
-
-                setOnErrorListener { _, what, extra ->
-                    Log.e("FittoAudio", "MediaPlayer error what=$what extra=$extra url=$url")
-                    stopAudioPlayback()
-
-                    Toast.makeText(
-                        requireContext(),
-                        getString(R.string.chat_voice_play_error),
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    true
-                }
-
-                prepareAsync()
-            }
-        }.onFailure { error ->
-            Log.e("FittoAudio", "Audio play failed: ${error.message}", error)
-            stopAudioPlayback()
-
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_voice_play_error),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    private fun stopAudioPlayback() {
-        runCatching {
-            mediaPlayer?.setOnPreparedListener(null)
-            mediaPlayer?.setOnCompletionListener(null)
-            mediaPlayer?.setOnErrorListener(null)
-        }
-
-        runCatching {
-            if (mediaPlayer?.isPlaying == true) {
-                mediaPlayer?.stop()
-            }
-        }
-
-        runCatching {
-            mediaPlayer?.release()
-        }
-
-        mediaPlayer = null
-        playingAudioUrl = null
-        if (::messageAdapter.isInitialized) {
-            messageAdapter.setPlayingAudioUrl(null)
-        }
+        mediaController.playOrStopAudio(url)
     }
 
     private fun submitMessages(messages: List<ChatMessageUiModel>) {
@@ -1557,8 +1434,9 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
 
     override fun onDestroyView() {
-        releaseVoiceRecorder()
-        stopAudioPlayback()
+        if (::mediaController.isInitialized) {
+            mediaController.release()
+        }
         handler.removeCallbacks(stopTypingRunnable)
         handler.removeCallbacks(typingAnimationRunnable)
         repository.setTyping(threadId, false)
