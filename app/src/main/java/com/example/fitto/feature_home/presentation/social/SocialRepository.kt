@@ -7,10 +7,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
-import java.util.UUID
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -116,6 +114,27 @@ class SocialRepository {
             )
         )
     }
+    private val threadManagementCoordinator by lazy {
+        SocialThreadManagementCoordinator(
+            querySource = FirebaseSocialThreadQuerySource(
+                auth = auth,
+                firestore = firestore,
+                searchUsers = profileCoordinator::searchUsers
+            ),
+            commandSource = FirebaseSocialThreadCommandSource(
+                auth = auth,
+                firestore = firestore,
+                storage = storage,
+                ensureCurrentUserProfile = profileCoordinator::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = profileCoordinator::getCurrentUserProfile,
+                loadUserProfile = profileCoordinator::getUserProfile
+            ),
+            membershipSource = FirebaseSocialGroupMembershipSource(
+                auth = auth,
+                firestore = firestore
+            )
+        )
+    }
 
     fun currentUserId(): String {
         return auth.currentUser?.uid.orEmpty()
@@ -187,194 +206,33 @@ class SocialRepository {
     }
 
     suspend fun getGroupSettings(threadId: String): GroupSettingsUiModel {
-        if (threadId.isBlank()) return GroupSettingsUiModel()
-
-        val snapshot = firestore
-            .collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .get()
-            .await()
-
-        return SocialGroupSettingsResolver.fromRawMap(
-            snapshot.get("settings") as? Map<*, *>
-        )
+        return threadManagementCoordinator.getGroupSettings(threadId)
     }
 
     suspend fun updateGroupSettings(
         threadId: String,
         settings: GroupSettingsUiModel
     ) {
-        if (threadId.isBlank()) return
-
-        firestore
-            .collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .update(
-                mapOf(
-                    "settings" to SocialGroupSettingsResolver.toRawMap(settings),
-                    "updatedAt" to System.currentTimeMillis()
-                )
-            )
-            .await()
+        threadManagementCoordinator.updateGroupSettings(threadId, settings)
     }
+
     suspend fun getGroupMembers(threadId: String): List<GroupMemberUiModel> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyList()
-        if (threadId.isBlank()) return emptyList()
-
-        val threadSnapshot = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .get()
-            .await()
-
-        if (!threadSnapshot.exists()) return emptyList()
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUserId)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        return SocialGroupMemberResolver.resolveMembers(
-            participantIds = participantIds,
-            participants = threadSnapshot.get("participants") as? Map<*, *>,
-            currentUserId = currentUserId,
-            creatorId = threadSnapshot.getString("creatorId").orEmpty()
-        )
+        return threadManagementCoordinator.getGroupMembers(threadId)
     }
 
     suspend fun updateGroupPhoto(
         threadId: String,
         imageUri: Uri
     ): String {
-        val currentUserId = auth.currentUser?.uid ?: return ""
-        if (threadId.isBlank()) return ""
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
-
-        if (!isGroup || !participantIds.contains(currentUserId)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val storageRef = storage.reference.child(
-            SocialMediaUploadResolver.groupPhotoStoragePath(
-                threadId = threadId,
-                fileId = UUID.randomUUID().toString()
-            )
-        )
-
-        storageRef.putFile(imageUri).await()
-        val downloadUrl = storageRef.downloadUrl.await().toString()
-
-        threadRef.update(
-            SocialMediaUploadResolver.groupPhotoUpdatePayload(
-                photoUrl = downloadUrl,
-                updatedAt = System.currentTimeMillis()
-            )
-        ).await()
-
-        return downloadUrl
+        return threadManagementCoordinator.updateGroupPhoto(threadId, imageUri)
     }
 
     suspend fun getThreadSharedContent(threadId: String): List<SharedContentUiModel> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyList()
-        if (threadId.isBlank()) return emptyList()
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val threadSnapshot = threadRef.get().await()
-
-        if (!threadSnapshot.exists()) return emptyList()
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUserId)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val messagesSnapshot = threadRef
-            .collection(MESSAGES_SUBCOLLECTION)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .get()
-            .await()
-
-        return messagesSnapshot.documents.flatMap { document ->
-            SocialThreadSharedContentResolver.resolve(
-                messageId = document.id,
-                text = document.getString("text").orEmpty(),
-                createdAt = document.getLong("createdAt") ?: 0L,
-                senderName = document.getString("senderName").orEmpty(),
-                imageUrl = document.getString("imageUrl")
-                    ?: document.getString("mediaUrl")
-                    ?: document.getString("photoUrl"),
-                fileUrl = document.getString("fileUrl"),
-                fileName = document.getString("fileName").orEmpty(),
-                linkExtractor = SocialLinkResolver::extractLinks
-            )
-        }
+        return threadManagementCoordinator.getThreadSharedContent(threadId)
     }
 
     suspend fun createOrGetDirectThread(targetUserId: String): MessageThreadUiModel? {
-        val currentUser = auth.currentUser ?: return null
-        if (
-            SocialDirectThreadPayloadResolver.shouldSkipTarget(
-                currentUserId = currentUser.uid,
-                targetUserId = targetUserId
-            )
-        ) return null
-
-        createCurrentUserProfileIfNeeded()
-
-        val currentProfile = getCurrentUserProfile()
-        val targetProfile = getUserProfile(targetUserId) ?: return null
-
-        val currentParticipant = SocialDirectThreadPayloadResolver.currentParticipant(
-            uid = currentUser.uid,
-            profileUserName = currentProfile?.userName,
-            profilePhotoUrl = currentProfile?.photoUrl,
-            email = currentUser.email,
-            authPhotoUrl = currentUser.photoUrl?.toString()
-        )
-
-        val targetParticipant = SocialDirectThreadPayloadResolver.targetParticipant(
-            uid = targetUserId,
-            userName = targetProfile.userName,
-            photoUrl = targetProfile.photoUrl
-        )
-
-        val threadId = SocialThreadParticipantResolver.directThreadId(currentUser.uid, targetUserId)
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val now = System.currentTimeMillis()
-
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(threadRef)
-
-            if (!snapshot.exists()) {
-                transaction.set(
-                    threadRef,
-                    SocialDirectThreadPayloadResolver.createPayload(
-                        threadId = threadId,
-                        threadType = THREAD_TYPE_DIRECT,
-                        currentParticipant = currentParticipant,
-                        targetParticipant = targetParticipant,
-                        now = now
-                    )
-                )
-            }
-
-            null
-        }.await()
-
-        val threadSnapshot = threadRef.get().await()
-        return SocialMessageThreadSnapshotMapper.map(
-            document = threadSnapshot,
-            currentUserId = currentUser.uid,
-            includeClearedThread = true
-        )
+        return threadManagementCoordinator.createOrGetDirectThread(targetUserId)
     }
 
     suspend fun createGroupThread(
@@ -382,346 +240,69 @@ class SocialRepository {
         description: String = "",
         selectedUsers: List<SearchUserUiModel>
     ): MessageThreadUiModel? {
-        val currentUser = auth.currentUser ?: return null
-        val resolvedInput = SocialGroupThreadPayloadResolver.resolveInput(
+        return threadManagementCoordinator.createGroupThread(
             title = title,
             description = description,
-            selectedUsers = selectedUsers,
-            currentUserId = currentUser.uid
-        ) ?: return null
-
-        createCurrentUserProfileIfNeeded()
-
-        val currentProfile = getCurrentUserProfile()
-        val currentSender = SocialMessageSenderResolver.resolve(
-            profileUserName = currentProfile?.userName,
-            profilePhotoUrl = currentProfile?.photoUrl,
-            currentUserEmail = currentUser.email,
-            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+            selectedUsers = selectedUsers
         )
-
-        val threadId = "group_${UUID.randomUUID()}"
-        val now = System.currentTimeMillis()
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-
-        threadRef.set(
-            SocialGroupThreadPayloadResolver.createPayload(
-                threadId = threadId,
-                currentUserId = currentUser.uid,
-                currentUserName = currentSender.name,
-                currentPhotoUrl = currentSender.photoUrl,
-                input = resolvedInput,
-                now = now
-            )
-        ).await()
-
-        return SocialMessageThreadSnapshotMapper.map(threadRef.get().await(), currentUser.uid)
     }
 
     suspend fun updateGroupTitle(threadId: String, newTitle: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        val updatePayload = SocialGroupMetadataUpdateResolver.createTitleUpdatePayload(
-            newTitle = newTitle,
-            updatedAt = System.currentTimeMillis()
-        ) ?: return
-        if (threadId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-        val participantIds = snapshot.getStringListCompat("participantIds")
-
-        if (!SocialGroupMetadataUpdateResolver.isGroupParticipant(
-                threadType = snapshot.getString("type"),
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        threadRef.update(updatePayload).await()
+        threadManagementCoordinator.updateGroupTitle(threadId, newTitle)
     }
+
     suspend fun updateGroupDescription(threadId: String, newDescription: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-        val participantIds = snapshot.getStringListCompat("participantIds")
-
-        if (!SocialGroupMetadataUpdateResolver.isGroupParticipant(
-                threadType = snapshot.getString("type"),
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        threadRef.update(
-            SocialGroupMetadataUpdateResolver.createDescriptionUpdatePayload(
-                newDescription = newDescription,
-                updatedAt = System.currentTimeMillis()
-            )
-        ).await()
+        threadManagementCoordinator.updateGroupDescription(threadId, newDescription)
     }
 
     suspend fun updateGroupName(
         threadId: String,
         newName: String
     ) {
-        if (threadId.isBlank()) return
-
-        val updatePayload = SocialGroupMetadataUpdateResolver.createLegacyNameUpdatePayload(
-            newName = newName,
-            updatedAt = System.currentTimeMillis()
-        ) ?: return
-
-        firestore
-            .collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .update(updatePayload)
-            .await()
+        threadManagementCoordinator.updateGroupName(threadId, newName)
     }
+
     suspend fun clearThreadForCurrentUser(threadId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        if (!SocialThreadVisibilityPayloadResolver.isParticipant(
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val now = System.currentTimeMillis()
-
-        threadRef.update(
-            SocialThreadVisibilityPayloadResolver.createClearPayload(
-                currentUserId = currentUserId,
-                clearedAt = now
-            )
-        ).await()
+        threadManagementCoordinator.clearThreadForCurrentUser(threadId)
     }
 
     suspend fun deleteThreadForCurrentUser(threadId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        if (!SocialThreadVisibilityPayloadResolver.isParticipant(
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val now = System.currentTimeMillis()
-
-        threadRef.update(
-            SocialThreadVisibilityPayloadResolver.createClearPayload(
-                currentUserId = currentUserId,
-                clearedAt = now
-            )
-        ).await()
+        threadManagementCoordinator.deleteThreadForCurrentUser(threadId)
     }
 
     suspend fun leaveGroup(threadId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
-
-        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
-                isGroup = isGroup,
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val now = System.currentTimeMillis()
-
-        threadRef.update(
-            SocialGroupMembershipPayloadResolver.createRemoveMemberPayload(
-                memberId = currentUserId,
-                participantIds = participantIds,
-                updatedAt = now
-            )
-        ).await()
+        threadManagementCoordinator.leaveGroup(threadId)
     }
+
     suspend fun removeMemberFromGroup(
         threadId: String,
         memberId: String
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank() || memberId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        val creatorId = snapshot.getString("creatorId").orEmpty()
-
-        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
-                isGroup = isGroup,
-                participantIds = participantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        if (currentUserId != creatorId) {
-            throw IllegalStateException("ONLY_CREATOR_CAN_REMOVE_MEMBER")
-        }
-
-        if (memberId == creatorId) {
-            throw IllegalStateException("CREATOR_CAN_NOT_BE_REMOVED")
-        }
-
-        if (!participantIds.contains(memberId)) {
-            return
-        }
-
-        val now = System.currentTimeMillis()
-
-        threadRef.update(
-            SocialGroupMembershipPayloadResolver.createRemoveMemberPayload(
-                memberId = memberId,
-                participantIds = participantIds,
-                updatedAt = now
-            )
-        ).await()
+        threadManagementCoordinator.removeMemberFromGroup(threadId, memberId)
     }
-
 
     suspend fun addMembersToGroup(
         threadId: String,
         selectedUsers: List<SearchUserUiModel>
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank() || selectedUsers.isEmpty()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val snapshot = threadRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val isGroup = snapshot.getString("type") == THREAD_TYPE_GROUP
-        val currentParticipantIds = snapshot.getStringListCompat("participantIds")
-
-        if (!SocialGroupMembershipPayloadResolver.hasGroupAccess(
-                isGroup = isGroup,
-                participantIds = currentParticipantIds,
-                currentUserId = currentUserId
-            )
-        ) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val newUsers = SocialGroupMembershipPayloadResolver.filterNewMembers(
-            selectedUsers = selectedUsers,
-            currentParticipantIds = currentParticipantIds
-        )
-
-        if (newUsers.isEmpty()) return
-
-        val now = System.currentTimeMillis()
-        val updates = SocialGroupMembershipPayloadResolver.createAddMembersPayload(
-            newUsers = newUsers,
-            currentParticipantIds = currentParticipantIds,
-            updatedAt = now
-        )
-
-        threadRef.update(updates).await()
+        threadManagementCoordinator.addMembersToGroup(threadId, selectedUsers)
     }
+
     suspend fun searchUsersForGroupInvite(
         threadId: String,
         query: String
     ): List<SearchUserUiModel> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyList()
-        if (threadId.isBlank()) return emptyList()
-
-        val threadSnapshot = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .get()
-            .await()
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-
-        if (!participantIds.contains(currentUserId)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        return searchUsers(query)
-            .filterNot { user -> participantIds.contains(user.id) }
+        return threadManagementCoordinator.searchUsersForGroupInvite(threadId, query)
     }
 
     suspend fun getMessageThread(threadId: String): MessageThreadUiModel? {
-        val currentUserId = auth.currentUser?.uid ?: return null
-        if (threadId.isBlank()) return null
-
-        return SocialMessageThreadSnapshotMapper.map(
-            document = firestore.collection(MESSAGE_THREADS_COLLECTION)
-                .document(threadId)
-                .get()
-                .await(),
-            currentUserId = currentUserId
-        )
+        return threadManagementCoordinator.getMessageThread(threadId)
     }
 
     suspend fun getMessageThreadRawData(threadId: String): Map<String, Any?> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyMap()
-        if (threadId.isBlank()) return emptyMap()
-
-        val snapshot = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .get()
-            .await()
-
-        if (!snapshot.exists()) return emptyMap()
-
-        val participantIds = snapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUserId)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        return snapshot.data.orEmpty()
+        return threadManagementCoordinator.getMessageThreadRawData(threadId)
     }
+
     suspend fun sendMessage(
         threadId: String,
         text: String
