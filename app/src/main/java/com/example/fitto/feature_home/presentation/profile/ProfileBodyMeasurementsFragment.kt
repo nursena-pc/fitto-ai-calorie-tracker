@@ -38,13 +38,8 @@ import java.util.Locale
 
 class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_measurements) {
 
-    private enum class ChartRange {
-        ONE_MONTH,
-        THREE_MONTHS,
-        ALL
-    }
-
     private lateinit var viewModel: ProfileViewModel
+    private val measurementsController = BodyMeasurementsController()
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var mainScrollView: NestedScrollView
@@ -71,22 +66,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
     private val measurementCards = linkedMapOf<BodyMeasurementField, LinearLayout>()
     private var ignoreMeasurementInputChanges: Boolean = false
 
-    private var latestGenderKey: String = ""
-    private var currentMeasurements: BodyMeasurementsData = BodyMeasurementsData()
-    private var draftMeasurements: BodyMeasurementsData = BodyMeasurementsData()
-    private var historyItems: List<BodyMeasurementsHistoryItem> = emptyList()
-
-    private var selectedChartField: BodyMeasurementField = BodyMeasurementField.WAIST
-    private var selectedChartRange: ChartRange = ChartRange.ALL
-    private var isChartPickerExpanded: Boolean = false
-    private var selectedHistoryItemId: String? = null
-    private var previewHistoryMeasurements: BodyMeasurementsData? = null
-    private var previewHistoryTimestamp: Long = 0L
-
-    private var hasUnsavedChanges: Boolean = false
-    private var isHistoryScreenVisible: Boolean = false
     private var historyMenuItem: MenuItem? = null
-    private var isSavingSnapshot: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -188,24 +168,25 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
 
                 override fun afterTextChanged(s: Editable?) {
                     if (ignoreMeasurementInputChanges) return
-                    if (previewHistoryMeasurements != null) return
 
                     val current = s?.toString().orEmpty()
-                    val normalized = normalizeMeasurementInput(current)
+                    val result = measurementsController.onMeasurementInput(field, current)
 
-                    if (normalized != current) {
+                    if (result.normalizedInput != current) {
                         ignoreMeasurementInputChanges = true
-                        input.setText(normalized)
-                        input.setSelection(normalized.length)
+                        input.setText(result.normalizedInput)
+                        input.setSelection(result.normalizedInput.length)
                         ignoreMeasurementInputChanges = false
                     }
 
-                    applyMeasurementInput(field, normalized)
+                    if (result.accepted) {
+                        bindDraftChangeState(result.state)
+                    }
                 }
             })
 
             input.setOnFocusChangeListener { _, hasFocus ->
-                val readOnly = previewHistoryMeasurements != null
+                val readOnly = measurementsController.state.isReadOnly
                 input.isCursorVisible = hasFocus && !readOnly
                 bindMeasurementCardState(field, active = hasFocus && !readOnly, readOnly = readOnly)
 
@@ -252,7 +233,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         historyMenuItem = toolbar.menu.findItem(R.id.menuBodyMeasurementsHistory)
 
         toolbar.setNavigationOnClickListener {
-            if (isHistoryScreenVisible) {
+            if (measurementsController.state.screen == BodyMeasurementsScreen.HISTORY) {
                 showMainScreen()
             } else {
                 parentFragmentManager.popBackStack()
@@ -275,7 +256,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (isHistoryScreenVisible) {
+                    if (measurementsController.state.screen == BodyMeasurementsScreen.HISTORY) {
                         showMainScreen()
                     } else {
                         parentFragmentManager.popBackStack()
@@ -299,8 +280,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         }
 
         chartPickerHeader.setOnClickListener {
-            isChartPickerExpanded = !isChartPickerExpanded
-            bindChartPickerVisibility()
+            bindChartPickerVisibility(measurementsController.toggleChartPicker())
         }
 
         saveButton.setOnClickListener {
@@ -323,24 +303,14 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
 
     private fun observeViewModel() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            latestGenderKey = state.healthData.genderKey
-            currentMeasurements = state.bodyMeasurements
-            historyItems = state.bodyMeasurementsHistory
+            val measurementState = measurementsController.updateProfile(
+                genderKey = state.healthData.genderKey,
+                currentMeasurements = state.bodyMeasurements,
+                historyItems = state.bodyMeasurementsHistory,
+                allowDraftReplacement = !hasFocusedMeasurementInput()
+            )
 
-            if (!hasUnsavedChanges && !hasFocusedMeasurementInput()) {
-                draftMeasurements = currentMeasurements
-            }
-
-            refreshSelectedHistoryPreview()
-
-            if (previewHistoryMeasurements == null) {
-                bindEditableMeasurements()
-            } else {
-                bindHistoryPreview()
-            }
-
-            bindHistoryList(historyItems)
-            updateChart()
+            renderMeasurementState(measurementState)
 
             state.errorMessage?.let { message ->
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
@@ -348,43 +318,54 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         }
     }
 
-    private fun bindEditableMeasurements() {
+    private fun renderMeasurementState(state: BodyMeasurementsState) {
+        if (state.isReadOnly) {
+            bindHistoryPreview(state)
+        } else {
+            bindEditableMeasurements(state)
+        }
+
+        bindHistoryList(state.historyItems)
+        updateChart(state)
+    }
+
+    private fun bindEditableMeasurements(state: BodyMeasurementsState) {
         diagramView.submitData(
-            measurements = draftMeasurements,
-            genderKey = latestGenderKey,
+            measurements = state.draftMeasurements,
+            genderKey = state.genderKey,
             readOnly = false
         )
-        bindMeasurementInputValues(draftMeasurements, readOnly = false)
+        bindMeasurementInputValues(state.draftMeasurements, readOnly = false)
 
         textLastUpdate.text = getString(
             R.string.profile_body_measurements_last_update_compact_format,
-            formatDateOrEmpty(currentMeasurements.updatedAt)
+            formatDateOrEmpty(state.currentMeasurements.updatedAt)
         )
 
-        textMode.visibility = if (hasUnsavedChanges) View.VISIBLE else View.INVISIBLE
+        textMode.visibility = if (state.hasUnsavedChanges) View.VISIBLE else View.INVISIBLE
         textMode.text = getString(R.string.profile_body_measurements_unsaved_hint)
 
         saveButton.isVisible = true
         returnCurrentButton.isVisible = false
 
-        updateSaveButtonState()
+        updateSaveButtonState(state)
     }
 
-    private fun bindHistoryPreview() {
-        val data = previewHistoryMeasurements ?: return
+    private fun bindHistoryPreview(state: BodyMeasurementsState) {
+        val previewItem = state.previewItem ?: return
 
         clearFocusedMeasurementInput()
 
         diagramView.submitData(
-            measurements = data,
-            genderKey = latestGenderKey,
+            measurements = previewItem.data,
+            genderKey = state.genderKey,
             readOnly = true
         )
-        bindMeasurementInputValues(data, readOnly = true)
+        bindMeasurementInputValues(previewItem.data, readOnly = true)
 
         textLastUpdate.text = getString(
             R.string.profile_body_measurements_last_update_compact_format,
-            formatDateOrEmpty(previewHistoryTimestamp)
+            formatDateOrEmpty(previewItem.createdAt)
         )
 
         textMode.visibility = View.VISIBLE
@@ -427,14 +408,10 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         card.background = measurementCardBackground(active = active, readOnly = readOnly)
     }
 
-    private fun updateSaveButtonState() {
-        val canSave = previewHistoryMeasurements == null &&
-            draftMeasurements.filledCount > 0 &&
-            !isSavingSnapshot
-
-        saveButton.isEnabled = canSave
-        saveButton.alpha = if (canSave) 1f else 0.58f
-        saveButton.text = if (isSavingSnapshot) {
+    private fun updateSaveButtonState(state: BodyMeasurementsState) {
+        saveButton.isEnabled = state.canSave
+        saveButton.alpha = if (state.canSave) 1f else 0.58f
+        saveButton.text = if (state.isSavingSnapshot) {
             getString(R.string.profile_body_measurements_saving)
         } else {
             getString(R.string.profile_body_measurements_save_snapshot)
@@ -448,29 +425,31 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         }
 
         rangeFilterLayout.removeAllViews()
-        ChartRange.entries.forEach { range ->
+        BodyMeasurementsChartRange.entries.forEach { range ->
             rangeFilterLayout.addView(createRangeItem(range))
         }
 
-        bindChartPickerVisibility()
-        refreshRangeFilters()
+        val state = measurementsController.state
+        bindChartPickerVisibility(state)
+        refreshFilters(state)
+        refreshRangeFilters(state)
     }
 
-    private fun bindChartPickerVisibility() {
-        chartSelectedText.text = getString(selectedChartField.labelResId)
-        filterGrid.isVisible = isChartPickerExpanded
+    private fun bindChartPickerVisibility(state: BodyMeasurementsState) {
+        chartSelectedText.text = getString(state.selectedChartField.labelResId)
+        filterGrid.isVisible = state.isChartPickerExpanded
 
         chartPickerArrow.animate()
-            .rotation(if (isChartPickerExpanded) 180f else 0f)
+            .rotation(if (state.isChartPickerExpanded) 180f else 0f)
             .setDuration(160L)
             .start()
     }
 
-    private fun refreshFilters() {
+    private fun refreshFilters(state: BodyMeasurementsState) {
         for (index in 0 until filterGrid.childCount) {
             val view = filterGrid.getChildAt(index) as? TextView ?: continue
             val field = view.tag as? BodyMeasurementField ?: continue
-            bindFilterItem(view, field)
+            bindFilterItem(view, field, state)
         }
     }
 
@@ -491,19 +470,22 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
             }
 
             setOnClickListener {
-                selectedChartField = field
-                isChartPickerExpanded = false
-                bindChartPickerVisibility()
-                refreshFilters()
-                updateChart()
+                val state = measurementsController.selectChartField(field)
+                bindChartPickerVisibility(state)
+                refreshFilters(state)
+                updateChart(state)
             }
 
-            bindFilterItem(this, field)
+            bindFilterItem(this, field, measurementsController.state)
         }
     }
 
-    private fun bindFilterItem(view: TextView, field: BodyMeasurementField) {
-        val selected = selectedChartField == field
+    private fun bindFilterItem(
+        view: TextView,
+        field: BodyMeasurementField,
+        state: BodyMeasurementsState
+    ) {
+        val selected = state.selectedChartField == field
         val green = ContextCompat.getColor(requireContext(), R.color.fitto_green)
 
         view.setTextColor(
@@ -521,7 +503,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         )
     }
 
-    private fun createRangeItem(range: ChartRange): TextView {
+    private fun createRangeItem(range: BodyMeasurementsChartRange): TextView {
         return TextView(requireContext()).apply {
             tag = range
             text = getRangeLabel(range)
@@ -535,25 +517,29 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
             }
 
             setOnClickListener {
-                selectedChartRange = range
-                refreshRangeFilters()
-                updateChart()
+                val state = measurementsController.selectChartRange(range)
+                refreshRangeFilters(state)
+                updateChart(state)
             }
 
-            bindRangeItem(this, range)
+            bindRangeItem(this, range, measurementsController.state)
         }
     }
 
-    private fun refreshRangeFilters() {
+    private fun refreshRangeFilters(state: BodyMeasurementsState) {
         for (index in 0 until rangeFilterLayout.childCount) {
             val view = rangeFilterLayout.getChildAt(index) as? TextView ?: continue
-            val range = view.tag as? ChartRange ?: continue
-            bindRangeItem(view, range)
+            val range = view.tag as? BodyMeasurementsChartRange ?: continue
+            bindRangeItem(view, range, state)
         }
     }
 
-    private fun bindRangeItem(view: TextView, range: ChartRange) {
-        val selected = selectedChartRange == range
+    private fun bindRangeItem(
+        view: TextView,
+        range: BodyMeasurementsChartRange,
+        state: BodyMeasurementsState
+    ) {
+        val selected = state.selectedChartRange == range
         val green = ContextCompat.getColor(requireContext(), R.color.fitto_green)
 
         view.setTextColor(
@@ -568,53 +554,32 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         )
     }
 
-    private fun getRangeLabel(range: ChartRange): String {
+    private fun getRangeLabel(range: BodyMeasurementsChartRange): String {
         return when (range) {
-            ChartRange.ONE_MONTH -> getString(R.string.profile_body_measurements_chart_range_1m)
-            ChartRange.THREE_MONTHS -> getString(R.string.profile_body_measurements_chart_range_3m)
-            ChartRange.ALL -> getString(R.string.profile_body_measurements_chart_range_all)
+            BodyMeasurementsChartRange.ONE_MONTH -> getString(R.string.profile_body_measurements_chart_range_1m)
+            BodyMeasurementsChartRange.THREE_MONTHS -> getString(R.string.profile_body_measurements_chart_range_3m)
+            BodyMeasurementsChartRange.ALL -> getString(R.string.profile_body_measurements_chart_range_all)
         }
     }
 
-    private fun updateChart() {
-        val allPoints = historyItems
-            .asReversed()
-            .mapNotNull { item ->
-                val value = item.data.getValue(selectedChartField) ?: return@mapNotNull null
-                item.createdAt to value
-            }
-
-        val minTimestamp = when (selectedChartRange) {
-            ChartRange.ONE_MONTH -> System.currentTimeMillis() - 30L * 24L * 60L * 60L * 1000L
-            ChartRange.THREE_MONTHS -> System.currentTimeMillis() - 90L * 24L * 60L * 60L * 1000L
-            ChartRange.ALL -> 0L
-        }
-
-        val visiblePoints = if (minTimestamp > 0L) {
-            allPoints.filter { it.first >= minTimestamp }
-        } else {
-            allPoints
-        }
-
-        trendChartView.submitData(visiblePoints)
-        bindChartSummary(visiblePoints)
+    private fun updateChart(state: BodyMeasurementsState) {
+        trendChartView.submitData(
+            state.chartPoints.map { point -> point.timestamp to point.value }
+        )
+        bindChartSummary(state.chartSummary)
     }
 
-    private fun bindChartSummary(points: List<Pair<Long, Float>>) {
-        if (points.isEmpty()) {
+    private fun bindChartSummary(summary: BodyMeasurementsChartSummary?) {
+        if (summary == null) {
             chartSummaryLayout.isVisible = false
             return
         }
 
-        val first = points.first().second
-        val last = points.last().second
-        val change = last - first
-
         chartSummaryLayout.isVisible = true
 
-        chartFirstValue.text = String.format(Locale.getDefault(), "%.2f cm", first)
-        chartLastValue.text = String.format(Locale.getDefault(), "%.2f cm", last)
-        chartChangeValue.text = String.format(Locale.getDefault(), "%+.2f cm", change)
+        chartFirstValue.text = String.format(Locale.getDefault(), "%.2f cm", summary.firstValue)
+        chartLastValue.text = String.format(Locale.getDefault(), "%.2f cm", summary.lastValue)
+        chartChangeValue.text = String.format(Locale.getDefault(), "%+.2f cm", summary.change)
 
         val green = ContextCompat.getColor(requireContext(), R.color.fitto_green)
         val text = ContextCompat.getColor(requireContext(), R.color.profile_text)
@@ -622,74 +587,20 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
 
         chartFirstValue.setTextColor(text)
         chartLastValue.setTextColor(text)
-
-        chartChangeValue.setTextColor(
-            when {
-                change == 0f -> subText
-                else -> green
-            }
-        )
-    }
-    private fun applyMeasurementInput(field: BodyMeasurementField, normalized: String) {
-        val value = normalized.toFloatOrNull()
-        val safeValue = when {
-            normalized.isBlank() -> null
-            normalized.endsWith(".") && value != null && value > 0f && value <= 300f -> value
-            value != null && value > 0f && value <= 300f -> value
-            else -> return
-        }
-
-        updateDraftFieldFromInput(field, safeValue)
+        chartChangeValue.setTextColor(if (summary.change == 0f) subText else green)
     }
 
-    private fun updateDraftFieldFromInput(field: BodyMeasurementField, value: Float?) {
-        draftMeasurements = draftMeasurements.withValue(field, value)
-
-        hasUnsavedChanges = hasMeasurementChanges(
-            draft = draftMeasurements,
-            current = currentMeasurements
-        )
-
-        textMode.visibility = if (hasUnsavedChanges) View.VISIBLE else View.INVISIBLE
+    private fun bindDraftChangeState(state: BodyMeasurementsState) {
+        textMode.visibility = if (state.hasUnsavedChanges) View.VISIBLE else View.INVISIBLE
         textMode.text = getString(R.string.profile_body_measurements_unsaved_hint)
-        updateSaveButtonState()
-    }
-
-    private fun normalizeMeasurementInput(raw: String): String {
-        val builder = StringBuilder()
-        var hasDecimalSeparator = false
-        var decimalCount = 0
-
-        raw.replace(',', '.').forEach { char ->
-            when {
-                char.isDigit() && !hasDecimalSeparator && builder.length < 3 -> {
-                    builder.append(char)
-                }
-
-                char.isDigit() && hasDecimalSeparator && decimalCount < 2 -> {
-                    builder.append(char)
-                    decimalCount++
-                }
-
-                char == '.' && !hasDecimalSeparator && builder.isNotEmpty() -> {
-                    builder.append(char)
-                    hasDecimalSeparator = true
-                }
-
-                char == '.' && !hasDecimalSeparator && builder.isEmpty() -> {
-                    builder.append("0.")
-                    hasDecimalSeparator = true
-                }
-            }
-        }
-
-        return builder.toString()
+        updateSaveButtonState(state)
     }
 
     private fun formatInputAfterEditing(field: BodyMeasurementField) {
         val input = measurementInputs[field] ?: return
-        val value = input.text?.toString()?.toFloatOrNull()
-        val formatted = value?.takeIf { it > 0f && it <= 300f }?.formatInputDisplay().orEmpty()
+        val formatted = measurementsController.formatInputAfterEditing(
+            input.text?.toString().orEmpty()
+        )
 
         ignoreMeasurementInputChanges = true
         input.setText(formatted)
@@ -714,29 +625,15 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
     }
 
     private fun saveDraftMeasurements() {
-        if (previewHistoryMeasurements != null) return
-        if (draftMeasurements.filledCount == 0) return
-        if (isSavingSnapshot) return
-
-        val dataToSave = draftMeasurements.withUpdatedAtNow()
-
-        isSavingSnapshot = true
-        updateSaveButtonState()
+        val dataToSave = measurementsController.beginSave() ?: return
+        updateSaveButtonState(measurementsController.state)
 
         viewModel.updateBodyMeasurements(
             data = dataToSave,
             onSuccess = {
-                selectedHistoryItemId = null
-                previewHistoryMeasurements = null
-                previewHistoryTimestamp = 0L
-
-                currentMeasurements = dataToSave
-                draftMeasurements = dataToSave
-                hasUnsavedChanges = false
-                isSavingSnapshot = false
-
-                bindEditableMeasurements()
-                updateChart()
+                val state = measurementsController.completeSave(dataToSave)
+                bindEditableMeasurements(state)
+                updateChart(state)
 
                 Toast.makeText(
                     requireContext(),
@@ -745,20 +642,10 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
                 ).show()
             },
             onError = { message ->
-                isSavingSnapshot = false
-                updateSaveButtonState()
+                updateSaveButtonState(measurementsController.failSave())
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             }
         )
-    }
-
-    private fun hasMeasurementChanges(
-        draft: BodyMeasurementsData,
-        current: BodyMeasurementsData
-    ): Boolean {
-        return BodyMeasurementField.entries.any { field ->
-            draft.getValue(field) != current.getValue(field)
-        }
     }
 
     private fun bindHistoryList(items: List<BodyMeasurementsHistoryItem>) {
@@ -790,7 +677,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
 
     private fun createHistoryRow(item: BodyMeasurementsHistoryItem): View {
         val context = requireContext()
-        val isSelected = item.id == selectedHistoryItemId
+        val isSelected = item.id == measurementsController.state.selectedHistoryItemId
 
         val row = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -813,14 +700,12 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
             }
 
             setOnClickListener {
-                selectedHistoryItemId = item.id
-                previewHistoryMeasurements = item.data
-                previewHistoryTimestamp = item.createdAt
+                val state = measurementsController.selectHistoryItem(item.id)
 
                 clearFocusedMeasurementInput()
                 diagramView.clearInlineEditing()
-                bindHistoryList(historyItems)
-                showMainScreen()
+                bindHistoryList(state.historyItems)
+                showMainScreen(state)
             }
         }
 
@@ -877,29 +762,13 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         return row
     }
 
-    private fun refreshSelectedHistoryPreview() {
-        val selectedId = selectedHistoryItemId ?: return
-
-        val selectedItem = historyItems.firstOrNull { it.id == selectedId }
-        if (selectedItem == null) {
-            selectedHistoryItemId = null
-            previewHistoryMeasurements = null
-            previewHistoryTimestamp = 0L
-        } else {
-            previewHistoryMeasurements = selectedItem.data
-            previewHistoryTimestamp = selectedItem.createdAt
-        }
-    }
-
     private fun clearHistoryPreview() {
-        selectedHistoryItemId = null
-        previewHistoryMeasurements = null
-        previewHistoryTimestamp = 0L
+        val state = measurementsController.clearHistoryPreview()
 
         clearFocusedMeasurementInput()
         diagramView.clearInlineEditing()
-        bindEditableMeasurements()
-        bindHistoryList(historyItems)
+        bindEditableMeasurements(state)
+        bindHistoryList(state.historyItems)
 
         mainScrollView.post {
             mainScrollView.smoothScrollTo(0, 0)
@@ -907,9 +776,9 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
     }
 
     private fun showHistoryScreen() {
+        measurementsController.showHistory()
         clearFocusedMeasurementInput()
         diagramView.clearInlineEditing()
-        isHistoryScreenVisible = true
 
         toolbar.title = getString(R.string.profile_body_measurements_history)
         historyMenuItem?.isVisible = false
@@ -922,19 +791,19 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
         }
     }
 
-    private fun showMainScreen() {
-        isHistoryScreenVisible = false
-
+    private fun showMainScreen(
+        state: BodyMeasurementsState = measurementsController.showEditor()
+    ) {
         toolbar.title = getString(R.string.profile_body_measurements_title)
         historyMenuItem?.isVisible = true
 
         historyScrollView.isVisible = false
         mainScrollView.isVisible = true
 
-        if (previewHistoryMeasurements == null) {
-            bindEditableMeasurements()
+        if (state.isReadOnly) {
+            bindHistoryPreview(state)
         } else {
-            bindHistoryPreview()
+            bindEditableMeasurements(state)
         }
 
         mainScrollView.post {
