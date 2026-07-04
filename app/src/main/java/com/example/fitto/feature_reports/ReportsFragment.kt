@@ -22,9 +22,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.fitto.R
-import com.example.fitto.data.local.FittoDatabaseProvider
-import com.example.fitto.data.local.session.UserSessionDataGuard
-import com.example.fitto.feature_home.presentation.profile.ProfileRepository
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
 import com.example.fitto.feature_home.presentation.social.NotificationsFragment
 import com.github.mikephil.charting.charts.LineChart
@@ -47,37 +44,51 @@ import com.google.android.material.divider.MaterialDivider
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textview.MaterialTextView
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 
 class ReportsFragment : Fragment() {
 
-    private val profileRepository = ProfileRepository()
-
+    private lateinit var dataCoordinator: ReportsDataCoordinator
     private lateinit var dateButton: MaterialButton
     private lateinit var viewPager: ViewPager2
     private lateinit var caloriePage: CaloriePageRefs
     private lateinit var macroPage: MacroPageRefs
     private lateinit var weightPage: WeightPageRefs
 
-    private var selectedDate: LocalDate = LocalDate.now()
-    private var nutritionDays: List<ReportDay> = emptyList()
-    private var healthData: ProfileHealthData = ProfileHealthData.Empty
     private var lastReportPageIndex = 0
+
+    private val selectedDate: LocalDate
+        get() = dataCoordinator.state.selectedDate
+
+    private val nutritionDays: List<ReportDay>
+        get() = dataCoordinator.state.nutritionDays
+
+    private val healthData: ProfileHealthData
+        get() = dataCoordinator.state.healthData
 
     private val tabTitleResIds = intArrayOf(
         R.string.reports_tab_calorie,
         R.string.reports_tab_macro,
         R.string.reports_tab_weight
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        dataCoordinator = ReportsDataCoordinator(
+            nutritionDataSource = LocalReportNutritionDataSource(
+                requireContext().applicationContext
+            ),
+            healthDataSource = ProfileReportHealthDataSource(),
+            daysBack = resources.getInteger(R.integer.reports_days_back)
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -295,7 +306,7 @@ class ReportsFragment : Fragment() {
             .build()
 
         picker.addOnPositiveButtonClickListener { utcMillis ->
-            selectedDate = utcMillis.toUtcLocalDate()
+            dataCoordinator.selectDate(utcMillis.toUtcLocalDate())
             updateDateButtonText()
             loadReportData()
         }
@@ -543,34 +554,10 @@ class ReportsFragment : Fragment() {
     }
 
     private fun loadNutritionData() {
-        val appContext = requireContext().applicationContext
-        val database = FittoDatabaseProvider.getDatabase(appContext)
-        val activeUserId = UserSessionDataGuard.getActiveUid(appContext) ?: "local_anonymous"
-        val dates = selectedWeekDates()
-
         viewLifecycleOwner.lifecycleScope.launch {
-            val loadedDays = withContext(Dispatchers.IO) {
-                dates.map { date ->
-                    val summary = database.mealDao()
-                        .getNutritionSummaryForDate(activeUserId, date.toString())
-
-                    ReportDay(
-                        date = date,
-                        label = date.dayOfWeek.getDisplayName(
-                            TextStyle.SHORT,
-                            Locale.getDefault()
-                        ),
-                        calories = summary.totalCalories,
-                        protein = summary.totalProtein,
-                        carbs = summary.totalCarbs,
-                        fat = summary.totalFat
-                    )
-                }
-            }
-
+            if (dataCoordinator.loadNutrition(Locale.getDefault()) == null) return@launch
             if (!isAdded) return@launch
 
-            nutritionDays = loadedDays
             renderAll()
         }
     }
@@ -587,21 +574,13 @@ class ReportsFragment : Fragment() {
             page.scrollTo(0, 0)
         }
     }
+
     private fun loadProfileData() {
-        profileRepository.loadProfile(
-            onSuccess = { state ->
-                if (!isAdded) return@loadProfile
+        dataCoordinator.loadHealthData {
+            if (!isAdded) return@loadHealthData
 
-                healthData = state.healthData
-                renderAll()
-            },
-            onError = {
-                if (!isAdded) return@loadProfile
-
-                healthData = ProfileHealthData.Empty
-                renderAll()
-            }
-        )
+            renderAll()
+        }
     }
 
     private fun renderAll() {
@@ -1149,12 +1128,6 @@ class ReportsFragment : Fragment() {
             root = card,
             valueText = valueText
         )
-    }
-
-    private fun selectedWeekDates(): List<LocalDate> {
-        return (resources.getInteger(R.integer.reports_days_back) downTo 0).map { offset ->
-            selectedDate.minusDays(offset.toLong())
-        }
     }
 
     private fun LocalDate.displayDate(): String {
