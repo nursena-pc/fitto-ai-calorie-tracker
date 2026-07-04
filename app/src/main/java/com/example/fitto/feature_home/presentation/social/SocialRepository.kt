@@ -66,6 +66,23 @@ class SocialRepository {
             )
         )
     }
+    private val postMutationCoordinator by lazy {
+        SocialPostMutationCoordinator(
+            commandSource = FirebaseSocialPostCommandSource(
+                auth = auth,
+                firestore = firestore,
+                storage = storage,
+                ensureCurrentUserProfile = ::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = ::getCurrentUserProfile
+            ),
+            interactionSource = FirebaseSocialPostInteractionSource(
+                auth = auth,
+                firestore = firestore,
+                ensureCurrentUserProfile = ::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = ::getCurrentUserProfile
+            )
+        )
+    }
 
     fun currentUserId(): String {
         return auth.currentUser?.uid.orEmpty()
@@ -1366,37 +1383,18 @@ class SocialRepository {
         tags: List<String>,
         isDraft: Boolean
     ) {
-        val user = auth.currentUser ?: return
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val author = SocialPostPayloadResolver.resolveAuthor(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            email = user.email,
-            authPhotoUrl = user.photoUrl?.toString()
-        )
-
-        val imageUrl = imageUri?.let { uploadPostImage(it) }
-
-        firestore.collection("posts")
-            .add(
-                SocialPostPayloadResolver.createPostPayload(
-                    userId = user.uid,
-                    author = author,
-                    content = content,
-                    imageUrl = imageUrl,
-                    mealInfo = mealInfo,
-                    calories = calories,
-                    allowComments = allowComments,
-                    visibility = visibility,
-                    tags = tags,
-                    isDraft = isDraft,
-                    createdAt = System.currentTimeMillis()
-                )
+        postMutationCoordinator.createPost(
+            SocialPostCreateRequest(
+                content = content,
+                imageUri = imageUri,
+                mealInfo = mealInfo,
+                calories = calories,
+                allowComments = allowComments,
+                visibility = visibility,
+                tags = tags,
+                isDraft = isDraft
             )
-            .await()
+        )
     }
 
     suspend fun createRecipePost(
@@ -1414,24 +1412,8 @@ class SocialRepository {
         recipeIngredients: List<String>,
         recipeSteps: List<String>
     ): String? {
-        val user = auth.currentUser ?: return null
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val author = SocialPostPayloadResolver.resolveAuthor(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            email = user.email,
-            authPhotoUrl = user.photoUrl?.toString()
-        )
-        val now = System.currentTimeMillis()
-        val postRef = firestore.collection("posts").document()
-
-        postRef.set(
-            SocialPostPayloadResolver.createRecipePostPayload(
-                userId = user.uid,
-                author = author,
+        return postMutationCoordinator.createRecipePost(
+            SocialRecipePostCreateRequest(
                 content = content,
                 recipeId = recipeId,
                 recipeTitle = recipeTitle,
@@ -1444,12 +1426,9 @@ class SocialRepository {
                 recipeSourceTag = recipeSourceTag,
                 recipeDescription = recipeDescription,
                 recipeIngredients = recipeIngredients,
-                recipeSteps = recipeSteps,
-                createdAt = now
+                recipeSteps = recipeSteps
             )
-        ).await()
-
-        return postRef.id
+        )
     }
 
     suspend fun addComment(
@@ -1457,119 +1436,31 @@ class SocialRepository {
         text: String,
         parentCommentId: String? = null
     ) {
-        val user = auth.currentUser ?: return
-        val postRef = firestore.collection("posts").document(postId)
-        val postSnapshot = postRef.get().await()
-        val allowComments = postSnapshot.getBoolean("allowComments") ?: true
-
-        if (!allowComments) {
-            throw IllegalStateException("COMMENTS_DISABLED")
-        }
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val author = SocialPostPayloadResolver.resolveAuthor(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            email = user.email,
-            authPhotoUrl = user.photoUrl?.toString()
+        postMutationCoordinator.addComment(
+            SocialCommentCreateRequest(
+                postId = postId,
+                text = text,
+                parentCommentId = parentCommentId
+            )
         )
-
-        firestore.runBatch { batch ->
-            val commentRef = postRef.collection("comments").document()
-
-            batch.set(
-                commentRef,
-                SocialPostPayloadResolver.createCommentPayload(
-                    userId = user.uid,
-                    author = author,
-                    postId = postId,
-                    postOwnerId = postSnapshot.getString("userId").orEmpty(),
-                    text = text,
-                    parentCommentId = parentCommentId,
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-
-            batch.update(
-                postRef,
-                "commentsCount",
-                FieldValue.increment(1)
-            )
-
-            if (parentCommentId != null) {
-                val parentCommentRef = postRef
-                    .collection("comments")
-                    .document(parentCommentId)
-
-                batch.update(
-                    parentCommentRef,
-                    "replyCount",
-                    FieldValue.increment(1)
-                )
-            }
-        }.await()
     }
 
     suspend fun toggleCommentLike(
         postId: String,
         comment: SocialComment
     ) {
-        val userId = auth.currentUser?.uid ?: return
-
-        val commentRef = firestore.collection("posts")
-            .document(postId)
-            .collection("comments")
-            .document(comment.id)
-
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(commentRef)
-
-            transaction.update(
-                commentRef,
-                SocialPostInteractionResolver.toggleLikePayload(
-                    likedByValue = snapshot.get("likedBy"),
-                    currentLikes = snapshot.getLong("likesCount") ?: 0L,
-                    userId = userId
-                )
-            )
-        }.await()
+        postMutationCoordinator.toggleCommentLike(
+            postId = postId,
+            commentId = comment.id
+        )
     }
 
     suspend fun toggleSave(post: SocialPost) {
-        val userId = auth.currentUser?.uid ?: return
-        val postRef = firestore.collection("posts").document(post.id)
-
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(postRef)
-
-            transaction.update(
-                postRef,
-                SocialPostInteractionResolver.toggleSavePayload(
-                    savedByValue = snapshot.get("savedBy"),
-                    userId = userId
-                )
-            )
-        }.await()
+        postMutationCoordinator.toggleSave(post.id)
     }
 
     suspend fun toggleLike(post: SocialPost) {
-        val userId = auth.currentUser?.uid ?: return
-        val postRef = firestore.collection("posts").document(post.id)
-
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(postRef)
-
-            transaction.update(
-                postRef,
-                SocialPostInteractionResolver.toggleLikePayload(
-                    likedByValue = snapshot.get("likedBy"),
-                    currentLikes = snapshot.getLong("likesCount") ?: 0L,
-                    userId = userId
-                )
-            )
-        }.await()
+        postMutationCoordinator.toggleLike(post.id)
     }
 
     suspend fun getBlockedUsers(): List<SocialUser> {
@@ -1867,38 +1758,20 @@ class SocialRepository {
         tags: List<String>,
         publish: Boolean
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (draftId.isBlank()) return
-
-        val postRef = firestore.collection("posts").document(draftId)
-        val snapshot = postRef.get().await()
-
-        if (!snapshot.exists()) {
-            throw IllegalStateException("DRAFT_NOT_FOUND")
-        }
-
-        if (snapshot.getString("userId") != currentUserId) {
-            throw IllegalStateException("DRAFT_OWNER_MISMATCH")
-        }
-
-        val finalImageUrl = imageUri?.let { uri ->
-            uploadPostImage(uri)
-        } ?: existingImageUrl ?: snapshot.getString("imageUrl")
-
-        val now = System.currentTimeMillis()
-        val updates = SocialPostDraftUpdateResolver.createUpdatePayload(
-            content = content,
-            imageUrl = finalImageUrl,
-            mealInfo = mealInfo,
-            calories = calories,
-            allowComments = allowComments,
-            visibility = visibility,
-            tags = tags,
-            publish = publish,
-            updatedAt = now
+        postMutationCoordinator.updateDraftPost(
+            SocialDraftPostUpdateRequest(
+                draftId = draftId,
+                content = content,
+                imageUri = imageUri,
+                existingImageUrl = existingImageUrl,
+                mealInfo = mealInfo,
+                calories = calories,
+                allowComments = allowComments,
+                visibility = visibility,
+                tags = tags,
+                publish = publish
+            )
         )
-
-        postRef.set(updates, SetOptions.merge()).await()
     }
 
 
@@ -2296,23 +2169,6 @@ class SocialRepository {
             }
 
             batch.commit().await()
-        }
-    }
-
-    private suspend fun uploadPostImage(uri: Uri): String? {
-        return try {
-            val imageRef = storage.reference.child(
-                SocialMediaUploadResolver.postImageStoragePath(
-                    fileId = UUID.randomUUID().toString()
-                )
-            )
-
-            imageRef.putFile(uri).await()
-
-            imageRef.downloadUrl.await().toString()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
 
