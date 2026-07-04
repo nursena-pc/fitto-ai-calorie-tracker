@@ -5,10 +5,8 @@ import android.net.Uri
 import java.io.File
 import android.provider.OpenableColumns
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
@@ -38,6 +36,27 @@ class SocialRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val realtimeDatabase = FirebaseDatabase.getInstance()
     private val storage = FirebaseStorage.getInstance()
+    private val profileCoordinator by lazy {
+        val querySource = FirebaseSocialProfileQuerySource(
+            auth = auth,
+            firestore = firestore
+        )
+        SocialProfileCoordinator(
+            querySource = querySource,
+            commandSource = FirebaseSocialProfileCommandSource(
+                auth = auth,
+                firestore = firestore,
+                realtimeDatabase = realtimeDatabase,
+                storage = storage
+            ),
+            relationshipSource = FirebaseSocialRelationshipSource(
+                auth = auth,
+                firestore = firestore,
+                ensureCurrentUserProfile = querySource::createCurrentUserProfileIfNeeded,
+                loadUsersByIds = querySource::getUsersByIds
+            )
+        )
+    }
     private val conversationObservationCoordinator by lazy {
         SocialConversationObservationCoordinator(
             realtimeSource = FirebaseSocialRealtimeObservationSource(
@@ -48,7 +67,7 @@ class SocialRepository {
             threadSource = FirebaseSocialThreadObservationSource(
                 auth = auth,
                 firestore = firestore,
-                loadUsersByIds = ::getUsersByIds
+                loadUsersByIds = profileCoordinator::getUsersByIds
             )
         )
     }
@@ -57,12 +76,12 @@ class SocialRepository {
             feedSource = FirebaseSocialFeedObservationSource(
                 auth = auth,
                 firestore = firestore,
-                loadUsersByIds = ::getUsersByIds
+                loadUsersByIds = profileCoordinator::getUsersByIds
             ),
             contentSource = FirebaseSocialPostContentObservationSource(
                 auth = auth,
                 firestore = firestore,
-                loadUsersByIds = ::getUsersByIds
+                loadUsersByIds = profileCoordinator::getUsersByIds
             )
         )
     }
@@ -72,14 +91,14 @@ class SocialRepository {
                 auth = auth,
                 firestore = firestore,
                 storage = storage,
-                ensureCurrentUserProfile = ::createCurrentUserProfileIfNeeded,
-                loadCurrentUserProfile = ::getCurrentUserProfile
+                ensureCurrentUserProfile = profileCoordinator::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = profileCoordinator::getCurrentUserProfile
             ),
             interactionSource = FirebaseSocialPostInteractionSource(
                 auth = auth,
                 firestore = firestore,
-                ensureCurrentUserProfile = ::createCurrentUserProfileIfNeeded,
-                loadCurrentUserProfile = ::getCurrentUserProfile
+                ensureCurrentUserProfile = profileCoordinator::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = profileCoordinator::getCurrentUserProfile
             )
         )
     }
@@ -1203,174 +1222,27 @@ class SocialRepository {
     }
 
     suspend fun searchUsers(query: String): List<SearchUserUiModel> {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-        val normalizedQuery = SocialUserLookupResolver.normalizeSearchQuery(query)
-
-        if (!SocialUserLookupResolver.shouldSearch(normalizedQuery)) return emptyList()
-
-        val snapshot = firestore.collection("users")
-            .orderBy("usernameLowercase")
-            .whereGreaterThanOrEqualTo("usernameLowercase", normalizedQuery)
-            .whereLessThanOrEqualTo("usernameLowercase", normalizedQuery + "\uf8ff")
-            .limit(25)
-            .get()
-            .await()
-
-        return snapshot.documents.mapNotNull { document ->
-            SocialUserLookupResolver.resolveSearchUser(
-                id = document.id,
-                currentUserId = currentUserId,
-                isDeleted = document.getBoolean("isDeleted") == true,
-                userName = document.getString("userName"),
-                usernameLowercase = document.getString("usernameLowercase"),
-                email = document.getString("email"),
-                bio = document.getString("bio"),
-                photoUrl = document.getString("photoUrl")
-            )
-        }
+        return profileCoordinator.searchUsers(query)
     }
 
     suspend fun createCurrentUserProfileIfNeeded() {
-        val user = auth.currentUser ?: return
-
-        val userRef = firestore.collection("users").document(user.uid)
-        val snapshot = userRef.get().await()
-
-        if (!snapshot.exists()) {
-            userRef.set(
-                SocialProfileMaintenanceResolver.createCurrentUserProfilePayload(
-                    uid = user.uid,
-                    email = user.email,
-                    displayName = user.displayName,
-                    photoUrl = user.photoUrl?.toString(),
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                )
-            ).await()
-        }
+        profileCoordinator.createCurrentUserProfileIfNeeded()
     }
 
     suspend fun getCurrentUserProfile(): SocialUser? {
-        val user = auth.currentUser ?: return null
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getUserProfile(user.uid) ?: return null
-        return profile.copy(
-            isFollowedByMe = false,
-            photoUrl = profile.photoUrl ?: user.photoUrl?.toString()
-        )
+        return profileCoordinator.getCurrentUserProfile()
     }
 
     suspend fun getUserProfile(userId: String): SocialUser? {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        val userDoc = firestore.collection("users")
-            .document(userId)
-            .get()
-            .await()
-
-        if (!userDoc.exists()) return null
-        if (userDoc.getBoolean("isDeleted") == true) return null
-
-        val followDoc = if (currentUserId.isNotBlank() && currentUserId != userId) {
-            firestore.collection("follows")
-                .document("${currentUserId}_$userId")
-                .get()
-                .await()
-        } else {
-            null
-        }
-
-        return SocialUserDocumentResolver.resolveProfile(
-            id = userDoc.id,
-            userName = userDoc.getString("userName"),
-            username = userDoc.getString("username"),
-            displayName = userDoc.getString("displayName"),
-            name = userDoc.getString("name"),
-            realName = userDoc.getString("realName"),
-            email = userDoc.getString("email"),
-            photoUrl = userDoc.getString("photoUrl"),
-            bio = userDoc.getString("bio"),
-            followersCount = userDoc.getLong("followersCount")?.toInt() ?: 0,
-            followingCount = userDoc.getLong("followingCount")?.toInt() ?: 0,
-            isFollowedByMe = followDoc?.exists() == true
-        )
+        return profileCoordinator.getUserProfile(userId)
     }
 
     suspend fun toggleFollow(targetUser: SocialUser) {
-        val currentUser = auth.currentUser ?: return
-        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, targetUser.id)) return
-
-        createCurrentUserProfileIfNeeded()
-
-        val followId = SocialFollowPayloadResolver.followDocumentId(
-            followerId = currentUser.uid,
-            followingId = targetUser.id
-        )
-        val followRef = firestore.collection("follows").document(followId)
-        val currentUserRef = firestore.collection("users").document(currentUser.uid)
-        val targetUserRef = firestore.collection("users").document(targetUser.id)
-
-        firestore.runTransaction { transaction ->
-            val followSnapshot = transaction.get(followRef)
-            val targetSnapshot = transaction.get(targetUserRef)
-
-            val targetDeleted = SocialFollowPayloadResolver.isDeletedOrMissing(
-                exists = targetSnapshot.exists(),
-                isDeleted = targetSnapshot.getBoolean("isDeleted")
-            )
-
-            if (targetDeleted) {
-                if (followSnapshot.exists()) {
-                    transaction.delete(followRef)
-                    transaction.update(
-                        currentUserRef,
-                        "followingCount",
-                        FieldValue.increment(-1)
-                    )
-                }
-
-                if (targetSnapshot.exists()) {
-                    transaction.update(
-                        targetUserRef,
-                        SocialFollowPayloadResolver.deletedUserCountResetPayload()
-                    )
-                }
-
-                return@runTransaction
-            }
-
-            if (followSnapshot.exists()) {
-                transaction.delete(followRef)
-                transaction.update(currentUserRef, "followingCount", FieldValue.increment(-1))
-                transaction.update(targetUserRef, "followersCount", FieldValue.increment(-1))
-            } else {
-                transaction.set(
-                    followRef,
-                    SocialFollowPayloadResolver.createFollowPayload(
-                        followerId = currentUser.uid,
-                        followingId = targetUser.id,
-                        createdAt = System.currentTimeMillis()
-                    )
-                )
-
-                transaction.update(currentUserRef, "followingCount", FieldValue.increment(1))
-                transaction.update(targetUserRef, "followersCount", FieldValue.increment(1))
-            }
-        }.await()
+        profileCoordinator.toggleFollow(targetUser)
     }
 
     suspend fun isUserDeletedOrMissing(userId: String): Boolean {
-        if (userId.isBlank()) return true
-
-        val snapshot = firestore
-            .collection("users")
-            .document(userId)
-            .get()
-            .await()
-
-        return !snapshot.exists() || snapshot.getBoolean("isDeleted") == true
+        return profileCoordinator.isUserDeletedOrMissing(userId)
     }
 
     suspend fun createPost(
@@ -1779,397 +1651,34 @@ class SocialRepository {
         displayName: String,
         bio: String
     ) {
-        val user = auth.currentUser ?: return
-        val newVisibleName = SocialTextResolver.normalizeUsername(displayName)
-        SocialTextResolver.validateVisibleName(newVisibleName)
-
-        val now = System.currentTimeMillis()
-        val userRef = firestore.collection("users").document(user.uid)
-        val newUsernameRef = firestore.collection("usernames").document(newVisibleName)
-
-        firestore.runTransaction { transaction ->
-            val userSnapshot = transaction.get(userRef)
-            val oldUsernameCandidates = SocialProfileMaintenanceResolver.oldUsernameCandidates(
-                userName = userSnapshot.getString("userName"),
-                username = userSnapshot.getString("username"),
-                displayName = userSnapshot.getString("displayName")
-            )
-
-            val newUsernameSnapshot = transaction.get(newUsernameRef)
-            val ownerUid = newUsernameSnapshot.getString("uid")
-
-            if (newUsernameSnapshot.exists() && ownerUid != user.uid) {
-                throw IllegalStateException("VISIBLE_NAME_TAKEN")
-            }
-
-            val oldUsernameSnapshots = oldUsernameCandidates
-                .filterNot { it == newVisibleName }
-                .map { oldUsername ->
-                    val oldUsernameRef = firestore.collection("usernames").document(oldUsername)
-                    oldUsernameRef to transaction.get(oldUsernameRef)
-                }
-
-            oldUsernameSnapshots.forEach { (oldUsernameRef, oldUsernameSnapshot) ->
-                if (oldUsernameSnapshot.exists() && oldUsernameSnapshot.getString("uid") == user.uid) {
-                    transaction.delete(oldUsernameRef)
-                }
-            }
-
-            transaction.set(
-                newUsernameRef,
-                SocialProfileMaintenanceResolver.createUsernameClaimPayload(
-                    uid = user.uid,
-                    email = user.email.orEmpty(),
-                    username = newVisibleName,
-                    updatedAt = now
-                ),
-                SetOptions.merge()
-            )
-
-            transaction.set(
-                userRef,
-                SocialProfileMaintenanceResolver.createProfileUpdatePayload(
-                    username = newVisibleName,
-                    bio = bio,
-                    updatedAt = now
-                ),
-                SetOptions.merge()
-            )
-
-            null
-        }.await()
-
-        runCatching {
-            user.updateProfile(
-                UserProfileChangeRequest.Builder()
-                    .setDisplayName(newVisibleName)
-                    .build()
-            ).await()
-        }
-
-        updateOwnedPublicUsernameCopies(
-            uid = user.uid,
-            userName = newVisibleName,
-            now = now
-        )
+        profileCoordinator.updateCurrentUserProfile(displayName, bio)
     }
 
     suspend fun updateCurrentUserPhotoUrl(photoUrl: String?) {
-        val user = auth.currentUser ?: return
-        val now = System.currentTimeMillis()
-        val userRef = firestore.collection("users").document(user.uid)
-
-        userRef.set(
-            SocialProfileMaintenanceResolver.createPhotoDocumentUpdatePayload(
-                photoUrl = photoUrl,
-                updatedAt = now
-            ),
-            SetOptions.merge()
-        ).await()
-
-        runCatching {
-            realtimeDatabase.reference
-                .child(REALTIME_STATUS_NODE)
-                .child(user.uid)
-                .updateChildren(
-                    SocialProfileMaintenanceResolver.createRealtimeStatusPhotoUpdatePayload(
-                        photoUrl = photoUrl,
-                        updatedAt = now
-                    )
-                )
-                .await()
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-
-        runCatching {
-            user.updateProfile(
-                UserProfileChangeRequest.Builder()
-                    .setPhotoUri(photoUrl?.let { Uri.parse(it) })
-                    .build()
-            ).await()
-        }
-
-        // Profil belgesi başarıyla güncellendiyse işlem kullanıcı açısından başarılıdır.
-        // Post/yorum/mesaj kopyaları denormalize alanlar olduğu için ayrı ayrı en iyi
-        // çabayla güncellenir; bu kopyalardan biri izin/index sebebiyle güncellenemezse
-        // kullanıcıya yanlışlıkla "hata oldu" göstermeyelim.
-        runCatching {
-            updateOwnedProfilePhotoCopies(
-                uid = user.uid,
-                photoUrl = photoUrl,
-                now = now
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
+        profileCoordinator.updateCurrentUserPhotoUrl(photoUrl)
     }
 
     suspend fun removeFollower(followerId: String) {
-        val currentUser = auth.currentUser ?: return
-        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, followerId)) return
-
-        val followRef = firestore.collection("follows")
-            .document(
-                SocialFollowPayloadResolver.followDocumentId(
-                    followerId = followerId,
-                    followingId = currentUser.uid
-                )
-            )
-        val followerRef = firestore.collection("users").document(followerId)
-        val currentUserRef = firestore.collection("users").document(currentUser.uid)
-
-        firestore.runTransaction { transaction ->
-            val followSnapshot = transaction.get(followRef)
-            if (!followSnapshot.exists()) return@runTransaction null
-
-            val followerSnapshot = transaction.get(followerRef)
-            val currentSnapshot = transaction.get(currentUserRef)
-
-            transaction.delete(followRef)
-            val updatedAt = System.currentTimeMillis()
-            transaction.set(
-                followerRef,
-                SocialFollowPayloadResolver.decrementCountPayload(
-                    field = "followingCount",
-                    currentCount = followerSnapshot.getLong("followingCount"),
-                    updatedAt = updatedAt
-                ),
-                SetOptions.merge()
-            )
-            transaction.set(
-                currentUserRef,
-                SocialFollowPayloadResolver.decrementCountPayload(
-                    field = "followersCount",
-                    currentCount = currentSnapshot.getLong("followersCount"),
-                    updatedAt = updatedAt
-                ),
-                SetOptions.merge()
-            )
-            null
-        }.await()
+        profileCoordinator.removeFollower(followerId)
     }
 
     suspend fun stopFollowing(followingId: String) {
-        val currentUser = auth.currentUser ?: return
-        if (SocialFollowPayloadResolver.shouldSkipFollowAction(currentUser.uid, followingId)) return
-
-        val followRef = firestore.collection("follows")
-            .document(
-                SocialFollowPayloadResolver.followDocumentId(
-                    followerId = currentUser.uid,
-                    followingId = followingId
-                )
-            )
-        val currentUserRef = firestore.collection("users").document(currentUser.uid)
-        val followingUserRef = firestore.collection("users").document(followingId)
-
-        firestore.runTransaction { transaction ->
-            val followSnapshot = transaction.get(followRef)
-            if (!followSnapshot.exists()) return@runTransaction null
-
-            val currentSnapshot = transaction.get(currentUserRef)
-            val followingSnapshot = transaction.get(followingUserRef)
-
-            transaction.delete(followRef)
-            val updatedAt = System.currentTimeMillis()
-            transaction.set(
-                currentUserRef,
-                SocialFollowPayloadResolver.decrementCountPayload(
-                    field = "followingCount",
-                    currentCount = currentSnapshot.getLong("followingCount"),
-                    updatedAt = updatedAt
-                ),
-                SetOptions.merge()
-            )
-            transaction.set(
-                followingUserRef,
-                SocialFollowPayloadResolver.decrementCountPayload(
-                    field = "followersCount",
-                    currentCount = followingSnapshot.getLong("followersCount"),
-                    updatedAt = updatedAt
-                ),
-                SetOptions.merge()
-            )
-            null
-        }.await()
+        profileCoordinator.stopFollowing(followingId)
     }
 
     suspend fun uploadCurrentUserProfilePhoto(
         context: Context,
         imageUri: Uri
     ): String {
-        val user = auth.currentUser ?: return ""
-        val now = System.currentTimeMillis()
-        val storageRef = storage.reference.child(
-            SocialMediaUploadResolver.profilePhotoStoragePath(
-                userId = user.uid,
-                nowMillis = now,
-                fileId = UUID.randomUUID().toString()
-            )
-        )
-
-        val metadata = StorageMetadata.Builder()
-            .setContentType(
-                SocialMediaUploadResolver.imageContentType(
-                    context.contentResolver.getType(imageUri)
-                )
-            )
-            .build()
-
-        storageRef.putFile(imageUri, metadata).await()
-        return storageRef.downloadUrl.await().toString()
+        return profileCoordinator.uploadCurrentUserProfilePhoto(context, imageUri)
     }
 
     suspend fun getFollowers(userId: String): List<SocialUser> {
-        if (SocialUserListResolver.shouldSkipRelationshipLookup(userId)) return emptyList()
-
-        val followerIds = firestore.collection("follows")
-            .whereEqualTo("followingId", userId)
-            .get()
-            .await()
-            .documents
-            .map { document -> document.getString("followerId") }
-            .let(SocialUserListResolver::followerIds)
-
-        return getUsersByIds(followerIds)
+        return profileCoordinator.getFollowers(userId)
     }
 
     suspend fun getFollowing(userId: String): List<SocialUser> {
-        if (SocialUserListResolver.shouldSkipRelationshipLookup(userId)) return emptyList()
-
-        val followingIds = firestore.collection("follows")
-            .whereEqualTo("followerId", userId)
-            .get()
-            .await()
-            .documents
-            .map { document -> document.getString("followingId") }
-            .let(SocialUserListResolver::followingIds)
-
-        return getUsersByIds(followingIds)
-    }
-
-    private suspend fun getUsersByIds(userIds: List<String>): List<SocialUser> {
-        val lookupChunks = SocialUserListResolver.lookupChunks(userIds)
-        if (lookupChunks.isEmpty()) return emptyList()
-
-        val users = mutableMapOf<String, SocialUser>()
-
-        lookupChunks.forEach { chunk ->
-            val snapshot = firestore.collection("users")
-                .whereIn(FieldPath.documentId(), chunk)
-                .get()
-                .await()
-
-            snapshot.documents.forEach { document ->
-                val user = SocialUserListResolver.resolveVisibleProfile(
-                    id = document.id,
-                    isDeleted = document.getBoolean("isDeleted"),
-                    userName = document.getString("userName"),
-                    username = document.getString("username"),
-                    displayName = document.getString("displayName"),
-                    name = document.getString("name"),
-                    realName = document.getString("realName"),
-                    email = document.getString("email"),
-                    photoUrl = document.getString("photoUrl"),
-                    bio = document.getString("bio"),
-                    followersCount = document.getLong("followersCount"),
-                    followingCount = document.getLong("followingCount")
-                ) ?: return@forEach
-
-                users[user.id] = user
-            }
-        }
-
-        return SocialUserListResolver.orderUsersByRequestedIds(
-            requestedIds = userIds,
-            usersById = users
-        )
-    }
-
-    private suspend fun updateOwnedPublicUsernameCopies(
-        uid: String,
-        userName: String,
-        now: Long
-    ) {
-        SocialProfileCopyPropagationResolver.publicUsernameTargets(
-            uid = uid,
-            userName = userName,
-            now = now
-        ).forEach { target ->
-            propagateProfileCopyTarget(target)
-        }
-    }
-
-    private suspend fun updateOwnedProfilePhotoCopies(
-        uid: String,
-        photoUrl: String?,
-        now: Long
-    ) {
-        // Her alanı ayrı güncelliyoruz. Böylece örneğin collectionGroup yorum
-        // sorgusu izin/index yüzünden başarısız olsa bile postlar ve mesaj
-        // thread'leri güncellenmeye devam eder.
-        SocialProfileCopyPropagationResolver.profilePhotoTargets(
-            uid = uid,
-            photoUrl = photoUrl,
-            now = now
-        ).forEach { target ->
-            propagateProfileCopyTarget(target)
-        }
-    }
-
-    private suspend fun propagateProfileCopyTarget(target: SocialProfileCopyPropagationTarget) {
-        runCatching {
-            val query = when (target.scope) {
-                SocialProfileCopyQueryScope.COLLECTION -> firestore.collection(target.sourceName)
-                SocialProfileCopyQueryScope.COLLECTION_GROUP -> firestore.collectionGroup(target.sourceName)
-            }
-            val filteredQuery = when (target.lookupOperator) {
-                SocialProfileCopyLookupOperator.EQUAL_TO -> query.whereEqualTo(
-                    target.lookupField,
-                    target.lookupValue
-                )
-                SocialProfileCopyLookupOperator.ARRAY_CONTAINS -> query.whereArrayContains(
-                    target.lookupField,
-                    target.lookupValue
-                )
-            }
-            val documents = filteredQuery
-                .get()
-                .await()
-                .documents
-
-            updateDocumentsInBatches(
-                documents = documents,
-                updates = target.updates,
-                useSetMerge = target.useSetMerge
-            )
-        }.onFailure { error ->
-            error.printStackTrace()
-        }
-    }
-
-    private suspend fun updateDocumentsInBatches(
-        documents: List<DocumentSnapshot>,
-        updates: Map<String, Any>,
-        useSetMerge: Boolean = true
-    ) {
-        val documentBatches = SocialProfileCopyPropagationResolver.documentBatches(documents)
-        if (documentBatches.isEmpty()) return
-
-        documentBatches.forEach { chunk ->
-            val batch = firestore.batch()
-
-            chunk.forEach { document ->
-                if (useSetMerge) {
-                    batch.set(document.reference, updates, SetOptions.merge())
-                } else {
-                    batch.update(document.reference, updates)
-                }
-            }
-
-            batch.commit().await()
-        }
+        return profileCoordinator.getFollowing(userId)
     }
 
     private fun DocumentSnapshot.getStringListCompat(field: String): List<String> {
@@ -2183,7 +1692,6 @@ class SocialRepository {
         const val MESSAGES_SUBCOLLECTION = "messages"
         const val THREAD_TYPE_DIRECT = "direct"
         const val THREAD_TYPE_GROUP = "group"
-        const val REALTIME_STATUS_NODE = "status"
 
     }
 }
