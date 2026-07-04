@@ -51,7 +51,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private lateinit var messageAdapter: ChatMessageAdapter
 
     private val handler = Handler(Looper.getMainLooper())
-    private var isSending = false
+    private val messageComposerController = ChatMessageComposerController()
     private var typingDotIndex = 0
     private var currentTypingUsers: List<TypingUserUiModel> = emptyList()
     private lateinit var mediaController: ChatMediaController
@@ -165,7 +165,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         observePresence()
         observeTypingUsers()
         markThreadAsRead()
-        updateSendButton()
+        renderComposerUiState()
         observeBlockState()
         checkDeletedDirectUserState()
         setupDeleteMessageResultListener()
@@ -277,12 +277,12 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
     private fun setupInput() = with(binding) {
         chatMessageEditText.doAfterTextChanged { editable ->
-            updateSendButton()
+            val textChange = messageComposerController.onTextChanged(editable)
+            renderComposerUiState(textChange.uiState)
 
-            val hasText = editable?.toString()?.trim()?.isNotBlank() == true
-            repository.setTyping(threadId, hasText)
+            repository.setTyping(threadId, textChange.isTyping)
             handler.removeCallbacks(stopTypingRunnable)
-            if (hasText) {
+            if (textChange.isTyping) {
                 handler.postDelayed(stopTypingRunnable, STOP_TYPING_DELAY_MILLIS)
             }
         }
@@ -674,7 +674,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         chatVoiceButton.isEnabled = true
         chatAttachButton.isEnabled = true
 
-        updateSendButton()
+        renderComposerUiState()
     }
 
     private fun showChatMoreMenu(anchor: View) {
@@ -840,95 +840,58 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
 
     private fun sendMessage() {
-        if (isCurrentChatBlocked) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_blocked_send_error),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
+        val decision = messageComposerController.beginTextSend(
+            text = binding.chatMessageEditText.text,
+            isChatBlocked = isCurrentChatBlocked
+        )
 
-        if (isSending) return
+        when (decision) {
+            is ChatTextSendDecision.Send -> {
+                repository.setTyping(threadId, false)
+                handler.removeCallbacks(stopTypingRunnable)
 
-        val text = binding.chatMessageEditText.text
-            ?.toString()
-            ?.trim()
-            .orEmpty()
-
-        if (text.isBlank()) return
-
-        isSending = true
-        updateSendButton()
-        repository.setTyping(threadId, false)
-        handler.removeCallbacks(stopTypingRunnable)
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                repository.sendMessage(
-                    threadId = threadId,
-                    text = text
+                launchComposerDelivery(
+                    delivery = {
+                        repository.sendMessage(
+                            threadId = threadId,
+                            text = decision.text
+                        )
+                    },
+                    failureMessageRes = R.string.messages_new_chat_error,
+                    onSuccess = {
+                        binding.chatMessageEditText.setText("")
+                    }
                 )
-            }.onSuccess {
-                if (_binding == null) return@onSuccess
-                binding.chatMessageEditText.setText("")
-            }.onFailure {
-                if (_binding == null) return@onFailure
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.messages_new_chat_error),
-                    Toast.LENGTH_SHORT
-                ).show()
             }
 
-            isSending = false
-            if (_binding != null) updateSendButton()
+            is ChatTextSendDecision.Rejected -> {
+                handleComposerSendRejection(decision.reason)
+            }
         }
     }
+
     private fun sendFileMessage(fileUri: Uri) {
-        if (isCurrentChatBlocked) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_blocked_send_error),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
-        }
-
-        if (isSending) return
-
-        isSending = true
-        updateSendButton()
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
-                repository.sendFileMessage(
-                    context = requireContext(),
-                    threadId = threadId,
-                    fileUri = fileUri
+        when (val decision = messageComposerController.beginAttachmentSend(isCurrentChatBlocked)) {
+            ChatMediaSendDecision.Send -> {
+                launchComposerDelivery(
+                    delivery = {
+                        repository.sendFileMessage(
+                            context = requireContext(),
+                            threadId = threadId,
+                            fileUri = fileUri
+                        )
+                    },
+                    successMessageRes = R.string.chat_file_sent,
+                    failureMessageRes = R.string.chat_file_send_error
                 )
-            }.onSuccess {
-                if (_binding == null) return@onSuccess
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.chat_file_sent),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }.onFailure {
-                if (_binding == null) return@onFailure
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.chat_file_send_error),
-                    Toast.LENGTH_SHORT
-                ).show()
             }
 
-            isSending = false
-            if (_binding != null) updateSendButton()
+            is ChatMediaSendDecision.Rejected -> {
+                handleComposerSendRejection(decision.reason)
+            }
         }
     }
+
     private fun createMediaController(): ChatMediaController {
         return ChatMediaController(
             voiceFileFactory = {
@@ -969,16 +932,19 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
 
     private fun toggleVoiceRecording() {
-        if (isCurrentChatBlocked) {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.chat_blocked_send_error),
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+        when (
+            messageComposerController.resolveVoiceToggle(
+                isChatBlocked = isCurrentChatBlocked,
+                isVoiceRecording = mediaController.isVoiceRecording
+            )
+        ) {
+            ChatVoiceToggleAction.Blocked -> {
+                showBlockedSendError()
+                return
+            }
+            ChatVoiceToggleAction.Busy -> return
+            ChatVoiceToggleAction.Toggle -> Unit
         }
-
-        if (isSending && !mediaController.isVoiceRecording) return
 
         when (val result = mediaController.toggleVoiceRecording()) {
             ChatVoiceRecordingActionResult.Started -> {
@@ -1030,43 +996,25 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         audioFile: File,
         durationMillis: Long
     ) {
-        if (isSending) return
+        if (messageComposerController.beginAudioSend() is ChatMediaSendDecision.Rejected) {
+            return
+        }
 
-        isSending = true
-        updateSendButton()
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            runCatching {
+        launchComposerDelivery(
+            delivery = {
                 repository.sendAudioMessage(
                     context = requireContext(),
                     threadId = threadId,
                     audioFile = audioFile,
                     durationMillis = durationMillis
                 )
-            }.onSuccess {
-                if (_binding == null) return@onSuccess
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.chat_voice_sent),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }.onFailure {
-                if (_binding == null) return@onFailure
-
-                audioFile.delete()
-
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.chat_voice_send_error),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
-            isSending = false
-            if (_binding != null) updateSendButton()
-        }
+            },
+            successMessageRes = R.string.chat_voice_sent,
+            failureMessageRes = R.string.chat_voice_send_error,
+            onFailure = audioFile::delete
+        )
     }
+
     private fun openAttachment(message: ChatMessageUiModel) {
         val url = message.fileUrl.orEmpty()
         if (url.isBlank()) return
@@ -1411,16 +1359,71 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         return SimpleDateFormat("dd MMM yyyy HH:mm", Locale("tr", "TR")).format(Date(timeMillis))
     }
 
-    private fun updateSendButton() {
+    private fun launchComposerDelivery(
+        delivery: suspend () -> Unit,
+        failureMessageRes: Int,
+        successMessageRes: Int? = null,
+        onSuccess: () -> Unit = {},
+        onFailure: () -> Unit = {}
+    ) {
+        renderComposerUiState()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = runCatching { delivery() }
+
+            if (_binding != null) {
+                result.onSuccess {
+                    onSuccess()
+                    successMessageRes?.let(::showShortToast)
+                }.onFailure {
+                    onFailure()
+                    showShortToast(failureMessageRes)
+                }
+            }
+
+            finishComposerSend()
+        }
+    }
+
+    private fun showShortToast(messageRes: Int) {
+        Toast.makeText(
+            requireContext(),
+            getString(messageRes),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun handleComposerSendRejection(rejection: ChatComposerSendRejection) {
+        if (rejection == ChatComposerSendRejection.BLOCKED) {
+            showBlockedSendError()
+        }
+    }
+
+    private fun showBlockedSendError() {
+        Toast.makeText(
+            requireContext(),
+            getString(R.string.chat_blocked_send_error),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun finishComposerSend() {
+        if (_binding != null) {
+            val uiState = messageComposerController.finishSend(binding.chatMessageEditText.text)
+            renderComposerUiState(uiState)
+        } else {
+            messageComposerController.finishSend(text = null)
+        }
+    }
+
+    private fun renderComposerUiState(uiState: ChatComposerUiState? = null) {
         if (_binding == null) return
 
-        val hasText = binding.chatMessageEditText.text
-            ?.toString()
-            ?.trim()
-            ?.isNotBlank() == true
+        val resolvedUiState = uiState
+            ?: messageComposerController.uiState(binding.chatMessageEditText.text)
 
-        binding.chatSendButton.isEnabled = hasText && !isSending
-        binding.chatSendButton.alpha = if (hasText && !isSending) 1f else 0.45f
+        binding.chatSendButton.isEnabled = resolvedUiState.isSendButtonEnabled
+        binding.chatSendButton.alpha = if (resolvedUiState.isSendButtonEnabled) 1f else 0.45f
     }
 
     override fun onDestroyView() {
