@@ -55,11 +55,12 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private var typingDotIndex = 0
     private var currentTypingUsers: List<TypingUserUiModel> = emptyList()
     private lateinit var mediaController: ChatMediaController
+    private val messagePresentationController by lazy(LazyThreadSafetyMode.NONE) {
+        ChatMessagePresentationController(highlightMessageId)
+    }
     private var latestThread: MessageThreadUiModel? = null
     private var currentThreadPhotoUrl: String? = null
     private var lastPresence: PresenceStatusUiModel? = null
-    private var selectedMessage: ChatMessageUiModel? = null
-    private var hasHandledHighlightMessage = false
     private var isCurrentChatBlocked = false
     private var isOtherUserDeleted = false
     private var latestMessages: List<ChatMessageUiModel> = emptyList()
@@ -255,11 +256,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                 selectMessage(message)
             },
             onMessageClick = { message ->
-                if (selectedMessage?.id == message.id) {
-                    clearSelectedMessage()
-                } else {
-                    selectMessage(message)
-                }
+                toggleMessageSelection(message)
             },
             onAttachmentClick = { message ->
                 openAttachment(message)
@@ -1155,61 +1152,45 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
 
     private fun submitMessages(messages: List<ChatMessageUiModel>) {
-        val hiddenSenderId = otherParticipantId
+        val presentation = messagePresentationController.present(
+            ChatMessagePresentationInput(
+                messages = messages,
+                isGroup = isGroup,
+                hiddenSenderId = otherParticipantId,
+                isCurrentChatBlocked = isCurrentChatBlocked,
+                hiddenMessageRanges = hiddenMessageRanges
+            )
+        )
 
-        val visibleMessages = messages.filterNot { message ->
-            if (isGroup || hiddenSenderId.isNullOrBlank()) {
-                false
-            } else {
-                val isMessageFromBlockedUser = message.senderId == hiddenSenderId
-
-                val isInsideHiddenRange = hiddenMessageRanges.any { range ->
-                    range.userId == hiddenSenderId &&
-                            message.createdAt >= range.startAt &&
-                            (range.endAt == null || message.createdAt <= range.endAt)
-                }
-
-                val fallbackHideWhileBlocked =
-                    isCurrentChatBlocked &&
-                            hiddenMessageRanges.isEmpty() &&
-                            isMessageFromBlockedUser
-
-                isMessageFromBlockedUser && (isInsideHiddenRange || fallbackHideWhileBlocked)
-            }
-        }
-
-        val selectedId = selectedMessage?.id
-        if (selectedId != null && visibleMessages.none { it.id == selectedId }) {
-            selectedMessage = null
+        if (presentation.selectionWasCleared) {
+            messageAdapter.setSelectedMessage(null)
             updateSelectionUi()
         }
 
-        messageAdapter.submitList(visibleMessages) {
-            val targetId = highlightMessageId
+        messageAdapter.submitList(presentation.visibleMessages) {
+            applyMessagePostSubmitAction(presentation.postSubmitAction)
+        }
+    }
 
-            if (!targetId.isNullOrBlank() && !hasHandledHighlightMessage) {
-                val targetIndex = visibleMessages.indexOfFirst { message ->
-                    message.id == targetId
-                }
+    private fun applyMessagePostSubmitAction(action: ChatMessagePostSubmitAction) {
+        if (!messagePresentationController.shouldApplyPostSubmitAction(action)) return
 
-                if (targetIndex != -1) {
-                    hasHandledHighlightMessage = true
+        when (action) {
+            ChatMessagePostSubmitAction.None -> Unit
 
-                    binding.chatMessagesRecyclerView.scrollToPosition(targetIndex)
-                    messageAdapter.setHighlightedMessage(targetId)
-
-                    handler.postDelayed({
-                        if (_binding != null) {
-                            messageAdapter.setHighlightedMessage(null)
-                        }
-                    }, 2200L)
-
-                    return@submitList
-                }
+            is ChatMessagePostSubmitAction.ScrollToPosition -> {
+                binding.chatMessagesRecyclerView.scrollToPosition(action.position)
             }
 
-            if (targetId.isNullOrBlank() && visibleMessages.isNotEmpty()) {
-                binding.chatMessagesRecyclerView.scrollToPosition(visibleMessages.lastIndex)
+            is ChatMessagePostSubmitAction.HighlightMessage -> {
+                binding.chatMessagesRecyclerView.scrollToPosition(action.position)
+                messageAdapter.setHighlightedMessage(action.messageId)
+
+                handler.postDelayed({
+                    if (_binding != null) {
+                        messageAdapter.setHighlightedMessage(null)
+                    }
+                }, action.clearAfterMillis)
             }
         }
     }
@@ -1300,14 +1281,23 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
 
 
+    private val selectedMessage: ChatMessageUiModel?
+        get() = messagePresentationController.selectedMessage
+
     private fun selectMessage(message: ChatMessageUiModel) {
-        selectedMessage = message
+        messagePresentationController.selectMessage(message)
         messageAdapter.setSelectedMessage(message.id)
         updateSelectionUi()
     }
 
+    private fun toggleMessageSelection(message: ChatMessageUiModel) {
+        messagePresentationController.toggleMessageSelection(message)
+        messageAdapter.setSelectedMessage(selectedMessage?.id)
+        updateSelectionUi()
+    }
+
     private fun clearSelectedMessage() {
-        selectedMessage = null
+        messagePresentationController.clearSelection()
         messageAdapter.setSelectedMessage(null)
         updateSelectionUi()
     }
