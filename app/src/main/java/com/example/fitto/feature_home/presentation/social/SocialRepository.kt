@@ -2,22 +2,20 @@ package com.example.fitto.feature_home.presentation.social
 
 import android.content.Context
 import android.net.Uri
-import java.io.File
-import android.provider.OpenableColumns
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
+import java.io.File
+import java.util.UUID
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
-import com.google.firebase.storage.StorageMetadata
-import com.google.firebase.firestore.FieldPath
+
 data class MessageHiddenRange(
     val userId: String,
     val startAt: Long,
@@ -102,6 +100,22 @@ class SocialRepository {
             )
         )
     }
+    private val messageMutationCoordinator by lazy {
+        SocialMessageMutationCoordinator(
+            deliverySource = FirebaseSocialMessageDeliverySource(
+                auth = auth,
+                firestore = firestore,
+                storage = storage,
+                ensureCurrentUserProfile = profileCoordinator::createCurrentUserProfileIfNeeded,
+                loadCurrentUserProfile = profileCoordinator::getCurrentUserProfile,
+                setTyping = conversationObservationCoordinator::setTyping
+            ),
+            lifecycleSource = FirebaseSocialMessageLifecycleSource(
+                auth = auth,
+                firestore = firestore
+            )
+        )
+    }
 
     fun currentUserId(): String {
         return auth.currentUser?.uid.orEmpty()
@@ -165,38 +179,9 @@ class SocialRepository {
     }
 
     suspend fun clearChatForMe(threadId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank()) return
-
-        val messagesSnapshot = firestore
-            .collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .collection(MESSAGES_SUBCOLLECTION)
-            .get()
-            .await()
-
-        if (messagesSnapshot.isEmpty) return
-
-        val batch = firestore.batch()
-        val now = System.currentTimeMillis()
-
-        messagesSnapshot.documents.forEach { document ->
-            batch.update(
-                document.reference,
-                SocialMessageDeletionPayloadResolver.createDeleteForMePayload(
-                    currentUserId = currentUserId,
-                    updatedAt = now
-                )
-            )
-        }
-
-        batch.update(
-            firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId),
-            mapOf("updatedAt" to now)
-        )
-
-        batch.commit().await()
+        messageMutationCoordinator.clearChatForMe(threadId)
     }
+
     suspend fun refreshFeedFromServer() {
         postObservationCoordinator.refreshFeedFromServer()
     }
@@ -737,488 +722,55 @@ class SocialRepository {
 
         return snapshot.data.orEmpty()
     }
-    private suspend fun getRecipientsWhoBlockedSender(
-        participantIds: List<String>,
-        senderId: String
-    ): List<String> {
-        val blockedRecipientIds = mutableListOf<String>()
-
-        SocialMessageDeliveryResolver.recipientLookupChunks(
-            participantIds = participantIds,
-            senderId = senderId
-        ).forEach { chunk ->
-            val snapshot = firestore.collection("users")
-                .whereIn(FieldPath.documentId(), chunk)
-                .get()
-                .await()
-
-            val records = snapshot.documents.map { userDocument ->
-                SocialMessageRecipientBlockRecord(
-                    userId = userDocument.id,
-                    blockedUserIds = userDocument.getStringListCompat("blockedUserIds")
-                )
-            }
-
-            blockedRecipientIds += SocialMessageDeliveryResolver.blockedRecipientIds(
-                records = records,
-                senderId = senderId
-            )
-        }
-
-        return blockedRecipientIds.distinct()
-    }
-
     suspend fun sendMessage(
         threadId: String,
         text: String
     ) {
-        val currentUser = auth.currentUser ?: return
-        val trimmedText = text.trim()
-
-        if (SocialMessageDeliveryResolver.shouldSkipTextMessage(threadId, trimmedText)) return
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val sender = SocialMessageSenderResolver.resolve(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            currentUserEmail = currentUser.email,
-            currentUserPhotoUrl = currentUser.photoUrl?.toString()
-        )
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val threadSnapshot = threadRef.get().await()
-
-        if (!threadSnapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUser.uid)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val now = System.currentTimeMillis()
-        val messageRef = threadRef.collection(MESSAGES_SUBCOLLECTION).document()
-
-        val blockedRecipientIds = getRecipientsWhoBlockedSender(
-            participantIds = participantIds,
-            senderId = currentUser.uid
-        )
-
-        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
-            lastMessageText = trimmedText,
-            lastMessageSenderId = currentUser.uid,
-            lastMessageCreatedAt = now,
-            lastMessageType = "text",
-            participantIds = participantIds,
-            senderId = currentUser.uid,
-            blockedRecipientIds = blockedRecipientIds,
-            updatedAt = now
-        )
-
-        firestore.runBatch { batch ->
-            batch.set(
-                messageRef,
-                SocialMessageTextPayloadResolver.createTextMessagePayload(
-                    messageId = messageRef.id,
-                    threadId = threadId,
-                    senderId = currentUser.uid,
-                    sender = sender,
-                    text = trimmedText,
-                    deletedFor = blockedRecipientIds,
-                    readAt = now
-                )
-            )
-
-            batch.update(threadRef, threadUpdates)
-        }.await()
-
-        setTyping(threadId, false)
+        messageMutationCoordinator.sendMessage(threadId, text)
     }
+
     suspend fun sendFileMessage(
         context: Context,
         threadId: String,
         fileUri: Uri
     ) {
-        val currentUser = auth.currentUser ?: return
-        if (SocialMessageDeliveryResolver.shouldSkipAttachmentMessage(threadId)) return
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val sender = SocialMessageSenderResolver.resolve(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            currentUserEmail = currentUser.email,
-            currentUserPhotoUrl = currentUser.photoUrl?.toString()
+        messageMutationCoordinator.sendFileMessage(
+            context = context,
+            threadId = threadId,
+            fileUri = fileUri
         )
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val threadSnapshot = threadRef.get().await()
-
-        if (!threadSnapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        if (!participantIds.contains(currentUser.uid)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val fileInfo = readPickedFileInfo(context, fileUri)
-        val now = System.currentTimeMillis()
-        val messageRef = threadRef.collection(MESSAGES_SUBCOLLECTION).document()
-
-        val safeFileName = SocialMessageAttachmentPayloadResolver.safeStorageFileName(
-            fileName = fileInfo.name,
-            fallbackFileName = "file_${System.currentTimeMillis()}"
-        )
-
-        val storageRef = FirebaseStorage.getInstance()
-            .reference
-            .child(
-                SocialMessageDeliveryResolver.attachmentStoragePath(
-                    threadId = threadId,
-                    messageId = messageRef.id,
-                    fileId = UUID.randomUUID().toString(),
-                    safeFileName = safeFileName
-                )
-            )
-
-        val metadata = StorageMetadata.Builder()
-            .setContentType(fileInfo.mimeType)
-            .build()
-
-        storageRef.putFile(fileUri, metadata).await()
-        val downloadUrl = storageRef.downloadUrl.await().toString()
-
-        val lastMessageText = SocialMessageAttachmentPayloadResolver.fileLastMessageText(
-            fileName = fileInfo.name,
-            mimeType = fileInfo.mimeType
-        )
-        val blockedRecipientIds = getRecipientsWhoBlockedSender(
-            participantIds = participantIds,
-            senderId = currentUser.uid
-        )
-
-        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
-            lastMessageText = lastMessageText,
-            lastMessageSenderId = currentUser.uid,
-            lastMessageCreatedAt = now,
-            lastMessageType = "file",
-            participantIds = participantIds,
-            senderId = currentUser.uid,
-            blockedRecipientIds = blockedRecipientIds,
-            updatedAt = now
-        )
-
-        firestore.runBatch { batch ->
-            batch.set(
-                messageRef,
-                SocialMessageAttachmentPayloadResolver.createFileMessagePayload(
-                    messageId = messageRef.id,
-                    threadId = threadId,
-                    senderId = currentUser.uid,
-                    sender = sender,
-                    fileUrl = downloadUrl,
-                    fileName = fileInfo.name,
-                    fileMimeType = fileInfo.mimeType,
-                    fileSizeBytes = fileInfo.sizeBytes,
-                    deletedFor = blockedRecipientIds,
-                    readAt = now
-                )
-            )
-
-            batch.update(threadRef, threadUpdates)
-        }.await()
-
-        setTyping(threadId, false)
     }
+
     suspend fun sendAudioMessage(
         context: Context,
         threadId: String,
         audioFile: File,
         durationMillis: Long
     ) {
-        val currentUser = auth.currentUser ?: return
-        if (
-            SocialMessageDeliveryResolver.shouldSkipAudioMessage(
-                threadId = threadId,
-                fileExists = audioFile.exists(),
-                fileSizeBytes = audioFile.length()
-            )
-        ) return
-
-        createCurrentUserProfileIfNeeded()
-
-        val profile = getCurrentUserProfile()
-        val sender = SocialMessageSenderResolver.resolve(
-            profileUserName = profile?.userName,
-            profilePhotoUrl = profile?.photoUrl,
-            currentUserEmail = currentUser.email,
-            currentUserPhotoUrl = currentUser.photoUrl?.toString()
-        )
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val threadSnapshot = threadRef.get().await()
-
-        if (!threadSnapshot.exists()) {
-            throw IllegalStateException("THREAD_NOT_FOUND")
-        }
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-
-        if (!participantIds.contains(currentUser.uid)) {
-            throw IllegalStateException("THREAD_ACCESS_DENIED")
-        }
-
-        val now = System.currentTimeMillis()
-        val messageRef = threadRef.collection(MESSAGES_SUBCOLLECTION).document()
-
-        val storageRef = FirebaseStorage.getInstance()
-            .reference
-            .child(
-                SocialMessageDeliveryResolver.audioStoragePath(
-                    threadId = threadId,
-                    messageId = messageRef.id,
-                    fileId = UUID.randomUUID().toString()
-                )
-            )
-
-        val metadata = StorageMetadata.Builder()
-            .setContentType(SocialMessageDeliveryResolver.audioContentType())
-            .build()
-
-        storageRef.putFile(Uri.fromFile(audioFile), metadata).await()
-        val downloadUrl = storageRef.downloadUrl.await().toString()
-
-        val lastMessageText = SocialMessageDeliveryResolver.audioLastMessageText()
-        val blockedRecipientIds = getRecipientsWhoBlockedSender(
-            participantIds = participantIds,
-            senderId = currentUser.uid
-        )
-
-        val threadUpdates = SocialMessageThreadUpdateResolver.createLastMessageUpdates(
-            lastMessageText = lastMessageText,
-            lastMessageSenderId = currentUser.uid,
-            lastMessageCreatedAt = now,
-            lastMessageType = "audio",
-            participantIds = participantIds,
-            senderId = currentUser.uid,
-            blockedRecipientIds = blockedRecipientIds,
-            updatedAt = now
-        )
-
-        firestore.runBatch { batch ->
-            batch.set(
-                messageRef,
-                SocialMessageAttachmentPayloadResolver.createAudioMessagePayload(
-                    messageId = messageRef.id,
-                    threadId = threadId,
-                    senderId = currentUser.uid,
-                    sender = sender,
-                    fileUrl = downloadUrl,
-                    fileSizeBytes = audioFile.length(),
-                    audioDurationMillis = durationMillis,
-                    deletedFor = blockedRecipientIds,
-                    readAt = now
-                )
-            )
-
-            batch.update(threadRef, threadUpdates)
-        }.await()
-
-        runCatching {
-            audioFile.delete()
-        }
-
-        setTyping(threadId, false)
-    }
-    private data class PickedFileInfo(
-        val name: String,
-        val mimeType: String?,
-        val sizeBytes: Long
-    )
-
-    private fun readPickedFileInfo(
-        context: Context,
-        uri: Uri
-    ): PickedFileInfo {
-        var fileName = "Dosya"
-        var fileSize = 0L
-
-        context.contentResolver.query(
-            uri,
-            arrayOf(
-                OpenableColumns.DISPLAY_NAME,
-                OpenableColumns.SIZE
-            ),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-
-            if (cursor.moveToFirst()) {
-                if (nameIndex >= 0) {
-                    fileName = cursor.getString(nameIndex).orEmpty().ifBlank { "Dosya" }
-                }
-
-                if (sizeIndex >= 0) {
-                    fileSize = cursor.getLong(sizeIndex)
-                }
-            }
-        }
-
-        return PickedFileInfo(
-            name = fileName,
-            mimeType = context.contentResolver.getType(uri),
-            sizeBytes = fileSize
+        messageMutationCoordinator.sendAudioMessage(
+            context = context,
+            threadId = threadId,
+            audioFile = audioFile,
+            durationMillis = durationMillis
         )
     }
+
     suspend fun markThreadRead(threadId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (!SocialMessageReadStateResolver.canMarkThreadRead(currentUserId, threadId)) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val now = System.currentTimeMillis()
-
-        val threadSnapshot = threadRef.get().await()
-        if (!threadSnapshot.exists()) return
-
-        val participantIds = threadSnapshot.getStringListCompat("participantIds")
-        val otherUserId = SocialMessageReadStateResolver.directPeerId(
-            threadType = threadSnapshot.getString("type"),
-            participantIds = participantIds,
-            currentUserId = currentUserId
-        )
-
-        var isOtherUserCurrentlyBlocked = false
-        var hiddenRanges: List<MessageHiddenRange> = emptyList()
-
-        if (!otherUserId.isNullOrBlank()) {
-            val userSnapshot = firestore.collection("users")
-                .document(currentUserId)
-                .get()
-                .await()
-
-            val blockedUserIds = SocialMessageReadStateResolver.blockedUserIds(
-                userSnapshot.get("blockedUserIds")
-            )
-
-            isOtherUserCurrentlyBlocked = SocialMessageReadStateResolver.isPeerBlocked(
-                blockedUserIds = blockedUserIds,
-                peerId = otherUserId
-            )
-
-            hiddenRanges = SocialMessageReadStateResolver.hiddenRanges(
-                completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(userSnapshot, threadId),
-                activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(userSnapshot, threadId)
-            )
-        }
-
-        val unreadMessages = threadRef
-            .collection(MESSAGES_SUBCOLLECTION)
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .limit(80)
-            .get()
-            .await()
-            .documents
-            .filter { document ->
-                SocialThreadReadResolver.shouldMarkMessageAsRead(
-                    senderId = document.getString("senderId").orEmpty(),
-                    createdAt = document.getLong("createdAt") ?: 0L,
-                    readBy = document.get("readBy"),
-                    currentUserId = currentUserId,
-                    otherUserId = otherUserId,
-                    isOtherUserCurrentlyBlocked = isOtherUserCurrentlyBlocked,
-                    hiddenRanges = hiddenRanges
-                )
-            }
-
-        firestore.runBatch { batch ->
-            batch.update(
-                threadRef,
-                SocialThreadReadResolver.createThreadReadPayload(currentUserId)
-            )
-
-            unreadMessages.forEach { document ->
-                batch.set(
-                    document.reference,
-                    SocialThreadReadResolver.createMessageReadPayload(
-                        readBy = document.get("readBy"),
-                        currentUserId = currentUserId,
-                        readAt = now
-                    ),
-                    SetOptions.merge()
-                )
-            }
-        }.await()
+        messageMutationCoordinator.markThreadRead(threadId)
     }
-
 
     suspend fun deleteMessageForMe(
         threadId: String,
         messageId: String
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank() || messageId.isBlank()) return
-
-        val messageRef = firestore.collection(MESSAGE_THREADS_COLLECTION)
-            .document(threadId)
-            .collection(MESSAGES_SUBCOLLECTION)
-            .document(messageId)
-
-        messageRef.set(
-            SocialMessageDeletionPayloadResolver.createDeleteForMePayload(
-                currentUserId = currentUserId,
-                updatedAt = System.currentTimeMillis()
-            ),
-            SetOptions.merge()
-        ).await()
+        messageMutationCoordinator.deleteMessageForMe(threadId, messageId)
     }
 
     suspend fun deleteMessageForEveryone(
         threadId: String,
         messageId: String
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        if (threadId.isBlank() || messageId.isBlank()) return
-
-        val threadRef = firestore.collection(MESSAGE_THREADS_COLLECTION).document(threadId)
-        val messageRef = threadRef.collection(MESSAGES_SUBCOLLECTION).document(messageId)
-        val messageSnapshot = messageRef.get().await()
-
-        if (!messageSnapshot.exists()) return
-        if (messageSnapshot.getString("senderId") != currentUserId) {
-            throw IllegalStateException("ONLY_SENDER_CAN_DELETE_FOR_EVERYONE")
-        }
-
-        val now = System.currentTimeMillis()
-        val messageCreatedAt = messageSnapshot.getLong("createdAt") ?: 0L
-        val threadSnapshot = threadRef.get().await()
-        val isLastMessage = threadSnapshot.getLong("lastMessageCreatedAt") == messageCreatedAt
-
-        firestore.runBatch { batch ->
-            batch.set(
-                messageRef,
-                SocialMessageDeletionPayloadResolver.createDeleteForEveryonePayload(
-                    currentUserId = currentUserId,
-                    deletedAt = now
-                ),
-                SetOptions.merge()
-            )
-
-            if (isLastMessage) {
-                batch.update(
-                    threadRef,
-                    SocialMessageDeletionPayloadResolver.createLastMessageDeletedPayload(updatedAt = now)
-                )
-            }
-        }.await()
+        messageMutationCoordinator.deleteMessageForEveryone(threadId, messageId)
     }
 
     suspend fun searchUsers(query: String): List<SearchUserUiModel> {
