@@ -2,36 +2,28 @@ package com.example.fitto.feature_home.presentation.profile
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Typeface
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputFilter
 import android.text.Spanned
 import android.text.TextWatcher
 import android.text.method.DigitsKeyListener
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
-import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.fitto.R
-import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
-import com.example.fitto.feature_home.presentation.profile.health.WeightHistoryItem
-import com.example.fitto.feature_home.presentation.profile.health.WeightTrend
 import com.example.fitto.feature_home.presentation.profile.health.formatSignedWeightKg
 import com.example.fitto.feature_home.presentation.profile.health.formatWeightKg
 import com.example.fitto.feature_home.presentation.profile.reminders.ProfileRemindersActivity
@@ -41,7 +33,6 @@ import com.google.android.material.button.MaterialButton
 import java.text.DateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.abs
 
 class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
 
@@ -66,17 +57,11 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
     private lateinit var chartFirstValue: TextView
     private lateinit var chartLastValue: TextView
     private lateinit var chartChangeValue: TextView
-    private lateinit var historyLayout: LinearLayout
+    private lateinit var historyRenderer: ProfileWeightHistoryRenderer
 
     private var historyMenuItem: MenuItem? = null
-    private var latestHealthData: ProfileHealthData = ProfileHealthData.Empty
-    private var historyItems: List<WeightHistoryItem> = emptyList()
-    private var selectedHistoryItemId: String? = null
-    private var previewHistoryItem: WeightHistoryItem? = null
-    private var isHistoryScreenVisible: Boolean = false
-    private var isSavingWeight: Boolean = false
+    private val weightController = WeightTrackingController()
     private var isBindingInput: Boolean = false
-    private var hasUnsavedWeightInput: Boolean = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -113,14 +98,18 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
         chartFirstValue = root.findViewById(R.id.textWeightChartFirstValue)
         chartLastValue = root.findViewById(R.id.textWeightChartLastValue)
         chartChangeValue = root.findViewById(R.id.textWeightChartChangeValue)
-        historyLayout = root.findViewById(R.id.layoutWeightHistory)
+        historyRenderer = ProfileWeightHistoryRenderer(
+            context = requireContext(),
+            container = root.findViewById(R.id.layoutWeightHistory),
+            onItemSelected = ::onHistoryItemSelected
+        )
     }
 
     private fun setupToolbar() {
         historyMenuItem = toolbar.menu.findItem(R.id.action_weight_history)
 
         toolbar.setNavigationOnClickListener {
-            if (isHistoryScreenVisible) {
+            if (weightController.state.screen == WeightTrackingScreen.HISTORY) {
                 showMainScreen()
             } else {
                 parentFragmentManager.popBackStack()
@@ -143,7 +132,7 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
             viewLifecycleOwner,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    if (isHistoryScreenVisible) {
+                    if (weightController.state.screen == WeightTrackingScreen.HISTORY) {
                         showMainScreen()
                     } else {
                         parentFragmentManager.popBackStack()
@@ -164,19 +153,19 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
 
             override fun afterTextChanged(s: Editable?) {
                 if (isBindingInput) return
-                if (previewHistoryItem != null) return
 
-                val value = parseWeightInput()
-                hasUnsavedWeightInput = value != null && abs(value - latestHealthData.currentWeightKg) > 0.0005
-                updateSaveButtonState()
+                val result = weightController.onWeightInput(
+                    rawInput = weightInput.text?.toString().orEmpty()
+                )
+                updateSaveButtonState(result.state)
             }
         })
 
         weightInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus && previewHistoryItem == null) {
+            if (!hasFocus && !weightController.state.isReadOnly) {
                 formatWeightInputAfterEditing()
             }
-            updateSaveButtonState()
+            updateSaveButtonState(weightController.state)
         }
 
         weightInput.setOnEditorActionListener { _, actionId, event ->
@@ -194,7 +183,7 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
 
     private fun setupClicks() {
         currentWeightCard.setOnClickListener {
-            if (previewHistoryItem == null) {
+            if (!weightController.state.isReadOnly) {
                 focusWeightInput()
             }
         }
@@ -224,64 +213,95 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
     }
 
     private fun observeViewModel() {
-        viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            latestHealthData = state.healthData
-            historyItems = state.healthData.history
+        viewModel.uiState.observe(viewLifecycleOwner) { profileState ->
+            val shouldReplaceDraft = !weightInput.hasFocus() ||
+                !weightController.state.hasUnsavedWeightInput
+            val weightState = weightController.updateProfile(
+                healthData = profileState.healthData,
+                allowDraftReplacement = shouldReplaceDraft
+            )
 
-            refreshSelectedHistoryPreview()
+            renderWeightState(
+                state = weightState,
+                forceInputBinding = shouldReplaceDraft || weightState.isReadOnly
+            )
+            renderHistory(weightState)
+            bindChart(weightState)
 
-            if (previewHistoryItem == null) {
-                bindEditableWeight()
-            } else {
-                bindHistoryPreview()
-            }
-
-            bindHistoryList(historyItems)
-            bindChart(state.healthData)
-
-            state.errorMessage?.let { message ->
+            profileState.errorMessage?.let { message ->
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun bindEditableWeight() {
+    private fun renderWeightState(
+        state: WeightTrackingState,
+        forceInputBinding: Boolean
+    ) {
+        if (state.isReadOnly) {
+            bindHistoryPreview(state)
+        } else {
+            bindEditableWeight(state, forceInputBinding)
+        }
+    }
+
+    private fun bindEditableWeight(
+        state: WeightTrackingState,
+        forceInputBinding: Boolean
+    ) {
+        val healthData = state.healthData
         bindWeightInput(
-            value = latestHealthData.currentWeightKg,
+            value = state.draftWeightKg ?: 0.0,
             readOnly = false,
-            force = !weightInput.hasFocus() || !hasUnsavedWeightInput
+            force = forceInputBinding
         )
 
-        textLastWeighDate.text = if (latestHealthData.lastWeighDateText.isNotBlank()) {
-            getString(R.string.weight_last_weigh_format, latestHealthData.lastWeighDateText)
+        textLastWeighDate.text = if (healthData.lastWeighDateText.isNotBlank()) {
+            getString(R.string.weight_last_weigh_format, healthData.lastWeighDateText)
         } else {
             getString(R.string.weight_last_weigh_default)
         }
 
-        textInitialWeightValue.text = formatWeightOrEmpty(latestHealthData.initialWeightKg)
-        textTargetWeightValue.text = formatWeightOrEmpty(latestHealthData.targetWeightKg)
-        textLostSoFar.text = getString(R.string.weight_lost_so_far_format, formatWeightKg(latestHealthData.lostSoFarKg).ifBlank { "0" })
-        textRemainingWeight.text = getString(R.string.weight_remaining_format, formatWeightKg(latestHealthData.remainingKg).ifBlank { "0" })
+        textInitialWeightValue.text = formatWeightOrEmpty(healthData.initialWeightKg)
+        textTargetWeightValue.text = formatWeightOrEmpty(healthData.targetWeightKg)
+        textLostSoFar.text = getString(
+            R.string.weight_lost_so_far_format,
+            formatWeightKg(healthData.lostSoFarKg).ifBlank { "0" }
+        )
+        textRemainingWeight.text = getString(
+            R.string.weight_remaining_format,
+            formatWeightKg(healthData.remainingKg).ifBlank { "0" }
+        )
 
         saveWeightButton.isVisible = true
         returnCurrentButton.isVisible = false
         weightInput.isFocusable = true
         weightInput.isFocusableInTouchMode = true
         weightInput.isCursorVisible = weightInput.hasFocus()
-        updateSaveButtonState()
+        updateSaveButtonState(state)
     }
 
-    private fun bindHistoryPreview() {
-        val item = previewHistoryItem ?: return
+    private fun bindHistoryPreview(state: WeightTrackingState) {
+        val item = state.previewItem ?: return
+        val healthData = state.healthData
 
         clearFocusedWeightInput()
         bindWeightInput(value = item.weightKg, readOnly = true, force = true)
 
-        textLastWeighDate.text = getString(R.string.weight_preview_hint, formatDateOrEmpty(item.createdAt))
-        textInitialWeightValue.text = formatWeightOrEmpty(latestHealthData.initialWeightKg)
-        textTargetWeightValue.text = formatWeightOrEmpty(latestHealthData.targetWeightKg)
-        textLostSoFar.text = getString(R.string.weight_lost_so_far_format, formatWeightKg(latestHealthData.lostSoFarKg).ifBlank { "0" })
-        textRemainingWeight.text = getString(R.string.weight_remaining_format, formatWeightKg(latestHealthData.remainingKg).ifBlank { "0" })
+        textLastWeighDate.text = getString(
+            R.string.weight_preview_hint,
+            formatDateOrEmpty(item.createdAt)
+        )
+        textInitialWeightValue.text = formatWeightOrEmpty(healthData.initialWeightKg)
+        textTargetWeightValue.text = formatWeightOrEmpty(healthData.targetWeightKg)
+        textLostSoFar.text = getString(
+            R.string.weight_lost_so_far_format,
+            formatWeightKg(healthData.lostSoFarKg).ifBlank { "0" }
+        )
+        textRemainingWeight.text = getString(
+            R.string.weight_remaining_format,
+            formatWeightKg(healthData.remainingKg).ifBlank { "0" }
+        )
 
         saveWeightButton.isVisible = false
         returnCurrentButton.isVisible = true
@@ -296,37 +316,39 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
         isBindingInput = true
         weightInput.setText(formatWeightKg(value))
         weightInput.setSelection(weightInput.text?.length ?: 0)
-        hasUnsavedWeightInput = false
         isBindingInput = false
     }
 
-    private fun bindChart(healthData: ProfileHealthData) {
-        weightTrendChartView.submitData(healthData.chartPoints)
+    private fun bindChart(state: WeightTrackingState) {
+        weightTrendChartView.submitData(state.healthData.chartPoints)
 
-        val points = healthData.chartPoints
-        if (points.isEmpty()) {
+        val summary = state.chartSummary
+        if (summary == null) {
             chartSummaryLayout.isVisible = false
             return
         }
 
-        val first = points.first().weightKg
-        val last = points.last().weightKg
-        val change = last - first
-
-        chartFirstValue.text = getString(R.string.weight_value_format, formatWeightKg(first))
-        chartLastValue.text = getString(R.string.weight_value_format, formatWeightKg(last))
-        chartChangeValue.text = getString(R.string.weight_value_format, formatSignedWeightKg(change))
+        chartFirstValue.text = getString(
+            R.string.weight_value_format,
+            formatWeightKg(summary.firstWeightKg)
+        )
+        chartLastValue.text = getString(
+            R.string.weight_value_format,
+            formatWeightKg(summary.lastWeightKg)
+        )
+        chartChangeValue.text = getString(
+            R.string.weight_value_format,
+            formatSignedWeightKg(summary.changeKg)
+        )
         chartSummaryLayout.isVisible = true
     }
 
-    private fun updateSaveButtonState() {
-        if (previewHistoryItem != null) return
+    private fun updateSaveButtonState(state: WeightTrackingState) {
+        if (state.isReadOnly) return
 
-        val value = parseWeightInput()
-        val canSave = value != null && value > 0.0 && !isSavingWeight
-        saveWeightButton.isEnabled = canSave
-        saveWeightButton.alpha = if (canSave) 1f else 0.58f
-        saveWeightButton.text = if (isSavingWeight) {
+        saveWeightButton.isEnabled = state.canSave
+        saveWeightButton.alpha = if (state.canSave) 1f else 0.58f
+        saveWeightButton.text = if (state.isSavingWeight) {
             getString(R.string.weight_saving)
         } else {
             getString(R.string.weight_save)
@@ -334,45 +356,38 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
     }
 
     private fun saveWeight() {
-        if (previewHistoryItem != null || isSavingWeight) return
+        val currentState = weightController.state
+        if (currentState.isReadOnly || currentState.isSavingWeight) return
 
-        val weight = parseWeightInput()
-        if (weight == null || weight <= 0.0) {
+        val weight = weightController.beginSave()
+        if (weight == null) {
             Toast.makeText(requireContext(), R.string.weight_invalid, Toast.LENGTH_SHORT).show()
             focusWeightInput()
             return
         }
 
         clearFocusedWeightInput()
-        isSavingWeight = true
-        updateSaveButtonState()
+        updateSaveButtonState(weightController.state)
 
         viewModel.updateWeight(
             weightKg = weight,
             onSuccess = {
-                selectedHistoryItemId = null
-                previewHistoryItem = null
-                isSavingWeight = false
-                hasUnsavedWeightInput = false
-
+                val completedState = weightController.completeSave(weight)
+                updateSaveButtonState(completedState)
                 Toast.makeText(requireContext(), R.string.weight_saved, Toast.LENGTH_SHORT).show()
             },
             onError = { message ->
-                isSavingWeight = false
-                updateSaveButtonState()
+                val failedState = weightController.failSave()
+                updateSaveButtonState(failedState)
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             }
         )
     }
 
-    private fun parseWeightInput(): Double? {
-        val raw = weightInput.text?.toString().orEmpty().trim()
-        if (raw.isBlank() || raw == "." || raw == ",") return null
-        return raw.replace(',', '.').toDoubleOrNull()
-    }
-
     private fun formatWeightInputAfterEditing() {
-        val value = parseWeightInput() ?: return
+        val value = weightController.formatInputAfterEditing(
+            weightInput.text?.toString().orEmpty()
+        ) ?: return
         isBindingInput = true
         weightInput.setText(formatWeightKg(value))
         weightInput.setSelection(weightInput.text?.length ?: 0)
@@ -411,159 +426,25 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
         startActivity(Intent(requireContext(), ProfileRemindersActivity::class.java))
     }
 
-    private fun bindHistoryList(items: List<WeightHistoryItem>) {
-        historyLayout.removeAllViews()
-
-        if (items.isEmpty()) {
-            historyLayout.addView(createEmptyHistoryView())
-            return
-        }
-
-        items.take(30).forEach { item ->
-            historyLayout.addView(createHistoryRow(item))
-        }
-    }
-
-    private fun createEmptyHistoryView(): View {
-        return TextView(requireContext()).apply {
-            text = getString(R.string.weight_history_empty)
-            setTextColor(ContextCompat.getColor(requireContext(), R.color.profile_subtext))
-            textSize = 14f
-            setPadding(dp(18), dp(16), dp(18), dp(16))
-            background = roundedDrawable(
-                color = ContextCompat.getColor(requireContext(), R.color.profile_card_background),
-                strokeColor = ContextCompat.getColor(requireContext(), R.color.profile_stroke),
-                radiusDp = 22
-            )
-        }
-    }
-
-    private fun createHistoryRow(item: WeightHistoryItem): View {
-        val context = requireContext()
-        val isSelected = item.id == selectedHistoryItemId
-
-        val row = LinearLayout(context).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(14), dp(14), dp(14))
-            background = roundedDrawable(
-                color = ContextCompat.getColor(context, R.color.profile_card_background),
-                strokeColor = if (isSelected) {
-                    ContextCompat.getColor(context, R.color.fitto_green)
-                } else {
-                    ContextCompat.getColor(context, R.color.profile_stroke)
-                },
-                radiusDp = 22
-            )
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                bottomMargin = dp(10)
-            }
-
-            setOnClickListener {
-                selectedHistoryItemId = item.id
-                previewHistoryItem = item
-                clearFocusedWeightInput()
-                bindHistoryList(historyItems)
-                showMainScreen()
-            }
-        }
-
-        val icon = ImageView(context).apply {
-            setImageResource(historyIconFor(item.trend))
-            setColorFilter(historyColorFor(item.trend))
-            background = roundedDrawable(
-                color = ContextCompat.getColor(context, R.color.fitto_primary_soft),
-                strokeColor = ContextCompat.getColor(context, R.color.fitto_primary_soft),
-                radiusDp = 18
-            )
-            setPadding(dp(10), dp(10), dp(10), dp(10))
-        }
-
-        row.addView(icon, LinearLayout.LayoutParams(dp(44), dp(44)))
-
-        val texts = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), 0, 0, 0)
-        }
-
-        texts.addView(TextView(context).apply {
-            text = formatDateOrEmpty(item.createdAt)
-            setTextColor(ContextCompat.getColor(context, R.color.profile_text))
-            textSize = 16f
-            setTypeface(typeface, Typeface.BOLD)
-        })
-
-        texts.addView(TextView(context).apply {
-            text = getString(R.string.weight_history_item_subtitle)
-            setTextColor(ContextCompat.getColor(context, R.color.profile_subtext))
-            textSize = 13f
-        })
-
-        row.addView(
-            texts,
-            LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+    private fun renderHistory(state: WeightTrackingState) {
+        historyRenderer.render(
+            items = state.visibleHistoryItems,
+            selectedItemId = state.selectedHistoryItemId
         )
-
-        row.addView(
-            TextView(context).apply {
-                text = getString(R.string.weight_value_format, formatWeightKg(item.weightKg))
-                setTextColor(ContextCompat.getColor(context, R.color.profile_text))
-                textSize = 17f
-                setTypeface(typeface, Typeface.BOLD)
-                gravity = Gravity.CENTER
-            },
-            LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        )
-
-        row.addView(
-            TextView(context).apply {
-                text = "›"
-                setTextColor(ContextCompat.getColor(context, R.color.profile_subtext))
-                textSize = 28f
-                gravity = Gravity.CENTER
-            },
-            LinearLayout.LayoutParams(dp(28), ViewGroup.LayoutParams.WRAP_CONTENT)
-        )
-
-        return row
     }
 
-    private fun historyIconFor(trend: WeightTrend): Int {
-        return when (trend) {
-            WeightTrend.UP -> R.drawable.ic_arrow_upward
-            WeightTrend.DOWN -> R.drawable.ic_arrow_downward
-            WeightTrend.SAME -> R.drawable.ic_history
-        }
-    }
-
-    private fun historyColorFor(trend: WeightTrend): Int {
-        return when (trend) {
-            WeightTrend.UP -> ContextCompat.getColor(requireContext(), R.color.fitto_orange)
-            WeightTrend.DOWN -> ContextCompat.getColor(requireContext(), R.color.fitto_green)
-            WeightTrend.SAME -> ContextCompat.getColor(requireContext(), R.color.profile_subtext)
-        }
-    }
-
-    private fun refreshSelectedHistoryPreview() {
-        val selectedId = selectedHistoryItemId ?: return
-        val selectedItem = historyItems.firstOrNull { it.id == selectedId }
-        if (selectedItem == null) {
-            selectedHistoryItemId = null
-            previewHistoryItem = null
-        } else {
-            previewHistoryItem = selectedItem
-        }
+    private fun onHistoryItemSelected(itemId: String) {
+        val selectedState = weightController.selectHistoryItem(itemId)
+        clearFocusedWeightInput()
+        renderHistory(selectedState)
+        showMainScreen(selectedState)
     }
 
     private fun clearHistoryPreview() {
-        selectedHistoryItemId = null
-        previewHistoryItem = null
+        val state = weightController.clearHistoryPreview()
         clearFocusedWeightInput()
-        bindEditableWeight()
-        bindHistoryList(historyItems)
+        bindEditableWeight(state, forceInputBinding = true)
+        renderHistory(state)
 
         mainScrollView.post {
             mainScrollView.smoothScrollTo(0, 0)
@@ -572,37 +453,36 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
 
     private fun showHistoryScreen() {
         clearFocusedWeightInput()
-        isHistoryScreenVisible = true
-
-        toolbar.title = getString(R.string.weight_history_title)
-        historyMenuItem?.isVisible = false
-
-        mainScrollView.isVisible = false
-        historyScrollView.isVisible = true
+        val state = weightController.showHistory()
+        renderScreen(state)
 
         historyScrollView.post {
             historyScrollView.scrollTo(0, 0)
         }
     }
 
-    private fun showMainScreen() {
-        isHistoryScreenVisible = false
-
-        toolbar.title = getString(R.string.profile_menu_weight)
-        historyMenuItem?.isVisible = true
-
-        historyScrollView.isVisible = false
-        mainScrollView.isVisible = true
-
-        if (previewHistoryItem == null) {
-            bindEditableWeight()
+    private fun showMainScreen(state: WeightTrackingState = weightController.showCurrent()) {
+        val currentState = if (state.screen == WeightTrackingScreen.CURRENT) {
+            state
         } else {
-            bindHistoryPreview()
+            weightController.showCurrent()
         }
+        renderScreen(currentState)
+        renderWeightState(currentState, forceInputBinding = true)
 
         mainScrollView.post {
             mainScrollView.smoothScrollTo(0, 0)
         }
+    }
+
+    private fun renderScreen(state: WeightTrackingState) {
+        val isHistoryVisible = state.screen == WeightTrackingScreen.HISTORY
+        toolbar.title = getString(
+            if (isHistoryVisible) R.string.weight_history_title else R.string.profile_menu_weight
+        )
+        historyMenuItem?.isVisible = !isHistoryVisible
+        mainScrollView.isVisible = !isHistoryVisible
+        historyScrollView.isVisible = isHistoryVisible
     }
 
     private fun isTouchOutsideView(event: MotionEvent, target: View): Boolean {
@@ -624,19 +504,6 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
             DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()).format(Date(timestamp))
         } else {
             getString(R.string.profile_body_measurements_no_date)
-        }
-    }
-
-    private fun roundedDrawable(
-        color: Int,
-        strokeColor: Int,
-        radiusDp: Int
-    ): android.graphics.drawable.GradientDrawable {
-        return android.graphics.drawable.GradientDrawable().apply {
-            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-            cornerRadius = dp(radiusDp).toFloat()
-            setColor(color)
-            setStroke(dp(1), strokeColor)
         }
     }
 
