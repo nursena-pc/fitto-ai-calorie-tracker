@@ -1,6 +1,5 @@
 package com.example.fitto.feature_home.presentation.social
 
-import com.google.firebase.firestore.Source
 import android.content.Context
 import android.net.Uri
 import java.io.File
@@ -12,13 +11,11 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import com.google.firebase.storage.StorageMetadata
@@ -49,6 +46,20 @@ class SocialRepository {
                 realtimeDatabase = realtimeDatabase
             ),
             threadSource = FirebaseSocialThreadObservationSource(
+                auth = auth,
+                firestore = firestore,
+                loadUsersByIds = ::getUsersByIds
+            )
+        )
+    }
+    private val postObservationCoordinator by lazy {
+        SocialPostObservationCoordinator(
+            feedSource = FirebaseSocialFeedObservationSource(
+                auth = auth,
+                firestore = firestore,
+                loadUsersByIds = ::getUsersByIds
+            ),
+            contentSource = FirebaseSocialPostContentObservationSource(
                 auth = auth,
                 firestore = firestore,
                 loadUsersByIds = ::getUsersByIds
@@ -101,189 +112,12 @@ class SocialRepository {
         conversationObservationCoordinator.setTyping(threadId, isTyping)
     }
 
-    fun observeFeed(): Flow<List<SocialPost>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (SocialFeedResolver.shouldSkipFeed(currentUserId)) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val sourcePostMaps = mutableMapOf<String, Map<String, SocialPost>>()
-        val registrations = mutableListOf<ListenerRegistration>()
-
-        fun emitMergedPosts() {
-            trySend(SocialFeedResolver.mergeSourcePosts(sourcePostMaps))
-        }
-
-        fun attachSource(
-            key: String,
-            query: Query,
-            includePost: (SocialPost) -> Boolean
-        ) {
-            val registration = query.addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    sourcePostMaps[key] = emptyMap()
-                    emitMergedPosts()
-                    return@addSnapshotListener
-                }
-
-                val rawPosts = snapshot
-                    ?.documents
-                    .orEmpty()
-                    .mapNotNull { document ->
-                        mapSocialPostDocument(
-                            document = document,
-                            currentUserId = currentUserId
-                        )
-                    }
-                    .filter(includePost)
-
-                launch {
-                    sourcePostMaps[key] = SocialFeedResolver.sourcePostMap(
-                        hydratePostAuthors(rawPosts)
-                    )
-                    emitMergedPosts()
-                }
-            }
-
-            registrations += registration
-        }
-
-        val followingIds = firestore.collection("follows")
-            .whereEqualTo("followerId", currentUserId)
-            .get()
-            .await()
-            .documents
-            .map { document -> document.getString("followingId") }
-            .let(SocialFeedResolver::followingIds)
-
-        // Herkesin görebileceği topluluk gönderileri
-        attachSource(
-            key = "community",
-            query = firestore.collection("posts")
-                .whereEqualTo("visibility", POST_VISIBILITY_COMMUNITY)
-                .whereEqualTo("isDraft", false),
-            includePost = { true }
-        )
-
-        // Benim taslak olmayan bütün gönderilerim: private/followers/community olabilir
-        attachSource(
-            key = "my_posts",
-            query = firestore.collection("posts")
-                .whereEqualTo("userId", currentUserId)
-                .whereEqualTo("isDraft", false),
-            includePost = { true }
-        )
-
-        // Takip ettiğim kişilerin followers gönderileri
-        SocialFeedResolver.followingLookupChunks(followingIds)
-            .forEachIndexed { index, chunk ->
-                if (chunk.isNotEmpty()) {
-                    attachSource(
-                        key = "following_$index",
-                        query = firestore.collection("posts")
-                            .whereEqualTo("visibility", POST_VISIBILITY_FOLLOWERS)
-                            .whereEqualTo("isDraft", false)
-                            .whereIn("userId", chunk),
-                        includePost = { true }
-                    )
-                }
-            }
-
-        awaitClose {
-            registrations.forEach { registration ->
-                registration.remove()
-            }
-        }
-    }
-    private fun mapSocialPostDocument(
-        document: DocumentSnapshot,
-        currentUserId: String
-    ): SocialPost? {
-        return SocialPostDocumentResolver.resolve(
-            id = document.id,
-            currentUserId = currentUserId,
-            userId = document.getString("userId"),
-            userName = document.getString("userName"),
-            userPhotoUrl = document.getString("userPhotoUrl"),
-            fallbackPhotoUrl = document.getString("photoUrl"),
-            content = document.getString("content"),
-            imageUrl = document.getString("imageUrl"),
-            mealInfo = document.getString("mealInfo"),
-            calories = document.getLong("calories"),
-            likesCount = document.getLong("likesCount"),
-            commentsCount = document.getLong("commentsCount"),
-            createdAt = document.getLong("createdAt"),
-            likedBy = document.get("likedBy"),
-            savedBy = document.get("savedBy"),
-            allowComments = document.getBoolean("allowComments"),
-            visibility = document.getString("visibility"),
-            tags = document.get("tags"),
-            isDraft = document.getBoolean("isDraft"),
-            postType = document.getString("postType"),
-            recipeId = document.getString("recipeId"),
-            recipeTitle = document.getString("recipeTitle"),
-            recipeImageResId = document.getLong("recipeImageResId"),
-            recipeDuration = document.getString("recipeDuration"),
-            recipeServing = document.getString("recipeServing"),
-            recipeCalories = document.getLong("recipeCalories"),
-            recipeCategory = document.getString("recipeCategory"),
-            recipeSourceTag = document.getString("recipeSourceTag"),
-            recipeDescription = document.getString("recipeDescription"),
-            recipeIngredients = document.get("recipeIngredients"),
-            recipeSteps = document.get("recipeSteps")
-        )
+    fun observeFeed(): Flow<List<SocialPost>> {
+        return postObservationCoordinator.observeFeed()
     }
 
-    private suspend fun hydratePostAuthors(posts: List<SocialPost>): List<SocialPost> {
-        val users = getUsersByIds(SocialAuthorHydrationResolver.postAuthorIds(posts))
-        return SocialAuthorHydrationResolver.hydratePosts(posts, users)
-    }
-
-    private suspend fun hydrateCommentAuthors(comments: List<SocialComment>): List<SocialComment> {
-        val users = getUsersByIds(SocialAuthorHydrationResolver.commentAuthorIds(comments))
-        return SocialAuthorHydrationResolver.hydrateComments(comments, users)
-    }
-
-    fun observeComments(postId: String): Flow<List<SocialComment>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        val listener = firestore.collection("posts")
-            .document(postId)
-            .collection("comments")
-            .orderBy("createdAt", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val comments = snapshot?.documents?.map { doc ->
-                    SocialCommentDocumentResolver.resolve(
-                        id = doc.id,
-                        postId = postId,
-                        currentUserId = currentUserId,
-                        userId = doc.getString("userId"),
-                        userName = doc.getString("userName"),
-                        userPhotoUrl = doc.getString("userPhotoUrl"),
-                        fallbackPhotoUrl = doc.getString("photoUrl"),
-                        text = doc.getString("text"),
-                        parentCommentId = doc.getString("parentCommentId"),
-                        likesCount = doc.getLong("likesCount"),
-                        replyCount = doc.getLong("replyCount"),
-                        likedBy = doc.get("likedBy"),
-                        createdAt = doc.getLong("createdAt")
-                    )
-                }.orEmpty()
-
-                launch {
-                    trySend(hydrateCommentAuthors(comments))
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observeComments(postId: String): Flow<List<SocialComment>> {
+        return postObservationCoordinator.observeComments(postId)
     }
 
     fun observeMessageThreads(): Flow<List<MessageThreadUiModel>> {
@@ -328,10 +162,7 @@ class SocialRepository {
         batch.commit().await()
     }
     suspend fun refreshFeedFromServer() {
-        firestore.collection("posts")
-            .orderBy("createdAt", Query.Direction.DESCENDING)
-            .get(Source.SERVER)
-            .await()
+        postObservationCoordinator.refreshFeedFromServer()
     }
 
     suspend fun getGroupSettings(threadId: String): GroupSettingsUiModel {
@@ -2004,169 +1835,24 @@ class SocialRepository {
     }
 
 
-    fun observeMyProfilePosts(): Flow<List<SocialPost>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (currentUserId.isBlank()) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection("posts")
-            .whereEqualTo("userId", currentUserId)
-            .whereEqualTo("isDraft", false)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val posts = SocialPostListResolver.profilePosts(
-                    snapshot?.documents.orEmpty()
-                        .mapNotNull { document ->
-                            mapSocialPostDocument(
-                                document = document,
-                                currentUserId = currentUserId
-                            )
-                        }
-                )
-
-                launch {
-                    trySend(hydratePostAuthors(posts))
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observeMyProfilePosts(): Flow<List<SocialPost>> {
+        return postObservationCoordinator.observeMyProfilePosts()
     }
 
-    fun observeMyDraftPosts(): Flow<List<SocialPost>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (currentUserId.isBlank()) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection("posts")
-            .whereEqualTo("userId", currentUserId)
-            .whereEqualTo("isDraft", true)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val drafts = SocialPostListResolver.draftPosts(
-                    snapshot?.documents.orEmpty()
-                        .mapNotNull { document ->
-                            mapSocialPostDocument(
-                                document = document,
-                                currentUserId = currentUserId
-                            )
-                        }
-                )
-
-                launch {
-                    trySend(hydratePostAuthors(drafts))
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observeMyDraftPosts(): Flow<List<SocialPost>> {
+        return postObservationCoordinator.observeMyDraftPosts()
     }
 
-    fun observeSavedPosts(): Flow<List<SocialPost>> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (currentUserId.isBlank()) {
-            trySend(emptyList())
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection("posts")
-            .whereArrayContains("savedBy", currentUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(emptyList())
-                    return@addSnapshotListener
-                }
-
-                val posts = SocialPostListResolver.savedPosts(
-                    snapshot?.documents.orEmpty()
-                        .mapNotNull { document ->
-                            mapSocialPostDocument(
-                                document = document,
-                                currentUserId = currentUserId
-                            )
-                        }
-                )
-
-                launch {
-                    trySend(hydratePostAuthors(posts))
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observeSavedPosts(): Flow<List<SocialPost>> {
+        return postObservationCoordinator.observeSavedPosts()
     }
 
-
-    fun observePost(postId: String): Flow<SocialPost?> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (postId.isBlank() || currentUserId.isBlank()) {
-            trySend(null)
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection("posts")
-            .document(postId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    trySend(null)
-                    return@addSnapshotListener
-                }
-
-                val post = SocialPostListResolver.visiblePost(
-                    post = snapshot
-                        ?.takeIf { document -> document.exists() }
-                        ?.let { document ->
-                            mapSocialPostDocument(
-                                document = document,
-                                currentUserId = currentUserId
-                            )
-                        },
-                    currentUserId = currentUserId
-                )
-
-                launch {
-                    trySend(post?.let { hydratePostAuthors(listOf(it)).firstOrNull() })
-                }
-            }
-
-        awaitClose { listener.remove() }
+    fun observePost(postId: String): Flow<SocialPost?> {
+        return postObservationCoordinator.observePost(postId)
     }
 
     suspend fun getPostById(postId: String): SocialPost? {
-        val currentUserId = auth.currentUser?.uid.orEmpty()
-
-        if (postId.isBlank() || currentUserId.isBlank()) return null
-
-        val snapshot = firestore.collection("posts")
-            .document(postId)
-            .get()
-            .await()
-
-        if (!snapshot.exists()) return null
-
-        val post = mapSocialPostDocument(
-            document = snapshot,
-            currentUserId = currentUserId
-        ) ?: return null
-
-        return hydratePostAuthors(listOf(post)).firstOrNull()
+        return postObservationCoordinator.getPostById(postId)
     }
 
     suspend fun updateDraftPost(
