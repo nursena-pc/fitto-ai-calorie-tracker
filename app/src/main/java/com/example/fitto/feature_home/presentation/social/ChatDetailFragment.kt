@@ -52,15 +52,22 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
     private val handler = Handler(Looper.getMainLooper())
     private val messageComposerController = ChatMessageComposerController()
-    private var typingDotIndex = 0
-    private var currentTypingUsers: List<TypingUserUiModel> = emptyList()
+    private val headerPresentationController by lazy(LazyThreadSafetyMode.NONE) {
+        ChatHeaderPresentationController(
+            isGroup = isGroup,
+            memberCount = memberCount,
+            initialTitle = threadTitle,
+            initialInitials = threadInitials,
+            initialPhotoUrl = threadPhotoUrl
+        )
+    }
     private lateinit var mediaController: ChatMediaController
+    private var _headerRenderer: ChatHeaderRenderer? = null
+    private val headerRenderer get() = _headerRenderer!!
     private val messagePresentationController by lazy(LazyThreadSafetyMode.NONE) {
         ChatMessagePresentationController(highlightMessageId)
     }
     private var latestThread: MessageThreadUiModel? = null
-    private var currentThreadPhotoUrl: String? = null
-    private var lastPresence: PresenceStatusUiModel? = null
     private var isCurrentChatBlocked = false
     private var isOtherUserDeleted = false
     private var latestMessages: List<ChatMessageUiModel> = emptyList()
@@ -88,8 +95,11 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         }
     private val typingAnimationRunnable = object : Runnable {
         override fun run() {
-            updateTypingText(currentTypingUsers)
-            if (currentTypingUsers.isNotEmpty()) {
+            val presentation = headerPresentationController.onTypingAnimationTick()
+            if (_binding != null) {
+                headerRenderer.renderSubtitle(presentation.subtitle)
+            }
+            if (presentation.shouldAnimateTyping) {
                 handler.postDelayed(this, TYPING_ANIMATION_DELAY_MILLIS)
             }
         }
@@ -154,7 +164,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentChatDetailBinding.bind(view)
-        currentThreadPhotoUrl = threadPhotoUrl
+        _headerRenderer = ChatHeaderRenderer(binding)
         mediaController = createMediaController()
 
         setupHeader()
@@ -176,7 +186,10 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             val updatedName = bundle.getString(GroupEditNameFragment.BUNDLE_KEY_GROUP_NAME).orEmpty()
 
             if (updatedName.isNotBlank()) {
-                binding.chatTitleText.text = updatedName
+                val presentation = headerPresentationController.updateTitle(updatedName)
+                if (selectedMessage == null) {
+                    headerRenderer.renderTitle(presentation)
+                }
                 latestThread = latestThread?.copy(title = updatedName)
             }
         }
@@ -197,9 +210,9 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             val updatedPhotoUrl = bundle.getString(GroupInfoFragment.BUNDLE_KEY_GROUP_PHOTO_URL)
 
             if (updatedThreadId == threadId) {
-                currentThreadPhotoUrl = updatedPhotoUrl
+                val presentation = headerPresentationController.updatePhoto(updatedPhotoUrl)
                 latestThread = latestThread?.copy(photoUrl = updatedPhotoUrl)
-                updateHeaderPhoto()
+                headerRenderer.renderAvatar(presentation)
             }
         }
     }
@@ -218,36 +231,14 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         }
     }
     private fun setupHeader() = with(binding) {
-        chatTitleText.text = threadTitle
-        chatInitialsText.text = threadInitials
-
-        updateHeaderPhoto()
+        val presentation = headerPresentationController.currentPresentation
+        headerRenderer.renderIdentity(presentation)
+        headerRenderer.renderStatus(presentation)
 
         chatSubtitleText.isVisible = true
-        chatSubtitleText.text = if (isGroup) {
-            getString(R.string.chat_group_members, memberCount)
-        } else {
-            getString(R.string.chat_offline)
-        }
-
         chatInfoButton.isVisible = false
         chatDeleteButton.isVisible = false
         updateMoreButtonVisibility()
-    }
-
-    private fun updateHeaderPhoto() = with(binding) {
-        val displayPhotoUrl = currentThreadPhotoUrl ?: threadPhotoUrl
-        val hasPhoto = !displayPhotoUrl.isNullOrBlank()
-
-        chatAvatarImage.isVisible = hasPhoto
-        chatGroupIcon.isVisible = isGroup && !hasPhoto
-        chatInitialsText.isVisible = !hasPhoto && !isGroup
-
-        if (hasPhoto) {
-            chatAvatarImage.load(displayPhotoUrl)
-        } else {
-            chatAvatarImage.setImageDrawable(null)
-        }
     }
 
     private fun setupRecyclerView() {
@@ -760,7 +751,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
             unreadCount = 0,
             participantIds = emptyList(),
             otherParticipantId = null,
-            photoUrl = currentThreadPhotoUrl ?: threadPhotoUrl,
+            photoUrl = headerPresentationController.currentPresentation.photoUrl,
             memberCount = memberCount
         )
 
@@ -819,10 +810,11 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                repository.observeUserPresence(otherParticipantId.orEmpty()).collect { presence: PresenceStatusUiModel ->
-                    lastPresence = presence
-                    if (_binding == null || currentTypingUsers.isNotEmpty()) return@collect
-                    binding.chatSubtitleText.text = formatPresenceText(presence)
+                repository.observeUserPresence(otherParticipantId.orEmpty()).collect { presence ->
+                    val presentation = headerPresentationController.onPresenceChanged(presence)
+                    if (_binding != null) {
+                        headerRenderer.renderStatus(presentation)
+                    }
                 }
             }
         }
@@ -831,9 +823,19 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private fun observeTypingUsers() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                repository.observeTypingUsers(threadId).collect { users: List<TypingUserUiModel> ->
-                    currentTypingUsers = users
-                    updateTypingUi(users)
+                repository.observeTypingUsers(threadId).collect { users ->
+                    val presentation = headerPresentationController.onTypingUsersChanged(users)
+                    if (_binding == null) return@collect
+
+                    handler.removeCallbacks(typingAnimationRunnable)
+                    headerRenderer.renderStatus(presentation)
+
+                    if (presentation.shouldAnimateTyping) {
+                        handler.postDelayed(
+                            typingAnimationRunnable,
+                            TYPING_ANIMATION_DELAY_MILLIS
+                        )
+                    }
                 }
             }
         }
@@ -1156,78 +1158,6 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         }
     }
 
-    private fun updateTypingUi(users: List<TypingUserUiModel>) = with(binding) {
-        val hasTyping = users.isNotEmpty()
-        chatTypingIndicatorContainer.isVisible = hasTyping
-
-        handler.removeCallbacks(typingAnimationRunnable)
-
-        if (!hasTyping) {
-            if (isGroup) {
-                chatSubtitleText.text = getString(R.string.chat_group_members, memberCount)
-            } else {
-                chatSubtitleText.text = lastPresence?.let { formatPresenceText(it) }
-                    ?: getString(R.string.chat_offline)
-            }
-            return@with
-        }
-
-        val firstUser = users.first()
-        val hasPhoto = !firstUser.photoUrl.isNullOrBlank()
-        chatTypingAvatarImage.isVisible = hasPhoto
-        chatTypingAvatarInitialText.isVisible = !hasPhoto
-        chatTypingAvatarInitialText.text = firstUser.userName.firstOrNull()?.uppercase() ?: "F"
-
-        if (hasPhoto) {
-            ProfilePhotoLoader.load(
-                imageView = chatTypingAvatarImage,
-                photoUrl = firstUser.photoUrl,
-                placeholderResId = R.drawable.ic_profile_person,
-                errorResId = R.drawable.ic_profile_person
-            )
-        } else {
-            chatTypingAvatarImage.setImageDrawable(null)
-        }
-
-        typingDotIndex = 0
-        updateTypingText(users)
-        handler.postDelayed(typingAnimationRunnable, TYPING_ANIMATION_DELAY_MILLIS)
-    }
-
-    private fun updateTypingText(users: List<TypingUserUiModel>) {
-        if (_binding == null || users.isEmpty()) return
-
-        val dots = when (typingDotIndex % 4) {
-            0 -> ""
-            1 -> "."
-            2 -> ".."
-            else -> "..."
-        }
-        typingDotIndex++
-
-        val text = if (isGroup) {
-            if (users.size == 1) {
-                getString(R.string.chat_group_typing_one, users.first().userName, dots)
-            } else {
-                getString(R.string.chat_group_typing_many, users.size, dots)
-            }
-        } else {
-            getString(R.string.chat_typing, dots)
-        }
-
-        binding.chatTypingText.text = text
-        binding.chatSubtitleText.text = text
-    }
-
-    private fun formatPresenceText(presence: PresenceStatusUiModel): String {
-        if (presence.isOnline) return getString(R.string.chat_online)
-        if (presence.lastChanged <= 0L) return getString(R.string.chat_offline)
-
-        val timeText = SimpleDateFormat("HH:mm", Locale("tr", "TR")).format(Date(presence.lastChanged))
-        return getString(R.string.chat_last_seen, timeText)
-    }
-
-
 
     private val selectedMessage: ChatMessageUiModel?
         get() = messagePresentationController.selectedMessage
@@ -1434,6 +1364,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         handler.removeCallbacks(typingAnimationRunnable)
         repository.setTyping(threadId, false)
         binding.chatMessagesRecyclerView.adapter = null
+        _headerRenderer = null
         _binding = null
         super.onDestroyView()
     }
