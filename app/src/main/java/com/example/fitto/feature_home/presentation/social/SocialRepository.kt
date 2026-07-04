@@ -4,27 +4,12 @@ import android.content.Context
 import android.net.Uri
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.io.File
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
-
-data class MessageHiddenRange(
-    val userId: String,
-    val startAt: Long,
-    val endAt: Long?
-)
-
-data class DirectThreadBlockState(
-    val isBlocked: Boolean,
-    val hiddenRanges: List<MessageHiddenRange>
-)
-
 
 class SocialRepository {
 
@@ -132,6 +117,19 @@ class SocialRepository {
             membershipSource = FirebaseSocialGroupMembershipSource(
                 auth = auth,
                 firestore = firestore
+            )
+        )
+    }
+    private val moderationCoordinator by lazy {
+        SocialModerationCoordinator(
+            querySource = FirebaseSocialModerationQuerySource(
+                auth = auth,
+                firestore = firestore
+            ),
+            commandSource = FirebaseSocialModerationCommandSource(
+                auth = auth,
+                firestore = firestore,
+                ensureCurrentUserProfile = profileCoordinator::createCurrentUserProfileIfNeeded
             )
         )
     }
@@ -469,235 +467,53 @@ class SocialRepository {
     }
 
     suspend fun getBlockedUsers(): List<SocialUser> {
-        val currentUserId = auth.currentUser?.uid ?: return emptyList()
-
-        val currentUserSnapshot = firestore.collection("users")
-            .document(currentUserId)
-            .get()
-            .await()
-
-        val blockedUserIds = SocialBlockedUserListResolver.blockedUserIds(
-            ids = currentUserSnapshot.getStringListCompat("blockedUserIds"),
-            currentUserId = currentUserId
-        )
-
-        if (blockedUserIds.isEmpty()) return emptyList()
-
-        val usersById = mutableMapOf<String, SocialUser>()
-
-        SocialBlockedUserListResolver.lookupChunks(blockedUserIds).forEach { chunk ->
-            val snapshot = firestore.collection("users")
-                .whereIn(FieldPath.documentId(), chunk)
-                .get()
-                .await()
-
-            snapshot.documents.forEach { document ->
-                usersById[document.id] = SocialBlockedUserListResolver.resolveBlockedUser(
-                    id = document.id,
-                    isDeleted = document.getBoolean("isDeleted"),
-                    userName = document.getString("userName"),
-                    username = document.getString("username"),
-                    displayName = document.getString("displayName"),
-                    name = document.getString("name"),
-                    realName = document.getString("realName"),
-                    email = document.getString("email"),
-                    photoUrl = document.getString("photoUrl"),
-                    bio = document.getString("bio"),
-                    followersCount = document.getLong("followersCount"),
-                    followingCount = document.getLong("followingCount")
-                )
-            }
-        }
-
-        return SocialBlockedUserListResolver.orderBlockedUsers(
-            blockedUserIds = blockedUserIds,
-            usersById = usersById
-        )
+        return moderationCoordinator.getBlockedUsers()
     }
 
     suspend fun reportPost(
         postId: String,
         reason: String
     ) {
-        val userId = auth.currentUser?.uid ?: return
-
-        firestore.collection("reports")
-            .add(
-                SocialModerationPayloadResolver.createPostReportPayload(
-                    postId = postId,
-                    reporterId = userId,
-                    reason = reason,
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-            .await()
+        moderationCoordinator.reportPost(postId, reason)
     }
+
     suspend fun blockUser(
         targetUserId: String,
         threadId: String? = null,
         previewText: String? = null,
         previewCreatedAt: Long? = null
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-
-        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
-
-        createCurrentUserProfileIfNeeded()
-
-        val userRef = firestore.collection("users").document(currentUserId)
-        val now = System.currentTimeMillis()
-
-        userRef.update(
-            SocialModerationPayloadResolver.createBlockUserPayload(
-                targetUserId = targetUserId,
-                threadId = threadId,
-                previewText = previewText,
-                previewCreatedAt = previewCreatedAt,
-                updatedAt = now
-            )
-        ).await()
+        moderationCoordinator.blockUser(
+            targetUserId = targetUserId,
+            threadId = threadId,
+            previewText = previewText,
+            previewCreatedAt = previewCreatedAt
+        )
     }
 
     suspend fun unblockUser(
         targetUserId: String,
         threadId: String? = null
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-
-        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
-
-        val userRef = firestore.collection("users").document(currentUserId)
-        val snapshot = userRef.get().await()
-        val now = System.currentTimeMillis()
-
-        val updates = SocialModerationPayloadResolver.createUnblockBasePayload(
-            targetUserId = targetUserId,
-            updatedAt = now
-        ).toMutableMap()
-
-        fun closeHiddenRangeForThread(targetThreadId: String) {
-            updates.putAll(
-                SocialModerationPayloadResolver.createCloseBlockedThreadPayload(
-                    threadId = targetThreadId,
-                    activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, targetThreadId),
-                    targetUserId = targetUserId,
-                    updatedAt = now
-                )
-            )
-        }
-
-        if (!threadId.isNullOrBlank()) {
-            closeHiddenRangeForThread(threadId)
-        } else {
-            val activeRanges = snapshot.get("activeBlockedMessageRanges") as? Map<*, *>
-
-            activeRanges.orEmpty().forEach { entry ->
-                val targetThreadId = entry.key as? String ?: return@forEach
-                val activeRange = SocialMessageHiddenRangeResolver.readMessageHiddenRange(entry.value) ?: return@forEach
-
-                if (activeRange.userId == targetUserId) {
-                    closeHiddenRangeForThread(targetThreadId)
-                }
-            }
-
-        }
-
-        userRef.update(updates).await()
+        moderationCoordinator.unblockUser(targetUserId, threadId)
     }
 
     suspend fun isUserBlocked(targetUserId: String): Boolean {
-        val currentUserId = auth.currentUser?.uid ?: return false
-
-        if (targetUserId.isBlank()) return false
-
-        val snapshot = firestore.collection("users")
-            .document(currentUserId)
-            .get()
-            .await()
-
-        return SocialDirectThreadBlockStateResolver.isBlocked(
-            blockedUserIds = snapshot.get("blockedUserIds"),
-            targetUserId = targetUserId
-        )
+        return moderationCoordinator.isUserBlocked(targetUserId)
     }
+
     suspend fun getDirectThreadBlockState(
         threadId: String,
         targetUserId: String
     ): DirectThreadBlockState {
-        val currentUserId = auth.currentUser?.uid ?: return DirectThreadBlockState(
-            isBlocked = false,
-            hiddenRanges = emptyList()
-        )
-
-        if (threadId.isBlank() || targetUserId.isBlank()) {
-            return DirectThreadBlockState(
-                isBlocked = false,
-                hiddenRanges = emptyList()
-            )
-        }
-
-        val snapshot = firestore.collection("users")
-            .document(currentUserId)
-            .get()
-            .await()
-
-        val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
-        val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
-
-        return SocialDirectThreadBlockStateResolver.resolve(
-            blockedUserIds = snapshot.get("blockedUserIds"),
-            targetUserId = targetUserId,
-            completedRanges = completedRanges,
-            activeRange = activeRange
-        )
+        return moderationCoordinator.getDirectThreadBlockState(threadId, targetUserId)
     }
 
     fun observeDirectThreadBlockState(
         threadId: String,
         targetUserId: String
-    ): Flow<DirectThreadBlockState> = callbackFlow {
-        val currentUserId = auth.currentUser?.uid
-
-        if (currentUserId.isNullOrBlank() || threadId.isBlank() || targetUserId.isBlank()) {
-            trySend(
-                DirectThreadBlockState(
-                    isBlocked = false,
-                    hiddenRanges = emptyList()
-                )
-            )
-            close()
-            return@callbackFlow
-        }
-
-        val listener = firestore.collection("users")
-            .document(currentUserId)
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || !snapshot.exists()) {
-                    trySend(
-                        DirectThreadBlockState(
-                            isBlocked = false,
-                            hiddenRanges = emptyList()
-                        )
-                    )
-                    return@addSnapshotListener
-                }
-
-                val completedRanges = SocialMessageHiddenRangeResolver.readCompletedHiddenRanges(snapshot, threadId)
-                val activeRange = SocialMessageHiddenRangeResolver.readActiveHiddenRange(snapshot, threadId)
-
-                trySend(
-                    SocialDirectThreadBlockStateResolver.resolve(
-                        blockedUserIds = snapshot.get("blockedUserIds"),
-                        targetUserId = targetUserId,
-                        completedRanges = completedRanges,
-                        activeRange = activeRange
-                    )
-                )
-            }
-
-        awaitClose {
-            listener.remove()
-        }
+    ): Flow<DirectThreadBlockState> {
+        return moderationCoordinator.observeDirectThreadBlockState(threadId, targetUserId)
     }
 
     suspend fun reportUser(
@@ -705,22 +521,9 @@ class SocialRepository {
         threadId: String,
         reason: String
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return
-
-        if (SocialModerationPayloadResolver.shouldSkipTargetAction(currentUserId, targetUserId)) return
-
-        firestore.collection("reports")
-            .add(
-                SocialModerationPayloadResolver.createUserReportPayload(
-                    targetUserId = targetUserId,
-                    reporterId = currentUserId,
-                    threadId = threadId,
-                    reason = reason,
-                    createdAt = System.currentTimeMillis()
-                )
-            )
-            .await()
+        moderationCoordinator.reportUser(targetUserId, threadId, reason)
     }
+
     fun observeUnreadMessageCount(): Flow<Int> {
         return conversationObservationCoordinator.observeUnreadMessageCount()
     }
@@ -812,12 +615,6 @@ class SocialRepository {
 
     suspend fun getFollowing(userId: String): List<SocialUser> {
         return profileCoordinator.getFollowing(userId)
-    }
-
-    private fun DocumentSnapshot.getStringListCompat(field: String): List<String> {
-        return (get(field) as? List<*>)
-            ?.mapNotNull { it as? String }
-            .orEmpty()
     }
 
     companion object {
