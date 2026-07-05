@@ -13,15 +13,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDailyBinding
-import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import com.example.fitto.feature_daily.data.WaterTrackingStore
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
 import com.example.fitto.feature_dietplans.planning.DailyPlannedMealsUiModel
-import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_health.HealthConnectDailySummary
-import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
-import com.example.fitto.feature_meal.model.MealEntryDetailUiModel
 import com.example.fitto.feature_meal.model.MealType
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +35,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private lateinit var navigator: DailyNavigator
     private var currentProfileWeightKg: Double? = null
     private lateinit var sleepTrackingAction: DailySleepTrackingAction
-    private lateinit var dailyAiAnalysisAction: DailyAiAnalysisAction
+    private lateinit var dailyAiDashboardCoordinator: DailyAiDashboardCoordinator
     private lateinit var profileMetricsLoadAction: DailyProfileMetricsLoadAction
     private lateinit var dailySummaryLoadAction: DailySummaryLoadAction
     private lateinit var weeklyProgressLoadAction: DailyWeeklyProgressLoadAction
@@ -63,7 +59,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
     private var currentWaterMl: Int = 0
-    private var currentDailyAiSnapshot: DailyAiSnapshot? = null
     private lateinit var stepCounterAction: DailyStepCounterAction
     private var localStepCount: Long = 0L
     private var waterGoalMl: Int = 2500
@@ -140,7 +135,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         healthConnectSummaryAction = dependencies.healthConnectSummaryAction
         stepCounterAction = dependencies.stepCounterAction
         sleepTrackingAction = dependencies.sleepTrackingAction
-        dailyAiAnalysisAction = dependencies.dailyAiAnalysisAction
+        dailyAiDashboardCoordinator = dependencies.dailyAiDashboardCoordinator
         sleepWeightRenderer = DailySleepWeightRenderer(binding, requireContext())
         weeklyProgressRenderer = DailyWeeklyProgressRenderer(binding, requireContext())
         waterRenderer = DailyWaterRenderer(
@@ -333,164 +328,106 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun handleDailyAiCardClick() {
-        when (val decision = dailyAiAnalysisAction.onCardClicked(currentDailyAiSnapshot)) {
-            DailyAiAnalysisAction.CardClickDecision.PrepareSnapshot -> {
-                renderDailyAiPreparingState()
-                renderMealTotals()
-            }
-
-            is DailyAiAnalysisAction.CardClickDecision.Request -> {
-                launchDailyAiRequest(decision.intent)
-            }
-        }
+        if (!::dailyAiDashboardCoordinator.isInitialized) return
+        renderDailyAiEffects(dailyAiDashboardCoordinator.onCardClicked())
     }
 
-    private fun renderDailyAiDefaultState() {
-        dailyAiCardRenderer?.renderDefaultState()
-    }
-
-    private fun renderDailyAiPreparingState() {
-        dailyAiCardRenderer?.renderPreparingState()
-    }
-
-    private fun renderDailyAiState(snapshot: DailyAiSnapshot?) {
-        if (_binding == null || !::dailyAiAnalysisAction.isInitialized) return
-
-        val resolution = dailyAiAnalysisAction.resolveSnapshot(
-            snapshot = snapshot,
-            selectedDate = selectedDate,
-            today = LocalDate.now()
-        )
-        renderDailyAiSnapshotPresentation(resolution.presentation)
-        resolution.request?.let(::launchDailyAiRequest)
-    }
-
-    private fun renderDailyAiSnapshotPresentation(
-        presentation: DailyAiAnalysisAction.SnapshotPresentation
+    private fun renderDailyAiEffects(
+        effects: List<DailyAiDashboardCoordinator.Effect>
     ) {
-        when (presentation) {
-            DailyAiAnalysisAction.SnapshotPresentation.NoChange -> Unit
-            DailyAiAnalysisAction.SnapshotPresentation.Default -> renderDailyAiDefaultState()
-            is DailyAiAnalysisAction.SnapshotPresentation.Message -> {
-                val subtitle = when (presentation.subtitle) {
-                    DailyAiAnalysisAction.MessageSubtitle.DEFAULT -> {
-                        getString(R.string.daily_ai_default_subtitle)
-                    }
+        if (_binding == null) return
 
-                    DailyAiAnalysisAction.MessageSubtitle.RESULT -> {
-                        getString(R.string.daily_ai_result_subtitle)
-                    }
+        effects.forEach { effect ->
+            when (effect) {
+                DailyAiDashboardCoordinator.Effect.Default -> {
+                    dailyAiCardRenderer?.renderDefaultState()
                 }
-                renderDailyAiMessage(
-                    message = presentation.message,
-                    subtitle = subtitle,
-                    status = presentation.status
-                )
+
+                DailyAiDashboardCoordinator.Effect.Preparing -> {
+                    dailyAiCardRenderer?.renderPreparingState()
+                }
+
+                DailyAiDashboardCoordinator.Effect.RefreshSnapshot -> {
+                    renderMealTotals()
+                }
+
+                is DailyAiDashboardCoordinator.Effect.Loading -> {
+                    dailyAiCardRenderer?.renderLoading(effect.status)
+                }
+
+                is DailyAiDashboardCoordinator.Effect.Message -> {
+                    val subtitle = when (effect.subtitle) {
+                        DailyAiDashboardCoordinator.Subtitle.DEFAULT -> {
+                            getString(R.string.daily_ai_default_subtitle)
+                        }
+
+                        DailyAiDashboardCoordinator.Subtitle.RESULT -> {
+                            getString(R.string.daily_ai_result_subtitle)
+                        }
+                    }
+                    dailyAiCardRenderer?.renderMessage(
+                        message = effect.message,
+                        subtitle = subtitle,
+                        status = effect.status
+                    )
+                }
+
+                is DailyAiDashboardCoordinator.Effect.RateLimited -> {
+                    dailyAiCardRenderer?.renderMessage(
+                        message = getString(R.string.daily_ai_error_rate_limited),
+                        subtitle = effect.localMessage,
+                        status = effect.status
+                    )
+                }
+
+                is DailyAiDashboardCoordinator.Effect.Failure -> {
+                    dailyAiCardRenderer?.renderMessage(
+                        message = effect.localMessage,
+                        subtitle = getString(
+                            DailyAiMessageTextResolver.resolveErrorMessageRes(
+                                effect.failureKind
+                            )
+                        ),
+                        status = effect.status
+                    )
+                }
+
+                is DailyAiDashboardCoordinator.Effect.StructuredResult -> {
+                    dailyAiCardRenderer?.renderStructuredResult(
+                        analysis = effect.analysis,
+                        fallbackMessage = getString(
+                            DailyAiMessageTextResolver.resolveLocalMessageRes(
+                                effect.snapshot.triggerType
+                            )
+                        ),
+                        subtitle = getString(R.string.daily_ai_result_subtitle),
+                        status = DailyAiPromptDataMapper.localStatus(
+                            effect.snapshot.triggerType
+                        )
+                    )
+                }
+
+                is DailyAiDashboardCoordinator.Effect.Execute -> {
+                    launchDailyAiRequest(effect.request)
+                }
             }
         }
     }
 
     private fun launchDailyAiRequest(
-        intent: DailyAiAnalysisAction.RequestIntent
+        request: DailyAiAnalysisAction.PreparedRequest
     ) {
-        if (_binding == null || !::dailyAiAnalysisAction.isInitialized) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            val result = dailyAiDashboardCoordinator.execute(request)
+            if (_binding == null) return@launch
 
-        when (val preparation = dailyAiAnalysisAction.prepareRequest(intent)) {
-            is DailyAiAnalysisAction.RequestPreparation.Cached -> {
-                renderDailyAiMessage(
-                    message = preparation.message,
-                    subtitle = getString(R.string.daily_ai_result_subtitle),
-                    status = preparation.status
+            renderDailyAiEffects(
+                dailyAiDashboardCoordinator.onRequestCompleted(
+                    result = result,
+                    selectedDate = selectedDate
                 )
-            }
-
-            is DailyAiAnalysisAction.RequestPreparation.BlockedByCooldown -> {
-                renderDailyAiMessage(
-                    message = getString(R.string.daily_ai_error_rate_limited),
-                    subtitle = preparation.localMessage,
-                    status = preparation.status
-                )
-            }
-
-            is DailyAiAnalysisAction.RequestPreparation.AlreadyLoading -> {
-                renderDailyAiLoading(preparation.status)
-            }
-
-            is DailyAiAnalysisAction.RequestPreparation.Start -> {
-                renderDailyAiLoading(
-                    DailyAiPromptDataMapper.localStatus(preparation.request.snapshot.triggerType)
-                )
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val result = dailyAiAnalysisAction.execute(preparation.request)
-                    if (_binding == null) return@launch
-
-                    when (result) {
-                        is DailyAiAnalysisAction.RequestResult.Success -> {
-                            renderDailyAiStructuredResult(
-                                analysis = result.analysis,
-                                snapshot = result.snapshot,
-                                subtitle = getString(R.string.daily_ai_result_subtitle)
-                            )
-                        }
-
-                        is DailyAiAnalysisAction.RequestResult.Failure -> {
-                            renderDailyAiMessage(
-                                message = result.localMessage,
-                                subtitle = getString(
-                                    DailyAiMessageTextResolver.resolveErrorMessageRes(
-                                        result.failureKind
-                                    )
-                                ),
-                                status = DailyAiPromptDataMapper.localStatus(
-                                    result.snapshot.triggerType
-                                )
-                            )
-                        }
-
-                        DailyAiAnalysisAction.RequestResult.Stale -> {
-                            renderDailyAiState(currentDailyAiSnapshot)
-                        }
-                    }
-                }
-            }
+            )
         }
-    }
-
-    private fun renderDailyAiLoading(
-        status: AiDailyStatusLevel = currentDailyAiSnapshot?.let { snapshot ->
-            DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
-        } ?: AiDailyStatusLevel.GREEN
-    ) {
-        dailyAiCardRenderer?.renderLoading(status)
-    }
-
-    private fun renderDailyAiMessage(
-        message: String,
-        subtitle: String = getString(R.string.daily_ai_default_subtitle),
-        status: AiDailyStatusLevel = currentDailyAiSnapshot?.let { snapshot ->
-            DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
-        } ?: AiDailyStatusLevel.GREEN
-    ) {
-        dailyAiCardRenderer?.renderMessage(
-            message = message,
-            subtitle = subtitle,
-            status = status
-        )
-    }
-
-    private fun renderDailyAiStructuredResult(
-        analysis: com.example.fitto.feature_daily.ai.AiDailyAnalysisResult,
-        snapshot: DailyAiSnapshot,
-        subtitle: String = getString(R.string.daily_ai_result_subtitle)
-    ) {
-        dailyAiCardRenderer?.renderStructuredResult(
-            analysis = analysis,
-            fallbackMessage = getString(
-                DailyAiMessageTextResolver.resolveLocalMessageRes(snapshot.triggerType)
-            ),
-            subtitle = subtitle,
-            status = DailyAiPromptDataMapper.localStatus(snapshot.triggerType)
-        )
     }
 
     private fun renderSleepCard(
@@ -693,7 +630,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         dailyProteinProgress.progress = 0
         dailyFatProgress.progress = 0
         weeklyWaterProgress.progress = 0
-        renderDailyAiDefaultState()
+        dailyAiCardRenderer?.renderDefaultState()
     }
 
     private fun renderActivePlan() {
@@ -812,24 +749,18 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
             if (_binding == null || selectedDate != requestedDate) return@launch
 
-            val profile = result.profile
             val nutritionTargets = result.nutritionTargets
             val targetCalories = nutritionTargets.dailyCalories
-
             val oldTargetCalories = currentDailyTargetCalories
 
             currentDailyTargetCalories = targetCalories
             currentProteinTargetGrams = nutritionTargets.proteinGrams
             currentCarbTargetGrams = nutritionTargets.carbGrams
             currentFatTargetGrams = nutritionTargets.fatGrams
-
-            val byMealType = result.mealSummariesByType
-
             currentProfileWeightKg = result.resolvedWeightKg
             currentWeightKg = result.displayWeightKg
 
-            val summaryState = result.summaryState
-            val energyBalance = summaryState.energyBalance
+            val energyBalance = result.summaryState.energyBalance
             val activitySource = DailyActivityPresentationResolver.resolveSource(
                 healthConnectSummary = healthConnectSummary,
                 healthActiveCalories = energyBalance.syncedActivityCalories,
@@ -840,42 +771,17 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 result = result,
                 activitySource = activitySource
             )
-
-            val dailyAiMeals = buildDailyAiMeals(
-                mealSummariesByType = byMealType,
-                mealDetailsByType = result.mealDetailsByType
+            renderDailyAiEffects(
+                dailyAiDashboardCoordinator.onSummaryLoaded(
+                    request = DailyAiSummarySnapshotRequest(
+                        dateIso = selectedDateIso,
+                        summary = result,
+                        waterMl = currentWaterMl,
+                        waterGoalMl = waterGoalMl
+                    ),
+                    selectedDate = selectedDate
+                )
             )
-
-            currentDailyAiSnapshot = DailyAiSnapshotResolver.resolve(
-                dateIso = selectedDateIso,
-                userName = DailyAiUserNameResolver.resolve(
-                    displayName = profile?.displayName,
-                    userName = profile?.userName,
-                    fallbackName = getString(R.string.app_name)
-                ),
-                goalType = profile?.goalType.orEmpty(),
-                nutritionTargets = nutritionTargets,
-                summaryState = summaryState,
-                waterMl = currentWaterMl,
-                waterGoalMl = waterGoalMl,
-                meals = dailyAiMeals,
-                exerciseLogCount = result.exerciseLogCount,
-                exerciseSummaryText = buildDailyAiExerciseSummary(
-                    result.exerciseLogs,
-                    energyBalance.syncedActivityCalories
-                ),
-                dietPreferences = ProfilePreferenceStore.nutritionDietPreferencesText(
-                    requireContext()
-                ),
-                allergies = ProfilePreferenceStore.getNutritionAllergies(requireContext()),
-                dislikedFoods = ProfilePreferenceStore.getNutritionDislikedFoods(requireContext()),
-                mealRoutine = ProfilePreferenceStore.nutritionMealRoutineText(
-                    requireContext()
-                ),
-                snackMealLabel = getString(R.string.daily_snack)
-            )
-
-            renderDailyAiState(currentDailyAiSnapshot)
 
             if (oldTargetCalories != targetCalories) {
                 refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
@@ -883,72 +789,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         }
     }
 
-    private fun buildDailyAiMeals(
-        mealSummariesByType: Map<String, com.example.fitto.data.local.model.DailyMealSummary>,
-        mealDetailsByType: Map<MealType, List<MealEntryDetailUiModel>>
-    ): List<DailyAiMealSnapshot> {
-        return DailyAiMealSnapshotMapper.buildMeals(
-            mealDefinitions = DailyAiMealDefinitionResolver.resolveMealDefinitions().map { definition ->
-                DailyAiMealSnapshotMapper.MealDefinition(
-                    key = definition.key,
-                    label = getString(definition.labelRes)
-                )
-            },
-            mealSummariesByType = mealSummariesByType,
-            mealDetailsByType = mealDetailsByType.mapKeys { (mealType, _) ->
-                mealType.argumentValue
-            },
-            unavailableDetailsText = getString(R.string.daily_ai_entry_details_unavailable),
-            maxFoodSummaryChars = DAILY_AI_MEAL_SUMMARY_MAX_CHARS
-        )
-    }
-
-    private fun buildDailyAiExerciseSummary(
-        logs: List<ExerciseLogLocalModel>,
-        syncedActivityCalories: Int
-    ): String {
-        return DailyAiExerciseSummaryBuilder.build(
-            logs = DailyAiExerciseLogMapper.toExerciseLogs(logs),
-            syncedActivityCalories = syncedActivityCalories,
-            itemText = { title, durationMinutes, calories ->
-                getString(
-                    R.string.daily_ai_exercise_summary_item,
-                    title,
-                    durationMinutes,
-                    calories
-                )
-            },
-            withSyncedText = { manualSummary, syncedCalories ->
-                getString(R.string.daily_ai_exercise_summary_with_steps, manualSummary, syncedCalories)
-            },
-            syncedOnlyText = { syncedCalories ->
-                getString(R.string.daily_ai_exercise_summary_synced, syncedCalories)
-            }
-        )
-    }
-
     private fun refreshDailyAiSnapshotForWater() {
-        val currentSnapshot = currentDailyAiSnapshot ?: return
-        val updatedTrigger = DailyAiTriggerResolver.resolve(
-            totalCalories = currentSnapshot.totalCalories,
-            targetCalories = currentSnapshot.dailyCalorieTarget,
-            waterMl = currentWaterMl,
-            waterGoalMl = waterGoalMl,
-            proteinGrams = currentSnapshot.proteinGrams,
-            proteinTargetGrams = currentSnapshot.proteinTargetGrams,
-            meals = currentSnapshot.meals,
-            exerciseLogCount = currentSnapshot.exerciseLogCount,
-            snackMealLabel = getString(R.string.daily_snack)
+        if (!::dailyAiDashboardCoordinator.isInitialized) return
+        renderDailyAiEffects(
+            dailyAiDashboardCoordinator.onWaterChanged(
+                waterMl = currentWaterMl,
+                waterGoalMl = waterGoalMl,
+                selectedDate = selectedDate
+            )
         )
-
-        val updatedSnapshot = currentSnapshot.copy(
-            waterMl = currentWaterMl,
-            waterGoalMl = waterGoalMl,
-            triggerType = updatedTrigger
-        )
-
-        currentDailyAiSnapshot = updatedSnapshot
-        renderDailyAiState(updatedSnapshot)
     }
 
     private fun applyActivePlanTodayOrOpenList() {
@@ -1125,6 +974,5 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         private const val DEFAULT_CARB_TARGET_GRAMS = 280
         private const val DEFAULT_FAT_TARGET_GRAMS = 70
         private const val DEFAULT_PROFILE_WEIGHT_KG = 70.0
-        private const val DAILY_AI_MEAL_SUMMARY_MAX_CHARS = 360
     }
 }
