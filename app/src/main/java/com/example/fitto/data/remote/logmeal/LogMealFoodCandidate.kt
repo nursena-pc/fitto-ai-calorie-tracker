@@ -20,4 +20,9 @@ data class LogMealFoodCandidate(
                 (carbs ?: 0.0) > 0.0 ||
                 (fat ?: 0.0) > 0.0
     }
+
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
 }

@@ -1,10 +1,11 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import java.util.Locale
 
 internal object SocialGroupMetadataUpdateResolver {
 
-    private val turkishLocale = Locale("tr", "TR")
+    private val turkishLocale = AppLocales.TURKISH
 
     fun isGroupParticipant(
         threadType: String?,

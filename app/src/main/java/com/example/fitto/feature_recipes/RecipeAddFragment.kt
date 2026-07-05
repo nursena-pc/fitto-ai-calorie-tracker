@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Gravity
@@ -127,7 +128,7 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
             isChecked = checked
             isCheckedIconVisible = false
             minHeight = if (compact) 30.dp else 34.dp
-            chipCornerRadius = (if (compact) 15 else 17).dp.toFloat()
+            setUniformCornerRadius((if (compact) 15 else 17).dp.toFloat())
             textSize = if (compact) 11f else 12f
             setChipBackgroundColorResource(R.color.chip_selector_bg)
             setTextColor(ContextCompat.getColorStateList(context, R.color.chip_selector_text))
@@ -264,6 +265,7 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
         ViewCompat.requestApplyInsets(binding.addRecipeScrollView)
     }
 
+    @Suppress("DEPRECATION")
     private fun applyRecipeFormKeyboardMode() {
         val window = activity?.window ?: return
         if (previousSoftInputMode == null) {

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.profile
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -200,7 +201,7 @@ class ProfileReminderEditDialogViewFactory {
                 isCheckable = true
                 this.isChecked = isChecked
                 isCheckedIconVisible = false
-                chipCornerRadius = dp(context, 16).toFloat()
+                setUniformCornerRadius(dp(context, 16).toFloat())
                 textSize = 13f
                 maxLines = 1
                 isSingleLine = true

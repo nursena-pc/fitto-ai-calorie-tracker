@@ -1,5 +1,6 @@
 package com.example.fitto.feature_auth.register
 
+import com.example.fitto.core.text.AppLocales
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -273,7 +274,7 @@ Beslenme tercihleri:
 
     private fun Long?.toDateLabel(isEnglish: Boolean): String {
         if (this == null) return label("Seçilmedi", "Not selected", isEnglish)
-        val locale = if (isEnglish) Locale.ENGLISH else Locale("tr", "TR")
+        val locale = if (isEnglish) Locale.ENGLISH else AppLocales.TURKISH
         val formatter = SimpleDateFormat(if (isEnglish) "MMM dd, yyyy" else "dd MMM yyyy", locale)
         val remainingDays = TimeUnit.MILLISECONDS.toDays(this - System.currentTimeMillis())
         return formatter.format(Date(this)) + if (remainingDays >= 0) {

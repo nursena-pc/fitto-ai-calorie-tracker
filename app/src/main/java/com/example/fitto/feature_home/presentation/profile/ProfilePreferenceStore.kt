@@ -1,5 +1,7 @@
 package com.example.fitto.feature_home.presentation.profile
 
+import com.example.fitto.core.platform.ActivityTransitionCompat
+import com.example.fitto.core.text.AppLocales
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -175,7 +177,7 @@ object ProfilePreferenceStore {
                 AppCompatDelegate.setDefaultNightMode(nightModeFor(theme))
             } else {
                 activity.window.decorView.post {
-                    activity.overridePendingTransition(0, 0)
+                    ActivityTransitionCompat.disableAnimations(activity)
                     AppCompatDelegate.setDefaultNightMode(nightModeFor(theme))
                 }
             }
@@ -541,7 +543,7 @@ object ProfilePreferenceStore {
 
     fun wrapContextWithSavedLanguage(context: Context): Context {
         val language = getLanguage(context)
-        val locale = Locale(languageTag(language))
+        val locale = AppLocales.fromLanguageTag(languageTag(language))
 
         Locale.setDefault(locale)
 
@@ -587,7 +589,7 @@ object ProfilePreferenceStore {
     private fun Activity.recreateWithoutAnimation() {
         window.decorView.post {
             recreate()
-            overridePendingTransition(0, 0)
+            ActivityTransitionCompat.disableAnimations(this)
         }
     }
 }

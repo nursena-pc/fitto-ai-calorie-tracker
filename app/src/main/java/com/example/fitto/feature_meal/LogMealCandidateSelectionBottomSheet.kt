@@ -5,7 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
+import androidx.core.os.BundleCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
@@ -23,11 +23,7 @@ class LogMealCandidateSelectionBottomSheet : BottomSheetDialogFragment() {
     private lateinit var adapter: LogMealCandidateAdapter
 
     private val rawCandidates: List<LogMealFoodCandidate> by lazy {
-        @Suppress("DEPRECATION")
-        requireArguments()
-            .getSerializable(ARG_CANDIDATES)
-            .let { it as? ArrayList<LogMealFoodCandidate> }
-            .orEmpty()
+        requireArguments().getLogMealCandidatePayload(ARG_CANDIDATES)
     }
 
     override fun onCreateView(
@@ -83,9 +79,12 @@ class LogMealCandidateSelectionBottomSheet : BottomSheetDialogFragment() {
 
             parentFragmentManager.setFragmentResult(
                 REQUEST_CANDIDATES_SELECTED,
-                bundleOf(
-                    BUNDLE_SELECTED_CANDIDATES to ArrayList(selectedCandidates)
-                )
+                Bundle().apply {
+                    putLogMealCandidatePayload(
+                        BUNDLE_SELECTED_CANDIDATES,
+                        selectedCandidates
+                    )
+                }
             )
 
             dismiss()
@@ -107,11 +106,11 @@ class LogMealCandidateSelectionBottomSheet : BottomSheetDialogFragment() {
             LogMealCandidatePortionBottomSheet.REQUEST_PORTION_UPDATED,
             viewLifecycleOwner
         ) { _, bundle ->
-            @Suppress("DEPRECATION")
-            val updatedCandidate = bundle
-                .getSerializable(LogMealCandidatePortionBottomSheet.BUNDLE_UPDATED_CANDIDATE)
-                    as? LogMealFoodCandidate
-                ?: return@setFragmentResultListener
+            val updatedCandidate = BundleCompat.getSerializable(
+                bundle,
+                LogMealCandidatePortionBottomSheet.BUNDLE_UPDATED_CANDIDATE,
+                LogMealFoodCandidate::class.java
+            ) ?: return@setFragmentResultListener
 
             adapter.updateCandidate(updatedCandidate)
             updateAddButton()
@@ -230,7 +229,7 @@ class LogMealCandidateSelectionBottomSheet : BottomSheetDialogFragment() {
         ): LogMealCandidateSelectionBottomSheet {
             return LogMealCandidateSelectionBottomSheet().apply {
                 arguments = Bundle().apply {
-                    putSerializable(ARG_CANDIDATES, ArrayList(candidates))
+                    putLogMealCandidatePayload(ARG_CANDIDATES, candidates)
                 }
             }
         }

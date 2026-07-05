@@ -1,5 +1,6 @@
 package com.example.fitto.feature_daily
 
+import kotlin.ConsistentCopyVisibility
 enum class DailyDashboardRefreshStep {
     RENDER_SELECTED_DATE,
     LOAD_HEALTH_CONNECT_SUMMARY,
@@ -13,6 +14,7 @@ enum class DailyDashboardRefreshStep {
     RENDER_MEAL_TOTALS
 }
 
+@ConsistentCopyVisibility
 data class DailyDashboardRefreshPlan private constructor(
     val steps: List<DailyDashboardRefreshStep>
 ) {

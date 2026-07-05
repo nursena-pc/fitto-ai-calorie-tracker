@@ -267,10 +267,4 @@ abstract class MealDao {
         clearMealEntryFoodsForUser(userId)
         clearMealEntriesForUser(userId)
     }
-
-    @Deprecated("Use clearMealLogsForUser so different accounts keep their own local history.")
-    @Transaction
-    open suspend fun clearAllMealLogs() {
-        // Intentionally no-op for account switching. Profile/account deletion should call clearMealLogsForUser.
-    }
 }

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -7,7 +8,7 @@ import java.util.Locale
 internal object SocialTextResolver {
 
     private val turkishLocale: Locale
-        get() = Locale("tr", "TR")
+        get() = AppLocales.TURKISH
 
     fun createInitials(value: String): String {
         val parts = value

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import androidx.core.view.isVisible
 import coil.load
 import com.example.fitto.R
@@ -77,7 +78,7 @@ internal class ChatHeaderRenderer(
             }
 
             is ChatHeaderSubtitle.LastSeen -> {
-                val timeText = SimpleDateFormat("HH:mm", Locale("tr", "TR"))
+                val timeText = SimpleDateFormat("HH:mm", AppLocales.TURKISH)
                     .format(Date(subtitle.lastChanged))
                 binding.root.context.getString(R.string.chat_last_seen, timeText)
             }

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.text.AppLocales
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -377,6 +378,6 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
 
     companion object {
         private const val TAG_RECIPE_DETAIL = "recipe_detail"
-        private val TURKISH_LOCALE = Locale("tr", "TR")
+        private val TURKISH_LOCALE = AppLocales.TURKISH
     }
 }

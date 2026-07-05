@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.app.Dialog
 import android.net.Uri
 import android.os.Bundle
@@ -299,7 +300,7 @@ class CreatePostFragment : DialogFragment(R.layout.fragment_create_post) {
             isCheckedIconVisible = false
             isCloseIconVisible = removable
             chipMinHeight = 42f
-            chipCornerRadius = 18f
+            setUniformCornerRadius(18f)
             textSize = 14f
             setTypeface(typeface, android.graphics.Typeface.BOLD)
 
@@ -338,7 +339,7 @@ class CreatePostFragment : DialogFragment(R.layout.fragment_create_post) {
             isCheckable = false
             isCloseIconVisible = false
             chipMinHeight = 42f
-            chipCornerRadius = 18f
+            setUniformCornerRadius(18f)
             textSize = 14f
             setTypeface(typeface, android.graphics.Typeface.BOLD)
 

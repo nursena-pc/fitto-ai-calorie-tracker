@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.text.AppLocales
 import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.os.Bundle
@@ -257,6 +258,6 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
         private const val TAG_RECIPE_DETAIL = "recipe_detail"
         private const val TAG_RECIPE_ADD = "recipe_add"
         private const val TAG_FILTER_SHEET = "recipe_book_filter_sheet"
-        private val TURKISH_LOCALE = Locale("tr", "TR")
+        private val TURKISH_LOCALE = AppLocales.TURKISH
     }
 }

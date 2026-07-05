@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Gravity
@@ -504,7 +505,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
             isFocusable = true
             isCheckedIconVisible = false
             minHeight = 34.dp
-            chipCornerRadius = 17.dp.toFloat()
+            setUniformCornerRadius(17.dp.toFloat())
             setPadding(10.dp, 0, 10.dp, 0)
             chipBackgroundColor = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.fitto_surface))
             setTextColor(ContextCompat.getColor(context, if (checked) R.color.fitto_green else R.color.fitto_text_dark))
@@ -546,7 +547,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
             closeIcon = ContextCompat.getDrawable(context, R.drawable.ic_close)
             closeIconTint = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.fitto_green))
             minHeight = 34.dp
-            chipCornerRadius = 17.dp.toFloat()
+            setUniformCornerRadius(17.dp.toFloat())
             setPadding(10.dp, 0, 6.dp, 0)
             chipBackgroundColor = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.fitto_surface))
             setTextColor(ContextCompat.getColor(context, R.color.fitto_green))

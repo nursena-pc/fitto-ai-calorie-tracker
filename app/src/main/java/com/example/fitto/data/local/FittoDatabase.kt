@@ -32,7 +32,7 @@ import com.example.fitto.data.local.entity.UserProfileEntity
         RecipeEntity::class
     ],
     version = 9,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(RecipeTypeConverters::class)
 abstract class FittoDatabase : RoomDatabase() {

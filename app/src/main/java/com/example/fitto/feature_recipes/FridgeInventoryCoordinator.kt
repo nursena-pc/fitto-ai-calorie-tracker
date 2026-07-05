@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.text.AppLocales
 import com.example.fitto.feature_recipes.model.RecipeUiModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +40,6 @@ class FridgeInventoryCoordinator(
 
     private companion object {
         private const val DEFAULT_SUGGESTION_LIMIT = 10
-        private val TURKISH_LOCALE = Locale("tr", "TR")
+        private val TURKISH_LOCALE = AppLocales.TURKISH
     }
 }

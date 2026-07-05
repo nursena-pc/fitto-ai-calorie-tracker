@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.profile
 
+import com.example.fitto.core.text.AppLocales
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -443,7 +444,7 @@ class AccountDeletionRepository(
         deletedUserName: String,
         now: Long
     ) {
-        val deletedUserNameLowercase = deletedUserName.lowercase(Locale("tr", "TR"))
+        val deletedUserNameLowercase = deletedUserName.lowercase(AppLocales.TURKISH)
 
         val tombstone = mapOf(
             "uid" to uid,

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_daily
 
+import com.example.fitto.core.text.AppLocales
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -14,7 +15,7 @@ class DailySelectedDateTextResolverTest {
         val result = DailySelectedDateTextResolver.resolve(
             selectedDate = LocalDate.of(2026, 6, 27),
             today = LocalDate.of(2026, 6, 27),
-            locale = Locale("tr", "TR")
+            locale = AppLocales.TURKISH
         )
 
         assertTrue(result.isToday)
@@ -25,7 +26,7 @@ class DailySelectedDateTextResolverTest {
         val result = DailySelectedDateTextResolver.resolve(
             selectedDate = LocalDate.of(2026, 6, 26),
             today = LocalDate.of(2026, 6, 27),
-            locale = Locale("tr", "TR")
+            locale = AppLocales.TURKISH
         )
 
         assertFalse(result.isToday)

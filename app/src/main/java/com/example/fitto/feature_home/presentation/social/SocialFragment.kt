@@ -1,10 +1,10 @@
 package com.example.fitto.feature_home.presentation.social
 
 import android.os.Bundle
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
-import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
@@ -24,12 +24,11 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
-import android.view.GestureDetector
 class SocialFragment : Fragment(R.layout.fragment_social) {
 
     private var _binding: FragmentSocialBinding? = null
     private val binding get() = _binding!!
-    private lateinit var gestureDetector: GestureDetectorCompat
+    private lateinit var gestureDetector: GestureDetector
     private lateinit var viewModel: SocialViewModel
     private val socialDependencies by lazy(LazyThreadSafetyMode.NONE) {
         requireContext().fittoAppContainer.socialFeatureDependencies
@@ -63,7 +62,7 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
 
     }
     private fun setupSwipeToMyProfile() {
-        gestureDetector = GestureDetectorCompat(
+        gestureDetector = GestureDetector(
             requireContext(),
             object : GestureDetector.SimpleOnGestureListener() {
 

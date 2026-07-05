@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import android.app.Dialog
 import android.os.Bundle
 import android.view.View
@@ -129,19 +130,19 @@ class GroupMessageSearchFragment : DialogFragment(R.layout.fragment_group_messag
         val normalizedQuery = query.trim()
         if (normalizedQuery.isBlank()) return emptyList()
 
-        val lowerQuery = normalizedQuery.lowercase(Locale("tr", "TR"))
+        val lowerQuery = normalizedQuery.lowercase(AppLocales.TURKISH)
 
         return messages
             .filter { message ->
                 !message.isDeleted &&
                         (
-                                message.text.lowercase(Locale("tr", "TR")).contains(lowerQuery) ||
-                                        message.senderName.lowercase(Locale("tr", "TR")).contains(lowerQuery)
+                                message.text.lowercase(AppLocales.TURKISH).contains(lowerQuery) ||
+                                        message.senderName.lowercase(AppLocales.TURKISH).contains(lowerQuery)
                                 )
             }
             .sortedWith(
                 compareByDescending<ChatMessageUiModel> { message ->
-                    message.text.lowercase(Locale("tr", "TR")).startsWith(lowerQuery)
+                    message.text.lowercase(AppLocales.TURKISH).startsWith(lowerQuery)
                 }.thenByDescending { message ->
                     message.createdAt
                 }
