@@ -1,0 +1,86 @@
+name: Bug report
+description: Report a reproducible problem in Fitto
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve Fitto. Do not include API keys, credentials, private messages, health data, or other personal information.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the problem clearly.
+      placeholder: What went wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable sequence that reproduces the issue.
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version or commit
+      placeholder: "1.0 or commit SHA"
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: "Samsung SM-A325F, Android 13"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Regression
+      options:
+        - Unknown
+        - Yes, this worked before
+        - No, this has never worked
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove tokens, email addresses, health data, private messages, and other sensitive information.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed secrets and personal information from the report.
+          required: true

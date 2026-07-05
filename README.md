@@ -1,5 +1,10 @@
 # Fitto - AI-Supported Healthy Lifestyle, Nutrition & Social Tracking App
 
+[![Android CI](https://github.com/nursena-pc/fitto-ai-calorie-tracker/actions/workflows/android-ci.yml/badge.svg)](https://github.com/nursena-pc/fitto-ai-calorie-tracker/actions/workflows/android-ci.yml)
+[![Android Instrumentation](https://github.com/nursena-pc/fitto-ai-calorie-tracker/actions/workflows/android-instrumentation.yml/badge.svg)](https://github.com/nursena-pc/fitto-ai-calorie-tracker/actions/workflows/android-instrumentation.yml)
+[![API](https://img.shields.io/badge/minSdk-26-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.21-7F52FF.svg)](https://kotlinlang.org/)
+
 > 🇹🇷 Fitto, kullanıcıların kalori, makro besin, su, egzersiz, uyku, kilo ve vücut ölçüsü gibi sağlıklı yaşam verilerini takip edebildiği; Gemini API destekli yapay zekâ rehberliği, tarifler, diyet planları, kamera ile yemek tanıma, sosyal medya, mesajlaşma, hatırlatıcılar ve gelişim raporlarını tek bir mobil platformda birleştiren kapsamlı bir Android uygulamasıdır.
 
 Fitto is an AI-supported Android healthy lifestyle platform that combines nutrition tracking, personalized goal guidance, recipe and diet plan management, camera-based food recognition, social sharing, messaging, reminders and progress analytics in a single mobile application.
@@ -355,6 +360,13 @@ This project was developed by:
 - [İrem Nur Şahin](https://github.com/Iremnursh)
 
 ---
+
+## Development and quality gates
+
+Every change is reviewed through a pull request and verified by GitHub Actions. The main workflow compiles Kotlin, runs unit tests and lint, builds the debug application APK, and builds the Android test APK. Instrumentation tests run on an Android emulator for migration and platform-level coverage.
+
+Repository standards and local verification commands are documented in [CONTRIBUTING.md](CONTRIBUTING.md). Security concerns must be reported privately according to [SECURITY.md](SECURITY.md). Branch protection and release expectations are documented in [Repository Governance](docs/REPOSITORY_GOVERNANCE.md).
+
 
 ## Project Status
 

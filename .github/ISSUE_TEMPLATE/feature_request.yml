@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose a user-facing or engineering improvement
+title: "[Feature]: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: Explain the user or engineering problem before proposing a solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior and scope.
+    validations:
+      required: true
+
+  - type: textarea
+    id: value
+    attributes:
+      label: User value
+      description: Who benefits and how?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical
+    attributes:
+      label: Technical considerations
+      description: Note data, migration, security, API, navigation, lifecycle, or compatibility implications.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and pull requests for a similar proposal.
+          required: true
+        - label: This request does not contain secrets or personal information.
+          required: true

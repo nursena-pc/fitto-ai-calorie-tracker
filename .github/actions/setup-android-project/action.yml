@@ -1,0 +1,59 @@
+name: Set up Android project
+description: Configure Java, Gradle, and non-production Android build inputs for CI
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Java 17
+      uses: actions/setup-java@v5
+      with:
+        distribution: temurin
+        java-version: "17"
+
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-provider: basic
+
+    - name: Create non-production build configuration
+      shell: bash
+      run: |
+        cat > local.properties <<'PROPERTIES'
+        USDA_API_KEY=DEMO_KEY
+        GEMINI_API_KEY=
+        LOGMEAL_API_USER_TOKEN=
+        PROPERTIES
+
+        cat > app/google-services.json <<'JSON'
+        {
+          "project_info": {
+            "project_number": "123456789000",
+            "project_id": "fitto-ci",
+            "storage_bucket": "fitto-ci.appspot.com"
+          },
+          "client": [
+            {
+              "client_info": {
+                "mobilesdk_app_id": "1:123456789000:android:0000000000000000000000",
+                "android_client_info": {
+                  "package_name": "com.example.fitto"
+                }
+              },
+              "oauth_client": [],
+              "api_key": [
+                {
+                  "current_key": "AIzaSyCIPlaceholderKey000000000000000"
+                }
+              ],
+              "services": {
+                "appinvite_service": {
+                  "other_platform_oauth_client": []
+                }
+              }
+            }
+          ],
+          "configuration_version": "1"
+        }
+        JSON
+
+        chmod +x gradlew

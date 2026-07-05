@@ -1,0 +1,68 @@
+"area: build":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.gradle.kts"
+          - "gradle/**"
+          - "gradle.properties"
+          - "gradlew"
+          - "gradlew.bat"
+
+"area: ci":
+  - changed-files:
+      - any-glob-to-any-file: ".github/workflows/**"
+
+"area: documentation":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "docs/**"
+
+"area: authentication":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_auth/**"
+
+"area: daily":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_daily/**"
+
+"area: diet plans":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_dietplans/**"
+
+"area: exercise and health":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/src/**/feature_exercise/**"
+          - "app/src/**/feature_health/**"
+
+"area: meals":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_meal/**"
+
+"area: profile":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_home/presentation/profile/**"
+
+"area: recipes":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_recipes/**"
+
+"area: reports":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_reports/**"
+
+"area: social and messaging":
+  - changed-files:
+      - any-glob-to-any-file: "app/src/**/feature_home/presentation/social/**"
+
+"area: database":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/src/**/data/local/**"
+          - "app/schemas/**"
+
+"tests":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/src/test/**"
+          - "app/src/androidTest/**"
