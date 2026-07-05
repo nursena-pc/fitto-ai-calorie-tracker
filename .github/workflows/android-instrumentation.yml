@@ -4,12 +4,21 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/src/androidTest/**"
+      - "app/schemas/**"
+      - "app/src/main/java/com/example/fitto/data/local/**"
+      - ".github/actions/setup-android-project/**"
+      - ".github/workflows/android-instrumentation.yml"
   push:
     branches: [main]
     paths:
       - "app/src/androidTest/**"
       - "app/schemas/**"
       - "app/src/main/java/com/example/fitto/data/local/**"
+      - ".github/actions/setup-android-project/**"
       - ".github/workflows/android-instrumentation.yml"
 
 permissions:
@@ -39,6 +48,22 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Reclaim disk space for the Android emulator
+        shell: bash
+        run: |
+          echo "Disk space before cleanup:"
+          df -h /
+
+          # GitHub-hosted runners include large toolchains that this Android job
+          # does not use. Removing them leaves enough room for the API 33 image
+          # and its userdata partition without changing the application build.
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}/ndk"
+          sudo rm -rf "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}/ndk-bundle"
+
+          echo "Disk space after cleanup:"
+          df -h /
+
       - name: Run connected Android tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -47,8 +72,8 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          disk-size: 6000M
-          heap-size: 2048M
+          disk-size: 2048M
+          heap-size: 1024M
           emulator-options: >-
             -no-window
             -gpu swiftshader_indirect
@@ -56,6 +81,7 @@ jobs:
             -noaudio
             -no-boot-anim
             -camera-back none
+            -no-metrics
           script: ./gradlew --no-daemon --stacktrace :app:connectedDebugAndroidTest
 
       - name: Upload instrumentation reports
