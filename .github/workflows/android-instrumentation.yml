@@ -48,6 +48,22 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Reclaim disk space for the Android emulator
+        shell: bash
+        run: |
+          echo "Disk space before cleanup:"
+          df -h /
+
+          # GitHub-hosted runners include large toolchains that this Android job
+          # does not use. Removing them leaves enough room for the API 33 image
+          # and its userdata partition without changing the application build.
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}/ndk"
+          sudo rm -rf "${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}/ndk-bundle"
+
+          echo "Disk space after cleanup:"
+          df -h /
+
       - name: Run connected Android tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
