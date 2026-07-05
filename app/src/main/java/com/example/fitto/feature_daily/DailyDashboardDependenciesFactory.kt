@@ -17,9 +17,6 @@ import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.planning.CustomDietMealPlanGenerator
 import com.example.fitto.feature_dietplans.planning.DietMealPlanCatalog
 import com.example.fitto.feature_exercise.data.ExerciseLogStore
-import com.example.fitto.feature_health.FittoStepCounterManager
-import com.example.fitto.feature_health.HealthConnectManager
-import com.example.fitto.feature_sleep.data.SleepLogStore
 
 /**
  * Dependencies retained by [DailyFragment] after construction.
@@ -57,6 +54,7 @@ internal class DailyDashboardDependenciesFactory(
     private val context: Context,
     private val defaultTargets: DailyDashboardDefaultTargets,
     private val coroutineDispatchers: AppCoroutineDispatchers,
+    private val trackingSources: DailyTrackingSources,
     private val onFastingTick: (planId: String, remainingMillis: Long) -> Unit,
     private val onFastingFinish: (planId: String) -> Unit
 ) {
@@ -204,10 +202,6 @@ internal class DailyDashboardDependenciesFactory(
             onFinish = onFastingFinish
         )
 
-        val healthConnectManager = HealthConnectManager(appContext)
-        val stepCounterManager = FittoStepCounterManager(appContext)
-        val sleepLogStore = SleepLogStore(appContext)
-
         return DailyDashboardDependencies(
             initialDailyTargetCalories = nutritionTargetStore
                 .getDailyTargetCalories()
@@ -225,17 +219,17 @@ internal class DailyDashboardDependenciesFactory(
             fastingAction = fastingAction,
             fastingCountdownCoordinator = fastingCountdownCoordinator,
             healthConnectSummaryAction = DailyHealthConnectSummaryAction(
-                readDailySummary = healthConnectManager::readDailySummary
+                readDailySummary = trackingSources.readHealthConnectSummary
             ),
             stepCounterAction = DailyStepCounterAction(
-                getCachedSteps = stepCounterManager::getCachedSteps,
-                isStepCounterAvailable = stepCounterManager::isStepCounterAvailable,
-                startStepCounter = stepCounterManager::start,
-                stopStepCounter = stepCounterManager::stop
+                getCachedSteps = trackingSources.getCachedSteps,
+                isStepCounterAvailable = trackingSources.isStepCounterAvailable,
+                startStepCounter = trackingSources.startStepCounter,
+                stopStepCounter = trackingSources.stopStepCounter
             ),
             sleepTrackingAction = DailySleepTrackingAction(
-                getLogForDate = sleepLogStore::getLogForDate,
-                saveLog = sleepLogStore::saveLog
+                getLogForDate = trackingSources.getSleepLogForDate,
+                saveLog = trackingSources.saveSleepLog
             ),
             dailyAiDashboardCoordinator = createDailyAiDashboardCoordinator(appContext),
             backgroundTaskRunner = CoroutineTaskRunner(coroutineDispatchers.io)

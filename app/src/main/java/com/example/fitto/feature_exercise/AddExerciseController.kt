@@ -7,6 +7,7 @@ import com.example.fitto.feature_exercise.model.ExerciseIntensity
 import com.example.fitto.feature_exercise.model.ExerciseUiModel
 
 data class AddExerciseState(
+    val isInitialized: Boolean = false,
     val activities: List<ExerciseUiModel> = emptyList(),
     val searchableTextById: Map<String, String> = emptyMap(),
     val selectedCategory: ExerciseCategory = ExerciseCategory.CARDIO,
@@ -34,6 +35,7 @@ class AddExerciseController(
         val selectedActivity = activities.firstOrNull { it.category == selectedCategory }
 
         state = AddExerciseState(
+            isInitialized = true,
             activities = activities,
             searchableTextById = ExerciseActivitySearchCache.build(activities),
             selectedCategory = selectedCategory,
@@ -43,6 +45,12 @@ class AddExerciseController(
             userWeightKg = defaultUserWeightKg
         )
         return state
+    }
+
+    fun initializeIfNeeded(
+        loadActivities: () -> List<ExerciseUiModel>
+    ): AddExerciseState {
+        return if (state.isInitialized) state else initialize(loadActivities())
     }
 
     fun selectCategory(category: ExerciseCategory): AddExerciseState {

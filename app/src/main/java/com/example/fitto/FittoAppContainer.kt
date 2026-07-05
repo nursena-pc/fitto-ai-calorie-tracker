@@ -6,10 +6,18 @@ import com.example.fitto.data.seed.SeedDataImporter
 import com.example.fitto.feature_daily.DailyDashboardDefaultTargets
 import com.example.fitto.feature_daily.DailyDashboardDependencies
 import com.example.fitto.feature_daily.DailyDashboardDependenciesFactory
+import com.example.fitto.feature_daily.DailyTrackingSources
+import com.example.fitto.feature_exercise.AddExerciseCoordinator
+import com.example.fitto.feature_exercise.LocalAddExerciseDataSource
+import com.example.fitto.feature_health.FittoStepCounterManager
+import com.example.fitto.feature_health.HealthConnectConnectionCoordinator
+import com.example.fitto.feature_health.HealthConnectConnectionDependencies
+import com.example.fitto.feature_health.HealthConnectManager
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationChannels
 import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
 import com.example.fitto.feature_meal.AddMealCoordinator
 import com.example.fitto.feature_meal.LocalAddMealDataSource
+import com.example.fitto.feature_sleep.data.SleepLogStore
 
 /** Application-level composition root for shared infrastructure and feature dependency graphs. */
 internal class FittoAppContainer(
@@ -23,6 +31,25 @@ internal class FittoAppContainer(
         ensureNotificationChannels = { FittoNotificationChannels.ensureCreated(appContext) },
         startSocialNotificationObserver = { SocialNotificationObserver.start(appContext) }
     )
+
+    fun createAddExerciseCoordinator(): AddExerciseCoordinator {
+        return AddExerciseCoordinator(
+            dataSource = LocalAddExerciseDataSource(appContext),
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
+
+    fun createHealthConnectManager(): HealthConnectManager {
+        return HealthConnectManager(appContext)
+    }
+
+    fun createHealthConnectConnectionDependencies(): HealthConnectConnectionDependencies {
+        val manager = createHealthConnectManager()
+        return HealthConnectConnectionDependencies(
+            manager = manager,
+            coordinator = HealthConnectConnectionCoordinator(manager)
+        )
+    }
 
     fun createAddMealCoordinator(): AddMealCoordinator {
         return AddMealCoordinator(
@@ -40,9 +67,25 @@ internal class FittoAppContainer(
             context = appContext,
             defaultTargets = defaultTargets,
             coroutineDispatchers = coroutineDispatchers,
+            trackingSources = createDailyTrackingSources(),
             onFastingTick = onFastingTick,
             onFastingFinish = onFastingFinish
         ).create()
+    }
+
+    private fun createDailyTrackingSources(): DailyTrackingSources {
+        val healthConnectManager = createHealthConnectManager()
+        val stepCounterManager = FittoStepCounterManager(appContext)
+        val sleepLogStore = SleepLogStore(appContext)
+        return DailyTrackingSources(
+            readHealthConnectSummary = healthConnectManager::readDailySummary,
+            getCachedSteps = stepCounterManager::getCachedSteps,
+            isStepCounterAvailable = stepCounterManager::isStepCounterAvailable,
+            startStepCounter = stepCounterManager::start,
+            stopStepCounter = stepCounterManager::stop,
+            getSleepLogForDate = sleepLogStore::getLogForDate,
+            saveSleepLog = sleepLogStore::saveLog
+        )
     }
 }
 

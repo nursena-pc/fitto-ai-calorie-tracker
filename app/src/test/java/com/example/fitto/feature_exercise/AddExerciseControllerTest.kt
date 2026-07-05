@@ -32,6 +32,42 @@ class AddExerciseControllerTest {
     }
 
     @Test
+    fun initializeIfNeeded_loadsCatalogForUninitializedState() {
+        val controller = AddExerciseController()
+        var loadCount = 0
+
+        controller.initializeIfNeeded {
+            loadCount += 1
+            listOf(activity("walk", ExerciseCategory.CARDIO, 30))
+        }
+
+        assertEquals(1, loadCount)
+        assertTrue(controller.state.isInitialized)
+        assertEquals("walk", controller.state.selectedActivity?.id)
+    }
+
+    @Test
+    fun initializeIfNeeded_preservesExistingScreenState() {
+        val controller = controller()
+        controller.selectCategory(ExerciseCategory.STRENGTH)
+        controller.updateSearchQuery("weights")
+        controller.increaseDuration()
+
+        var reloadCount = 0
+        controller.initializeIfNeeded {
+            reloadCount += 1
+            listOf(activity("replacement", ExerciseCategory.CARDIO, 10))
+        }
+
+        assertEquals(0, reloadCount)
+        assertTrue(controller.state.isInitialized)
+        assertEquals("weights", controller.state.selectedActivity?.id)
+        assertEquals("weights", controller.state.rawSearchQuery)
+        assertEquals(50, controller.state.durationMinutes)
+        assertEquals(3, controller.state.activities.size)
+    }
+
+    @Test
     fun selectCategory_resetsSelectionDurationAndIntensity() {
         val controller = controller()
         controller.cycleIntensity()
