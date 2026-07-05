@@ -27,13 +27,41 @@ import kotlinx.coroutines.withContext
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private lateinit var healthConnectSummaryAction: DailyHealthConnectSummaryAction
-    private var healthConnectSummary: HealthConnectDailySummary = HealthConnectDailySummary()
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
-    private var selectedDate: LocalDate = LocalDate.now()
+    private val dashboardStateStore = DailyDashboardStateStore(
+        initialDate = LocalDate.now(),
+        initialNutritionTargets = DailyDashboardNutritionTargets(
+            calories = DEFAULT_DAILY_CALORIE_TARGET,
+            proteinGrams = DEFAULT_PROTEIN_TARGET_GRAMS,
+            carbGrams = DEFAULT_CARB_TARGET_GRAMS,
+            fatGrams = DEFAULT_FAT_TARGET_GRAMS
+        ),
+        initialDisplayWeightKg = DEFAULT_PROFILE_WEIGHT_KG,
+        initialWaterGoalMl = DEFAULT_WATER_GOAL_ML
+    )
+    private val dashboardState: DailyDashboardScreenState
+        get() = dashboardStateStore.current()
+    private val healthConnectSummary: HealthConnectDailySummary
+        get() = dashboardState.healthConnectSummary
+    private val selectedDate: LocalDate
+        get() = dashboardState.selectedDate
+    private val currentProfileWeightKg: Double?
+        get() = dashboardState.profileWeightKg
+    private val currentWeightKg: Double
+        get() = dashboardState.displayWeightKg
+    private val currentWaterMl: Int
+        get() = dashboardState.waterMl
+    private val localStepCount: Long
+        get() = dashboardState.localSteps
+    private val waterGoalMl: Int
+        get() = dashboardState.waterGoalMl
+    private val currentActivePlan: ActiveDietPlanUiModel?
+        get() = dashboardState.activePlan
+    private val currentDailyMealPlan: DailyPlannedMealsUiModel?
+        get() = dashboardState.dailyMealPlan
     private lateinit var dashboardRefreshCoordinator: DailyDashboardRefreshCoordinator
     private lateinit var navigator: DailyNavigator
-    private var currentProfileWeightKg: Double? = null
     private lateinit var sleepTrackingAction: DailySleepTrackingAction
     private lateinit var dailyAiDashboardCoordinator: DailyAiDashboardCoordinator
     private lateinit var profileMetricsLoadAction: DailyProfileMetricsLoadAction
@@ -57,11 +85,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var sleepDialogCoordinator: DailySleepDialogCoordinator? = null
     private lateinit var datePickerCoordinator: DailyDatePickerCoordinator
 
-    private var currentWeightKg: Double = DEFAULT_PROFILE_WEIGHT_KG
-    private var currentWaterMl: Int = 0
     private lateinit var stepCounterAction: DailyStepCounterAction
-    private var localStepCount: Long = 0L
-    private var waterGoalMl: Int = 2500
     private val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
     private val activityRecognitionPermissionLauncher = registerForActivityResult(
@@ -83,15 +107,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             renderActivityStepsOnly()
         }
     }
-    private var currentDailyTargetCalories: Int = DEFAULT_DAILY_CALORIE_TARGET
-    private var currentProteinTargetGrams: Int = DEFAULT_PROTEIN_TARGET_GRAMS
-    private var currentCarbTargetGrams: Int = DEFAULT_CARB_TARGET_GRAMS
-    private var currentFatTargetGrams: Int = DEFAULT_FAT_TARGET_GRAMS
-
-    private var currentActivePlan: ActiveDietPlanUiModel? = null
-    private var currentDailyMealPlan: DailyPlannedMealsUiModel? = null
-    private var activePlanLoadGeneration: Long = 0L
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDailyBinding.bind(view)
@@ -123,6 +138,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 }
             }
         ).create()
+        dashboardStateStore.updateDailyCalorieTarget(
+            dependencies.initialDailyTargetCalories
+        )
         profileMetricsLoadAction = dependencies.profileMetricsLoadAction
         dailySummaryLoadAction = dependencies.dailySummaryLoadAction
         weeklyProgressLoadAction = dependencies.weeklyProgressLoadAction
@@ -213,8 +231,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             renderMealTotals = ::renderMealTotals
         )
 
-        currentDailyTargetCalories = dependencies.initialDailyTargetCalories
-
         initializeDashboardView()
         bindDashboardClicks()
         registerDashboardResultListeners()
@@ -235,9 +251,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             }
             if (_binding == null) return@launch
 
-            currentProfileWeightKg = result.profileWeightKg
-            currentWeightKg = result.displayWeightKg
-            waterGoalMl = result.waterGoalMl
+            dashboardStateStore.updateProfileMetrics(
+                profileWeightKg = result.profileWeightKg,
+                displayWeightKg = result.displayWeightKg,
+                waterGoalMl = result.waterGoalMl
+            )
 
             renderSleepWeightSummary()
             renderWaterTracking()
@@ -454,7 +472,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 )
             }
 
-            if (_binding == null || selectedDate != requestedDate) return@launch
+            if (_binding == null || !dashboardStateStore.isSelectedDate(requestedDate)) return@launch
 
             weeklyProgressRenderer?.render(result)
         }
@@ -480,7 +498,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 waterGoalMl = waterGoalMl
             )
         )
-        currentWaterMl = result.waterState.normalizedWaterMl
+        dashboardStateStore.updateWaterMl(result.waterState.normalizedWaterMl)
 
         waterRenderer?.render(
             result = result,
@@ -528,7 +546,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 hasActivityRecognitionPermission = hasActivityRecognitionPermission
             )
         ) { update ->
-            localStepCount = update.steps
+            dashboardStateStore.updateLocalSteps(update.steps)
             renderActivityStepsOnly()
 
             if (update.shouldRefreshSummary) {
@@ -575,9 +593,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         viewLifecycleOwner.lifecycleScope.launch {
             val requestedDate = selectedDate
             val result = healthConnectSummaryAction.load(requestedDate)
-            if (_binding == null || selectedDate != result.requestedDate) return@launch
+            if (_binding == null) return@launch
+            if (!dashboardStateStore.updateHealthConnectSummary(result.requestedDate, result.summary)) {
+                return@launch
+            }
 
-            healthConnectSummary = result.summary
             renderHealthConnectSummary()
         }
     }
@@ -611,7 +631,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     }
 
     private fun updateSelectedDate(date: LocalDate) {
-        selectedDate = date
+        dashboardStateStore.selectDate(date)
         renderSelectedDate()
     }
 
@@ -636,20 +656,15 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun renderActivePlan() {
         if (_binding == null || !::activePlanLoadAction.isInitialized) return
 
-        val loadGeneration = ++activePlanLoadGeneration
-        val targetCalories = currentDailyTargetCalories
+        val loadToken = dashboardStateStore.beginActivePlanLoad()
 
         viewLifecycleOwner.lifecycleScope.launch {
             val result = withContext(Dispatchers.IO) {
-                activePlanLoadAction.load(targetCalories)
+                activePlanLoadAction.load(loadToken.targetCalories)
             }
 
-            if (_binding == null || loadGeneration != activePlanLoadGeneration) {
-                return@launch
-            }
-
-            currentActivePlan = result.activePlan
-            currentDailyMealPlan = result.dailyPlan
+            if (_binding == null) return@launch
+            if (!dashboardStateStore.applyActivePlanLoad(loadToken, result)) return@launch
 
             when (result) {
                 is DailyActivePlanLoadResult.Basic -> renderBasicActivePlan(result.displayPlan)
@@ -747,18 +762,19 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     )
                 )
             }
-            if (_binding == null || selectedDate != requestedDate) return@launch
+            if (_binding == null || !dashboardStateStore.isSelectedDate(requestedDate)) return@launch
 
             val nutritionTargets = result.nutritionTargets
-            val targetCalories = nutritionTargets.dailyCalories
-            val oldTargetCalories = currentDailyTargetCalories
-
-            currentDailyTargetCalories = targetCalories
-            currentProteinTargetGrams = nutritionTargets.proteinGrams
-            currentCarbTargetGrams = nutritionTargets.carbGrams
-            currentFatTargetGrams = nutritionTargets.fatGrams
-            currentProfileWeightKg = result.resolvedWeightKg
-            currentWeightKg = result.displayWeightKg
+            val summaryStateChange = dashboardStateStore.updateSummary(
+                nutritionTargets = DailyDashboardNutritionTargets(
+                    calories = nutritionTargets.dailyCalories,
+                    proteinGrams = nutritionTargets.proteinGrams,
+                    carbGrams = nutritionTargets.carbGrams,
+                    fatGrams = nutritionTargets.fatGrams
+                ),
+                profileWeightKg = result.resolvedWeightKg,
+                displayWeightKg = result.displayWeightKg
+            )
 
             val energyBalance = result.summaryState.energyBalance
             val activitySource = DailyActivityPresentationResolver.resolveSource(
@@ -783,7 +799,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                 )
             )
 
-            if (oldTargetCalories != targetCalories) {
+            if (summaryStateChange.didCalorieTargetChange) {
                 refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
             }
         }
@@ -974,5 +990,6 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         private const val DEFAULT_CARB_TARGET_GRAMS = 280
         private const val DEFAULT_FAT_TARGET_GRAMS = 70
         private const val DEFAULT_PROFILE_WEIGHT_KG = 70.0
+        private const val DEFAULT_WATER_GOAL_ML = 2500
     }
 }
