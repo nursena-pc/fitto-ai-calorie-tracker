@@ -8,32 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
-
-data class OnboardingState(
-    val name: String = "",
-    val height: Int = 0,
-    val weight: Int = 0,
-    val age: Int = 0,
-    val gender: Gender? = null,
-    val goalType: GoalType? = null,
-    val barriers: List<BarrierType> = emptyList(),
-    val otherBarrierText: String? = null,
-    val weightLossReason: ReasonType? = null,
-    val targetWeight: Int = 0,
-    val eventTimeMillis: Long? = null,
-    val activityLevel: ActivityLevel? = null
-)
-
-enum class PlanStatus {
-    HEALTHY,
-    AGGRESSIVE,
-    NOT_RECOMMENDED,
-    NO_WEIGHT_CHANGE
-}
 
 data class AiTargetUiState(
     val isAiLoading: Boolean = false,
@@ -43,20 +18,9 @@ data class AiTargetUiState(
     val aiError: String? = null
 )
 
-data class DailyNeedsResult(
-    val bmr: Int,
-    val maintenanceCalories: Int,
-    val targetCalories: Int,
-    val recommendedCalories: Int,
-    val appliedCalories: Int,
-    val isUserTargetApplied: Boolean,
-    val weeklyWeightChangeKg: Double,
-    val estimatedWeeks: Int?,
-    val requiredWeeklyChangeKg: Double?,
-    val status: PlanStatus
-)
-
-class OnboardingViewModel : ViewModel() {
+class OnboardingViewModel(
+    private val planEngine: OnboardingPlanEngine = OnboardingPlanEngine()
+) : ViewModel() {
 
     private val aiRepository = GeminiAiRepository()
 
@@ -195,7 +159,7 @@ class OnboardingViewModel : ViewModel() {
             }.onSuccess { suggestion ->
                 Log.d(FITTO_AI_LOG_TAG, "Target suggestion received: ${suggestion.suggestedTargetWeightKg} kg")
                 val validatedSuggestion = suggestion.withPersonalizedExplanation(promptLanguage)
-                    .takeIf { validateAiTargetSuggestion(it) }
+                    .takeIf { planEngine.validateAiTargetSuggestion(state, it) }
                 _aiTargetUiState.update { current ->
                     if (state.aiSuggestionContextSignature(nutritionContext) == contextSignature) {
                         if (validatedSuggestion != null) {
@@ -274,7 +238,7 @@ class OnboardingViewModel : ViewModel() {
                 )
                 aiRepository.requestPlanSuggestion(prompt, promptLanguage)
             }.onSuccess { suggestion ->
-                val validation = validateAiPlanSuggestion(localResult, suggestion)
+                val validation = planEngine.validateAiPlanSuggestion(state, localResult, suggestion)
                 _aiPlanUiState.update { current ->
                     if (state.aiPlanContextSignature(localResult, nutritionContext) == contextSignature) {
                         current.copy(
@@ -416,114 +380,6 @@ class OnboardingViewModel : ViewModel() {
         return contains(displayName, ignoreCase = true)
     }
 
-    private fun validateAiTargetSuggestion(suggestion: AiTargetSuggestion): Boolean {
-        val currentWeight = state.weight
-        val targetWeight = suggestion.suggestedTargetWeightKg
-        val goalType = state.goalType
-
-        if (targetWeight !in 25..300) return false
-        if (goalType == GoalType.LOSE_WEIGHT && targetWeight >= currentWeight) return false
-        if (goalType == GoalType.GAIN_WEIGHT && targetWeight <= currentWeight) return false
-        if (suggestion.riskLevel == AiTargetRiskLevel.NOT_RECOMMENDED) return false
-
-        val safety = TargetWeightSafetyChecker.evaluate(
-            age = state.age,
-            heightCm = state.height,
-            currentWeightKg = currentWeight,
-            targetWeightKg = targetWeight,
-            goalType = goalType,
-            daysUntilEvent = state.daysUntilEvent(),
-            aiSuggestedTargetWeightKg = null
-        )
-        if (safety.status == TargetWeightSafetyStatus.BLOCKED) return false
-
-        val weeklyChangeKg = safety.weeklyChangeKg
-        if (weeklyChangeKg != null) {
-            if (goalType == GoalType.LOSE_WEIGHT && weeklyChangeKg > 1.5) return false
-            if (goalType == GoalType.GAIN_WEIGHT && weeklyChangeKg > 1.0) return false
-        }
-
-        return true
-    }
-
-    private data class PlanValidation(
-        val mode: PlanAiMode,
-        val displayResult: DailyNeedsResult
-    )
-
-    private fun validateAiPlanSuggestion(
-        localResult: DailyNeedsResult,
-        suggestion: AiPlanSuggestion
-    ): PlanValidation {
-        val minimumCalories = minimumSafeCalories(state.gender)
-        val maxCalories = (localResult.maintenanceCalories * 1.6).roundToInt().coerceAtLeast(minimumCalories + 300)
-        val recommendedCalories = suggestion.recommendedDailyCalories
-        val absWeeklyChange = abs(suggestion.recommendedWeeklyChangeKg)
-        val isWeightLoss = state.goalType == GoalType.LOSE_WEIGHT
-        val isWeightGain = state.goalType == GoalType.GAIN_WEIGHT
-        val maxWeeklyChange = when (state.goalType) {
-            GoalType.LOSE_WEIGHT -> 1.2
-            GoalType.GAIN_WEIGHT -> 0.8
-            else -> 0.4
-        }
-
-        val caloriesLooksSafe = recommendedCalories in minimumCalories..maxCalories
-        val caloriesCloseToLocal = localResult.appliedCalories <= 0 ||
-                abs(recommendedCalories - localResult.appliedCalories) / localResult.appliedCalories.toDouble() <= 0.25
-        val weeklyLooksSafe = absWeeklyChange <= maxWeeklyChange
-        val planStatusAllowsNumbers = suggestion.planStatus != AiPlanStatus.NOT_RECOMMENDED
-
-        val useAiNumbers = caloriesLooksSafe && caloriesCloseToLocal && weeklyLooksSafe && planStatusAllowsNumbers
-
-        if (!useAiNumbers) {
-            return PlanValidation(
-                mode = PlanAiMode.AI_ADJUSTED,
-                displayResult = localResult
-            )
-        }
-
-        val isWeightChangeGoal = isWeightLoss || isWeightGain
-        val signedWeeklyChange = when {
-            isWeightLoss -> -absWeeklyChange
-            isWeightGain -> absWeeklyChange
-            else -> 0.0
-        }
-
-        val estimatedWeeks = estimateWeeksForPlan(signedWeeklyChange)
-        val planStatus = if (!isWeightChangeGoal) {
-            // Maintain / learn nutrition / eat healthier hedeflerinde kilo değişimi statüsü göstermeyelim.
-            // AI yorumu planı zenginleştirir; kullanıcıya görünen yerel hedef statüsü korunur.
-            localResult.status
-        } else {
-            when (suggestion.planStatus) {
-                AiPlanStatus.SAFE -> PlanStatus.HEALTHY
-                AiPlanStatus.CAUTION, AiPlanStatus.AGGRESSIVE -> PlanStatus.AGGRESSIVE
-                AiPlanStatus.NOT_RECOMMENDED -> PlanStatus.NOT_RECOMMENDED
-            }
-        }
-
-        return PlanValidation(
-            mode = PlanAiMode.AI_VERIFIED,
-            displayResult = localResult.copy(
-                targetCalories = recommendedCalories,
-                recommendedCalories = recommendedCalories,
-                appliedCalories = recommendedCalories,
-                isUserTargetApplied = true,
-                weeklyWeightChangeKg = signedWeeklyChange,
-                estimatedWeeks = estimatedWeeks,
-                status = planStatus
-            )
-        )
-    }
-
-    private fun estimateWeeksForPlan(weeklyChangeKg: Double): Int? {
-        if (state.goalType != GoalType.LOSE_WEIGHT && state.goalType != GoalType.GAIN_WEIGHT) return null
-        if (state.targetWeight <= 0 || weeklyChangeKg == 0.0) return null
-        val diff = abs(state.weight - state.targetWeight)
-        if (diff == 0) return 0
-        return ceil(diff / abs(weeklyChangeKg)).toInt()
-    }
-
     private fun Throwable.toAiErrorCode(): String {
         val messageText = message.orEmpty()
         return when {
@@ -538,202 +394,15 @@ class OnboardingViewModel : ViewModel() {
     }
 
     fun hasBasicUserInfo(): Boolean {
-        return state.name.isNotBlank() &&
-                state.height > 0 &&
-                state.weight > 0 &&
-                state.age > 0 &&
-                state.gender != null
+        return planEngine.hasBasicUserInfo(state)
     }
 
     fun canCalculateDailyNeeds(): Boolean {
-        val needsTargetWeight = state.goalType == GoalType.LOSE_WEIGHT ||
-                state.goalType == GoalType.GAIN_WEIGHT
-
-        return hasBasicUserInfo() &&
-                state.goalType != null &&
-                state.activityLevel != null &&
-                (!needsTargetWeight || state.targetWeight > 0)
+        return planEngine.canCalculateDailyNeeds(state)
     }
 
     fun calculateDailyNeeds(): DailyNeedsResult {
-        val bmr = calculateBmr(
-            weight = state.weight,
-            height = state.height,
-            age = state.age,
-            gender = state.gender
-        )
-
-        val maintenanceCalories =
-            (bmr * activityMultiplier(state.activityLevel)).roundToInt()
-
-        val isWeightLoss = state.goalType == GoalType.LOSE_WEIGHT
-        val isWeightGain = state.goalType == GoalType.GAIN_WEIGHT
-
-        if (!isWeightLoss && !isWeightGain) {
-            return DailyNeedsResult(
-                bmr = bmr.roundToInt(),
-                maintenanceCalories = maintenanceCalories,
-                targetCalories = maintenanceCalories,
-                recommendedCalories = maintenanceCalories,
-                appliedCalories = maintenanceCalories,
-                isUserTargetApplied = true,
-                weeklyWeightChangeKg = 0.0,
-                estimatedWeeks = null,
-                requiredWeeklyChangeKg = null,
-                status = PlanStatus.NO_WEIGHT_CHANGE
-            )
-        }
-
-        val weightDifference = abs(state.weight - state.targetWeight)
-
-        val requiredWeeklyChangeKg = calculateRequiredWeeklyChange(
-            currentWeight = state.weight,
-            targetWeight = state.targetWeight,
-            eventTimeMillis = state.eventTimeMillis
-        )
-
-        val recommendedWeeklyChangeKg = if (isWeightLoss) 0.5 else 0.3
-        val targetWeeklyChangeKg = requiredWeeklyChangeKg ?: recommendedWeeklyChangeKg
-
-        val targetDailyCalorieChange = weeklyKgToDailyCalories(targetWeeklyChangeKg)
-        val minimumCalories = minimumSafeCalories(state.gender)
-
-        val rawTargetCalories = if (isWeightLoss) {
-            maintenanceCalories - targetDailyCalorieChange
-        } else {
-            maintenanceCalories + targetDailyCalorieChange
-        }
-
-        val targetCalories = rawTargetCalories
-            .roundToInt()
-            .coerceAtLeast(minimumCalories)
-
-        val recommendedCalories = if (isWeightLoss) {
-            (maintenanceCalories - 500).coerceAtLeast(minimumCalories)
-        } else {
-            maintenanceCalories + 300
-        }
-
-        val status = evaluatePlanStatus(
-            goal = state.goalType,
-            requiredWeeklyChangeKg = requiredWeeklyChangeKg
-        )
-
-        val isUserTargetApplied =
-            status == PlanStatus.HEALTHY || status == PlanStatus.NO_WEIGHT_CHANGE
-
-        val appliedCalories = if (isUserTargetApplied) {
-            targetCalories
-        } else {
-            recommendedCalories
-        }
-
-        val appliedWeeklyChangeKg = if (isUserTargetApplied) {
-            if (isWeightLoss) -targetWeeklyChangeKg else targetWeeklyChangeKg
-        } else {
-            if (isWeightLoss) -recommendedWeeklyChangeKg else recommendedWeeklyChangeKg
-        }
-
-        val estimatedWeeks = if (weightDifference == 0) {
-            0
-        } else {
-            ceil(weightDifference / abs(appliedWeeklyChangeKg)).toInt()
-        }
-
-        return DailyNeedsResult(
-            bmr = bmr.roundToInt(),
-            maintenanceCalories = maintenanceCalories,
-            targetCalories = targetCalories,
-            recommendedCalories = recommendedCalories,
-            appliedCalories = appliedCalories,
-            isUserTargetApplied = isUserTargetApplied,
-            weeklyWeightChangeKg = appliedWeeklyChangeKg,
-            estimatedWeeks = estimatedWeeks,
-            requiredWeeklyChangeKg = requiredWeeklyChangeKg,
-            status = status
-        )
-    }
-
-    private fun calculateBmr(
-        weight: Int,
-        height: Int,
-        age: Int,
-        gender: Gender?
-    ): Double {
-        return when (gender) {
-            Gender.MALE -> 10 * weight + 6.25 * height - 5 * age + 5
-            Gender.FEMALE -> 10 * weight + 6.25 * height - 5 * age - 161
-            Gender.PREFER_NOT_TO_SAY, null -> 10 * weight + 6.25 * height - 5 * age - 78
-        }
-    }
-
-    private fun activityMultiplier(activityLevel: ActivityLevel?): Double {
-        return when (activityLevel) {
-            ActivityLevel.LOW -> 1.2
-            ActivityLevel.MODERATE -> 1.375
-            ActivityLevel.HIGH -> 1.55
-            ActivityLevel.VERY_HIGH -> 1.725
-            null -> 1.2
-        }
-    }
-
-    private fun calculateRequiredWeeklyChange(
-        currentWeight: Int,
-        targetWeight: Int,
-        eventTimeMillis: Long?
-    ): Double? {
-        if (eventTimeMillis == null) return null
-
-        val diffMillis = eventTimeMillis - System.currentTimeMillis()
-        val days = diffMillis / (1000.0 * 60.0 * 60.0 * 24.0)
-
-        if (days <= 0) return null
-
-        val weeks = days / 7.0
-        val weightDifference = abs(currentWeight - targetWeight)
-
-        return weightDifference / weeks
-    }
-
-    private fun evaluatePlanStatus(
-        goal: GoalType?,
-        requiredWeeklyChangeKg: Double?
-    ): PlanStatus {
-        if (requiredWeeklyChangeKg == null) return PlanStatus.HEALTHY
-
-        return when (goal) {
-            GoalType.LOSE_WEIGHT -> when {
-                requiredWeeklyChangeKg <= 0.9 -> PlanStatus.HEALTHY
-                requiredWeeklyChangeKg <= 1.2 -> PlanStatus.AGGRESSIVE
-                else -> PlanStatus.NOT_RECOMMENDED
-            }
-
-            GoalType.GAIN_WEIGHT -> when {
-                requiredWeeklyChangeKg <= 0.5 -> PlanStatus.HEALTHY
-                requiredWeeklyChangeKg <= 0.8 -> PlanStatus.AGGRESSIVE
-                else -> PlanStatus.NOT_RECOMMENDED
-            }
-
-            else -> PlanStatus.NO_WEIGHT_CHANGE
-        }
-    }
-
-    private fun weeklyKgToDailyCalories(weeklyKg: Double): Double {
-        return weeklyKg * 7700.0 / 7.0
-    }
-
-    private fun minimumSafeCalories(gender: Gender?): Int {
-        return when (gender) {
-            Gender.MALE -> 1500
-            Gender.FEMALE -> 1200
-            Gender.PREFER_NOT_TO_SAY, null -> 1200
-        }
-    }
-
-    private fun OnboardingState.daysUntilEvent(): Long? {
-        val event = eventTimeMillis ?: return null
-        val days = ((event - System.currentTimeMillis()) / (1000L * 60L * 60L * 24L))
-        return days.takeIf { it > 0L }
+        return planEngine.calculateDailyNeeds(state)
     }
 
     private fun String.normalizedAiLanguage(): String {
