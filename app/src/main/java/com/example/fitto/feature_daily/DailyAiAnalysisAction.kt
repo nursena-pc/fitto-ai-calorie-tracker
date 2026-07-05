@@ -1,5 +1,6 @@
 package com.example.fitto.feature_daily
 
+import kotlin.ConsistentCopyVisibility
 import com.example.fitto.feature_daily.ai.AiDailyAnalysisResult
 import com.example.fitto.feature_daily.ai.AiDailyStatusLevel
 import kotlinx.coroutines.CancellationException
@@ -258,6 +259,7 @@ class DailyAiAnalysisAction(
         ) : RequestPreparation
     }
 
+    @ConsistentCopyVisibility
     data class PreparedRequest internal constructor(
         val snapshot: DailyAiSnapshot,
         val requestKey: String

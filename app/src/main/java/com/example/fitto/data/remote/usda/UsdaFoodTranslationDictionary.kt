@@ -1,10 +1,11 @@
 package com.example.fitto.data.remote.usda
 
+import com.example.fitto.core.text.AppLocales
 import java.util.Locale
 
 object UsdaFoodTranslationDictionary {
 
-    private val trLocale = Locale("tr", "TR")
+    private val trLocale = AppLocales.TURKISH
 
     private val trPhraseToEn = linkedMapOf(
         "tavuk gogsu" to "chicken breast",

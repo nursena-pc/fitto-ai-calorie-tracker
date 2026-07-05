@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import android.content.Context
 import com.example.fitto.R
 import java.util.Locale
@@ -67,7 +68,7 @@ object SocialTextLocalizer {
     private fun normalize(value: String): String {
         return value
             .trim()
-            .lowercase(Locale("tr", "TR"))
+            .lowercase(AppLocales.TURKISH)
             .replace('ı', 'i')
             .replace('ğ', 'g')
             .replace('ü', 'u')

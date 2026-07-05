@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -43,7 +44,7 @@ class GroupMessageSearchAdapter(
 
         private fun formatDate(value: Long): String {
             if (value <= 0L) return ""
-            return SimpleDateFormat("dd MMM, HH:mm", Locale("tr", "TR"))
+            return SimpleDateFormat("dd MMM, HH:mm", AppLocales.TURKISH)
                 .format(Date(value))
         }
     }

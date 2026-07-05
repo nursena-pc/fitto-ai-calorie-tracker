@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes.data
 
+import com.example.fitto.core.text.AppLocales
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -62,7 +63,7 @@ object RecipeValueResolver {
     private const val DEFAULT_DURATION_MINUTES = 30
     private const val DURATION_ROUNDING_STEP_MINUTES = 5
 
-    private val TURKISH_LOCALE = Locale("tr", "TR")
+    private val TURKISH_LOCALE = AppLocales.TURKISH
 
     private val DURATION_RANGE_REGEX = Regex("""^(\d+)\s*[-–—]\s*(\d+)\s*dk$""")
 

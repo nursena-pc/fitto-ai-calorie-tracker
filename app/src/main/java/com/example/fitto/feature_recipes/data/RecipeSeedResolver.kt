@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes.data
 
+import com.example.fitto.core.text.AppLocales
 import com.example.fitto.data.local.entity.RecipeEntity
 import org.json.JSONArray
 import org.json.JSONObject
@@ -143,5 +144,5 @@ object RecipeSeedResolver {
         }
     }
 
-    private val TURKISH_LOCALE = Locale("tr", "TR")
+    private val TURKISH_LOCALE = AppLocales.TURKISH
 }

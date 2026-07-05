@@ -16,6 +16,7 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
 import com.example.fitto.R
@@ -432,7 +433,7 @@ class ProfileAccountDialogCoordinator(
 
     private fun transparentButton(
         @StringRes textResId: Int,
-        @StringRes textColorResId: Int
+        @ColorRes textColorResId: Int
     ): MaterialButton {
         return MaterialButton(context).apply {
             setText(textResId)

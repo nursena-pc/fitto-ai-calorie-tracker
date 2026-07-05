@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes.data
 
+import com.example.fitto.core.text.AppLocales
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.example.fitto.feature_recipes.model.RecipeFilterState
 import com.example.fitto.feature_recipes.model.RecipeUiModel
@@ -131,5 +132,5 @@ object RecipeFilterResolver {
         return RecipeFilterOption(key = label.normalizeRecipeText(), label = label)
     }
 
-    private val TURKISH_LOCALE = Locale("tr", "TR")
+    private val TURKISH_LOCALE = AppLocales.TURKISH
 }

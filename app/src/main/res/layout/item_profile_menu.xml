@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/layoutProfileMenuItem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,7 +31,7 @@
                 android:layout_gravity="center"
                 android:contentDescription="@null"
                 android:src="@android:drawable/ic_menu_manage"
-                android:tint="@color/fitto_green" />
+                app:tint="@color/fitto_green" />
 
     </FrameLayout>
 

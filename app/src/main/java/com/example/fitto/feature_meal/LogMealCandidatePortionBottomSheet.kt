@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.BundleCompat
 import androidx.core.os.bundleOf
 import com.example.fitto.R
 import com.example.fitto.data.remote.logmeal.LogMealFoodCandidate
@@ -17,8 +18,13 @@ class LogMealCandidatePortionBottomSheet : BottomSheetDialogFragment() {
     private val binding get() = _binding!!
 
     private val candidate: LogMealFoodCandidate by lazy {
-        @Suppress("DEPRECATION")
-        requireArguments().getSerializable(ARG_CANDIDATE) as LogMealFoodCandidate
+        requireNotNull(
+            BundleCompat.getSerializable(
+                requireArguments(),
+                ARG_CANDIDATE,
+                LogMealFoodCandidate::class.java
+            )
+        ) { "LogMeal candidate argument is required" }
     }
 
     private var amountGrams: Double = 100.0

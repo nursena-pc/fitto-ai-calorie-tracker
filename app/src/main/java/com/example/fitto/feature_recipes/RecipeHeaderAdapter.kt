@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -94,7 +95,7 @@ class RecipeHeaderAdapter(
                 )
             )
             binding.allCategoryChip.minHeight = (34 * binding.root.resources.displayMetrics.density).toInt()
-            binding.allCategoryChip.chipCornerRadius = 17 * binding.root.resources.displayMetrics.density
+            binding.allCategoryChip.setUniformCornerRadius(17 * binding.root.resources.displayMetrics.density)
             binding.allCategoryChip.setChipBackgroundColorResource(R.color.chip_selector_bg)
             binding.allCategoryChip.setTextColor(
                 ContextCompat.getColorStateList(binding.root.context, R.color.chip_selector_text)
@@ -176,7 +177,7 @@ class RecipeHeaderAdapter(
                 isFocusable = true
                 isCheckedIconVisible = false
                 minHeight = (34 * density).toInt()
-                chipCornerRadius = 17 * density
+                setUniformCornerRadius(17 * density)
                 setPadding((10 * density).toInt(), 0, (10 * density).toInt(), 0)
                 setChipBackgroundColorResource(R.color.chip_selector_bg)
                 setTextColor(ContextCompat.getColorStateList(context, R.color.chip_selector_text))

@@ -9,6 +9,7 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.graphics.Shader
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -465,6 +466,10 @@ class BodyMeasurementsTrendChartView @JvmOverloads constructor(
     }
 
     private fun sp(value: Float): Float {
-        return value * resources.displayMetrics.scaledDensity
+        return TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_SP,
+            value,
+            resources.displayMetrics
+        )
     }
 }

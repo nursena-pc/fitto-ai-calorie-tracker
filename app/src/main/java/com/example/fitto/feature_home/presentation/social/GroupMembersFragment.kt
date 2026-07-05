@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import android.app.Dialog
 import android.os.Bundle
 import android.view.View
@@ -149,10 +150,10 @@ class GroupMembersFragment : DialogFragment(R.layout.fragment_group_members) {
             .map { it.trim() }
             .filter { it.isNotBlank() }
             .take(2)
-            .mapNotNull { it.firstOrNull()?.uppercase(Locale("tr", "TR")) }
+            .mapNotNull { it.firstOrNull()?.uppercase(AppLocales.TURKISH) }
             .joinToString("")
             .ifBlank {
-                value.firstOrNull()?.uppercase(Locale("tr", "TR")) ?: "F"
+                value.firstOrNull()?.uppercase(AppLocales.TURKISH) ?: "F"
             }
     }
 

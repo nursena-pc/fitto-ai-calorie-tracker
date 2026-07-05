@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.ui.setUniformCornerRadius
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -88,7 +89,7 @@ class SocialPostAdapter(
 
                 // Burada çok küçük yükseklik vermiyoruz, yoksa yazı kesiliyor
                 chipMinHeight = dp(30).toFloat()
-                chipCornerRadius = dp(14).toFloat()
+                setUniformCornerRadius(dp(14).toFloat())
                 chipStrokeWidth = 0f
 
                 // Kutunun iç boşlukları

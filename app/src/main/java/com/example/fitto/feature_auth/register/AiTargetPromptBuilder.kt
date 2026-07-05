@@ -1,5 +1,6 @@
 package com.example.fitto.feature_auth.register
 
+import com.example.fitto.core.text.AppLocales
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -302,7 +303,7 @@ riskLevel must be only SAFE, CAUTION, or NOT_RECOMMENDED.
     private fun Long?.toPromptDateLabel(isEnglish: Boolean): String {
         if (this == null) return if (isEnglish) "Not selected" else "Seçilmedi"
 
-        val locale = if (isEnglish) Locale.ENGLISH else Locale("tr", "TR")
+        val locale = if (isEnglish) Locale.ENGLISH else AppLocales.TURKISH
         val formatter = SimpleDateFormat(if (isEnglish) "MMM dd, yyyy" else "dd MMM yyyy", locale)
         val dateText = formatter.format(Date(this))
         val remainingDays = TimeUnit.MILLISECONDS.toDays(this - System.currentTimeMillis())

@@ -1,5 +1,6 @@
 package com.example.fitto.feature_auth.register
 
+import com.example.fitto.core.text.AppLocales
 import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
@@ -170,7 +171,7 @@ class WeightLossReasonFragment : Fragment(R.layout.fragment_weight_loss_reason) 
         picker.addOnPositiveButtonClickListener { selection: Long ->
             selectedEventDateMillis = selection
 
-            val formatter = SimpleDateFormat("dd MMM yyyy", Locale("tr", "TR"))
+            val formatter = SimpleDateFormat("dd MMM yyyy", AppLocales.TURKISH)
 
             binding.reasonEventDateText.text = formatter.format(Date(selection))
             binding.reasonEventDateText.setTextColor(

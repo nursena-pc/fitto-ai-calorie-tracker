@@ -55,11 +55,7 @@ class CustomFastingPlanBottomSheet : BottomSheetDialogFragment() {
             schedule.eatingHours
         )
 
-        summaryText.text = getString(
-            R.string.if_custom_dialog_summary,
-            schedule.fastingHours,
-            schedule.eatingHours
-        )
+        summaryText.text = getString(R.string.if_custom_dialog_summary)
 
         startInfoText.text = getString(R.string.if_custom_dialog_start_info)
         eatInfoText.text = getString(

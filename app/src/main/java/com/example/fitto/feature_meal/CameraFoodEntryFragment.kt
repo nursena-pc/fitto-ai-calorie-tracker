@@ -266,11 +266,9 @@ class CameraFoodEntryFragment : Fragment(R.layout.fragment_camera_food_entry) {
             LogMealCandidateSelectionBottomSheet.REQUEST_CANDIDATES_SELECTED,
             viewLifecycleOwner
         ) { _, bundle ->
-            @Suppress("DEPRECATION")
-            val selectedCandidates = bundle
-                .getSerializable(LogMealCandidateSelectionBottomSheet.BUNDLE_SELECTED_CANDIDATES)
-                .let { it as? ArrayList<LogMealFoodCandidate> }
-                .orEmpty()
+            val selectedCandidates = bundle.getLogMealCandidatePayload(
+                LogMealCandidateSelectionBottomSheet.BUNDLE_SELECTED_CANDIDATES
+            )
 
             if (selectedCandidates.isEmpty()) return@setFragmentResultListener
 

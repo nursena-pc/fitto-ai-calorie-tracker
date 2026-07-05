@@ -1,5 +1,6 @@
 package com.example.fitto.feature_home.presentation.social
 
+import com.example.fitto.core.text.AppLocales
 import android.app.Dialog
 import android.graphics.Color
 import android.net.Uri
@@ -1271,7 +1272,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
     private fun formatFullTime(timeMillis: Long): String {
         if (timeMillis <= 0L) return getString(R.string.chat_message_info_unknown)
-        return SimpleDateFormat("dd MMM yyyy HH:mm", Locale("tr", "TR")).format(Date(timeMillis))
+        return SimpleDateFormat("dd MMM yyyy HH:mm", AppLocales.TURKISH).format(Date(timeMillis))
     }
 
     private fun launchComposerDelivery(

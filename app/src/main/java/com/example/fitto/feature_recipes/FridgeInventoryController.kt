@@ -1,5 +1,6 @@
 package com.example.fitto.feature_recipes
 
+import com.example.fitto.core.text.AppLocales
 import java.util.Locale
 
 data class FridgeIngredient(
@@ -71,7 +72,7 @@ class FridgeInventoryController(
     }
 
     companion object {
-        private val TURKISH_LOCALE = Locale("tr", "TR")
+        private val TURKISH_LOCALE = AppLocales.TURKISH
 
         fun defaultIngredients(): List<FridgeIngredient> = listOf(
             FridgeIngredient("default_tomato", "Domates", "4", "adet"),

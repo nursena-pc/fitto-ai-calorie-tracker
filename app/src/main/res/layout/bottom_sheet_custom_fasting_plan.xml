@@ -39,7 +39,7 @@
                 android:layout_height="22dp"
                 android:contentDescription="@string/common_close"
                 android:src="@drawable/ic_close"
-                android:tint="@color/fitto_text_secondary" />
+                app:tint="@color/fitto_text_secondary" />
     </LinearLayout>
 
     <TextView

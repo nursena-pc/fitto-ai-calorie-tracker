@@ -34,8 +34,12 @@ class ProfileNotificationSettingsDialogCoordinator(
     private val launchIntent: (Intent) -> Unit,
     private val sdkInt: Int = Build.VERSION.SDK_INT,
     private val canScheduleExactAlarms: () -> Boolean = {
-        context.getSystemService(AlarmManager::class.java)
-            ?.canScheduleExactAlarms() == true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            context.getSystemService(AlarmManager::class.java)
+                ?.canScheduleExactAlarms() == true
+        } else {
+            false
+        }
     }
 ) {
 

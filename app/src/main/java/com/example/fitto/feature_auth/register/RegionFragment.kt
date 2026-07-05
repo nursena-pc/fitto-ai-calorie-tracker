@@ -1,5 +1,6 @@
 package com.example.fitto.feature_auth.register
 
+import com.example.fitto.core.text.AppLocales
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -149,13 +150,13 @@ class RegionFragment : Fragment(R.layout.fragment_region) {
 
     private fun createCountryList(): List<CountryUiModel> {
         val displayLocale = when (appLanguage) {
-            AppLanguage.TURKISH -> Locale("tr", "TR")
+            AppLanguage.TURKISH -> AppLocales.TURKISH
             AppLanguage.ENGLISH -> Locale.ENGLISH
         }
 
         return Locale.getISOCountries()
             .mapNotNull { code ->
-                val countryLocale = Locale("", code)
+                val countryLocale = AppLocales.forRegion(code)
                 val countryName = countryLocale.getDisplayCountry(displayLocale)
 
                 if (countryName.isBlank()) {

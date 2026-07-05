@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.os.Build
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -39,12 +40,15 @@ object FittoReminderVibrator {
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val effect = VibrationEffect.createWaveform(PATTERN, -1)
-                val attributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
 
-                vibrator.vibrate(effect, attributes)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    vibrator.vibrate(
+                        effect,
+                        VibrationAttributes.createForUsage(VibrationAttributes.USAGE_ALARM)
+                    )
+                } else {
+                    vibrateWithLegacyAttributes(vibrator, effect)
+                }
             } else {
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(PATTERN, -1)
@@ -56,6 +60,18 @@ object FittoReminderVibrator {
         }.onFailure { throwable ->
             ReminderDebugLogger.w("manual vibration failed", throwable)
         }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun vibrateWithLegacyAttributes(
+        vibrator: Vibrator,
+        effect: VibrationEffect
+    ) {
+        val attributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        vibrator.vibrate(effect, attributes)
     }
 
     private fun getVibrator(context: Context): Vibrator? {

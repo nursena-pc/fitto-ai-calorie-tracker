@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.NavHostFragment
+import com.example.fitto.core.platform.ActivityTransitionCompat
 import com.example.fitto.data.local.session.UserSessionDataGuard
 import com.example.fitto.feature_home.presentation.notifications.FittoInAppNotificationCenter
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
@@ -69,7 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         ReminderTaskRemovedService.ensureStarted(this)
-        overridePendingTransition(0, 0)
+        ActivityTransitionCompat.disableAnimations(this)
         setContentView(R.layout.activity_main)
         setupStartDestination()
         setupNotificationAccountGuard()
@@ -326,7 +327,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun recreate() {
         super.recreate()
-        overridePendingTransition(0, 0)
+        ActivityTransitionCompat.disableAnimations(this)
     }
 
     private fun dp(value: Int): Int {

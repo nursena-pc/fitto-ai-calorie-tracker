@@ -3,7 +3,8 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.androidx.room)
     id("com.google.gms.google-services")
 }
 val localProperties = Properties()
@@ -34,7 +35,8 @@ android {
         buildConfigField("String", "USDA_API_KEY", usdaApiKey.asBuildConfigString())
         buildConfigField("String", "GEMINI_API_KEY", geminiApiKey.asBuildConfigString())
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "LOGMEAL_API_USER_TOKEN", logMealApiUserToken.asBuildConfigString())    }
+        buildConfigField("String", "LOGMEAL_API_USER_TOKEN", logMealApiUserToken.asBuildConfigString())
+    }
 
     buildTypes {
         release {
@@ -60,6 +62,11 @@ android {
         viewBinding = true
         buildConfig = true
     }
+
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
@@ -76,6 +83,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation("androidx.test:core-ktx:1.7.0")
+    androidTestImplementation("androidx.room:room-testing:2.8.4")
 
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
@@ -98,7 +107,7 @@ dependencies {
     // Room
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
+    kapt("androidx.room:room-compiler:2.8.4")
 
     //api
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
