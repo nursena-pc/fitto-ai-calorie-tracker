@@ -2,6 +2,7 @@ package com.example.fitto
 
 import android.content.Context
 import com.example.fitto.core.coroutines.AppCoroutineDispatchers
+import com.example.fitto.feature_auth.AuthFeatureDependencies
 import com.example.fitto.data.seed.SeedDataImporter
 import com.example.fitto.feature_daily.DailyDashboardDefaultTargets
 import com.example.fitto.feature_daily.DailyDashboardDependencies
@@ -15,6 +16,8 @@ import com.example.fitto.feature_health.HealthConnectConnectionCoordinator
 import com.example.fitto.feature_health.HealthConnectConnectionDependencies
 import com.example.fitto.feature_health.HealthConnectManager
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationChannels
+import com.example.fitto.feature_home.presentation.profile.ProfileFeatureDependencies
+import com.example.fitto.feature_home.presentation.profile.reminders.ReminderFeatureDependencies
 import com.example.fitto.feature_home.presentation.social.RealtimePresenceManager
 import com.example.fitto.feature_home.presentation.social.SocialFeatureDependencies
 import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
@@ -23,6 +26,7 @@ import com.example.fitto.feature_meal.AddMealCoordinator
 import com.example.fitto.feature_meal.LocalAddMealDataSource
 import com.example.fitto.feature_recipes.RecipeFeatureDependencies
 import com.example.fitto.feature_recipes.data.RecipeRepository
+import com.example.fitto.feature_reports.ReportsFeatureDependencies
 import com.example.fitto.feature_sleep.data.SleepLogStore
 
 /** Application-level composition root for shared infrastructure and feature dependency graphs. */
@@ -38,6 +42,13 @@ internal class FittoAppContainer(
         startSocialNotificationObserver = { SocialNotificationObserver.start(appContext) }
     )
 
+    val authFeatureDependencies: AuthFeatureDependencies by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        AuthFeatureDependencies(
+            context = appContext,
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
+
     val socialFeatureDependencies: SocialFeatureDependencies by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         SocialFeatureDependencies(
             repositoryFactory = ::SocialRepository,
@@ -45,6 +56,32 @@ internal class FittoAppContainer(
             ioDispatcher = coroutineDispatchers.io,
             startPresence = RealtimePresenceManager::start
         )
+    }
+
+    val profileFeatureDependencies: ProfileFeatureDependencies by lazy(
+        LazyThreadSafetyMode.SYNCHRONIZED
+    ) {
+        ProfileFeatureDependencies(
+            context = appContext,
+            ioDispatcher = coroutineDispatchers.io,
+            socialRepository = socialFeatureDependencies.repository
+        )
+    }
+
+    val reportsFeatureDependencies: ReportsFeatureDependencies by lazy(
+        LazyThreadSafetyMode.SYNCHRONIZED
+    ) {
+        ReportsFeatureDependencies(
+            context = appContext,
+            profileRepository = profileFeatureDependencies.repository,
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
+
+    val reminderFeatureDependencies: ReminderFeatureDependencies by lazy(
+        LazyThreadSafetyMode.SYNCHRONIZED
+    ) {
+        ReminderFeatureDependencies(appContext)
     }
 
     fun createAddExerciseCoordinator(): AddExerciseCoordinator {

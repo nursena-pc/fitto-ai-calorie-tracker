@@ -26,7 +26,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.fitto.R
 import com.example.fitto.feature_home.presentation.profile.view.BodyMeasurementsDiagramView
 import com.example.fitto.feature_home.presentation.profile.view.BodyMeasurementsTrendChartView
@@ -91,7 +90,7 @@ class ProfileBodyMeasurementsFragment : Fragment(R.layout.fragment_profile_body_
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
+        viewModel = obtainProfileViewModel()
 
         bindViews(view)
         createMeasurementInputOverlays()

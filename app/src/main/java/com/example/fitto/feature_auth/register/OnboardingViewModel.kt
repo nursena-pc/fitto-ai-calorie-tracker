@@ -19,10 +19,9 @@ data class AiTargetUiState(
 )
 
 class OnboardingViewModel(
+    private val aiRepository: OnboardingAiRepository,
     private val planEngine: OnboardingPlanEngine = OnboardingPlanEngine()
 ) : ViewModel() {
-
-    private val aiRepository = GeminiAiRepository()
 
     private val _aiTargetUiState = MutableStateFlow(AiTargetUiState())
     val aiTargetUiState: StateFlow<AiTargetUiState> = _aiTargetUiState.asStateFlow()

@@ -56,7 +56,7 @@ internal interface ReportHealthDataSource {
 }
 
 internal class ProfileReportHealthDataSource(
-    private val profileRepository: ProfileRepository = ProfileRepository()
+    private val profileRepository: ProfileRepository
 ) : ReportHealthDataSource {
 
     override fun load(

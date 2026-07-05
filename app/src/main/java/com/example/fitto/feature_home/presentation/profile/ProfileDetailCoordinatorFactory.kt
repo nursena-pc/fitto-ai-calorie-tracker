@@ -33,8 +33,8 @@ internal class ProfileDetailCoordinatorFactory(
     private val scope: CoroutineScope,
     private val menuId: ProfileMenuId,
     private val callbacks: ProfileDetailCoordinatorCallbacks,
-    private val accountSettingsRepository: AccountSettingsRepository = AccountSettingsRepository(),
-    private val socialRepository: SocialRepository = SocialRepository()
+    private val accountSettingsRepository: AccountSettingsRepository,
+    private val socialRepository: SocialRepository
 ) {
     private val appContext = context.applicationContext
     private val featureScope = ProfileDetailFeatureScopeResolver.resolve(menuId)

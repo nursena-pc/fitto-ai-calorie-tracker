@@ -10,10 +10,10 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentUsernameSetupBinding
 import kotlinx.coroutines.launch
 import kotlin.random.Random
@@ -25,9 +25,7 @@ class UsernameSetupFragment : Fragment(R.layout.fragment_username_setup) {
 
     private val controller = UsernameSetupController()
     private val coordinator: UsernameSetupCoordinator by lazy {
-        UsernameSetupCoordinator(
-            dataSource = FirebaseUsernameSetupDataSource(requireContext())
-        )
+        requireContext().fittoAppContainer.authFeatureDependencies.usernameSetupCoordinator
     }
 
     private lateinit var onboardingViewModel: OnboardingViewModel
@@ -37,7 +35,7 @@ class UsernameSetupFragment : Fragment(R.layout.fragment_username_setup) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentUsernameSetupBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         setupUser()
         setupSuggestions()

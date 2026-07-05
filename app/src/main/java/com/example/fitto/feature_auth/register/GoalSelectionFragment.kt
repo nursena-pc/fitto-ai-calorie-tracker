@@ -7,7 +7,6 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentGoalSelectionBinding
@@ -25,7 +24,7 @@ class GoalSelectionFragment : Fragment(R.layout.fragment_goal_selection) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentGoalSelectionBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(5)
 

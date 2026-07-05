@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.data.local.session.UserSessionDataGuard
 import com.example.fitto.databinding.DialogResetPasswordBinding
 import com.example.fitto.databinding.FragmentLoginBinding
@@ -28,7 +29,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
     private val binding get() = _binding!!
 
     private val loginCoordinator: AuthLoginCoordinator by lazy {
-        AuthLoginCoordinator(FirebaseAuthLoginDataSource())
+        requireContext().fittoAppContainer.authFeatureDependencies.loginCoordinator
     }
 
     private var isLoading = false

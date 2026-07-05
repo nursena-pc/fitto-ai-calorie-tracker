@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.data.local.session.UserSessionDataGuard
 import com.example.fitto.databinding.DialogEmailVerificationWaitBinding
 import com.example.fitto.databinding.FragmentCreateAccountBinding
@@ -30,7 +31,7 @@ class CreateAccountFragment : Fragment(R.layout.fragment_create_account) {
 
     private val registrationController = AccountRegistrationController()
     private val registrationCoordinator: AccountRegistrationCoordinator by lazy {
-        AccountRegistrationCoordinator(FirebaseAccountRegistrationDataSource())
+        requireContext().fittoAppContainer.authFeatureDependencies.accountRegistrationCoordinator
     }
 
     private var emailVerificationJob: Job? = null

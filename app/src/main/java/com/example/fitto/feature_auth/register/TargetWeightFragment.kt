@@ -9,7 +9,6 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
@@ -36,7 +35,7 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentTargetWeightBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(10)
 

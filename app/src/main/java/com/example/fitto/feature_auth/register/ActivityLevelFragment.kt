@@ -6,7 +6,6 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentActivityLevelBinding
@@ -24,7 +23,7 @@ class ActivityLevelFragment : Fragment(R.layout.fragment_activity_level) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentActivityLevelBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(if (needsTargetWeight()) 9 else 10)
 

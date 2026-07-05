@@ -11,7 +11,7 @@ import java.text.DateFormat
 import java.util.Date
 
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepository()
+    private val repository: ProfileRepository
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(ProfileUiState())

@@ -3,7 +3,6 @@ package com.example.fitto.feature_auth.register
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDailyNeedsBinding
@@ -19,7 +18,7 @@ class DailyNeedsFragment : Fragment(R.layout.fragment_daily_needs) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentDailyNeedsBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(7)
 

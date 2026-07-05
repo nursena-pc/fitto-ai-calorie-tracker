@@ -8,7 +8,6 @@ import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentUserInfoBinding
@@ -31,7 +30,7 @@ class UserInfoFragment : Fragment(R.layout.fragment_user_info) {
 
         _binding = FragmentUserInfoBinding.bind(view)
         binding.root.setOnboardingProgress(3)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         setupInputs()
         setupClicks()

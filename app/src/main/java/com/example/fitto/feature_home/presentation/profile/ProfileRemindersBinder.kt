@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
 import com.example.fitto.feature_home.presentation.profile.reminders.ProfileReminderItem
 import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
-import com.example.fitto.feature_home.presentation.profile.reminders.alarm.ReminderAlarmScheduler
 import com.example.fitto.feature_home.presentation.profile.view.ReminderClockMarker
 import com.example.fitto.feature_home.presentation.profile.view.ReminderClockMarkerCategory
 import com.example.fitto.feature_home.presentation.profile.view.ReminderClockMarkerKind
@@ -23,12 +22,13 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-object ProfileRemindersBinder {
+internal class ProfileRemindersBinder(
+    private val listActionFactory: (Context) -> ProfileReminderListAction,
+    private val stateStore: ProfileRemindersStateStore = ProfileRemindersStateStore()
+) {
 
-    const val REQUEST_PICK_REMINDER_SOUND =
-        ProfileReminderEditDialogCoordinator.REQUEST_PICK_REMINDER_SOUND
-
-    private var selectedCategory: ReminderCategory = ReminderCategory.ALL
+    val selectedCategory: ReminderCategory
+        get() = stateStore.state.selectedCategory
     private var adapter: ProfileReminderAdapter? = null
     private var lastBackClick: (() -> Unit)? = null
     private val clockStateResolver = ProfileReminderClockStateResolver()
@@ -57,7 +57,7 @@ object ProfileRemindersBinder {
             )
         }
 
-        val listAction = createListAction(context)
+        val listAction = listActionFactory(context)
         val listState = listAction.load(selectedCategory)
         val allItems = listState.items
         val activeItems = listState.activeItems
@@ -87,24 +87,6 @@ object ProfileRemindersBinder {
             recyclerView = recyclerView,
             items = allItems.toMutableList(),
             listAction = listAction
-        )
-    }
-
-    private fun createListAction(context: Context): ProfileReminderListAction {
-        return ProfileReminderListAction(
-            loadReminders = { ReminderPreferenceStore.getReminders(context) },
-            persistEnabled = { id, enabled ->
-                ReminderPreferenceStore.setEnabled(context, id, enabled)
-            },
-            deleteReminder = { id ->
-                ReminderPreferenceStore.deleteReminder(context, id)
-            },
-            scheduleReminder = { item ->
-                ReminderAlarmScheduler.scheduleReminder(context, item)
-            },
-            cancelReminder = { id ->
-                ReminderAlarmScheduler.cancelReminder(context, id)
-            }
         )
     }
 
@@ -252,7 +234,7 @@ object ProfileRemindersBinder {
             chip.isChecked = selectedCategory == category
 
             chip.setOnClickListener {
-                selectedCategory = category
+                stateStore.selectCategory(category)
                 onCategoryChanged()
             }
         }
@@ -533,6 +515,11 @@ object ProfileRemindersBinder {
             shape = GradientDrawable.OVAL
             setColor(ContextCompat.getColor(context, categoryColorRes(category)))
         }
+    }
+
+    companion object {
+        const val REQUEST_PICK_REMINDER_SOUND =
+            ProfileReminderEditDialogCoordinator.REQUEST_PICK_REMINDER_SOUND
     }
 
 }
