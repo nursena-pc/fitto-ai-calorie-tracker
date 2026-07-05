@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentGroupAddMembersBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,7 +25,9 @@ class GroupAddMembersFragment : DialogFragment(R.layout.fragment_group_add_membe
     private var _binding: FragmentGroupAddMembersBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private var searchJob: Job? = null
 
     private val threadId: String by lazy {

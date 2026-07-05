@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentMessagesBinding
 import kotlinx.coroutines.launch
 
@@ -28,14 +29,12 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
     private var _binding: FragmentMessagesBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private lateinit var threadAdapter: MessageThreadAdapter
 
-    private var selectedFilter: MessageFilter = MessageFilter.ALL
-    private var searchQuery: String = ""
-    private var allThreads: List<MessageThreadUiModel> = emptyList()
-    private val pendingDeletedThreadIds = mutableSetOf<String>()
-    private val pendingDeletedAtByThreadId = mutableMapOf<String, Long>()
+    private val stateStore = MessagesScreenStateStore()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +58,7 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentMessagesBinding.bind(view)
-        RealtimePresenceManager.start()
+        requireContext().fittoAppContainer.socialFeatureDependencies.startRealtimePresence()
 
         setupRecyclerView()
         setupSwipeToDelete()
@@ -104,8 +103,7 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
                 }
 
                 val deletionStartedAt = System.currentTimeMillis()
-                pendingDeletedThreadIds.add(thread.id)
-                pendingDeletedAtByThreadId[thread.id] = deletionStartedAt
+                stateStore.beginDeletion(thread.id, deletionStartedAt)
                 updateThreads()
 
                 viewLifecycleOwner.lifecycleScope.launch {
@@ -114,8 +112,7 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
                             Toast.makeText(requireContext(), R.string.messages_thread_deleted, Toast.LENGTH_SHORT).show()
                         }
                         .onFailure {
-                            pendingDeletedThreadIds.remove(thread.id)
-                            pendingDeletedAtByThreadId.remove(thread.id)
+                            stateStore.rollbackDeletion(thread.id)
                             updateThreads()
                             Toast.makeText(requireContext(), R.string.messages_thread_delete_error, Toast.LENGTH_SHORT).show()
                         }
@@ -169,25 +166,38 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
     }
 
     private fun setupSearch() = with(binding) {
+        val restoredQuery = stateStore.state.searchQuery
+        messagesSearchEditText.setText(restoredQuery)
+        messagesSearchEditText.setSelection(restoredQuery.length)
         messagesSearchEditText.doAfterTextChanged { editable ->
-            searchQuery = editable?.toString()?.trim().orEmpty()
+            stateStore.updateSearchQuery(editable?.toString().orEmpty())
             updateThreads()
         }
     }
 
     private fun setupFilters() = with(binding) {
+        messagesTabGroup.check(filterButtonId(stateStore.state.selectedFilter))
         messagesTabGroup.setOnCheckedStateChangeListener { _, checkedIds ->
             val checkedId = checkedIds.firstOrNull() ?: R.id.friendsTabButton
-
-            selectedFilter = when (checkedId) {
-                R.id.friendsTabButton -> MessageFilter.ALL
-                R.id.unreadTabButton -> MessageFilter.UNREAD
-                R.id.aiAssistantTabButton -> MessageFilter.AI_ASSISTANT
-                R.id.groupsTabButton -> MessageFilter.GROUPS
-                else -> MessageFilter.ALL
-            }
-
+            stateStore.selectFilter(
+                when (checkedId) {
+                    R.id.friendsTabButton -> MessageThreadFilter.ALL
+                    R.id.unreadTabButton -> MessageThreadFilter.UNREAD
+                    R.id.aiAssistantTabButton -> MessageThreadFilter.AI_ASSISTANT
+                    R.id.groupsTabButton -> MessageThreadFilter.GROUPS
+                    else -> MessageThreadFilter.ALL
+                }
+            )
             updateThreads()
+        }
+    }
+
+    private fun filterButtonId(filter: MessageThreadFilter): Int {
+        return when (filter) {
+            MessageThreadFilter.ALL -> R.id.friendsTabButton
+            MessageThreadFilter.UNREAD -> R.id.unreadTabButton
+            MessageThreadFilter.AI_ASSISTANT -> R.id.aiAssistantTabButton
+            MessageThreadFilter.GROUPS -> R.id.groupsTabButton
         }
     }
 
@@ -195,20 +205,7 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.observeMessageThreads().collect { threads ->
-                    val revivedThreadIds = threads
-                        .filter { thread ->
-                            val deletedAt = pendingDeletedAtByThreadId[thread.id]
-                            deletedAt != null && thread.lastMessageCreatedAt > deletedAt
-                        }
-                        .map { thread -> thread.id }
-
-                    if (revivedThreadIds.isNotEmpty()) {
-                        val revivedSet = revivedThreadIds.toSet()
-                        pendingDeletedThreadIds.removeAll(revivedSet)
-                        revivedSet.forEach { threadId -> pendingDeletedAtByThreadId.remove(threadId) }
-                    }
-
-                    allThreads = threads
+                    stateStore.updateThreads(threads)
                     updateThreads()
                 }
             }
@@ -218,32 +215,14 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
     private fun updateThreads() {
         if (_binding == null) return
 
-        val filteredThreads = allThreads
-            .filterNot { thread -> pendingDeletedThreadIds.contains(thread.id) }
-            .filter { thread ->
-                when (selectedFilter) {
-                    MessageFilter.ALL -> true
-                    MessageFilter.UNREAD -> thread.unreadCount > 0
-                    MessageFilter.AI_ASSISTANT -> thread.id.contains("ai", ignoreCase = true) ||
-                            thread.title.contains("ai", ignoreCase = true) ||
-                            thread.title.contains("asistan", ignoreCase = true)
-                    MessageFilter.GROUPS -> thread.isGroup
-                }
-            }
-            .filter { thread ->
-                searchQuery.isBlank() ||
-                        thread.title.contains(searchQuery, ignoreCase = true) ||
-                        thread.lastMessage.contains(searchQuery, ignoreCase = true)
-            }
-
-        binding.messagesEmptyText.text = when (selectedFilter) {
-            MessageFilter.UNREAD -> getString(R.string.messages_unread_empty_state)
-            MessageFilter.AI_ASSISTANT -> getString(R.string.messages_ai_empty_state)
-            MessageFilter.GROUPS -> getString(R.string.messages_groups_empty_state)
-            MessageFilter.ALL -> getString(R.string.messages_empty_state)
+        val currentState = stateStore.state
+        val filteredThreads = stateStore.visibleThreads()
+        binding.messagesEmptyText.text = when (currentState.selectedFilter) {
+            MessageThreadFilter.UNREAD -> getString(R.string.messages_unread_empty_state)
+            MessageThreadFilter.AI_ASSISTANT -> getString(R.string.messages_ai_empty_state)
+            MessageThreadFilter.GROUPS -> getString(R.string.messages_groups_empty_state)
+            MessageThreadFilter.ALL -> getString(R.string.messages_empty_state)
         }
-
-
 
         binding.messagesEmptyText.isVisible = filteredThreads.isEmpty()
         binding.messagesRecyclerView.isVisible = filteredThreads.isNotEmpty()
@@ -262,10 +241,4 @@ class MessagesFragment : DialogFragment(R.layout.fragment_messages) {
         super.onDestroyView()
     }
 
-    private enum class MessageFilter {
-        ALL,
-        UNREAD,
-        AI_ASSISTANT,
-        GROUPS
-    }
 }

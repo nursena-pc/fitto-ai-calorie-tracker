@@ -27,6 +27,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.launch
 
 class SocialPostDetailFragment : DialogFragment() {
@@ -71,7 +72,10 @@ class SocialPostDetailFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this)[SocialViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            requireContext().fittoAppContainer.socialFeatureDependencies.createViewModelFactory()
+        )[SocialViewModel::class.java]
         setupAdapter()
         observePost()
         viewModel.observePostDetail(postId)

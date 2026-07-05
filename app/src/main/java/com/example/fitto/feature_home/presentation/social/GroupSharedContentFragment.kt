@@ -14,6 +14,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentGroupSharedContentBinding
 import kotlinx.coroutines.launch
 
@@ -22,7 +23,9 @@ class GroupSharedContentFragment : DialogFragment(R.layout.fragment_group_shared
     private var _binding: FragmentGroupSharedContentBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private val adapter = SharedContentAdapter(::onSharedContentClick)
 
     private val threadId: String by lazy {

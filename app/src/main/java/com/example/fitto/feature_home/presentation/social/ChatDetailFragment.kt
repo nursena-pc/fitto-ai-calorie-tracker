@@ -21,6 +21,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentChatDetailBinding
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -47,7 +48,9 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private var _binding: FragmentChatDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private lateinit var messageAdapter: ChatMessageAdapter
 
     private val handler = Handler(Looper.getMainLooper())
@@ -72,8 +75,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     private val messagePresentationController by lazy(LazyThreadSafetyMode.NONE) {
         ChatMessagePresentationController(highlightMessageId)
     }
-    private var latestThread: MessageThreadUiModel? = null
-    private var latestMessages: List<ChatMessageUiModel> = emptyList()
+    private val conversationStateStore = ChatConversationStateStore()
     private val stopTypingRunnable = Runnable {
         repository.setTyping(threadId, false)
     }
@@ -154,7 +156,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
     override fun onStart() {
         super.onStart()
-        RealtimePresenceManager.start()
+        requireContext().fittoAppContainer.socialFeatureDependencies.startRealtimePresence()
         dialog?.window?.setLayout(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT
@@ -173,6 +175,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         _headerRenderer = ChatHeaderRenderer(binding)
         _conversationAccessRenderer = ChatConversationAccessRenderer(binding)
         mediaController = createMediaController()
+        ensureInitialConversationState()
 
         setupHeader()
         setupRecyclerView()
@@ -197,7 +200,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                 if (selectedMessage == null) {
                     headerRenderer.renderTitle(presentation)
                 }
-                latestThread = latestThread?.copy(title = updatedName)
+                conversationStateStore.updateThreadTitle(updatedName)
             }
         }
         parentFragmentManager.setFragmentResultListener(
@@ -218,10 +221,30 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
             if (updatedThreadId == threadId) {
                 val presentation = headerPresentationController.updatePhoto(updatedPhotoUrl)
-                latestThread = latestThread?.copy(photoUrl = updatedPhotoUrl)
+                conversationStateStore.updateThreadPhoto(updatedPhotoUrl)
                 headerRenderer.renderAvatar(presentation)
             }
         }
+    }
+
+    private fun ensureInitialConversationState() {
+        if (conversationStateStore.state.thread != null) return
+
+        conversationStateStore.updateThread(
+            MessageThreadUiModel(
+                id = threadId,
+                title = threadTitle,
+                lastMessage = "",
+                timeText = "",
+                isGroup = isCurrentGroupChat,
+                initials = threadInitials,
+                unreadCount = 0,
+                participantIds = emptyList(),
+                otherParticipantId = otherParticipantId,
+                photoUrl = threadPhotoUrl,
+                memberCount = memberCount
+            )
+        )
     }
 
     private fun setupDeleteMessageResultListener() {
@@ -476,7 +499,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
     }
     private fun blockUser(targetUserId: String) {
         val preview = conversationAccessController.resolveBlockPreview(
-            messages = latestMessages,
+            messages = conversationStateStore.state.messages,
             emptyPreviewText = "Henüz mesaj yok.",
             fallbackCreatedAt = System.currentTimeMillis()
         )
@@ -569,7 +592,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
                         if (accessState.isBlocked) {
                             repository.setTyping(threadId, false)
                         }
-                        submitMessages(latestMessages)
+                        submitMessages(conversationStateStore.state.messages)
                     }
                 }
             }
@@ -591,7 +614,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
 
             if (_binding != null) {
                 renderConversationAccessState(accessState)
-                submitMessages(latestMessages)
+                submitMessages(conversationStateStore.state.messages)
             }
         }
     }
@@ -688,7 +711,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.observeMessages(threadId).collect { messages: List<ChatMessageUiModel> ->
-                    latestMessages = messages
+                    conversationStateStore.updateMessages(messages)
                     submitMessages(messages)
                     markThreadAsRead()
                 }
@@ -699,7 +722,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         openDirectUserSocialProfile()
     }
     private fun openGroupInfoScreen() {
-        val thread = latestThread ?: MessageThreadUiModel(
+        val thread = conversationStateStore.state.thread ?: MessageThreadUiModel(
             id = threadId,
             title = binding.chatTitleText.text?.toString().orEmpty(),
             lastMessage = "",
@@ -1164,7 +1187,7 @@ class ChatDetailFragment : DialogFragment(R.layout.fragment_chat_detail) {
         chatTitleText.text = if (hasSelection) {
             getString(R.string.chat_message_selected)
         } else {
-            latestThread?.title ?: threadTitle
+            conversationStateStore.state.thread?.title ?: threadTitle
         }
 
         updateMoreButtonVisibility()

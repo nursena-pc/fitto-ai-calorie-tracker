@@ -11,6 +11,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentEditGroupNameBinding
 import kotlinx.coroutines.launch
 
@@ -19,7 +20,9 @@ class GroupEditNameFragment : DialogFragment(R.layout.fragment_edit_group_name) 
     private var _binding: FragmentEditGroupNameBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
 
     private val threadId: String by lazy {
         requireArguments().getString(ARG_THREAD_ID).orEmpty()

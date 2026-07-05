@@ -10,6 +10,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentGroupSettingsBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -19,7 +20,9 @@ class GroupSettingsFragment : DialogFragment(R.layout.fragment_group_settings) {
     private var _binding: FragmentGroupSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
 
     private val threadId: String by lazy {
         requireArguments().getString(ARG_THREAD_ID).orEmpty()

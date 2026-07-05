@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.asStateFlow
 
-class SocialViewModel : ViewModel() {
-
-    private val repository = SocialRepository()
+class SocialViewModel internal constructor(
+    private val repository: SocialRepository
+) : ViewModel() {
     private val _sharedContentSummary = MutableStateFlow(ThreadSharedContentSummary())
     val sharedContentSummary: StateFlow<ThreadSharedContentSummary> = _sharedContentSummary.asStateFlow()
     private val _posts = MutableStateFlow<List<SocialPost>>(emptyList())

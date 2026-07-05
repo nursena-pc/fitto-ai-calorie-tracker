@@ -13,6 +13,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentNewMessageBinding
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -23,7 +24,9 @@ class NewMessageFragment : DialogFragment(R.layout.fragment_new_message) {
     private var _binding: FragmentNewMessageBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private lateinit var userAdapter: SearchUserAdapter
     private lateinit var selectedUserAdapter: SelectedUserAdapter
 
