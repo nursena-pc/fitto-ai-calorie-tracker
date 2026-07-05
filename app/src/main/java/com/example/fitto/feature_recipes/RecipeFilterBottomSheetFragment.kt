@@ -17,19 +17,15 @@ import com.example.fitto.R
 import com.example.fitto.databinding.BottomSheetRecipeFiltersBinding
 import com.example.fitto.databinding.DialogRecipeIngredientPickerBinding
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
-import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.example.fitto.feature_recipes.model.RecipeFilterState
-import com.example.fitto.feature_recipes.util.normalizeRecipeText
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.bottom_sheet_recipe_filters) {
 
@@ -38,15 +34,16 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         get() = _binding!!
 
     private lateinit var catalog: RecipeFilterCatalog
-    private lateinit var repository: RecipeRepository
-    private var ingredientOptions: List<RecipeFilterOption> = emptyList()
-    private var draftFilterState: RecipeFilterState = RecipeFilterState()
+    private lateinit var filterController: RecipeFilterController
+    private lateinit var filterCoordinator: RecipeFilterCoordinator
 
     override fun getTheme(): Int = R.style.ThemeOverlay_Fitto_WhiteBottomSheet
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        draftFilterState = RecipeFilterState.fromBundle(arguments?.getBundle(ARG_FILTER_STATE))
+        filterController = RecipeFilterController(
+            RecipeFilterState.fromBundle(arguments?.getBundle(ARG_FILTER_STATE))
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,7 +51,9 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
         _binding = BottomSheetRecipeFiltersBinding.bind(view)
         catalog = RecipeFilterCatalog(resources)
-        repository = RecipeRepository(requireContext())
+        filterCoordinator = RecipeFilterCoordinator(
+            LocalRecipeFilterDataSource(requireContext())
+        )
 
         setupClicks()
         setupIncludeExcludeSectionToggles()
@@ -62,7 +61,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         updateApplyButton()
 
         viewLifecycleOwner.lifecycleScope.launch {
-            ingredientOptions = withContext(Dispatchers.IO) { repository.allIngredientOptions() }
+            filterController.setIngredientOptions(filterCoordinator.loadIngredientOptions())
             renderIncludeExcludeIngredientFilters()
         }
     }
@@ -80,7 +79,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
         clearButton.setOnClickListener {
             val scrollY: Int = filterScrollView.scrollY
-            draftFilterState = RecipeFilterState()
+            filterController.clear()
             renderFilters()
             updateApplyButton()
             filterScrollView.post { filterScrollView.scrollTo(0, scrollY) }
@@ -89,7 +88,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         applyButton.setOnClickListener {
             parentFragmentManager.setFragmentResult(
                 RecipeFilterState.RESULT_REQUEST_KEY,
-                bundleOf(RecipeFilterState.RESULT_BUNDLE_KEY to draftFilterState.toBundle())
+                bundleOf(RecipeFilterState.RESULT_BUNDLE_KEY to filterController.state.toBundle())
             )
             dismiss()
         }
@@ -115,13 +114,10 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindIconOptionCards(
             container = mainCategoryIconRow,
             options = catalog.mainCategories,
-            selectedKey = draftFilterState.selectedMainCategoryKey,
+            selectedKey = filterController.state.selectedMainCategoryKey,
             emojiProvider = ::emojiForMainCategory,
             onSelected = { selectedKey: String? ->
-                draftFilterState = draftFilterState.copy(
-                    selectedMainCategoryKey = selectedKey,
-                    selectedSubcategoryKey = null
-                )
+                filterController.selectMainCategory(selectedKey)
                 renderSubcategoryFilter()
                 updateApplyButton()
             }
@@ -132,10 +128,10 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindIconMultiOptionCards(
             container = mainIngredientIconRow,
             options = catalog.mainIngredients,
-            selectedKeys = draftFilterState.selectedMainIngredientKeys,
+            selectedKeys = filterController.state.selectedMainIngredientKeys,
             emojiProvider = ::emojiForMainIngredient,
             onSelectedKeysChanged = { selectedKeys: Set<String> ->
-                draftFilterState = draftFilterState.copy(selectedMainIngredientKeys = selectedKeys)
+                filterController.selectMainIngredients(selectedKeys)
                 updateApplyButton()
             }
         )
@@ -143,10 +139,10 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindMultiChoiceChips(
             group = dietChipGroup,
             options = catalog.diets,
-            selectedKeys = draftFilterState.selectedDietKeys,
+            selectedKeys = filterController.state.selectedDietKeys,
             iconProvider = ::emojiForDiet,
             onSelectedKeysChanged = { selectedKeys: Set<String> ->
-                draftFilterState = draftFilterState.copy(selectedDietKeys = selectedKeys)
+                filterController.selectDiets(selectedKeys)
                 updateApplyButton()
             }
         )
@@ -154,10 +150,10 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindIconMultiOptionCards(
             container = methodIconRow,
             options = catalog.methods,
-            selectedKeys = draftFilterState.selectedMethodKeys,
+            selectedKeys = filterController.state.selectedMethodKeys,
             emojiProvider = ::emojiForMethod,
             onSelectedKeysChanged = { selectedKeys: Set<String> ->
-                draftFilterState = draftFilterState.copy(selectedMethodKeys = selectedKeys)
+                filterController.selectMethods(selectedKeys)
                 updateApplyButton()
             }
         )
@@ -165,9 +161,9 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindSingleChoiceChips(
             group = difficultyChipGroup,
             options = catalog.difficulties,
-            selectedKey = draftFilterState.selectedDifficultyKey,
+            selectedKey = filterController.state.selectedDifficultyKey,
             onSelected = { selectedKey: String? ->
-                draftFilterState = draftFilterState.copy(selectedDifficultyKey = selectedKey)
+                filterController.selectDifficulty(selectedKey)
                 updateApplyButton()
             }
         )
@@ -175,9 +171,9 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindSingleChoiceChips(
             group = durationChipGroup,
             options = catalog.durations,
-            selectedKey = draftFilterState.selectedDurationKey,
+            selectedKey = filterController.state.selectedDurationKey,
             onSelected = { selectedKey: String? ->
-                draftFilterState = draftFilterState.copy(selectedDurationKey = selectedKey)
+                filterController.selectDuration(selectedKey)
                 updateApplyButton()
             }
         )
@@ -186,7 +182,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
     }
 
     private fun renderSubcategoryFilter(): Unit = with(binding) {
-        val selectedMainCategoryKey: String? = draftFilterState.selectedMainCategoryKey
+        val selectedMainCategoryKey: String? = filterController.state.selectedMainCategoryKey
         val subcategories: List<RecipeFilterOption> = catalog.subcategoriesFor(selectedMainCategoryKey)
 
         subcategoryChipGroup.removeAllViews()
@@ -203,51 +199,41 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         bindSingleChoiceChips(
             group = subcategoryChipGroup,
             options = subcategories,
-            selectedKey = draftFilterState.selectedSubcategoryKey,
+            selectedKey = filterController.state.selectedSubcategoryKey,
             onSelected = { selectedKey: String? ->
-                draftFilterState = draftFilterState.copy(selectedSubcategoryKey = selectedKey)
+                filterController.selectSubcategory(selectedKey)
                 updateApplyButton()
             }
         )
     }
 
     private fun showIngredientPicker(include: Boolean): Unit {
-        val dialogBinding: DialogRecipeIngredientPickerBinding = DialogRecipeIngredientPickerBinding.inflate(layoutInflater)
+        val mode = if (include) {
+            RecipeIngredientFilterMode.INCLUDE
+        } else {
+            RecipeIngredientFilterMode.EXCLUDE
+        }
+        val pickerState = filterController.ingredientPickerState(mode)
+        val dialogBinding = DialogRecipeIngredientPickerBinding.inflate(layoutInflater)
         val dialog = BottomSheetDialog(requireContext(), R.style.ThemeOverlay_Fitto_WhiteBottomSheet)
         dialog.setContentView(dialogBinding.root)
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.behavior.skipCollapsed = false
 
-        var selectedKeys: Set<String> = if (include) {
-            draftFilterState.selectedIncludedIngredientKeys
-        } else {
-            draftFilterState.selectedExcludedIngredientKeys
+        var selectedKeys = pickerState.selectedKeys
+        val adapter = RecipeIngredientPickerAdapter(selectedKeys) { updatedKeys ->
+            selectedKeys = updatedKeys
         }
-
-        val blockedKeys: Set<String> = if (include) {
-            draftFilterState.selectedExcludedIngredientKeys
-        } else {
-            draftFilterState.selectedIncludedIngredientKeys
-        }
-
-        val availableOptions: List<RecipeFilterOption> = ingredientOptions.filterNot { option -> option.key in blockedKeys }
-        val adapter = RecipeIngredientPickerAdapter(selectedKeys) { updatedKeys: Set<String> -> selectedKeys = updatedKeys }
 
         dialogBinding.ingredientsRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         dialogBinding.ingredientsRecyclerView.adapter = adapter
         dialogBinding.ingredientsRecyclerView.itemAnimator = null
 
         fun submitFilteredOptions(query: String) {
-            val normalizedQuery: String = query.normalizeRecipeText()
-            val filteredOptions: List<RecipeFilterOption> = if (normalizedQuery.isBlank()) {
-                availableOptions
-            } else {
-                availableOptions.filter { option: RecipeFilterOption ->
-                    option.label.normalizeRecipeText().contains(normalizedQuery) ||
-                            option.key.normalizeRecipeText().contains(normalizedQuery)
-                }
-            }
-
+            val filteredOptions = filterController.filterIngredientOptions(
+                options = pickerState.availableOptions,
+                query = query
+            )
             adapter.submitList(filteredOptions)
             dialogBinding.emptyIngredientText.isVisible = filteredOptions.isEmpty()
             dialogBinding.ingredientsRecyclerView.isVisible = filteredOptions.isNotEmpty()
@@ -259,17 +245,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
         dialogBinding.ingredientPickerCloseButton.setOnClickListener { dialog.dismiss() }
         dialogBinding.ingredientPickerCancelButton.setOnClickListener { dialog.dismiss() }
         dialogBinding.ingredientPickerDoneButton.setOnClickListener {
-            draftFilterState = if (include) {
-                draftFilterState.copy(
-                    selectedIncludedIngredientKeys = selectedKeys,
-                    selectedExcludedIngredientKeys = draftFilterState.selectedExcludedIngredientKeys - selectedKeys
-                )
-            } else {
-                draftFilterState.copy(
-                    selectedExcludedIngredientKeys = selectedKeys,
-                    selectedIncludedIngredientKeys = draftFilterState.selectedIncludedIngredientKeys - selectedKeys
-                )
-            }
+            filterController.applyIngredientSelection(mode, selectedKeys)
             renderIncludeExcludeIngredientFilters()
             updateApplyButton()
             dialog.dismiss()
@@ -481,11 +457,9 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
     private fun renderIncludeExcludeIngredientFilters(): Unit {
         bindSelectedIngredientChips(
             group = binding.includeIngredientChipGroup,
-            selectedKeys = draftFilterState.selectedIncludedIngredientKeys,
-            onRemove = { key: String ->
-                draftFilterState = draftFilterState.copy(
-                    selectedIncludedIngredientKeys = draftFilterState.selectedIncludedIngredientKeys - key
-                )
+            options = filterController.selectedIngredientOptions(RecipeIngredientFilterMode.INCLUDE),
+            onRemove = { key ->
+                filterController.removeIngredient(RecipeIngredientFilterMode.INCLUDE, key)
                 renderIncludeExcludeIngredientFilters()
                 updateApplyButton()
             }
@@ -493,11 +467,9 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
         bindSelectedIngredientChips(
             group = binding.excludeIngredientChipGroup,
-            selectedKeys = draftFilterState.selectedExcludedIngredientKeys,
-            onRemove = { key: String ->
-                draftFilterState = draftFilterState.copy(
-                    selectedExcludedIngredientKeys = draftFilterState.selectedExcludedIngredientKeys - key
-                )
+            options = filterController.selectedIngredientOptions(RecipeIngredientFilterMode.EXCLUDE),
+            onRemove = { key ->
+                filterController.removeIngredient(RecipeIngredientFilterMode.EXCLUDE, key)
                 renderIncludeExcludeIngredientFilters()
                 updateApplyButton()
             }
@@ -506,16 +478,15 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
     private fun bindSelectedIngredientChips(
         group: ChipGroup,
-        selectedKeys: Set<String>,
+        options: List<RecipeFilterOption>,
         onRemove: (String) -> Unit
     ): Unit {
         group.removeAllViews()
 
-        selectedKeys.forEach { key: String ->
-            val label: String = ingredientOptions.firstOrNull { option -> option.key == key }?.label ?: key
-            val chip: Chip = createSelectedIngredientChip(label).apply {
-                setOnCloseIconClickListener { onRemove(key) }
-                setOnClickListener { onRemove(key) }
+        options.forEach { option ->
+            val chip = createSelectedIngredientChip(option.label).apply {
+                setOnCloseIconClickListener { onRemove(option.key) }
+                setOnClickListener { onRemove(option.key) }
             }
             group.addView(chip)
         }
@@ -591,7 +562,7 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
     }
 
     private fun updateApplyButton(): Unit {
-        val hasActiveFilters: Boolean = draftFilterState.hasActiveFilters()
+        val hasActiveFilters: Boolean = filterController.hasActiveFilters
         binding.applyButton.isEnabled = true
         binding.applyButton.alpha = 1f
         binding.applyButton.text = getString(R.string.recipes_filter_show_results)

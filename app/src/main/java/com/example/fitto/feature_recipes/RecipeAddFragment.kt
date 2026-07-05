@@ -21,13 +21,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentRecipeAddBinding
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
-import com.example.fitto.feature_recipes.data.RecipeRepository
-import com.example.fitto.feature_recipes.data.UserRecipeDraft
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.google.android.material.chip.Chip
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
 
@@ -36,11 +32,9 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
         get() = _binding!!
 
     private lateinit var catalog: RecipeFilterCatalog
-    private lateinit var repository: RecipeRepository
+    private val formController = RecipeAddFormController()
+    private lateinit var addCoordinator: RecipeAddCoordinator
 
-    private var selectedCategoryKey: String? = null
-    private var selectedDurationKey: String? = null
-    private var selectedDifficultyKey: String? = null
     private val ingredientEdits = mutableListOf<EditText>()
     private val stepEdits = mutableListOf<EditText>()
     private val ingredientErrorTexts = mutableMapOf<EditText, TextView>()
@@ -52,7 +46,7 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
 
         _binding = FragmentRecipeAddBinding.bind(view)
         catalog = RecipeFilterCatalog(resources)
-        repository = RecipeRepository(requireContext())
+        addCoordinator = RecipeAddCoordinator(LocalRecipeAddDataSource(requireContext()))
 
         applyRecipeFormKeyboardMode()
 
@@ -87,9 +81,9 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
     private fun bindCategoryChips() {
         binding.categoryChipGroup.removeAllViews()
         catalog.mainCategories.forEach { option: RecipeFilterOption ->
-            val chip = createChoiceChip(option.label, option.key == selectedCategoryKey, compact = false)
+            val chip = createChoiceChip(option.label, option.key == formController.state.selectedCategoryKey, compact = false)
             chip.setOnClickListener {
-                selectedCategoryKey = if (selectedCategoryKey == option.key) null else option.key
+                formController.toggleCategory(option.key)
                 bindCategoryChips()
                 binding.categoryErrorText.visibility = View.GONE
                 updateSaveButton()
@@ -101,9 +95,9 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
     private fun bindDurationChips() {
         binding.durationChipGroup.removeAllViews()
         catalog.durations.forEach { option: RecipeFilterOption ->
-            val chip = createChoiceChip(option.label, option.key == selectedDurationKey, compact = true)
+            val chip = createChoiceChip(option.label, option.key == formController.state.selectedDurationKey, compact = true)
             chip.setOnClickListener {
-                selectedDurationKey = if (selectedDurationKey == option.key) null else option.key
+                formController.toggleDuration(option.key)
                 bindDurationChips()
                 updateSaveButton()
             }
@@ -114,9 +108,9 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
     private fun bindDifficultyChips() {
         binding.difficultyChipGroup.removeAllViews()
         catalog.difficulties.forEach { option: RecipeFilterOption ->
-            val chip = createChoiceChip(option.label, option.key == selectedDifficultyKey, compact = true)
+            val chip = createChoiceChip(option.label, option.key == formController.state.selectedDifficultyKey, compact = true)
             chip.setOnClickListener {
-                selectedDifficultyKey = if (selectedDifficultyKey == option.key) null else option.key
+                formController.toggleDifficulty(option.key)
                 bindDifficultyChips()
                 updateSaveButton()
             }
@@ -336,28 +330,32 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
     }
 
     private fun saveRecipe() {
-        val title = binding.titleEditText.text?.toString().orEmpty().trim()
-        val ingredients = ingredientEdits.map { it.text?.toString().orEmpty().trim() }.filter { it.isNotBlank() }
-        val steps = stepEdits.map { it.text?.toString().orEmpty().trim() }.filter { it.isNotBlank() }
+        clearValidationErrors()
 
-        if (!validateRequiredFields(title, ingredients, steps)) {
-            return
-        }
-
-        val draft = UserRecipeDraft(
-            title = title,
+        val submission = formController.prepareSubmission(
+            title = binding.titleEditText.text?.toString().orEmpty(),
             description = binding.descriptionEditText.text?.toString().orEmpty(),
-            mainCategoryKey = selectedCategoryKey.orEmpty(),
-            durationLabel = selectedDurationKey ?: catalog.durations.firstOrNull()?.key.orEmpty(),
-            difficultyKey = selectedDifficultyKey ?: catalog.difficulties.firstOrNull()?.key.orEmpty(),
-            ingredients = ingredients,
-            steps = steps
+            ingredientValues = ingredientEdits.map { it.text?.toString().orEmpty() },
+            stepValues = stepEdits.map { it.text?.toString().orEmpty() },
+            defaultDurationKey = catalog.durations.firstOrNull()?.key.orEmpty(),
+            defaultDifficultyKey = catalog.difficulties.firstOrNull()?.key.orEmpty()
         )
 
-        binding.saveRecipeButton.isEnabled = false
+        val readySubmission = when (submission) {
+            is RecipeAddSubmission.Invalid -> {
+                renderValidationErrors(submission.issues)
+                return
+            }
 
+            RecipeAddSubmission.AlreadySaving -> return
+            is RecipeAddSubmission.Ready -> submission
+        }
+
+        updateSaveButton()
+        val draft = readySubmission.draft
         viewLifecycleOwner.lifecycleScope.launch {
-            val recipeId = withContext(Dispatchers.IO) { repository.addUserRecipe(draft) }
+            val recipeId = addCoordinator.saveRecipe(draft)
+            formController.completeSave()
             if (_binding == null) return@launch
 
             parentFragmentManager.setFragmentResult(
@@ -369,29 +367,22 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
         }
     }
 
-    private fun validateRequiredFields(
-        title: String,
-        ingredients: List<String>,
-        steps: List<String>
-    ): Boolean {
-        clearValidationErrors()
-
+    private fun renderValidationErrors(issues: Set<RecipeAddValidationIssue>) {
         var firstInvalidView: View? = null
 
-        if (title.isBlank()) {
+        if (RecipeAddValidationIssue.TITLE in issues) {
             binding.titleInputLayout.error = getString(R.string.recipes_add_title_required)
             firstInvalidView = binding.titleEditText
         }
 
-        if (selectedCategoryKey == null) {
+        if (RecipeAddValidationIssue.CATEGORY in issues) {
             binding.categoryErrorText.text = getString(R.string.recipes_add_category_required)
             binding.categoryErrorText.visibility = View.VISIBLE
             if (firstInvalidView == null) firstInvalidView = binding.categoryErrorText
         }
 
-        if (ingredients.isEmpty()) {
-            val target = ingredientEdits.firstOrNull()
-            target?.let { edit ->
+        if (RecipeAddValidationIssue.INGREDIENTS in issues) {
+            ingredientEdits.firstOrNull()?.let { edit ->
                 ingredientErrorTexts[edit]?.apply {
                     text = getString(R.string.recipes_add_ingredient_required)
                     visibility = View.VISIBLE
@@ -400,9 +391,8 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
             }
         }
 
-        if (steps.isEmpty()) {
-            val target = stepEdits.firstOrNull()
-            target?.let { edit ->
+        if (RecipeAddValidationIssue.STEPS in issues) {
+            stepEdits.firstOrNull()?.let { edit ->
                 stepErrorTexts[edit]?.apply {
                     text = getString(R.string.recipes_add_step_required)
                     visibility = View.VISIBLE
@@ -415,8 +405,6 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
             view.requestFocus()
             keepInputAboveKeyboard(view)
         }
-
-        return firstInvalidView == null
     }
 
     private fun clearValidationErrors() {
@@ -428,8 +416,8 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
 
     private fun updateSaveButton() {
         if (_binding == null) return
-        // Butonu kapatmıyoruz; eksik alan varsa saveRecipe() içinde kullanıcıya sebebini söylüyoruz.
-        binding.saveRecipeButton.isEnabled = true
+        // Eksik alanlar saveRecipe() içinde açıklanır; yalnızca devam eden kayıt ikinci gönderimi engeller.
+        binding.saveRecipeButton.isEnabled = !formController.state.isSaving
     }
 
     private fun openSavedRecipeAndRemoveAddScreen(recipeId: String) {
