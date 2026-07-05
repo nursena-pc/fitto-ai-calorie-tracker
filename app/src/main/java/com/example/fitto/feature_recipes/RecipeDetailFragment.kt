@@ -1,7 +1,6 @@
 package com.example.fitto.feature_recipes
 
 import android.content.Context
-import com.example.fitto.data.local.session.UserSessionDataGuard
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -34,9 +33,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
@@ -44,42 +41,38 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     private val binding: FragmentRecipeDetailBinding
         get() = _binding!!
 
-    private lateinit var repository: RecipeRepository
+    private lateinit var detailCoordinator: RecipeDetailCoordinator
+    private lateinit var shoppingListStore: RecipeShoppingListStore
     private lateinit var catalog: RecipeFilterCatalog
-    private var currentRecipe: RecipeUiModel? = null
-    private var fromCommunity: Boolean = false
-    private var communityPostId: String? = null
-    private var communityPostOwnerId: String? = null
-    private var communityRecipeSourceTag: String? = null
-    private var activeTab: DetailTab = DetailTab.OVERVIEW
-    private var editMode: Boolean = false
-    private var shoppingSelectMode: Boolean = false
-    private var cookModeEnabled: Boolean = false
-    private var servingMultiplier: Int = 1
-    private val selectedShoppingIndexes: MutableSet<Int> = linkedSetOf()
-    private val detailIngredients: MutableList<RecipeDetailIngredient> = mutableListOf()
-    private var editModeSnapshot: List<RecipeDetailIngredient> = emptyList()
+    private val detailController = RecipeDetailController()
+    private val detailState: RecipeDetailState
+        get() = detailController.state
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentRecipeDetailBinding.bind(view)
-        repository = RecipeRepository(requireContext())
+        detailCoordinator = RecipeDetailCoordinator(
+            LocalRecipeDetailDataSource(RecipeRepository(requireContext()))
+        )
+        shoppingListStore = SharedPreferencesRecipeShoppingListStore(requireContext())
         catalog = RecipeFilterCatalog(resources)
 
         setupStaticClicks()
 
         val args = arguments
         val recipeId: String? = args?.getString(ARG_RECIPE_ID)
-        fromCommunity = args?.getBoolean(ARG_FROM_COMMUNITY, false) ?: false
-        communityPostId = args?.getString(ARG_COMMUNITY_POST_ID)
-        communityPostOwnerId = args?.getString(ARG_COMMUNITY_POST_OWNER_ID)
-        communityRecipeSourceTag = args?.getString(ARG_COMMUNITY_RECIPE_SOURCE_TAG)
+        detailController.updateOrigin(
+            RecipeDetailOrigin(
+                fromCommunity = args?.getBoolean(ARG_FROM_COMMUNITY, false) ?: false,
+                communityPostId = args?.getString(ARG_COMMUNITY_POST_ID),
+                communityPostOwnerId = args?.getString(ARG_COMMUNITY_POST_OWNER_ID),
+                communityRecipeSourceTag = args?.getString(ARG_COMMUNITY_RECIPE_SOURCE_TAG)
+            )
+        )
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val recipe: RecipeUiModel? = withContext(Dispatchers.IO) {
-                recipeId?.let { id -> repository.findById(id) }
-            }
+            val recipe: RecipeUiModel? = detailCoordinator.loadRecipe(recipeId)
 
             if (_binding == null) return@launch
 
@@ -89,16 +82,9 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
                 return@launch
             }
 
-            currentRecipe = recipe
-            detailIngredients.clear()
-            detailIngredients.addAll(
-                recipe.ingredients.mapIndexed { index, line ->
-                    RecipeDetailIngredientMapper.fromDisplayLine(line, index)
-                }
-            )
-            servingMultiplier = 1
+            detailController.loadRecipe(recipe)
             bindRecipe(recipe)
-            showTab(DetailTab.OVERVIEW)
+            showTab(RecipeDetailTab.OVERVIEW)
         }
     }
 
@@ -106,18 +92,16 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         backButton.setOnClickListener { parentFragmentManager.popBackStack() }
         topShareButton.setOnClickListener { showRecipeOptionsMenu() }
 
-        overviewTabButton.setOnClickListener { showTab(DetailTab.OVERVIEW) }
-        ingredientsTabButton.setOnClickListener { showTab(DetailTab.INGREDIENTS) }
-        stepsTabButton.setOnClickListener { showTab(DetailTab.STEPS) }
+        overviewTabButton.setOnClickListener { showTab(RecipeDetailTab.OVERVIEW) }
+        ingredientsTabButton.setOnClickListener { showTab(RecipeDetailTab.INGREDIENTS) }
+        stepsTabButton.setOnClickListener { showTab(RecipeDetailTab.STEPS) }
 
         portionMinusButton.setOnClickListener {
-            if (servingMultiplier > 1) {
-                servingMultiplier--
-                renderPortionAndNutrition()
-            }
+            detailController.decreaseServingMultiplier()
+            renderPortionAndNutrition()
         }
         portionPlusButton.setOnClickListener {
-            servingMultiplier++
+            detailController.increaseServingMultiplier()
             renderPortionAndNutrition()
         }
 
@@ -125,19 +109,27 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         addIngredientButton.setOnClickListener { addBlankIngredient() }
 
         bottomShoppingButton.setOnClickListener {
-            if (shoppingSelectMode) addSelectedIngredientsToShoppingList() else startShoppingSelection()
+            if (detailState.shoppingSelectMode) addSelectedIngredientsToShoppingList() else startShoppingSelection()
         }
 
         saveEditedRecipeButton.setOnClickListener { saveRecipeToBook(useEditedVersion = true) }
 
-        topCookModeCard.setOnClickListener { setCookModeEnabled(!cookModeEnabled, showToast = true) }
+        topCookModeCard.setOnClickListener {
+            detailController.toggleCookMode()
+            renderCookMode(showToast = true)
+        }
         setCookModeEnabled(false, showToast = false)
 
         startCookingButton.setOnClickListener { openCookingMode() }
     }
 
-    private fun setCookModeEnabled(enabled: Boolean, showToast: Boolean) = with(binding) {
-        cookModeEnabled = enabled
+    private fun setCookModeEnabled(enabled: Boolean, showToast: Boolean) {
+        detailController.setCookModeEnabled(enabled)
+        renderCookMode(showToast)
+    }
+
+    private fun renderCookMode(showToast: Boolean) = with(binding) {
+        val enabled = detailState.cookModeEnabled
         root.keepScreenOn = enabled
         topCookModeCard.strokeColor = ContextCompat.getColor(
             requireContext(),
@@ -188,28 +180,24 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun shouldUseCommunityBookAction(): Boolean {
-        if (!fromCommunity) return false
-        val sourceTag = communityRecipeSourceTag.orEmpty()
-        return sourceTag == RecipeRepository.RECIPE_SOURCE_TAG_COMMUNITY ||
-            currentRecipe?.id.orEmpty().startsWith("community_preview_") ||
-            currentRecipe?.id.orEmpty().startsWith("shared_")
+        return detailController.shouldUseCommunityBookAction()
     }
 
     private fun saveOriginalRecipe() {
-        val recipe = currentRecipe ?: return
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            repository.saveFavorite(recipe.id)
+        val recipe = detailState.recipe ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            detailCoordinator.saveOriginalRecipe(recipe.id)
         }
         Toast.makeText(requireContext(), getString(R.string.recipes_detail_saved_original, recipe.title), Toast.LENGTH_SHORT).show()
     }
 
     private fun saveCommunityRecipeToBook() {
-        val recipe = currentRecipe ?: return
+        val recipe = detailState.recipe ?: return
         viewLifecycleOwner.lifecycleScope.launch {
-            val savedId = withContext(Dispatchers.IO) {
-                repository.saveRecipeFromCommunityPost(
-                    postId = communityPostId.orEmpty(),
-                    postUserId = communityPostOwnerId.orEmpty(),
+            val savedId = detailCoordinator.saveCommunityRecipe(
+                RecipeCommunityBookRequest(
+                    postId = detailState.origin.communityPostId.orEmpty(),
+                    postUserId = detailState.origin.communityPostOwnerId.orEmpty(),
                     recipeId = recipe.id,
                     recipeTitle = recipe.title,
                     recipeImageResId = recipe.imageResId,
@@ -219,12 +207,10 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
                     recipeCategory = recipe.mainCategoryKey,
                     recipeSourceTag = RecipeRepository.RECIPE_SOURCE_TAG_COMMUNITY,
                     recipeDescription = recipe.description,
-                    recipeIngredients = detailIngredients.map(
-                        RecipeDetailIngredientMapper::toDisplayLine
-                    ),
+                    recipeIngredients = detailState.ingredientLines,
                     recipeSteps = recipe.steps
                 )
-            }
+            )
 
             if (_binding == null) return@launch
             Toast.makeText(
@@ -236,7 +222,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun showRecipeOptionsMenu() {
-        val recipe = currentRecipe ?: return
+        val recipe = detailState.recipe ?: return
         val context = requireContext()
 
         val card = MaterialCardView(context).apply {
@@ -442,10 +428,10 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         val shareText = buildString {
             append(recipe.title).append('\n')
             append(recipe.description).append('\n')
-            if (detailIngredients.isNotEmpty()) {
+            if (detailState.ingredients.isNotEmpty()) {
                 append('\n').append(getString(R.string.recipes_detail_ingredients)).append(':').append('\n')
                 append(
-                    detailIngredients.joinToString(separator = "\n") { ingredient ->
+                    detailState.ingredients.joinToString(separator = "\n") { ingredient ->
                         "• ${RecipeDetailIngredientMapper.toDisplayLine(ingredient)}"
                     }
                 )
@@ -461,13 +447,13 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
 
     private fun shareRecipeToSocial(recipe: RecipeUiModel, comment: String = "") {
         viewLifecycleOwner.lifecycleScope.launch {
-            val postId = withContext(Dispatchers.IO) {
-                repository.shareRecipeToCommunity(
-                    recipe.id,
-                    detailIngredients.map(RecipeDetailIngredientMapper::toDisplayLine),
-                    comment
+            val postId = detailCoordinator.shareRecipeToCommunity(
+                RecipeCommunityShareRequest(
+                    recipeId = recipe.id,
+                    ingredients = detailState.ingredientLines,
+                    comment = comment
                 )
-            }
+            )
             if (_binding == null) return@launch
             val message = if (postId != null) {
                 getString(R.string.recipes_detail_shared_to_community_with_comment)
@@ -478,25 +464,25 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
     }
 
-    private fun showTab(tab: DetailTab): Unit = with(binding) {
-        activeTab = tab
-        if (tab != DetailTab.INGREDIENTS && shoppingSelectMode) {
-            shoppingSelectMode = false
-            selectedShoppingIndexes.clear()
-            bottomShoppingButton.text = getString(R.string.recipes_detail_add_to_shopping)
+    private fun showTab(tab: RecipeDetailTab): Unit = with(binding) {
+        val previousShoppingMode = detailState.shoppingSelectMode
+        val state = detailController.selectTab(tab)
+        if (previousShoppingMode && !state.shoppingSelectMode) {
             renderIngredients()
         }
-        overviewContent.isVisible = tab == DetailTab.OVERVIEW
-        ingredientsContent.isVisible = tab == DetailTab.INGREDIENTS
-        stepsContent.isVisible = tab == DetailTab.STEPS
+        renderIngredientModeControls()
 
-        val showBottomActions = tab == DetailTab.INGREDIENTS
+        overviewContent.isVisible = tab == RecipeDetailTab.OVERVIEW
+        ingredientsContent.isVisible = tab == RecipeDetailTab.INGREDIENTS
+        stepsContent.isVisible = tab == RecipeDetailTab.STEPS
+
+        val showBottomActions = tab == RecipeDetailTab.INGREDIENTS
         bottomShoppingButton.isVisible = showBottomActions
         bottomActionRow.isVisible = showBottomActions
 
-        styleTabButton(overviewTabButton, tab == DetailTab.OVERVIEW)
-        styleTabButton(ingredientsTabButton, tab == DetailTab.INGREDIENTS)
-        styleTabButton(stepsTabButton, tab == DetailTab.STEPS)
+        styleTabButton(overviewTabButton, tab == RecipeDetailTab.OVERVIEW)
+        styleTabButton(ingredientsTabButton, tab == RecipeDetailTab.INGREDIENTS)
+        styleTabButton(stepsTabButton, tab == RecipeDetailTab.STEPS)
     }
 
     private fun styleTabButton(button: MaterialButton, selected: Boolean) {
@@ -514,56 +500,46 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun toggleEditMode() {
-        if (editMode) {
-            detailIngredients.clear()
-            detailIngredients.addAll(editModeSnapshot)
-            editModeSnapshot = emptyList()
-            editMode = false
-            shoppingSelectMode = false
-            selectedShoppingIndexes.clear()
-        } else {
-            editModeSnapshot = detailIngredients.map { ingredient -> ingredient.copy() }
-            editMode = true
-            shoppingSelectMode = false
-            selectedShoppingIndexes.clear()
-            binding.bottomShoppingButton.text = getString(R.string.recipes_detail_add_to_shopping)
+        val change = detailController.toggleEditMode()
+        if (change.editModeStarted) {
             Toast.makeText(requireContext(), R.string.recipes_detail_edit_mode_enabled, Toast.LENGTH_LONG).show()
         }
-        binding.ingredientEditToggleButton.text = getString(
-            if (editMode) R.string.cancel else R.string.recipes_detail_edit_for_me_short
-        )
-        binding.addIngredientButton.isVisible = editMode
-        binding.saveEditedRecipeButton.isVisible = editMode
+        renderIngredientModeControls()
         renderIngredients()
         renderPortionAndNutrition()
     }
 
-    private fun enableEditMode() {
-        if (!editMode) {
-            editModeSnapshot = detailIngredients.map { ingredient -> ingredient.copy() }
-            editMode = true
-            binding.ingredientEditToggleButton.text = getString(R.string.cancel)
-            binding.addIngredientButton.isVisible = true
-            binding.saveEditedRecipeButton.isVisible = true
-            Toast.makeText(requireContext(), R.string.recipes_detail_edit_mode_enabled, Toast.LENGTH_LONG).show()
-        }
+    private fun renderIngredientModeControls(): Unit = with(binding) {
+        val state = detailState
+        ingredientEditToggleButton.text = getString(
+            if (state.editMode) R.string.cancel else R.string.recipes_detail_edit_for_me_short
+        )
+        addIngredientButton.isVisible = state.editMode
+        saveEditedRecipeButton.isVisible = state.editMode
+        bottomShoppingButton.text = getString(
+            if (state.shoppingSelectMode) {
+                R.string.recipes_detail_add_selected_to_shopping
+            } else {
+                R.string.recipes_detail_add_to_shopping
+            }
+        )
     }
 
     private fun renderIngredients(): Unit = with(binding) {
         overviewIngredientListContainer.removeAllViews()
         ingredientListContainer.removeAllViews()
-        addIngredientButton.isVisible = editMode
-        saveEditedRecipeButton.isVisible = editMode
+        addIngredientButton.isVisible = detailState.editMode
+        saveEditedRecipeButton.isVisible = detailState.editMode
 
         overviewIngredientListContainer.addView(createQuickIngredientSummary())
-        detailIngredients.forEachIndexed { index, ingredient ->
+        detailState.ingredients.forEachIndexed { index, ingredient ->
             ingredientListContainer.addView(createIngredientRow(index, ingredient, compact = false))
         }
     }
 
     private fun createQuickIngredientSummary(): View {
         val context = requireContext()
-        val names = detailIngredients
+        val names = detailState.ingredients
             .map { ingredient -> ingredient.name.trim() }
             .filter { name -> name.isNotBlank() }
             .distinct()
@@ -598,12 +574,12 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
 
         val selectionText = TextView(context).apply {
-            isVisible = shoppingSelectMode
-            text = if (index in selectedShoppingIndexes) "✓" else "○"
+            isVisible = detailState.shoppingSelectMode
+            text = if (index in detailState.selectedShoppingIndexes) "✓" else "○"
             gravity = Gravity.CENTER
             textSize = 17f
             setTypeface(typeface, Typeface.BOLD)
-            setTextColor(ContextCompat.getColor(context, if (index in selectedShoppingIndexes) R.color.fitto_green else R.color.fitto_text_secondary))
+            setTextColor(ContextCompat.getColor(context, if (index in detailState.selectedShoppingIndexes) R.color.fitto_green else R.color.fitto_text_secondary))
             background = ContextCompat.getDrawable(context, R.drawable.bg_recipe_ingredient_icon_circle)
             layoutParams = LinearLayout.LayoutParams(32.dp, 32.dp).apply { marginEnd = 8.dp }
             setOnClickListener { toggleIngredientSelection(index) }
@@ -631,7 +607,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         val (amountOnly, unitOnly) = RecipeDetailIngredientMapper.splitAmountAndUnit(
             ingredient.amountUnit
         )
-        val amountView: View = if (editMode && !compact) {
+        val amountView: View = if (detailState.editMode && !compact) {
             EditText(context).apply {
                 setText(amountOnly)
                 setSingleLine(true)
@@ -645,20 +621,15 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
                 setPadding(6.dp, 0, 6.dp, 0)
                 layoutParams = LinearLayout.LayoutParams(58.dp, 40.dp)
                 doAfterTextChanged { editable ->
-                    if (index in detailIngredients.indices) {
-                        val newAmount = editable?.toString().orEmpty().trim()
-                        val updatedIngredient = RecipeDetailIngredientMapper.withUpdatedAmount(
-                            ingredient = detailIngredients[index],
-                            amount = newAmount,
-                            unit = unitOnly
-                        )
-                        detailIngredients[index] = updatedIngredient
-                        kcalText.text = getString(
-                            R.string.recipes_detail_ingredient_kcal,
-                            updatedIngredient.estimatedCalories
-                        )
-                        renderPortionAndNutrition()
-                    }
+                    val updatedIngredient = detailController.updateIngredientAmount(
+                        index = index,
+                        amount = editable?.toString().orEmpty()
+                    ) ?: return@doAfterTextChanged
+                    kcalText.text = getString(
+                        R.string.recipes_detail_ingredient_kcal,
+                        updatedIngredient.estimatedCalories
+                    )
+                    renderPortionAndNutrition()
                 }
             }
         } else {
@@ -674,7 +645,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
 
         val unitText = TextView(context).apply {
-            isVisible = editMode && !compact
+            isVisible = detailState.editMode && !compact
             text = unitOnly.ifBlank { getString(R.string.recipes_detail_unit_empty) }
             gravity = Gravity.CENTER_VERTICAL
             textSize = 12f
@@ -685,7 +656,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
 
         val removeButton = ImageButton(context).apply {
-            isVisible = editMode && !compact
+            isVisible = detailState.editMode && !compact
             background = null
             setImageResource(R.drawable.ic_close)
             imageTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.fitto_text_secondary))
@@ -696,7 +667,7 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         }
 
 
-        row.setOnClickListener { if (shoppingSelectMode) toggleIngredientSelection(index) }
+        row.setOnClickListener { if (detailState.shoppingSelectMode) toggleIngredientSelection(index) }
 
         row.addView(selectionText)
         row.addView(nameView)
@@ -708,16 +679,12 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun toggleIngredientSelection(index: Int) {
-        if (!shoppingSelectMode) return
-        if (index in selectedShoppingIndexes) selectedShoppingIndexes.remove(index) else selectedShoppingIndexes.add(index)
+        detailController.toggleIngredientSelection(index)
         renderIngredients()
     }
 
     private fun removeIngredientAt(index: Int) {
-        if (index !in detailIngredients.indices) return
-        detailIngredients.removeAt(index)
-        selectedShoppingIndexes.clear()
-        if (shoppingSelectMode) selectedShoppingIndexes.addAll(detailIngredients.indices)
+        detailController.removeIngredient(index)
         renderIngredients()
         renderPortionAndNutrition()
     }
@@ -749,23 +716,11 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun resolvePortionNutritionState(): RecipePortionNutritionResolver.State {
-        val recipe = currentRecipe
-
-        return RecipePortionNutritionResolver.resolve(
-            recipeCalories = recipe?.calories ?: 0,
-            recipeServings = recipe?.servings ?: 1,
-            servingMultiplier = servingMultiplier,
-            ingredientCalories = detailIngredients.map { ingredient ->
-                ingredient.estimatedCalories
-            },
-            proteinGrams = recipe?.proteinGrams ?: 0,
-            carbGrams = recipe?.carbGrams ?: 0,
-            fatGrams = recipe?.fatGrams ?: 0
-        )
+        return detailController.nutritionState()
     }
 
     private fun openCookingMode() {
-        val recipe = currentRecipe ?: return
+        val recipe = detailState.recipe ?: return
         setCookModeEnabled(true, showToast = false)
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
@@ -819,82 +774,71 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
     }
 
     private fun addBlankIngredient() {
-        enableEditMode()
-        val nextIndex = detailIngredients.size
-        val ingredient = RecipeDetailIngredient(
-            id = "ingredient_added_${System.currentTimeMillis()}",
-            icon = "🥄",
-            name = getString(R.string.recipes_detail_new_ingredient),
-            amountUnit = "",
-            estimatedCalories = 40
+        val change = detailController.addIngredient(
+            RecipeDetailIngredient(
+                id = "ingredient_added_${System.currentTimeMillis()}",
+                icon = "🥄",
+                name = getString(R.string.recipes_detail_new_ingredient),
+                amountUnit = "",
+                estimatedCalories = 40
+            )
         )
-        detailIngredients.add(ingredient)
-        if (shoppingSelectMode) {
-            selectedShoppingIndexes.add(nextIndex)
+        if (change.editModeStarted) {
+            Toast.makeText(requireContext(), R.string.recipes_detail_edit_mode_enabled, Toast.LENGTH_LONG).show()
         }
+        renderIngredientModeControls()
         renderIngredients()
         renderPortionAndNutrition()
     }
 
     private fun startShoppingSelection() {
-        if (editMode) toggleEditMode()
-        shoppingSelectMode = true
-        selectedShoppingIndexes.clear()
-        selectedShoppingIndexes.addAll(detailIngredients.indices)
-        binding.bottomShoppingButton.text = getString(R.string.recipes_detail_add_selected_to_shopping)
+        detailController.startShoppingSelection()
+        renderIngredientModeControls()
         renderIngredients()
+        renderPortionAndNutrition()
         Toast.makeText(requireContext(), R.string.recipes_detail_select_ingredients_hint, Toast.LENGTH_SHORT).show()
     }
 
     private fun addSelectedIngredientsToShoppingList() {
-        if (selectedShoppingIndexes.isEmpty()) {
+        val selectedLines = detailState.selectedShoppingLines
+        if (selectedLines.isEmpty()) {
             Toast.makeText(requireContext(), R.string.recipes_detail_no_ingredient_selected, Toast.LENGTH_SHORT).show()
             return
         }
-        val selectedLines = selectedShoppingIndexes.sorted().mapNotNull { index ->
-            detailIngredients.getOrNull(index)
-                ?.let(RecipeDetailIngredientMapper::toDisplayLine)
-        }
-        val prefs = UserSessionDataGuard.scopedSharedPreferences(requireContext(), SHOPPING_PREFS)
-        val current = prefs.getStringSet(SHOPPING_ITEMS_KEY, emptySet()).orEmpty().toMutableSet()
-        current.addAll(selectedLines)
-        prefs.edit().putStringSet(SHOPPING_ITEMS_KEY, current).apply()
+        shoppingListStore.addItems(selectedLines)
 
-        shoppingSelectMode = false
-        selectedShoppingIndexes.clear()
-        binding.bottomShoppingButton.text = getString(R.string.recipes_detail_add_to_shopping)
+        detailController.completeShoppingSelection()
+        renderIngredientModeControls()
         renderIngredients()
         Toast.makeText(requireContext(), getString(R.string.recipes_detail_added_to_shopping, selectedLines.size), Toast.LENGTH_LONG).show()
     }
 
     private fun saveRecipeToBook(useEditedVersion: Boolean) {
-        val recipe = currentRecipe ?: return
-        val editedLines: List<String>? = if (useEditedVersion) {
-            detailIngredients.map(RecipeDetailIngredientMapper::toDisplayLine)
-        } else {
-            null
-        }
+        val recipe = detailState.recipe ?: return
+        val editedLines: List<String>? = if (useEditedVersion) detailState.ingredientLines else null
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val copiedRecipeId = withContext(Dispatchers.IO) {
-                repository.copyRecipeToUserBook(recipe.id, editedLines)
-            }
+            val copiedRecipeId = detailCoordinator.copyRecipeToUserBook(
+                RecipeBookCopyRequest(
+                    recipeId = recipe.id,
+                    ingredientsOverride = editedLines
+                )
+            )
             if (_binding == null) return@launch
 
-            val messageRes = if (copiedRecipeId != null) {
+            val saved = copiedRecipeId != null
+            val messageRes = if (saved) {
                 R.string.recipes_detail_saved_to_book
             } else {
                 R.string.recipes_detail_save_failed
             }
             Toast.makeText(requireContext(), messageRes, Toast.LENGTH_SHORT).show()
-            if (copiedRecipeId != null && useEditedVersion && editMode) {
-                editMode = false
-                editModeSnapshot = emptyList()
-                binding.ingredientEditToggleButton.text = getString(R.string.recipes_detail_edit_for_me_short)
-                binding.addIngredientButton.isVisible = false
-                binding.saveEditedRecipeButton.isVisible = false
-                renderIngredients()
-            }
+            detailController.completeEditedRecipeSave(
+                success = saved,
+                useEditedVersion = useEditedVersion
+            )
+            renderIngredientModeControls()
+            renderIngredients()
         }
     }
 
@@ -907,7 +851,6 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         super.onDestroyView()
     }
 
-    private enum class DetailTab { OVERVIEW, INGREDIENTS, STEPS }
 
     companion object {
         private const val ARG_RECIPE_ID = "arg_recipe_id"
@@ -915,8 +858,6 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         private const val ARG_COMMUNITY_POST_ID = "arg_community_post_id"
         private const val ARG_COMMUNITY_POST_OWNER_ID = "arg_community_post_owner_id"
         private const val ARG_COMMUNITY_RECIPE_SOURCE_TAG = "arg_community_recipe_source_tag"
-        private const val SHOPPING_PREFS = "fitto_recipe_shopping_list"
-        private const val SHOPPING_ITEMS_KEY = "items"
         private const val TAG_RECIPE_COOKING = "recipe_cooking_mode"
         fun newInstance(
             recipeId: String,
