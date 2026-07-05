@@ -4,12 +4,21 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/src/androidTest/**"
+      - "app/schemas/**"
+      - "app/src/main/java/com/example/fitto/data/local/**"
+      - ".github/actions/setup-android-project/**"
+      - ".github/workflows/android-instrumentation.yml"
   push:
     branches: [main]
     paths:
       - "app/src/androidTest/**"
       - "app/schemas/**"
       - "app/src/main/java/com/example/fitto/data/local/**"
+      - ".github/actions/setup-android-project/**"
       - ".github/workflows/android-instrumentation.yml"
 
 permissions:
