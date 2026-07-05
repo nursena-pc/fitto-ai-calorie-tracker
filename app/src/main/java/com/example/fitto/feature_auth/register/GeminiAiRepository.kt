@@ -2,6 +2,7 @@ package com.example.fitto.feature_auth.register
 
 import android.util.Log
 import com.example.fitto.BuildConfig
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -19,21 +20,22 @@ class GeminiAiRepository(
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(25, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
-        .build()
-) {
+        .build(),
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : OnboardingAiRepository {
 
-    suspend fun requestTargetSuggestion(
+    override suspend fun requestTargetSuggestion(
         prompt: String,
         appLanguage: String
-    ): AiTargetSuggestion = withContext(Dispatchers.IO) {
+    ): AiTargetSuggestion = withContext(ioDispatcher) {
         val rawBody = executeGeminiRequest(prompt)
         parseSuggestion(rawBody, appLanguage.normalizedResponseLanguage())
     }
 
-    suspend fun requestPlanSuggestion(
+    override suspend fun requestPlanSuggestion(
         prompt: String,
         appLanguage: String
-    ): AiPlanSuggestion = withContext(Dispatchers.IO) {
+    ): AiPlanSuggestion = withContext(ioDispatcher) {
         val rawBody = executeGeminiRequest(prompt)
         parsePlanSuggestion(rawBody, appLanguage.normalizedResponseLanguage())
     }

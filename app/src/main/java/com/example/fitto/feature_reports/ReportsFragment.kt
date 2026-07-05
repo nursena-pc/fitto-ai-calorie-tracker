@@ -22,6 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_home.presentation.social.NotificationsFragment
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
@@ -48,7 +49,7 @@ class ReportsFragment : Fragment() {
     private lateinit var weightPage: WeightPageRefs
     private lateinit var pageRenderer: ReportsPageRenderer
 
-    private var lastReportPageIndex = 0
+    private val screenStateStore = ReportsScreenStateStore()
 
     private val selectedDate: LocalDate
         get() = dataCoordinator.state.selectedDate
@@ -62,13 +63,12 @@ class ReportsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        dataCoordinator = ReportsDataCoordinator(
-            nutritionDataSource = LocalReportNutritionDataSource(
-                requireContext().applicationContext
-            ),
-            healthDataSource = ProfileReportHealthDataSource(),
-            daysBack = resources.getInteger(R.integer.reports_days_back)
-        )
+        dataCoordinator = requireContext()
+            .fittoAppContainer
+            .reportsFeatureDependencies
+            .createDataCoordinator(
+                daysBack = resources.getInteger(R.integer.reports_days_back)
+            )
     }
 
     override fun onCreateView(
@@ -152,12 +152,13 @@ class ReportsFragment : Fragment() {
         viewPager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
-                    scrollReportPageToTop(lastReportPageIndex)
-                    scrollReportPageToTop(position)
-                    lastReportPageIndex = position
+                    val previous = screenStateStore.selectPage(position)
+                    scrollReportPageToTop(previous)
+                    scrollReportPageToTop(screenStateStore.state.selectedPageIndex)
                 }
             }
         )
+        viewPager.setCurrentItem(screenStateStore.state.selectedPageIndex, false)
         updateDateButtonText()
         pageRenderer.setupCharts()
         loadReportData()

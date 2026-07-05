@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPublisher
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
@@ -23,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 class ProfileRemindersActivity : AppCompatActivity() {
 
     private var exactAlarmPromptShown = false
+    private lateinit var remindersBinder: ProfileRemindersBinder
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(
@@ -38,9 +40,18 @@ class ProfileRemindersActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_profile_reminders)
 
+        val initialCategory = savedInstanceState
+            ?.getString(KEY_SELECTED_CATEGORY)
+            ?.let { raw -> runCatching { ReminderCategory.valueOf(raw) }.getOrNull() }
+            ?: ReminderCategory.ALL
+        remindersBinder = applicationContext
+            .fittoAppContainer
+            .reminderFeatureDependencies
+            .createBinder(initialCategory)
+
         clearSystemNotificationsOnAppOpen(intent)
 
-        ProfileRemindersBinder.bind(
+        remindersBinder.bind(
             root = findViewById(R.id.remindersScreenRoot),
             onBackClick = {
                 finish()
@@ -122,8 +133,15 @@ class ProfileRemindersActivity : AppCompatActivity() {
             }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (::remindersBinder.isInitialized) {
+            outState.putString(KEY_SELECTED_CATEGORY, remindersBinder.selectedCategory.name)
+        }
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
-        ProfileRemindersBinder.clear()
+        if (::remindersBinder.isInitialized) remindersBinder.clear()
         super.onDestroy()
     }
 
@@ -154,10 +172,15 @@ class ProfileRemindersActivity : AppCompatActivity() {
             requestCode == ProfileRemindersBinder.REQUEST_PICK_REMINDER_SOUND &&
             resultCode == RESULT_OK
         ) {
-            ProfileRemindersBinder.handlePickedSound(
+            remindersBinder.handlePickedSound(
                 context = this,
                 uri = data?.data
             )
         }
     }
+
+    private companion object {
+        const val KEY_SELECTED_CATEGORY = "reminder_selected_category"
+    }
+
 }

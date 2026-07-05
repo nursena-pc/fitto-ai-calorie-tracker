@@ -17,24 +17,20 @@ import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.BottomSheetCreateAccountBinding
 import com.example.fitto.databinding.FragmentDailyNeedsResultBinding
 import com.example.fitto.databinding.ItemResultSummaryRowBinding
-import com.example.fitto.feature_dietplans.data.UserNutritionTargetStore
 import com.example.fitto.feature_home.presentation.profile.ProfileLanguage
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -42,8 +38,9 @@ class DailyNeedsResultFragment : Fragment(R.layout.fragment_daily_needs_result) 
 
     private var _binding: FragmentDailyNeedsResultBinding? = null
     private val binding get() = _binding!!
-    private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
-    private val firestore: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
+    private val authDependencies by lazy {
+        requireContext().fittoAppContainer.authFeatureDependencies
+    }
     private lateinit var credentialManager: CredentialManager
 
     private var isGoogleAuthInProgress = false
@@ -54,7 +51,7 @@ class DailyNeedsResultFragment : Fragment(R.layout.fragment_daily_needs_result) 
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentDailyNeedsResultBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
         credentialManager = CredentialManager.create(requireContext())
 
         binding.root.setOnboardingProgress(12)
@@ -185,7 +182,7 @@ class DailyNeedsResultFragment : Fragment(R.layout.fragment_daily_needs_result) 
     }
 
     private fun bindResult(result: DailyNeedsResult) = with(binding) {
-        UserNutritionTargetStore(requireContext()).saveDailyTargetCalories(result.appliedCalories)
+        authDependencies.saveDailyTargetCalories(result.appliedCalories)
 
         calorieGaugeView.setCalories(
             targetCalories = result.appliedCalories,
@@ -431,7 +428,7 @@ class DailyNeedsResultFragment : Fragment(R.layout.fragment_daily_needs_result) 
         ) {
             try {
                 val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                firebaseAuthWithGoogle(googleCredential.idToken)
+                completeGoogleSignUp(googleCredential.idToken)
             } catch (exception: GoogleIdTokenParsingException) {
                 isGoogleAuthInProgress = false
                 showGoogleError(getString(R.string.google_error_parse))
@@ -442,96 +439,25 @@ class DailyNeedsResultFragment : Fragment(R.layout.fragment_daily_needs_result) 
         }
     }
 
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+    private fun completeGoogleSignUp(idToken: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            when (
+                val result = authDependencies.googleSignUpCoordinator.signIn(idToken)
+            ) {
+                is GoogleOnboardingResult.Success -> {
+                    isGoogleAuthInProgress = false
+                    when (result.destination) {
+                        GoogleOnboardingDestination.HOME -> navigateToHome()
+                        GoogleOnboardingDestination.USERNAME_SETUP -> navigateToUsernameSetup()
+                    }
+                }
 
-        auth.signInWithCredential(firebaseCredential)
-            .addOnSuccessListener { authResult ->
-                val user = authResult.user
-
-                if (user == null) {
+                is GoogleOnboardingResult.Failure -> {
                     isGoogleAuthInProgress = false
                     showGoogleError(getString(R.string.google_error_firebase_failed))
-                    return@addOnSuccessListener
                 }
-
-                createGoogleUserProfileIfNeeded(
-                    uid = user.uid,
-                    email = user.email.orEmpty(),
-                    displayName = user.displayName.orEmpty(),
-                    photoUrl = user.photoUrl?.toString()
-                )
             }
-            .addOnFailureListener {
-                isGoogleAuthInProgress = false
-                showGoogleError(getString(R.string.google_error_firebase_failed))
-            }
-    }
-
-    private fun createGoogleUserProfileIfNeeded(
-        uid: String,
-        email: String,
-        displayName: String,
-        photoUrl: String?
-    ) {
-        val userRef = firestore.collection("users").document(uid)
-
-        userRef.get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    isGoogleAuthInProgress = false
-
-                    val profileCompleted = document.getBoolean("profileCompleted") == true
-
-                    if (profileCompleted) {
-                        navigateToHome()
-                    } else {
-                        navigateToUsernameSetup()
-                    }
-
-                    return@addOnSuccessListener
-                }
-
-                val cleanEmailName = email.substringBefore("@")
-                    .lowercase()
-                    .replace(Regex("[^a-z0-9._]"), "")
-                    .ifBlank { "fitto_user" }
-
-                val profileName = displayName.ifBlank { cleanEmailName }
-
-                val userData = hashMapOf(
-                    "uid" to uid,
-                    "displayName" to cleanEmailName,
-                    "displayNameLowercase" to cleanEmailName.lowercase(),
-                    "realName" to profileName,
-                    "name" to profileName,
-                    "userName" to cleanEmailName,
-                    "username" to cleanEmailName,
-                    "usernameLowercase" to cleanEmailName.lowercase(),
-                    "email" to email,
-                    "photoUrl" to photoUrl,
-                    "bio" to "",
-                    "followersCount" to 0,
-                    "followingCount" to 0,
-                    "profileCompleted" to false,
-                    "createdAt" to System.currentTimeMillis(),
-                    "updatedAt" to System.currentTimeMillis()
-                )
-
-                userRef.set(userData)
-                    .addOnSuccessListener {
-                        isGoogleAuthInProgress = false
-                        navigateToUsernameSetup()
-                    }
-                    .addOnFailureListener {
-                        isGoogleAuthInProgress = false
-                        showGoogleError(getString(R.string.google_error_firebase_failed))
-                    }
-            }
-            .addOnFailureListener {
-                isGoogleAuthInProgress = false
-                showGoogleError(getString(R.string.google_error_firebase_failed))
-            }
+        }
     }
     private fun navigateToUsernameSetup() {
         findNavController().navigate(

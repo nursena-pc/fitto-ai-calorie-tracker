@@ -12,11 +12,11 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.BottomSheetLoginOptionsBinding
 import com.example.fitto.databinding.FragmentWelcomeBinding
 import com.example.fitto.feature_auth.login.GoogleSignInHelper
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
@@ -24,24 +24,14 @@ class WelcomeFragment : Fragment(R.layout.fragment_welcome) {
     private var _binding: FragmentWelcomeBinding? = null
     private val binding get() = _binding!!
 
-    private val auth: FirebaseAuth by lazy {
-        FirebaseAuth.getInstance()
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentWelcomeBinding.bind(view)
 
         view.doOnLayout {
-            val currentUser = auth.currentUser
-
-            if (
-                currentUser != null &&
-                (
-                        currentUser.email.isNullOrBlank() ||
-                                currentUser.isEmailVerified
-                        )
+            if (requireContext().fittoAppContainer.authFeatureDependencies
+                    .shouldOpenHomeForCurrentSession()
             ) {
                 findNavController().navigate(R.id.action_welcomeFragment_to_homeFragment)
             }

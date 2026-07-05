@@ -6,7 +6,6 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentWeightLossReasonBinding
@@ -31,7 +30,7 @@ class WeightLossReasonFragment : Fragment(R.layout.fragment_weight_loss_reason) 
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentWeightLossReasonBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(8)
 

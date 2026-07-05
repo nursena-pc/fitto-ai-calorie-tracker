@@ -7,7 +7,6 @@ import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentBarrierBinding
@@ -25,7 +24,7 @@ class BarrierFragment : Fragment(R.layout.fragment_barrier) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentBarrierBinding.bind(view)
-        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
+        onboardingViewModel = obtainOnboardingViewModel()
 
         binding.root.setOnboardingProgress(6)
 

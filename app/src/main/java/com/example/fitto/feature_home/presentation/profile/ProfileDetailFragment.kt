@@ -8,17 +8,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
 import com.example.fitto.feature_home.presentation.profile.health.ProfileHealthData
-import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_home.presentation.social.SocialUser
 
 class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
@@ -33,7 +32,10 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewModel: ProfileViewModel
-    private val socialRepository = SocialRepository()
+    private val profileDependencies by lazy {
+        requireContext().fittoAppContainer.profileFeatureDependencies
+    }
+    private val socialRepository by lazy { profileDependencies.socialRepository }
     private val featureScope: ProfileDetailFeatureScope by lazy {
         ProfileDetailFeatureScopeResolver.resolve(menuId)
     }
@@ -72,7 +74,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
+        viewModel = obtainProfileViewModel()
         setupCoordinators()
 
         val titleTextView = view.findViewById<TextView>(R.id.textProfileDetailTitle)
@@ -179,6 +181,7 @@ class ProfileDetailFragment : Fragment(R.layout.fragment_profile_detail) {
                 launchIntent = ::startActivity,
                 showMessage = ::showToast
             ),
+            accountSettingsRepository = profileDependencies.accountSettingsRepository,
             socialRepository = socialRepository
         ).create()
 

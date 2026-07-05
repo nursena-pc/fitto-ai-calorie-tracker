@@ -22,7 +22,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import com.example.fitto.R
 import com.example.fitto.feature_home.presentation.profile.health.formatSignedWeightKg
 import com.example.fitto.feature_home.presentation.profile.health.formatWeightKg
@@ -66,7 +65,7 @@ class ProfileWeightFragment : Fragment(R.layout.fragment_profile_weight) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(requireActivity())[ProfileViewModel::class.java]
+        viewModel = obtainProfileViewModel()
 
         bindViews(view)
         setupToolbar()
