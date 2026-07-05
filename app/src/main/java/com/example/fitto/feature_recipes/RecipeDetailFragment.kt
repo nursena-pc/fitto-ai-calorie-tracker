@@ -29,6 +29,7 @@ import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeUiModel
 import com.example.fitto.feature_recipes.util.RecipeImageLoader
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.textfield.TextInputEditText
@@ -52,10 +53,9 @@ class RecipeDetailFragment : Fragment(R.layout.fragment_recipe_detail) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentRecipeDetailBinding.bind(view)
-        detailCoordinator = RecipeDetailCoordinator(
-            LocalRecipeDetailDataSource(RecipeRepository(requireContext()))
-        )
-        shoppingListStore = SharedPreferencesRecipeShoppingListStore(requireContext())
+        val dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        detailCoordinator = dependencies.createDetailCoordinator()
+        shoppingListStore = dependencies.shoppingListStore
         catalog = RecipeFilterCatalog(resources)
 
         setupStaticClicks()

@@ -7,6 +7,7 @@ import com.example.fitto.feature_daily.DailyDashboardDefaultTargets
 import com.example.fitto.feature_daily.DailyDashboardDependencies
 import com.example.fitto.feature_daily.DailyDashboardDependenciesFactory
 import com.example.fitto.feature_daily.DailyTrackingSources
+import com.example.fitto.feature_dietplans.DietPlanFeatureDependencies
 import com.example.fitto.feature_exercise.AddExerciseCoordinator
 import com.example.fitto.feature_exercise.LocalAddExerciseDataSource
 import com.example.fitto.feature_health.FittoStepCounterManager
@@ -17,6 +18,7 @@ import com.example.fitto.feature_home.presentation.notifications.FittoNotificati
 import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
 import com.example.fitto.feature_meal.AddMealCoordinator
 import com.example.fitto.feature_meal.LocalAddMealDataSource
+import com.example.fitto.feature_recipes.RecipeFeatureDependencies
 import com.example.fitto.feature_sleep.data.SleepLogStore
 
 /** Application-level composition root for shared infrastructure and feature dependency graphs. */
@@ -54,6 +56,21 @@ internal class FittoAppContainer(
     fun createAddMealCoordinator(): AddMealCoordinator {
         return AddMealCoordinator(
             dataSource = LocalAddMealDataSource(appContext),
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
+
+
+    fun createDietPlanFeatureDependencies(): DietPlanFeatureDependencies {
+        return DietPlanFeatureDependencies(
+            context = appContext,
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
+
+    fun createRecipeFeatureDependencies(): RecipeFeatureDependencies {
+        return RecipeFeatureDependencies(
+            context = appContext,
             ioDispatcher = coroutineDispatchers.io
         )
     }

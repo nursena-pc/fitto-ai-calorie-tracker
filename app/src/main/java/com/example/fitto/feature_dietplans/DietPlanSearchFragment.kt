@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDietPlanSearchBinding
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
@@ -38,17 +39,12 @@ class DietPlanSearchFragment : Fragment(R.layout.fragment_diet_plan_search) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDietPlanSearchBinding.bind(view)
 
-        preferenceStore = DietPlanPreferenceStore(requireContext())
-        customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
-        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = preferenceStore
-        )
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
-        dietPlanListLoader = DietPlanListLoader.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = preferenceStore
-        )
+        val dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
+        preferenceStore = dependencies.preferenceStore
+        customDietPlanStore = dependencies.customPlanStore
+        customPlanDeletionAction = dependencies.deletionAction
+        dietPlanPreferenceAction = dependencies.preferenceAction
+        dietPlanListLoader = dependencies.listLoader
 
         allPlans = dietPlanListLoader.load(includeDrafts = false).allPlans
 

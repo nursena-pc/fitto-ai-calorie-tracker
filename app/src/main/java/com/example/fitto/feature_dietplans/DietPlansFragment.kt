@@ -9,53 +9,30 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.data.local.entity.UserProfileEntity
-import com.example.fitto.data.local.repository.ProfileCacheRepository
 import com.example.fitto.databinding.FragmentDietPlansBinding
-import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
-import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.DietPlanUiModel
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
-    private lateinit var customDietPlanStore: CustomDietPlanStore
     private var _binding: FragmentDietPlansBinding? = null
     private val binding get() = _binding!!
-    private var selectedTab: DietPlanTab = DietPlanTab.READY
-    private var activeFilterState: DietPlanFilterState? = null
+
+    private lateinit var dependencies: DietPlanFeatureDependencies
     private lateinit var adapter: DietPlansAdapter
-    private lateinit var dietPlanStore: DietPlanPreferenceStore
-    private lateinit var profileCacheRepository: ProfileCacheRepository
-    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
-    private lateinit var draftCompletionAction: DietPlanDraftCompletionAction
-    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
-    private lateinit var dietPlanListLoader: DietPlanListLoader
-    private var currentPlans: List<DietPlanUiModel> = emptyList()
-    private var currentRecommendation: PersonalizedDietRecommendation? = null
+    private val screenStateStore = DietPlansScreenStateStore()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDietPlansBinding.bind(view)
-        customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
-        dietPlanStore = DietPlanPreferenceStore(requireContext())
-        profileCacheRepository = ProfileCacheRepository(requireContext().applicationContext)
-        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = dietPlanStore
-        )
-        draftCompletionAction = DietPlanDraftCompletionAction.from(customDietPlanStore)
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
-        dietPlanListLoader = DietPlanListLoader.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = dietPlanStore
-        )
+        dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
 
         setupRecyclerView()
         setupClicks()
         setupFilterResultListener()
         setupDietPlanChangeListener()
+        restoreSelectedTab()
         loadDietPlans()
         setupPersonalizedRecommendation()
     }
@@ -63,11 +40,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private fun setupRecyclerView() = with(binding) {
         adapter = DietPlansAdapter(
             onDetailClick = { plan ->
-                if (plan.isDraft) {
-                    openDraftEditor(plan.id)
-                } else {
-                    openPlanDetail(plan.id)
-                }
+                if (plan.isDraft) openDraftEditor(plan.id) else openPlanDetail(plan.id)
             },
             onApplyClick = { plan ->
                 if (plan.isDraft) {
@@ -82,7 +55,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 }
             },
             onFavoriteClick = { plan ->
-                val favoriteResult = dietPlanPreferenceAction.toggleFavorite(plan.id)
+                val favoriteResult = dependencies.preferenceAction.toggleFavorite(plan.id)
                 renderListEffect(
                     DietPlansListEffectResolver.favoriteToggled(
                         planTitle = titleTextForPlan(plan),
@@ -90,9 +63,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                     )
                 )
             },
-            onDeleteClick = { plan ->
-                confirmDeleteCustomPlan(plan)
-            }
+            onDeleteClick = ::confirmDeleteCustomPlan
         )
 
         dietPlansRecyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -102,17 +73,13 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     private fun openDraftEditor(planId: String) {
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
-            .replace(
-                R.id.homeTabContainer,
-                CreateDietPlanFragment.newEditDraftInstance(planId)
-            )
+            .replace(R.id.homeTabContainer, CreateDietPlanFragment.newEditDraftInstance(planId))
             .addToBackStack(BACK_STACK_CREATE_DIET_PLAN)
             .commit()
     }
 
     private fun completeDraftPlan(plan: DietPlanUiModel) {
-        val result = draftCompletionAction.complete(plan.id)
-
+        val result = dependencies.draftCompletionAction.complete(plan.id)
         if (result is DietPlanDraftCompletionResult.Completed) {
             renderListEffect(DietPlansListEffectResolver.draftCompleted())
         }
@@ -134,14 +101,14 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                 .addToBackStack("diet_plan_filter")
                 .commit()
         }
+
         planChipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
-            selectedTab = DietPlanTabResolver.fromChipId(checkedIds.firstOrNull())
+            screenStateStore.selectTab(DietPlanTabResolver.fromChipId(checkedIds.firstOrNull()))
             applyVisiblePlans()
         }
 
         applyTodayDietButton.setOnClickListener {
-            val recommendation = currentRecommendation
-
+            val recommendation = screenStateStore.state.recommendation
             if (recommendation == null) {
                 Toast.makeText(
                     requireContext(),
@@ -149,10 +116,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                     Toast.LENGTH_SHORT
                 ).show()
             } else {
-                applyDietPlan(
-                    planId = recommendation.planId,
-                    planTitle = recommendation.titleText
-                )
+                applyDietPlan(recommendation.planId, recommendation.titleText)
             }
         }
 
@@ -165,32 +129,37 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
         }
     }
 
+    private fun restoreSelectedTab() {
+        val chipId = when (screenStateStore.state.selectedTab) {
+            DietPlanTab.READY -> R.id.chipReadyPlans
+            DietPlanTab.MY -> R.id.chipMyPlans
+            DietPlanTab.DRAFTS -> R.id.chipDrafts
+            DietPlanTab.SAVED -> R.id.chipFavorites
+        }
+        binding.planChipGroup.check(chipId)
+    }
+
     private fun loadDietPlans() {
-        currentPlans = dietPlanListLoader.load(includeDrafts = true).allPlans
+        screenStateStore.setPlans(
+            dependencies.listLoader.load(includeDrafts = true).allPlans
+        )
         applyVisiblePlans()
     }
+
     private fun setupDietPlanChangeListener() {
         parentFragmentManager.setFragmentResultListener(
             REQUEST_DIET_PLAN_CHANGED,
             viewLifecycleOwner
         ) { _, bundle ->
-            when (bundle.getString(BUNDLE_SELECT_TAB)) {
-                TAB_DRAFTS -> {
-                    selectedTab = DietPlanTab.DRAFTS
-                    binding.planChipGroup.check(R.id.chipDrafts)
-                }
-
-                TAB_MY -> {
-                    selectedTab = DietPlanTab.MY
-                    binding.planChipGroup.check(R.id.chipMyPlans)
-                }
-
-                TAB_SAVED -> {
-                    selectedTab = DietPlanTab.SAVED
-                    binding.planChipGroup.check(R.id.chipFavorites)
-                }
-
-                else -> Unit
+            val selectedTab = when (bundle.getString(BUNDLE_SELECT_TAB)) {
+                TAB_DRAFTS -> DietPlanTab.DRAFTS
+                TAB_MY -> DietPlanTab.MY
+                TAB_SAVED -> DietPlanTab.SAVED
+                else -> null
+            }
+            selectedTab?.let {
+                screenStateStore.selectTab(it)
+                restoreSelectedTab()
             }
 
             loadDietPlans()
@@ -203,55 +172,46 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             DietPlanFilterFragment.REQUEST_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
-            activeFilterState = DietPlanFilterResultMapper.fromResult(
-                clearFilters = bundle.getBoolean(DietPlanFilterFragment.BUNDLE_CLEAR_FILTER, false),
-                goal = bundle.getString(DietPlanFilterFragment.BUNDLE_GOAL),
-                duration = bundle.getInt(DietPlanFilterFragment.BUNDLE_DURATION, 0),
-                type = bundle.getString(DietPlanFilterFragment.BUNDLE_TYPE),
-                features = bundle.getStringArrayList(DietPlanFilterFragment.BUNDLE_FEATURES),
-                minCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MIN_CALORIES, 0),
-                maxCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MAX_CALORIES, Int.MAX_VALUE)
+            screenStateStore.setFilter(
+                DietPlanFilterResultMapper.fromResult(
+                    clearFilters = bundle.getBoolean(DietPlanFilterFragment.BUNDLE_CLEAR_FILTER, false),
+                    goal = bundle.getString(DietPlanFilterFragment.BUNDLE_GOAL),
+                    duration = bundle.getInt(DietPlanFilterFragment.BUNDLE_DURATION, 0),
+                    type = bundle.getString(DietPlanFilterFragment.BUNDLE_TYPE),
+                    features = bundle.getStringArrayList(DietPlanFilterFragment.BUNDLE_FEATURES),
+                    minCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MIN_CALORIES, 0),
+                    maxCalories = bundle.getInt(DietPlanFilterFragment.BUNDLE_MAX_CALORIES, Int.MAX_VALUE)
+                )
             )
-
             applyVisiblePlans()
         }
     }
 
     private fun applyVisiblePlans() = with(binding) {
-        val visibilityState = DietPlanVisibilityResolver.resolve(
-            plans = currentPlans,
-            selectedTab = selectedTab,
-            filter = activeFilterState
-        )
+        val visibilityState = screenStateStore.visibleState()
         val visiblePlans = visibilityState.visiblePlans
 
         createOwnPlanCard.isVisible = visibilityState.showCreateOwnPlan
         personalizedRecommendationCard.isVisible = visibilityState.showPersonalizedRecommendation
-
         dietPlansEmptyText.isVisible = visiblePlans.isEmpty()
         dietPlansRecyclerView.isVisible = visiblePlans.isNotEmpty()
         dietPlansEmptyText.text = getString(visibilityState.emptyTextRes)
-
         adapter.submitList(visiblePlans)
     }
-    private fun setupPersonalizedRecommendation() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
-            }
 
+    private fun setupPersonalizedRecommendation() {
+        val generation = screenStateStore.beginRecommendationLoad()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val profile = dependencies.profileLoader.loadCurrentProfile()
             if (_binding == null) return@launch
 
-            val recommendation = buildBestRecommendation(
-                profile = profile,
-                plans = currentPlans.ifEmpty {
-                    dietPlanListLoader.loadReadyPlans()
-                }
-            )
-
-            currentRecommendation = recommendation
-            renderPersonalizedRecommendation(recommendation)
+            val plans = screenStateStore.state.plans.ifEmpty {
+                dependencies.listLoader.loadReadyPlans()
+            }
+            val recommendation = buildBestRecommendation(profile, plans)
+            if (screenStateStore.applyRecommendation(generation, recommendation)) {
+                renderPersonalizedRecommendation(recommendation)
+            }
         }
     }
 
@@ -260,29 +220,21 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     ) = with(binding) {
         personalizedPlanTitleText.text = recommendation.titleText
         personalizedPlanDescText.setText(recommendation.reasonRes)
-
         personalizedMatchText.text = getString(
             R.string.diet_plans_personalized_match,
             recommendation.matchPercent
         )
-
         personalizedReasonChip1.setText(recommendation.chip1Res)
         personalizedReasonChip2.setText(recommendation.chip2Res)
         personalizedReasonChip3.setText(recommendation.chip3Res)
-
         personalizedRecommendationCard.setOnClickListener {
             openRecommendedPlanDetail(recommendation.planId)
         }
-
         personalizedDetailButton.setOnClickListener {
             openRecommendedPlanDetail(recommendation.planId)
         }
-
         personalizedApplyButton.setOnClickListener {
-            applyDietPlan(
-                planId = recommendation.planId,
-                planTitle = recommendation.titleText
-            )
+            applyDietPlan(recommendation.planId, recommendation.titleText)
         }
     }
 
@@ -294,9 +246,9 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
             DietPlanRecommendationResolver.resolve(
                 profile = profile,
                 plans = plans,
-                fallbackPlans = dietPlanListLoader.loadReadyPlans(
+                fallbackPlans = dependencies.listLoader.loadReadyPlans(
                     favoriteIds = emptySet(),
-                    activePlanId = dietPlanStore.getActivePlanId()
+                    activePlanId = dependencies.preferenceStore.getActivePlanId()
                 ),
                 titleTextForPlan = ::titleTextForPlan
             )
@@ -313,53 +265,42 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
 
     private fun confirmDeleteCustomPlan(plan: DietPlanUiModel) {
         if (!CustomDietPlanDeletionAction.isCustomPlanId(plan.id)) return
-
         val planTitle = plan.titleText
             ?: plan.titleRes?.let { getString(it) }
             ?: getString(R.string.diet_plan_tag_custom)
 
-        MaterialAlertDialogBuilder(
-            requireContext(),
-            R.style.ThemeOverlay_Fitto_WhiteAlertDialog
-        )
+        MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Fitto_WhiteAlertDialog)
             .setTitle(getString(R.string.diet_plans_delete_custom_plan_title))
             .setMessage(getString(R.string.diet_plans_delete_custom_plan_message, planTitle))
             .setNegativeButton(getString(R.string.common_cancel), null)
-            .setPositiveButton(getString(R.string.common_delete)) { _, _ ->
-                deleteCustomPlan(plan)
-            }
+            .setPositiveButton(getString(R.string.common_delete)) { _, _ -> deleteCustomPlan(plan) }
             .show()
     }
 
     private fun deleteCustomPlan(plan: DietPlanUiModel) {
-        val result = customPlanDeletionAction.delete(plan.id)
-        renderListEffect(DietPlansListEffectResolver.customPlanDeleted(result))
-    }
-    private fun applyDietPlan(
-        planId: String,
-        planTitle: String
-    ) {
-        val applyResult = dietPlanPreferenceAction.applyPlan(planId)
         renderListEffect(
-            DietPlansListEffectResolver.planApplied(
-                planTitle = planTitle,
-                result = applyResult
+            DietPlansListEffectResolver.customPlanDeleted(
+                dependencies.deletionAction.delete(plan.id)
             )
         )
     }
 
+    private fun applyDietPlan(planId: String, planTitle: String) {
+        renderListEffect(
+            DietPlansListEffectResolver.planApplied(
+                planTitle = planTitle,
+                result = dependencies.preferenceAction.applyPlan(planId)
+            )
+        )
+    }
 
     private fun renderListEffect(effect: DietPlansListEffect) {
         if (effect.shouldNotifyDietPlanChanged) {
             parentFragmentManager.setFragmentResult(
                 REQUEST_DIET_PLAN_CHANGED,
                 Bundle().apply {
-                    effect.activePlanId?.let { activePlanId ->
-                        putString(BUNDLE_ACTIVE_PLAN_ID, activePlanId)
-                    }
-                    effect.selectTab?.let { selectTab ->
-                        putString(BUNDLE_SELECT_TAB, selectTab)
-                    }
+                    effect.activePlanId?.let { putString(BUNDLE_ACTIVE_PLAN_ID, it) }
+                    effect.selectTab?.let { putString(BUNDLE_SELECT_TAB, it) }
                 }
             )
         }
@@ -367,33 +308,18 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
         effect.toastMessageRes?.let { messageRes ->
             Toast.makeText(
                 requireContext(),
-                effect.toastPlanTitle?.let { planTitle ->
-                    getString(messageRes, planTitle)
-                } ?: getString(messageRes),
+                effect.toastPlanTitle?.let { getString(messageRes, it) } ?: getString(messageRes),
                 Toast.LENGTH_SHORT
             ).show()
         }
 
-        effect.selectedTab?.let { tab ->
-            selectedTab = tab
-        }
-
-        effect.checkedChipId?.let { chipId ->
-            binding.planChipGroup.check(chipId)
-        }
-
-        if (effect.shouldReloadPlans) {
-            loadDietPlans()
-        }
-
-        if (effect.shouldRefreshRecommendation) {
-            setupPersonalizedRecommendation()
-        }
+        effect.selectedTab?.let { screenStateStore.selectTab(it) }
+        effect.checkedChipId?.let { binding.planChipGroup.check(it) }
+        if (effect.shouldReloadPlans) loadDietPlans()
+        if (effect.shouldRefreshRecommendation) setupPersonalizedRecommendation()
     }
 
-    private fun openRecommendedPlanDetail(planId: String) {
-        openPlanDetail(planId)
-    }
+    private fun openRecommendedPlanDetail(planId: String) = openPlanDetail(planId)
 
     private fun openPlanDetail(planId: String) {
         when (val destination = DietPlanDestinationResolver.resolve(planId)) {
@@ -404,29 +330,20 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
                     .addToBackStack("if_detail")
                     .commit()
             }
-
             is DietPlanDestination.ReadyDetail -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
-                    .replace(
-                        R.id.homeTabContainer,
-                        DietPlanDetailFragment.newInstance(destination.planId)
-                    )
+                    .replace(R.id.homeTabContainer, DietPlanDetailFragment.newInstance(destination.planId))
                     .addToBackStack(BACK_STACK_DIET_PLAN_DETAIL)
                     .commit()
             }
-
             is DietPlanDestination.CustomDetail -> {
                 parentFragmentManager.beginTransaction()
                     .setReorderingAllowed(true)
-                    .replace(
-                        R.id.homeTabContainer,
-                        CustomDietPlanDetailFragment.newInstance(destination.planId)
-                    )
+                    .replace(R.id.homeTabContainer, CustomDietPlanDetailFragment.newInstance(destination.planId))
                     .addToBackStack("custom_diet_plan_detail")
                     .commit()
             }
-
             is DietPlanDestination.Unknown -> {
                 Toast.makeText(
                     requireContext(),
@@ -438,6 +355,7 @@ class DietPlansFragment : Fragment(R.layout.fragment_diet_plans) {
     }
 
     override fun onDestroyView() {
+        binding.dietPlansRecyclerView.adapter = null
         _binding = null
         super.onDestroyView()
     }

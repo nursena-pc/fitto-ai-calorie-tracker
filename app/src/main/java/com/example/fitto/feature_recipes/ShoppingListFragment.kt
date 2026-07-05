@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentShoppingListBinding
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -39,7 +40,7 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentShoppingListBinding.bind(view)
 
-        shoppingStore = SharedPreferencesRecipeShoppingListStore(requireContext())
+        shoppingStore = requireContext().fittoAppContainer.createRecipeFeatureDependencies().shoppingListStore
         shoppingController = RecipeShoppingListController(shoppingStore.items())
 
         binding.backButton.setOnClickListener { parentFragmentManager.popBackStack() }

@@ -22,6 +22,7 @@ import com.example.fitto.R
 import com.example.fitto.databinding.FragmentRecipeAddBinding
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 
@@ -46,7 +47,7 @@ class RecipeAddFragment : Fragment(R.layout.fragment_recipe_add) {
 
         _binding = FragmentRecipeAddBinding.bind(view)
         catalog = RecipeFilterCatalog(resources)
-        addCoordinator = RecipeAddCoordinator(LocalRecipeAddDataSource(requireContext()))
+        addCoordinator = requireContext().fittoAppContainer.createRecipeFeatureDependencies().createAddCoordinator()
 
         applyRecipeFormKeyboardMode()
 

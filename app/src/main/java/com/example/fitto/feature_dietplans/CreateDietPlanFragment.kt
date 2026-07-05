@@ -7,15 +7,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
-import com.example.fitto.data.local.repository.ProfileCacheRepository
 import com.example.fitto.databinding.FragmentCreateDietPlanBinding
-import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
-import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
-import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_meal.model.MealType
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -28,21 +24,13 @@ class CreateDietPlanFragment :
     private var editingDraftPlan: CustomDietPlanLocalModel? = null
     private var isRenderingState: Boolean = false
 
-    private lateinit var customDietPlanStore: CustomDietPlanStore
-    private lateinit var dietPlanStore: DietPlanPreferenceStore
-    private lateinit var profileCacheRepository: ProfileCacheRepository
-    private lateinit var customPlanDeletionAction: CustomDietPlanDeletionAction
-    private lateinit var dietPlanPreferenceAction: DietPlanPreferenceAction
-    private lateinit var createDietPlanSaveAction: CreateDietPlanSaveAction
+    private lateinit var dependencies: DietPlanFeatureDependencies
     private lateinit var textResolver: CreateDietPlanTextResolver
     private val completionAction = CreateDietPlanCompletionAction()
     private var exclusionController: CreateDietPlanExclusionController? = null
     private var uiRenderer: CreateDietPlanUiRenderer? = null
     private var interactionBinder: CreateDietPlanInteractionBinder? = null
     private val planStateStore = CreateDietPlanStateStore()
-    private val socialShareAction by lazy {
-        CreateDietPlanSocialShareAction.from(SocialRepository())
-    }
     private val activeExclusionController: CreateDietPlanExclusionController
         get() = requireNotNull(exclusionController)
     private val activeUiRenderer: CreateDietPlanUiRenderer
@@ -52,19 +40,7 @@ class CreateDietPlanFragment :
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCreateDietPlanBinding.bind(view)
 
-        val appContext = requireContext().applicationContext
-        customDietPlanStore = CustomDietPlanStore(appContext)
-        dietPlanStore = DietPlanPreferenceStore(requireContext())
-        profileCacheRepository = ProfileCacheRepository(appContext)
-        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = dietPlanStore
-        )
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(dietPlanStore)
-        createDietPlanSaveAction = CreateDietPlanSaveAction.from(
-            customPlanStore = customDietPlanStore,
-            preferenceAction = dietPlanPreferenceAction
-        )
+        dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
         textResolver = CreateDietPlanTextResolver.from(requireContext())
         uiRenderer = CreateDietPlanUiRenderer(
             context = requireContext(),
@@ -94,10 +70,7 @@ class CreateDietPlanFragment :
         if (!useProfileDefaults) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val profile = withContext(Dispatchers.IO) {
-                profileCacheRepository.getCurrentUserProfile()
-                    ?: profileCacheRepository.syncCurrentUserProfileFromFirebase()
-            }
+            val profile = dependencies.profileLoader.loadCurrentProfile()
 
             if (_binding == null) return@launch
 
@@ -109,7 +82,7 @@ class CreateDietPlanFragment :
         val planId = arguments?.getString(ARG_EDIT_DRAFT_PLAN_ID).orEmpty()
         if (planId.isBlank()) return false
 
-        val draft = customDietPlanStore.getPlan(planId)
+        val draft = dependencies.customPlanStore.getPlan(planId)
             ?.takeIf { it.isDraft }
             ?: return false
 
@@ -148,7 +121,7 @@ class CreateDietPlanFragment :
     }
 
     private fun deleteEditingDraft(draft: CustomDietPlanLocalModel) {
-        when (customPlanDeletionAction.delete(draft.id)) {
+        when (dependencies.deletionAction.delete(draft.id)) {
             is CustomDietPlanDeletionResult.Deleted -> {
                 handleCompletionEffect(completionAction.draftDeleted())
             }
@@ -212,8 +185,8 @@ class CreateDietPlanFragment :
         val existingPlan = editingDraftPlan
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                createDietPlanSaveAction.save(
+            val result = withContext(dependencies.ioDispatcher) {
+                dependencies.createSaveAction.save(
                     formState = formState,
                     existingPlan = existingPlan,
                     isDraft = isDraft
@@ -263,7 +236,7 @@ class CreateDietPlanFragment :
     }
 
     private suspend fun handlePlanCreated(result: CreateDietPlanSaveResult.PlanCreated) {
-        socialShareAction.share(
+        dependencies.socialShareAction.share(
             plan = result.plan,
             text = textResolver.socialShareText(result.goal, result.plan)
         )

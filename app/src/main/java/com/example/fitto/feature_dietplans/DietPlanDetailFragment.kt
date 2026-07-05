@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentDietPlanDetailBinding
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 
 class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
@@ -20,8 +21,9 @@ class DietPlanDetailFragment : Fragment(R.layout.fragment_diet_plan_detail) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentDietPlanDetailBinding.bind(view)
-        preferenceStore = DietPlanPreferenceStore(requireContext())
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
+        val dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
+        preferenceStore = dependencies.preferenceStore
+        dietPlanPreferenceAction = dependencies.preferenceAction
 
         currentPlanId = arguments?.getString(ARG_PLAN_ID) ?: PLAN_MEDITERRANEAN
         setupClicks()

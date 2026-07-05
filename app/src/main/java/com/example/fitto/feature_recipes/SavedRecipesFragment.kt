@@ -11,7 +11,7 @@ import com.example.fitto.databinding.FragmentSavedRecipesBinding
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeUiModel
-import kotlinx.coroutines.Dispatchers
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -21,13 +21,15 @@ class SavedRecipesFragment : Fragment(R.layout.fragment_saved_recipes) {
     private val binding: FragmentSavedRecipesBinding
         get() = _binding!!
 
+    private lateinit var dependencies: RecipeFeatureDependencies
     private lateinit var repository: RecipeRepository
     private lateinit var adapter: MyRecipeAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSavedRecipesBinding.bind(view)
-        repository = RecipeRepository(requireContext())
+        dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        repository = dependencies.repository
 
         adapter = MyRecipeAdapter(
             filterCatalog = RecipeFilterCatalog(resources),
@@ -48,7 +50,7 @@ class SavedRecipesFragment : Fragment(R.layout.fragment_saved_recipes) {
 
     private fun loadRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
-            val recipes: List<RecipeUiModel> = withContext(Dispatchers.IO) {
+            val recipes: List<RecipeUiModel> = withContext(dependencies.ioDispatcher) {
                 repository.favoriteOriginalRecipes()
             }
             if (_binding == null) return@launch

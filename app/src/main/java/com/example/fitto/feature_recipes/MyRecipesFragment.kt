@@ -17,8 +17,8 @@ import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeFilterState
 import com.example.fitto.feature_recipes.model.RecipeUiModel
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -29,6 +29,7 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
     private val binding: FragmentMyRecipesBinding
         get() = _binding!!
 
+    private lateinit var dependencies: RecipeFeatureDependencies
     private lateinit var repository: RecipeRepository
     private lateinit var catalog: RecipeFilterCatalog
     private lateinit var adapter: MyRecipeAdapter
@@ -43,7 +44,8 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentMyRecipesBinding.bind(view)
-        repository = RecipeRepository(requireContext())
+        dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        repository = dependencies.repository
         catalog = RecipeFilterCatalog(resources)
 
         adapter = MyRecipeAdapter(
@@ -108,9 +110,9 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
 
     private fun loadRecipes() {
         viewLifecycleOwner.lifecycleScope.launch {
-            savedRecipes = withContext(Dispatchers.IO) { repository.favoriteOriginalRecipes() }
-            userRecipes = withContext(Dispatchers.IO) { repository.userRecipes() }
-            communityRecipes = withContext(Dispatchers.IO) { repository.communityRecipes() }
+            savedRecipes = withContext(dependencies.ioDispatcher) { repository.favoriteOriginalRecipes() }
+            userRecipes = withContext(dependencies.ioDispatcher) { repository.userRecipes() }
+            communityRecipes = withContext(dependencies.ioDispatcher) { repository.communityRecipes() }
             if (_binding == null) return@launch
             renderCurrentTab()
         }
@@ -202,7 +204,7 @@ class MyRecipesFragment : Fragment(R.layout.fragment_my_recipes) {
 
     private fun removeRecipeFromBook(recipe: RecipeUiModel) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val removed = withContext(Dispatchers.IO) { repository.removeFromBook(recipe.id) }
+            val removed = withContext(dependencies.ioDispatcher) { repository.removeFromBook(recipe.id) }
             if (_binding == null) return@launch
 
             if (removed) {

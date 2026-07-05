@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentIntermittentFastingDetailBinding
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_dietplans.data.DietPlanCatalog
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.FastingPlanType
@@ -30,8 +31,9 @@ class IntermittentFastingDetailFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentIntermittentFastingDetailBinding.bind(view)
-        preferenceStore = DietPlanPreferenceStore(requireContext())
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
+        val dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
+        preferenceStore = dependencies.preferenceStore
+        dietPlanPreferenceAction = dependencies.preferenceAction
 
         setupClicks()
         setupFaqAccordion()

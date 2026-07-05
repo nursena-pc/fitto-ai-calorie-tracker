@@ -12,49 +12,43 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentRecipesBinding
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
 import com.example.fitto.feature_home.presentation.social.NotificationsFragment
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
-import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.example.fitto.feature_recipes.model.RecipeFilterState
 import com.example.fitto.feature_recipes.model.RecipeHeaderState
 import com.example.fitto.feature_recipes.model.RecipeListMode
 import com.example.fitto.feature_recipes.model.RecipeUiModel
-import kotlinx.coroutines.Dispatchers
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class RecipesFragment : Fragment(R.layout.fragment_recipes) {
 
     private var _binding: FragmentRecipesBinding? = null
-    private val binding: FragmentRecipesBinding
-        get() = _binding!!
+    private val binding get() = _binding!!
 
+    private lateinit var dependencies: RecipeFeatureDependencies
+    private lateinit var listCoordinator: RecipeListCoordinator
     private lateinit var catalog: RecipeFilterCatalog
-    private lateinit var repository: RecipeRepository
     private lateinit var headerAdapter: RecipeHeaderAdapter
     private lateinit var listAdapter: RecipeListAdapter
     private lateinit var concatAdapter: ConcatAdapter
 
-    private var filterState: RecipeFilterState = RecipeFilterState()
-    private var searchQuery: String = ""
-    private var listMode: RecipeListMode = RecipeListMode.GRID
-    private var resultCount: Int = 0
+    private val screenStateStore = RecipesScreenStateStore()
     private var renderJob: Job? = null
     private var searchJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         _binding = FragmentRecipesBinding.bind(view)
+        dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        listCoordinator = dependencies.createListCoordinator()
         catalog = RecipeFilterCatalog(resources)
-        repository = RecipeRepository(requireContext())
 
         setupRecyclerView()
         setupFilterResultListener()
@@ -80,16 +74,16 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     private fun setupRecyclerView() {
         headerAdapter = RecipeHeaderAdapter(
             filterCatalog = catalog,
-            onSearchChanged = { query -> onSearchChanged(query) },
+            onSearchChanged = ::onSearchChanged,
             onFilterClick = {
                 RecipeFilterBottomSheetFragment
-                    .newInstance(filterState)
+                    .newInstance(screenStateStore.state.filterState)
                     .show(childFragmentManager, TAG_FILTER_SHEET)
             },
             onNotificationClick = {
                 NotificationsFragment().show(childFragmentManager, TAG_NOTIFICATIONS)
             },
-            onViewModeClick = { toggleListMode() },
+            onViewModeClick = ::toggleListMode,
             onCategoryClick = ::onCategoryChipClicked,
             onClearFiltersClick = ::clearFiltersKeepingPosition,
             onPantrySearchClick = ::openPantrySearch,
@@ -105,9 +99,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
         )
 
         concatAdapter = ConcatAdapter(
-            ConcatAdapter.Config.Builder()
-                .setIsolateViewTypes(false)
-                .build(),
+            ConcatAdapter.Config.Builder().setIsolateViewTypes(false).build(),
             headerAdapter,
             listAdapter
         )
@@ -120,12 +112,12 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             itemAnimator = null
         }
 
-        applyListMode(RecipeListMode.GRID, preserveScroll = false)
+        listAdapter.submitList(screenStateStore.state.recipes)
+        applyListMode(screenStateStore.state.listMode, preserveScroll = false)
     }
 
     private fun onSearchChanged(query: String) {
-        if (searchQuery == query) return
-        searchQuery = query
+        if (!screenStateStore.updateSearchQuery(query)) return
         updateHeader()
         searchJob?.cancel()
         searchJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -135,11 +127,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     }
 
     private fun toggleListMode() {
-        val nextMode = when (listMode) {
-            RecipeListMode.GRID -> RecipeListMode.LIST
-            RecipeListMode.LIST -> RecipeListMode.GRID
-        }
-        applyListMode(nextMode, preserveScroll = true)
+        applyListMode(screenStateStore.toggleListMode(), preserveScroll = true)
     }
 
     private fun applyListMode(mode: RecipeListMode, preserveScroll: Boolean) {
@@ -153,10 +141,8 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             null
         }
 
-        listMode = mode
         recyclerView.recycledViewPool.clear()
         listAdapter.updateViewMode(mode)
-
         recyclerView.layoutManager = when (mode) {
             RecipeListMode.GRID -> GridLayoutManager(requireContext(), GRID_SPAN_COUNT).apply {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
@@ -165,12 +151,10 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
                     }
                 }
             }
-
             RecipeListMode.LIST -> LinearLayoutManager(requireContext())
         }
 
         updateHeader()
-
         if (layoutState != null) {
             recyclerView.post {
                 recyclerView.layoutManager?.onRestoreInstanceState(layoutState)
@@ -183,8 +167,8 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
             RecipeFilterState.RESULT_REQUEST_KEY,
             viewLifecycleOwner
         ) { _, bundle ->
-            filterState = RecipeFilterState.fromBundle(
-                bundle.getBundle(RecipeFilterState.RESULT_BUNDLE_KEY)
+            screenStateStore.setFilter(
+                RecipeFilterState.fromBundle(bundle.getBundle(RecipeFilterState.RESULT_BUNDLE_KEY))
             )
             updateHeader()
             renderRecipes(preserveScroll = true)
@@ -192,24 +176,12 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     }
 
     private fun onCategoryChipClicked(option: RecipeFilterOption) {
-        val hadAdvancedFilters = filterState.hasAdvancedFilters()
-        val newState = when {
-            option.key == RecipeHeaderAdapter.KEY_ALL_CATEGORIES -> RecipeFilterState()
-
-            filterState.selectedMainCategoryKey == option.key && !filterState.hasAdvancedFilters() -> {
-                RecipeFilterState()
-            }
-
-            else -> RecipeFilterState(selectedMainCategoryKey = option.key)
-        }
-
-        val shouldWarnReset = hadAdvancedFilters && newState != filterState
-        filterState = newState
+        val result = screenStateStore.selectCategory(option)
+        if (!result.changed) return
 
         updateHeader()
         renderRecipes(preserveScroll = true)
-
-        if (shouldWarnReset) {
+        if (result.shouldWarnAdvancedFiltersReset) {
             Toast.makeText(
                 requireContext(),
                 getString(R.string.recipes_filter_reset_notice),
@@ -219,16 +191,14 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     }
 
     private fun clearFiltersKeepingPosition() {
-        if (!filterState.hasActiveFilters()) return
-        filterState = RecipeFilterState()
+        if (!screenStateStore.clearFilters()) return
         updateHeader()
         renderRecipes(preserveScroll = true)
         Toast.makeText(requireContext(), R.string.recipes_filters_cleared, Toast.LENGTH_SHORT).show()
     }
 
     private fun renderRecipes(preserveScroll: Boolean = true) {
-        val querySnapshot = searchQuery
-        val filterSnapshot = filterState
+        val request = screenStateStore.beginLoad()
         val layoutState = if (preserveScroll) {
             binding.recipesRecyclerView.layoutManager?.onSaveInstanceState()
         } else {
@@ -237,24 +207,18 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
 
         renderJob?.cancel()
         renderJob = viewLifecycleOwner.lifecycleScope.launch {
-            val filteredRecipes: List<RecipeUiModel> = withContext(Dispatchers.IO) {
-                repository.filterRecipes(
-                    query = querySnapshot,
-                    filterState = filterSnapshot
-                )
+            val recipes = listCoordinator.load(request)
+            if (_binding == null || !screenStateStore.applyRecipes(request.generation, recipes)) {
+                return@launch
             }
 
-            if (_binding == null) return@launch
-
-            resultCount = filteredRecipes.size
-            listAdapter.submitList(filteredRecipes) {
+            listAdapter.submitList(screenStateStore.state.recipes) {
                 if (layoutState != null) {
                     binding.recipesRecyclerView.layoutManager?.onRestoreInstanceState(layoutState)
                 }
             }
             updateHeader()
-
-            binding.emptyState.isVisible = filteredRecipes.isEmpty()
+            binding.emptyState.isVisible = screenStateStore.state.recipes.isEmpty()
             binding.recipesRecyclerView.isVisible = true
         }
     }
@@ -263,32 +227,30 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
         notificationBadgeCount: Int = headerAdapter.currentState().notificationBadgeCount
     ) {
         if (!::headerAdapter.isInitialized) return
+        val state = screenStateStore.state
         headerAdapter.submitState(
             RecipeHeaderState(
-                filterState = filterState,
-                searchQuery = searchQuery,
-                resultCount = resultCount,
-                listMode = listMode,
+                filterState = state.filterState,
+                searchQuery = state.searchQuery,
+                resultCount = state.resultCount,
+                listMode = state.listMode,
                 notificationBadgeCount = notificationBadgeCount
             )
         )
     }
 
     private fun toggleFavorite(recipe: RecipeUiModel) {
-        repository.toggleFavorite(recipe.id)
-
+        listCoordinator.toggleFavorite(recipe.id)
         val messageRes = if (recipe.isFavorite) {
             R.string.recipes_favorite_removed
         } else {
             R.string.recipes_favorite_added
         }
-
         Toast.makeText(
             requireContext(),
             getString(messageRes, recipe.title),
             Toast.LENGTH_LONG
         ).show()
-
         renderRecipes(preserveScroll = true)
     }
 
@@ -296,15 +258,10 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
             .hide(this)
-            .add(
-                R.id.homeTabContainer,
-                RecipeDetailFragment.newInstance(recipe.id),
-                TAG_RECIPE_DETAIL
-            )
+            .add(R.id.homeTabContainer, RecipeDetailFragment.newInstance(recipe.id), TAG_RECIPE_DETAIL)
             .addToBackStack(TAG_RECIPE_DETAIL)
             .commit()
     }
-
 
     private fun openPantrySearch() {
         parentFragmentManager.beginTransaction()
@@ -325,11 +282,7 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
     }
 
     private fun startVoiceSearch() {
-        Toast.makeText(
-            requireContext(),
-            R.string.recipes_voice_search_coming_soon,
-            Toast.LENGTH_LONG
-        ).show()
+        Toast.makeText(requireContext(), R.string.recipes_voice_search_coming_soon, Toast.LENGTH_LONG).show()
     }
 
     private fun openMyRecipes() {
@@ -365,7 +318,6 @@ class RecipesFragment : Fragment(R.layout.fragment_recipes) {
         private const val TAG_NOTIFICATIONS = "NotificationsFragment"
         private const val TAG_RECIPE_DETAIL = "recipe_detail"
         private const val TAG_MY_RECIPES = "my_recipes"
-        private const val TAG_SAVED_RECIPES = "saved_recipes"
         private const val TAG_FRIDGE_INVENTORY = "fridge_inventory"
         private const val TAG_SHOPPING_LIST = "shopping_list"
         private const val TAG_RECIPE_ADD = "recipe_add"
