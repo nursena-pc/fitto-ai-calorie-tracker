@@ -22,10 +22,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.NavHostFragment
 import com.example.fitto.data.local.session.UserSessionDataGuard
-import com.example.fitto.feature_home.presentation.HomeFragment
 import com.example.fitto.feature_home.presentation.notifications.FittoInAppNotificationCenter
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPermission
-import com.example.fitto.feature_home.presentation.notifications.FittoNotificationPublisher
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.example.fitto.feature_home.presentation.profile.ReminderPreferenceStore
@@ -40,6 +38,21 @@ class MainActivity : AppCompatActivity() {
 
     private val auth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
     private val bannerHandler = Handler(Looper.getMainLooper())
+    private val homeFragmentDispatcher by lazy { HomeFragmentDispatcher(this) }
+    private val notificationNavigationCoordinator by lazy {
+        MainNotificationNavigationCoordinator(
+            cancelActiveSystemNotifications = {
+                FittoNotificationStore.cancelActiveSystemNotifications(this)
+            },
+            markLocalNotificationRead = { notificationId ->
+                FittoNotificationStore.markLocalNotificationRead(this, notificationId)
+            },
+            removeMessageNotificationsForThread = { threadId ->
+                FittoNotificationStore.removeMessageNotificationsForThread(this, threadId)
+            },
+            navigate = homeFragmentDispatcher::dispatch
+        )
+    }
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
     private var observedUserId: String? = null
     private var inAppBannerView: View? = null
@@ -62,9 +75,7 @@ class MainActivity : AppCompatActivity() {
         setupNotificationAccountGuard()
         ensureCurrentUserScopeOnStartup()
         observeInAppNotifications()
-        clearSystemNotificationsOnAppOpen(intent)
-        handleSocialNotificationIntent(intent)
-        handleReminderNotificationIntent(intent)
+        notificationNavigationCoordinator.handleLaunchIntent(intent)
     }
 
 
@@ -75,19 +86,17 @@ class MainActivity : AppCompatActivity() {
         val navController = navHostFragment.navController
         val graph = navController.navInflater.inflate(R.navigation.nav_graph)
 
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        val shouldOpenHome = currentUser != null &&
-                (
-                        currentUser.email.isNullOrBlank() ||
-                                currentUser.isEmailVerified
-                        )
+        val currentUser = auth.currentUser
+        val destination = MainStartDestinationResolver.resolve(
+            hasAuthenticatedUser = currentUser != null,
+            email = currentUser?.email,
+            isEmailVerified = currentUser?.isEmailVerified == true
+        )
 
         graph.setStartDestination(
-            if (shouldOpenHome) {
-                R.id.homeFragment
-            } else {
-                R.id.welcomeFragment
+            when (destination) {
+                MainStartDestination.HOME -> R.id.homeFragment
+                MainStartDestination.WELCOME -> R.id.welcomeFragment
             }
         )
 
@@ -97,9 +106,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        clearSystemNotificationsOnAppOpen(intent)
-        handleSocialNotificationIntent(intent)
-        handleReminderNotificationIntent(intent)
+        notificationNavigationCoordinator.handleLaunchIntent(intent)
     }
 
     private fun observeInAppNotifications() {
@@ -189,16 +196,7 @@ class MainActivity : AppCompatActivity() {
             .start()
 
         banner.setOnClickListener {
-            FittoNotificationStore.markLocalNotificationRead(this, notification.id)
-            if (notification.type == FittoNotification.TYPE_MESSAGE ||
-                notification.type == FittoNotification.TYPE_GROUP_MESSAGE ||
-                notification.type == FittoNotification.TYPE_GROUP_ADDED
-            ) {
-                notification.targetId?.let { threadId ->
-                    FittoNotificationStore.removeMessageNotificationsForThread(this, threadId)
-                }
-            }
-            openSocialNotificationTarget(notification.type, notification.targetId, notification.secondaryTargetId)
+            notificationNavigationCoordinator.openInAppNotification(notification)
             hideInAppNotificationBanner(animate = true)
         }
 
@@ -278,15 +276,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notifyHomeFragmentAccountScopeChanged() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.mainNavHost) as? NavHostFragment
-
-        val homeFragment = navHostFragment
-            ?.childFragmentManager
-            ?.fragments
-            ?.firstOrNull { it is HomeFragment } as? HomeFragment
-
-        homeFragment?.onAccountScopeChanged()
+        homeFragmentDispatcher.notifyAccountScopeChanged()
     }
 
     override fun onRequestPermissionsResult(
@@ -303,93 +293,6 @@ class MainActivity : AppCompatActivity() {
         ) {
             ReminderAlarmScheduler.scheduleAll(this)
         }
-    }
-
-    private fun clearSystemNotificationsOnAppOpen(intent: Intent?) {
-        FittoNotificationStore.cancelActiveSystemNotifications(this)
-        if (intent?.getBooleanExtra(FittoNotificationPublisher.EXTRA_OPENED_FROM_NOTIFICATION, false) == true) {
-            intent.removeExtra(FittoNotificationPublisher.EXTRA_OPENED_FROM_NOTIFICATION)
-        }
-    }
-
-    private fun handleSocialNotificationIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra(FittoNotificationPublisher.EXTRA_OPENED_SOCIAL_NOTIFICATION, false) != true) {
-            return
-        }
-
-        val type = intent.getStringExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_TYPE)
-        val targetId = intent.getStringExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_TARGET_ID)
-        val secondaryTargetId = intent.getStringExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_SECONDARY_TARGET_ID)
-
-        if ((type == FittoNotification.TYPE_MESSAGE ||
-                    type == FittoNotification.TYPE_GROUP_MESSAGE ||
-                    type == FittoNotification.TYPE_GROUP_ADDED) &&
-            !targetId.isNullOrBlank()
-        ) {
-            FittoNotificationStore.removeMessageNotificationsForThread(this, targetId)
-        }
-
-        openSocialNotificationTarget(type, targetId, secondaryTargetId)
-
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_OPENED_SOCIAL_NOTIFICATION)
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_TYPE)
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_TARGET_ID)
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_SOCIAL_NOTIFICATION_SECONDARY_TARGET_ID)
-    }
-
-    private fun handleReminderNotificationIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra(FittoNotificationPublisher.EXTRA_OPENED_REMINDER_NOTIFICATION, false) != true) {
-            return
-        }
-
-        val reminderId = intent.getStringExtra(FittoNotificationPublisher.EXTRA_REMINDER_ID)
-        val reminderCategory = intent.getStringExtra(FittoNotificationPublisher.EXTRA_REMINDER_CATEGORY)
-
-        openReminderNotificationTarget(reminderCategory, reminderId)
-
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_OPENED_REMINDER_NOTIFICATION)
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_REMINDER_ID)
-        intent.removeExtra(FittoNotificationPublisher.EXTRA_REMINDER_CATEGORY)
-    }
-
-    private fun openReminderNotificationTarget(
-        categoryName: String?,
-        reminderId: String?
-    ) {
-        dispatchToHomeFragment { homeFragment ->
-            homeFragment.openReminderNotificationTarget(categoryName, reminderId)
-        }
-    }
-
-    private fun openSocialNotificationTarget(
-        type: String?,
-        targetId: String?,
-        secondaryTargetId: String?
-    ) {
-        dispatchToHomeFragment { homeFragment ->
-            homeFragment.openSocialNotificationTarget(type, targetId, secondaryTargetId)
-        }
-    }
-
-    private fun dispatchToHomeFragment(
-        attempt: Int = 0,
-        action: (HomeFragment) -> Unit
-    ) {
-        val delay = if (attempt == 0) 0L else 120L
-        window.decorView.postDelayed({
-            val navHostFragment = supportFragmentManager
-                .findFragmentById(R.id.mainNavHost) as? NavHostFragment
-
-            val homeFragment = navHostFragment
-                ?.childFragmentManager
-                ?.primaryNavigationFragment as? HomeFragment
-
-            if (homeFragment != null) {
-                action(homeFragment)
-            } else if (attempt < 6) {
-                dispatchToHomeFragment(attempt + 1, action)
-            }
-        }, delay)
     }
 
     override fun onResume() {
@@ -411,14 +314,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun rememberCurrentHomeScreenForSettingsRecreate() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.mainNavHost) as? NavHostFragment
-
-        val homeFragment = navHostFragment
-            ?.childFragmentManager
-            ?.primaryNavigationFragment as? HomeFragment
-
-        homeFragment?.rememberCurrentScreenForSettingsRecreate()
+        homeFragmentDispatcher.rememberCurrentScreenForSettingsRecreate()
     }
 
     override fun onDestroy() {

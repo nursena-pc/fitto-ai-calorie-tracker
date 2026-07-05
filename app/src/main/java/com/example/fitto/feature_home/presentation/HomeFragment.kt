@@ -18,7 +18,8 @@ import com.example.fitto.feature_home.presentation.profile.ProfileMenuId
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
 import com.example.fitto.feature_home.presentation.profile.ProfileScreenNavigator
 import com.example.fitto.feature_home.presentation.profile.ProfileWeightFragment
-import com.example.fitto.feature_home.presentation.profile.reminders.ReminderCategory
+import com.example.fitto.feature_home.presentation.navigation.HomeNavigationRequest
+import com.example.fitto.feature_home.presentation.navigation.HomeNotificationRouteResolver
 import com.example.fitto.feature_home.presentation.social.SocialFragment
 import com.example.fitto.feature_reports.ReportsFragment
 import com.example.fitto.feature_recipes.RecipesFragment
@@ -164,7 +165,30 @@ class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
     }
 
 
-    fun openSocialNotificationTarget(
+    internal fun navigate(request: HomeNavigationRequest) {
+        when (val destination = HomeNotificationRouteResolver.resolve(request)) {
+            is HomeNotificationRouteResolver.Destination.Social -> {
+                openSocialNotificationTarget(
+                    type = destination.type,
+                    targetId = destination.targetId,
+                    secondaryTargetId = destination.secondaryTargetId
+                )
+            }
+
+            HomeNotificationRouteResolver.Destination.ProfileWeight -> {
+                openProfileWeightScreen()
+            }
+
+            is HomeNotificationRouteResolver.Destination.DailyReminder -> {
+                openDailyReminderTarget(
+                    categoryName = destination.categoryName,
+                    reminderId = destination.reminderId
+                )
+            }
+        }
+    }
+
+    private fun openSocialNotificationTarget(
         type: String?,
         targetId: String?,
         secondaryTargetId: String?
@@ -187,25 +211,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), ProfileScreenNavigator {
                 targetId = targetId,
                 secondaryTargetId = secondaryTargetId
             )
-        }
-    }
-
-    fun openReminderNotificationTarget(
-        categoryName: String?,
-        reminderId: String?
-    ) {
-        val category = runCatching {
-            ReminderCategory.valueOf(categoryName.orEmpty())
-        }.getOrNull()
-
-        when (category) {
-            ReminderCategory.WEIGHT -> openProfileWeightScreen()
-            ReminderCategory.MEAL,
-            ReminderCategory.WATER,
-            ReminderCategory.EXERCISE,
-            ReminderCategory.CUSTOM,
-            ReminderCategory.ALL,
-            null -> openDailyReminderTarget(categoryName, reminderId)
         }
     }
 
