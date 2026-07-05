@@ -1,0 +1,86 @@
+name: Android CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Unit tests and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Android project
+        uses: ./.github/actions/setup-android-project
+
+      - name: Compile, test, and lint
+        run: >-
+          ./gradlew --no-daemon --stacktrace
+          :app:compileDebugKotlin
+          :app:testDebugUnitTest
+          :app:lintDebug
+
+      - name: Verify committed Room schemas
+        shell: bash
+        run: |
+          schema_changes="$(git status --porcelain -- app/schemas)"
+          if [[ -n "$schema_changes" ]]; then
+            echo "Room schema files changed during CI. Commit the generated schema updates:"
+            echo "$schema_changes"
+            exit 1
+          fi
+
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: verification-reports-${{ github.run_number }}
+          path: |
+            app/build/reports/tests/testDebugUnitTest/
+            app/build/test-results/testDebugUnitTest/
+            app/build/reports/lint-results-debug.html
+            app/build/reports/lint-results-debug.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  build:
+    name: Assemble debug artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Android project
+        uses: ./.github/actions/setup-android-project
+
+      - name: Assemble application and Android test APKs
+        run: >-
+          ./gradlew --no-daemon --stacktrace
+          :app:assembleDebug
+          :app:assembleDebugAndroidTest
+
+      - name: Upload debug APKs
+        uses: actions/upload-artifact@v7
+        with:
+          name: debug-apks-${{ github.run_number }}
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/androidTest/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14

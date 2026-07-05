@@ -1,0 +1,13 @@
+# Default repository owner
+* @nursena-pc
+
+# Repository governance and automation
+/.github/ @nursena-pc
+/SECURITY.md @nursena-pc
+/CONTRIBUTING.md @nursena-pc
+
+# High-risk application areas
+/app/src/main/java/com/example/fitto/data/local/ @nursena-pc
+/app/schemas/ @nursena-pc
+/app/src/main/java/com/example/fitto/feature_auth/ @nursena-pc
+/app/src/main/java/com/example/fitto/feature_home/presentation/profile/ @nursena-pc
