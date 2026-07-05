@@ -56,8 +56,8 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          disk-size: 6000M
-          heap-size: 2048M
+          disk-size: 2048M
+          heap-size: 1024M
           emulator-options: >-
             -no-window
             -gpu swiftshader_indirect
@@ -65,6 +65,7 @@ jobs:
             -noaudio
             -no-boot-anim
             -camera-back none
+            -no-metrics
           script: ./gradlew --no-daemon --stacktrace :app:connectedDebugAndroidTest
 
       - name: Upload instrumentation reports
