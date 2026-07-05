@@ -1,6 +1,7 @@
 package com.example.fitto.feature_daily
 
 import android.content.Context
+import com.example.fitto.R
 import com.example.fitto.data.local.entity.UserProfileEntity
 import com.example.fitto.data.local.repository.DietPlanSeedRepository
 import com.example.fitto.data.local.repository.MealRepository
@@ -38,7 +39,7 @@ internal data class DailyDashboardDependencies(
     val healthConnectSummaryAction: DailyHealthConnectSummaryAction,
     val stepCounterAction: DailyStepCounterAction,
     val sleepTrackingAction: DailySleepTrackingAction,
-    val dailyAiAnalysisAction: DailyAiAnalysisAction
+    val dailyAiDashboardCoordinator: DailyAiDashboardCoordinator
 )
 
 internal data class DailyDashboardDefaultTargets(
@@ -232,7 +233,50 @@ internal class DailyDashboardDependenciesFactory(
                 getLogForDate = sleepLogStore::getLogForDate,
                 saveLog = sleepLogStore::saveLog
             ),
-            dailyAiAnalysisAction = DailyAiAnalysisActionFactory.create(appContext)
+            dailyAiDashboardCoordinator = createDailyAiDashboardCoordinator(appContext)
+        )
+    }
+
+
+    private fun createDailyAiDashboardCoordinator(appContext: Context): DailyAiDashboardCoordinator {
+        return DailyAiDashboardCoordinator(
+            analysisAction = DailyAiAnalysisActionFactory.create(appContext),
+            snapshotBuilder = DailyAiSnapshotFactory(
+                appName = appContext.getString(R.string.app_name),
+                snackMealLabel = appContext.getString(R.string.daily_snack),
+                unavailableDetailsText = appContext.getString(
+                    R.string.daily_ai_entry_details_unavailable
+                ),
+                mealDefinitions = DailyAiMealDefinitionResolver.resolveMealDefinitions().map { definition ->
+                    DailyAiMealSnapshotMapper.MealDefinition(
+                        key = definition.key,
+                        label = appContext.getString(definition.labelRes)
+                    )
+                },
+                exerciseItemText = { title, durationMinutes, calories ->
+                    appContext.getString(
+                        R.string.daily_ai_exercise_summary_item,
+                        title,
+                        durationMinutes,
+                        calories
+                    )
+                },
+                exerciseWithSyncedText = { manualSummary, syncedCalories ->
+                    appContext.getString(
+                        R.string.daily_ai_exercise_summary_with_steps,
+                        manualSummary,
+                        syncedCalories
+                    )
+                },
+                exerciseSyncedOnlyText = { syncedCalories ->
+                    appContext.getString(
+                        R.string.daily_ai_exercise_summary_synced,
+                        syncedCalories
+                    )
+                },
+                maxFoodSummaryChars = DAILY_AI_MEAL_SUMMARY_MAX_CHARS
+            ),
+            profilePreferencesSource = ProfileStoreDailyAiProfilePreferencesSource(appContext)
         )
     }
 
@@ -246,5 +290,9 @@ internal class DailyDashboardDependenciesFactory(
         return customDietPlanStore.getPlan(activePlanId)
             ?.dailyCalories
             ?.takeIf { it > 0 }
+    }
+
+    private companion object {
+        const val DAILY_AI_MEAL_SUMMARY_MAX_CHARS = 360
     }
 }
