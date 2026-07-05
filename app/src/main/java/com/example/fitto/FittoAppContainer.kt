@@ -8,6 +8,8 @@ import com.example.fitto.feature_daily.DailyDashboardDependencies
 import com.example.fitto.feature_daily.DailyDashboardDependenciesFactory
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationChannels
 import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
+import com.example.fitto.feature_meal.AddMealCoordinator
+import com.example.fitto.feature_meal.LocalAddMealDataSource
 
 /** Application-level composition root for shared infrastructure and feature dependency graphs. */
 internal class FittoAppContainer(
@@ -21,6 +23,13 @@ internal class FittoAppContainer(
         ensureNotificationChannels = { FittoNotificationChannels.ensureCreated(appContext) },
         startSocialNotificationObserver = { SocialNotificationObserver.start(appContext) }
     )
+
+    fun createAddMealCoordinator(): AddMealCoordinator {
+        return AddMealCoordinator(
+            dataSource = LocalAddMealDataSource(appContext),
+            ioDispatcher = coroutineDispatchers.io
+        )
+    }
 
     fun createDailyDashboardDependencies(
         defaultTargets: DailyDashboardDefaultTargets,
