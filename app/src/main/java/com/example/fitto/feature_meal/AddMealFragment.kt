@@ -1,6 +1,5 @@
 package com.example.fitto.feature_meal
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -17,6 +16,7 @@ import com.example.fitto.databinding.FragmentAddMealBinding
 import com.example.fitto.feature_meal.model.FoodUiModel
 import com.example.fitto.feature_meal.model.MealType
 import com.example.fitto.feature_meal.model.SelectedFoodUiModel
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -37,44 +37,30 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
     private lateinit var suggestedFoodAdapter: AddMealFoodAdapter
     private lateinit var selectedFoodAdapter: SelectedFoodAdapter
-    private var currentFoodResults: List<FoodEntity> = emptyList()
-    private var lastOnlineQuery: String = ""
-    private var nextUsdaPageNumber: Int = 2
-    private var canLoadMoreUsda: Boolean = false
-    private var isLoadingMoreUsda: Boolean = false
     private var searchJob: Job? = null
-    private var selectedFoods: List<SelectedFoodUiModel> = emptyList()
     private val foodPresentationResolver = AddMealFoodPresentationResolver()
-    private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
+    private val screenStateStore = AddMealScreenStateStore()
     private lateinit var coordinator: AddMealCoordinator
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddMealBinding.bind(view)
 
-        val appContext = requireContext().applicationContext
-        initializeDependencies(appContext)
+        coordinator = requireContext().fittoAppContainer.createAddMealCoordinator()
 
         setupRecyclerViews()
         setupUi()
         setupPortionResultListener()
         setupCameraFoodResultListener()
         setupClicks()
-        updateSelectedFoods()
+        renderSelectedFoods()
         setupCustomFoodResultListener()
 
         searchFoods(
             query = binding.searchEditText.text?.toString().orEmpty(),
             debounce = false,
             allowOnlineSearch = false
-        )
-    }
-
-    private fun initializeDependencies(appContext: Context) {
-        coordinator = AddMealCoordinator(
-            dataSource = LocalAddMealDataSource(appContext),
-            presentationResolver = foodPresentationResolver
         )
     }
 
@@ -115,13 +101,12 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             FoodPortionBottomSheet.REQUEST_PORTION_SELECTED,
             viewLifecycleOwner
         ) { _, bundle ->
-            selectedFoods = selectionStateResolver.addSelectedFood(
-                currentSelection = selectedFoods,
-                selectedFood = FoodPortionBottomSheet.run {
+            screenStateStore.addSelectedFood(
+                FoodPortionBottomSheet.run {
                     bundle.toSelectedFoodUiModel()
                 }
             )
-            updateSelectedFoods()
+            renderSelectedFoods()
         }
     }
 
@@ -224,11 +209,8 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 when (result) {
                     AddMealDetectedFoodsResult.NoFoods -> Unit
                     is AddMealDetectedFoodsResult.Imported -> {
-                        selectedFoods = selectionStateResolver.addDetectedFoods(
-                            currentSelection = selectedFoods,
-                            detectedFoods = result.detectedFoods
-                        )
-                        updateSelectedFoods()
+                        screenStateStore.addDetectedFoods(result.detectedFoods)
+                        renderSelectedFoods()
                         saveSelectedFoodsToMeal()
                     }
                 }
@@ -334,6 +316,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         allowOnlineSearch: Boolean
     ) {
         searchJob?.cancel()
+        val contentToken = screenStateStore.beginFoodContentLoad()
         searchJob = viewLifecycleOwner.lifecycleScope.launch {
             if (debounce) delay(300)
 
@@ -369,14 +352,15 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
             val favoriteIds = coordinator.loadFavoriteIds()
 
+            if (_binding == null) return@launch
+            if (!screenStateStore.applySearchResult(contentToken, searchResult)) return@launch
+
             binding.foodsSectionTitleText.text = getString(searchResult.section.titleRes())
             showEmptySearchFeedback(searchResult.emptyFeedback)
-            applyOnlinePagingState(searchResult.pagingState)
-            currentFoodResults = searchResult.foods
-            updateLoadMoreButton()
+            renderLoadMoreButton()
             suggestedFoodAdapter.submitList(
                 foodPresentationResolver.toFoodUiModels(
-                    foods = searchResult.foods,
+                    foods = screenStateStore.current().currentFoodResults,
                     languageCode = currentLanguageCode(),
                     favoriteIds = favoriteIds
                 )
@@ -385,32 +369,30 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun loadMoreUsdaFoods() {
-        val query = lastOnlineQuery.trim()
-
-        if (!searchStateResolver.canStartLoadMore(query, canLoadMoreUsda, isLoadingMoreUsda)) return
-
-        isLoadingMoreUsda = true
-        binding.loadMoreFoodsButton.isEnabled = false
-        binding.loadMoreFoodsButton.text = getString(R.string.add_meal_loading_more_foods)
+        val loadToken = screenStateStore.beginLoadMore() ?: return
+        renderLoadMoreButton()
 
         val request = AddMealLoadMoreRequest(
-            query = query,
+            query = loadToken.query,
             mealType = targetMealType.argumentValue,
-            currentFoods = currentFoodResults,
-            currentPage = nextUsdaPageNumber,
+            currentFoods = loadToken.currentFoods,
+            currentPage = loadToken.currentPage,
             pageSize = USDA_PAGE_SIZE
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
             val result = coordinator.loadMore(request)
+            val favoriteIds = if (result is AddMealLoadMoreActionResult.Loaded) {
+                coordinator.loadFavoriteIds()
+            } else {
+                emptySet()
+            }
 
+            if (!screenStateStore.applyLoadMoreResult(loadToken, result)) return@launch
             if (_binding == null) return@launch
-
-            isLoadingMoreUsda = false
 
             when (result) {
                 is AddMealLoadMoreActionResult.NoMoreFoods -> {
-                    canLoadMoreUsda = result.canLoadMore
                     Toast.makeText(
                         requireContext(),
                         getString(R.string.add_meal_no_more_foods),
@@ -418,17 +400,9 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                     ).show()
                 }
                 is AddMealLoadMoreActionResult.Loaded -> {
-                    nextUsdaPageNumber = result.nextPageNumber
-                    canLoadMoreUsda = result.canLoadMore
-                    currentFoodResults = result.foods
-
-                    val favoriteIds = coordinator.loadFavoriteIds()
-
-                    if (_binding == null) return@launch
-
                     suggestedFoodAdapter.submitList(
                         foodPresentationResolver.toFoodUiModels(
-                            foods = currentFoodResults,
+                            foods = screenStateStore.current().currentFoodResults,
                             languageCode = currentLanguageCode(),
                             favoriteIds = favoriteIds
                         )
@@ -436,7 +410,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 }
             }
 
-            updateLoadMoreButton()
+            renderLoadMoreButton()
         }
     }
 
@@ -445,22 +419,6 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             AddMealFoodSection.RECENT -> R.string.add_meal_recent_foods
             AddMealFoodSection.SUGGESTED -> R.string.add_meal_suggested_foods
             AddMealFoodSection.RESULTS -> R.string.add_meal_food_results
-        }
-    }
-
-    private fun applyOnlinePagingState(state: AddMealOnlinePagingState) {
-        when (state) {
-            AddMealOnlinePagingState.Keep -> Unit
-            AddMealOnlinePagingState.Reset -> {
-                lastOnlineQuery = ""
-                nextUsdaPageNumber = 2
-                canLoadMoreUsda = false
-            }
-            is AddMealOnlinePagingState.Active -> {
-                lastOnlineQuery = state.query
-                nextUsdaPageNumber = state.nextPageNumber
-                canLoadMoreUsda = state.canLoadMore
-            }
         }
     }
 
@@ -480,25 +438,30 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         ).show()
     }
 
-    private fun updateLoadMoreButton() {
+    private fun renderLoadMoreButton() {
         if (_binding == null) return
 
-        val uiState = searchStateResolver.loadMoreUiState(
-            canLoadMore = canLoadMoreUsda,
-            hasCurrentResults = currentFoodResults.isNotEmpty(),
-            isLoadingMore = isLoadingMoreUsda
-        )
+        val screenState = screenStateStore.current()
+        val uiState = screenStateStore.loadMoreUiState()
 
         binding.loadMoreFoodsButton.visibility = if (uiState.visible) View.VISIBLE else View.GONE
         binding.loadMoreFoodsButton.isEnabled = uiState.enabled
-        binding.loadMoreFoodsButton.text = getString(R.string.add_meal_load_more_foods)
+        binding.loadMoreFoodsButton.text = getString(
+            if (screenState.onlinePaging.isLoadingMore) {
+                R.string.add_meal_loading_more_foods
+            } else {
+                R.string.add_meal_load_more_foods
+            }
+        )
     }
 
     private fun showFavoriteFoods() {
         searchJob?.cancel()
+        val contentToken = screenStateStore.beginFoodContentLoad()
         searchJob = viewLifecycleOwner.lifecycleScope.launch {
             val result = coordinator.loadFavorites()
 
+            if (!screenStateStore.applyFavoriteFoods(contentToken, result.foods)) return@launch
             if (_binding == null) return@launch
 
             binding.foodsSectionTitleText.text = getString(R.string.add_meal_favorite_foods)
@@ -511,9 +474,10 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 ).show()
             }
 
+            renderLoadMoreButton()
             suggestedFoodAdapter.submitList(
                 foodPresentationResolver.toFoodUiModels(
-                    foods = result.foods,
+                    foods = screenStateStore.current().currentFoodResults,
                     languageCode = currentLanguageCode(),
                     favoriteIds = result.foods.mapTo(mutableSetOf()) { food -> food.id }
                 )
@@ -548,20 +512,18 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun saveSelectedFoodsToMeal() {
+        val saveSnapshot = screenStateStore.beginSave() ?: return
+        renderSelectedFoods()
+
         val request = AddMealSaveRequest(
             mealType = targetMealType,
-            selectedFoods = selectedFoods,
+            selectedFoods = saveSnapshot.selectedFoods,
             entryDate = targetEntryDate
         )
 
-        if (!coordinator.canSave(request.selectedFoods)) return
-
-        binding.addMealButton.isEnabled = false
-        binding.addMealButton.alpha = 0.65f
-
         viewLifecycleOwner.lifecycleScope.launch {
             when (val result = coordinator.save(request)) {
-                AddMealSaveResult.EmptySelection -> restoreSaveButton()
+                AddMealSaveResult.EmptySelection -> restoreSaveState()
                 is AddMealSaveResult.Failed -> showSaveError()
                 is AddMealSaveResult.Saved -> showSaveSuccess(result)
             }
@@ -593,7 +555,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun showSaveError() {
-        restoreSaveButton()
+        restoreSaveState()
 
         Toast.makeText(
             requireContext(),
@@ -602,11 +564,9 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         ).show()
     }
 
-    private fun restoreSaveButton() {
-        if (_binding != null) {
-            binding.addMealButton.isEnabled = true
-            binding.addMealButton.alpha = 1f
-        }
+    private fun restoreSaveState() {
+        screenStateStore.finishSave()
+        if (_binding != null) renderSelectedFoods()
     }
 
     private fun openPortionBottomSheet(food: FoodUiModel) {
@@ -617,17 +577,14 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun removeFoodFromSelection(food: SelectedFoodUiModel) {
-        selectedFoods = selectionStateResolver.removeSelectedFood(
-            currentSelection = selectedFoods,
-            food = food
-        )
-        updateSelectedFoods()
+        screenStateStore.removeSelectedFood(food)
+        renderSelectedFoods()
     }
 
-    private fun updateSelectedFoods() = with(binding) {
-        selectedFoodAdapter.submitList(selectedFoods)
+    private fun renderSelectedFoods() = with(binding) {
+        selectedFoodAdapter.submitList(screenStateStore.current().selectedFoods)
 
-        val selectionState = selectionStateResolver.resolveUiState(selectedFoods)
+        val selectionState = screenStateStore.selectionUiState()
         selectedSummaryText.text = getString(
             R.string.add_meal_selected_summary,
             selectionState.selectedCount,
