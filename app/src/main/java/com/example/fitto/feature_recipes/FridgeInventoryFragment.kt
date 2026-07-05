@@ -1,12 +1,10 @@
 package com.example.fitto.feature_recipes
 
 import android.content.Context
-import com.example.fitto.data.local.session.UserSessionDataGuard
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
-import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -20,18 +18,13 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentFridgeInventoryBinding
-import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeUiModel
 import com.example.fitto.feature_recipes.util.RecipeImageLoader
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.Locale
 
 class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
@@ -40,27 +33,28 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
     private val binding: FragmentFridgeInventoryBinding
         get() = _binding!!
 
-    private lateinit var repository: RecipeRepository
-    private var ingredients: MutableList<FridgeIngredient> = mutableListOf()
-    private var searchQuery: String = ""
-    private var suggestionsVisible: Boolean = false
+    private lateinit var inventoryController: FridgeInventoryController
+    private lateinit var inventoryStore: FridgeInventoryStore
+    private lateinit var inventoryCoordinator: FridgeInventoryCoordinator
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFridgeInventoryBinding.bind(view)
-        repository = RecipeRepository(requireContext())
-
-        ingredients = loadIngredients().toMutableList()
-        if (ingredients.isEmpty()) {
-            ingredients.addAll(defaultIngredients())
-            saveIngredients()
+        inventoryStore = SharedPreferencesFridgeInventoryStore(requireContext())
+        val storedIngredients = inventoryStore.ingredients()
+        inventoryController = FridgeInventoryController(storedIngredients)
+        inventoryCoordinator = FridgeInventoryCoordinator(
+            LocalFridgeRecipeSuggestionDataSource(requireContext())
+        )
+        if (storedIngredients.isEmpty()) {
+            persistIngredients()
         }
 
         binding.backButton.setOnClickListener { parentFragmentManager.popBackStack() }
         binding.fridgeAddIngredientButton.setOnClickListener { showIngredientDialog(null) }
         binding.fridgeFindRecipesButton.setOnClickListener { renderSuggestions(searchNow = true) }
         binding.ingredientSearchEditText.doAfterTextChanged { editable ->
-            searchQuery = editable?.toString().orEmpty().trim()
+            inventoryController.updateSearchQuery(editable?.toString().orEmpty())
             renderIngredients()
         }
 
@@ -140,21 +134,16 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
                     Toast.makeText(context, R.string.fridge_ingredient_name_required, Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-                val ingredient = FridgeIngredient(
-                    id = existing?.id ?: "fridge_${System.currentTimeMillis()}",
-                    name = name,
-                    amount = amountInput.second.text?.toString().orEmpty().trim(),
-                    unit = unitInput.second.text?.toString().orEmpty().trim()
-                )
-                if (existing == null) {
-                    ingredients.add(ingredient)
-                } else {
-                    val index = ingredients.indexOfFirst { it.id == existing.id }
-                    if (index >= 0) ingredients[index] = ingredient
-                }
-                saveIngredients()
+                inventoryController.upsertIngredient(
+                    existingId = existing?.id,
+                    input = FridgeIngredientInput(
+                        name = name,
+                        amount = amountInput.second.text?.toString().orEmpty(),
+                        unit = unitInput.second.text?.toString().orEmpty()
+                    )
+                ) ?: return@setPositiveButton
+                persistIngredients()
                 renderIngredients()
-                suggestionsVisible = false
                 renderSuggestions(searchNow = false)
             }
             .create()
@@ -209,10 +198,7 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
 
     private fun renderIngredients() = with(binding) {
         fridgeIngredientGrid.removeAllViews()
-        val normalizedQuery = searchQuery.lowercase(TURKISH_LOCALE)
-        val visibleIngredients = ingredients.filter { ingredient ->
-            normalizedQuery.isBlank() || ingredient.name.lowercase(TURKISH_LOCALE).contains(normalizedQuery)
-        }
+        val visibleIngredients = inventoryController.visibleIngredients()
         fridgeEmptyText.isVisible = visibleIngredients.isEmpty()
         visibleIngredients.forEach { ingredient ->
             fridgeIngredientGrid.addView(createIngredientCard(ingredient))
@@ -259,8 +245,8 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
             setPadding(8.dp, 8.dp, 8.dp, 8.dp)
             layoutParams = LinearLayout.LayoutParams(34.dp, 34.dp)
             setOnClickListener {
-                ingredients.removeAll { it.id == ingredient.id }
-                saveIngredients()
+                inventoryController.removeIngredient(ingredient.id)
+                persistIngredients()
                 renderIngredients()
             }
         }
@@ -291,7 +277,6 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
     }
 
     private fun renderSuggestions(searchNow: Boolean) = with(binding) {
-        suggestionsVisible = searchNow
         fridgeSuggestionsContainer.removeAllViews()
         fridgeSuggestionsScroll.isVisible = false
         fridgeSuggestionEmptyText.isVisible = true
@@ -299,15 +284,7 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
         if (!searchNow) return@with
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val matches = withContext(Dispatchers.IO) {
-                val fridgeNames = ingredients.map { it.name.lowercase(TURKISH_LOCALE) }
-                repository.recipes().filter { recipe ->
-                    recipe.ingredientNames.any { ingredientName ->
-                        val normalized = ingredientName.lowercase(TURKISH_LOCALE)
-                        fridgeNames.any { fridgeName -> normalized.contains(fridgeName) || fridgeName.contains(normalized) }
-                    }
-                }.take(10)
-            }
+            val matches = inventoryCoordinator.findRecipeSuggestions(inventoryController.ingredients)
             if (_binding == null) return@launch
             fridgeSuggestionsContainer.removeAllViews()
             if (matches.isEmpty()) {
@@ -369,46 +346,9 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
             .commit()
     }
 
-    private fun loadIngredients(): List<FridgeIngredient> {
-        val raw = UserSessionDataGuard.scopedSharedPreferences(requireContext(), FRIDGE_PREFS).getString(FRIDGE_ITEMS_KEY, null) ?: return emptyList()
-        return runCatching {
-            val array = JSONArray(raw)
-            List(array.length()) { index ->
-                val obj = array.getJSONObject(index)
-                FridgeIngredient(
-                    id = obj.optString("id"),
-                    name = obj.optString("name"),
-                    amount = obj.optString("amount"),
-                    unit = obj.optString("unit")
-                )
-            }.filter { it.name.isNotBlank() }
-        }.getOrDefault(emptyList())
+    private fun persistIngredients() {
+        inventoryStore.replaceIngredients(inventoryController.ingredients)
     }
-
-    private fun saveIngredients() {
-        val array = JSONArray()
-        ingredients.forEach { ingredient ->
-            array.put(JSONObject().apply {
-                put("id", ingredient.id)
-                put("name", ingredient.name)
-                put("amount", ingredient.amount)
-                put("unit", ingredient.unit)
-            })
-        }
-        UserSessionDataGuard.scopedSharedPreferences(requireContext(), FRIDGE_PREFS)
-            .edit()
-            .putString(FRIDGE_ITEMS_KEY, array.toString())
-            .apply()
-    }
-
-    private fun defaultIngredients(): List<FridgeIngredient> = listOf(
-        FridgeIngredient("default_tomato", "Domates", "4", "adet"),
-        FridgeIngredient("default_egg", "Yumurta", "6", "adet"),
-        FridgeIngredient("default_milk", "Süt", "1", "L"),
-        FridgeIngredient("default_carrot", "Havuç", "2", "adet"),
-        FridgeIngredient("default_yogurt", "Yoğurt", "2", "kase"),
-        FridgeIngredient("default_potato", "Patates", "3", "adet")
-    )
 
     private fun String.ingredientEmoji(): String {
         val normalized = lowercase(TURKISH_LOCALE)
@@ -425,11 +365,6 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
         }
     }
 
-    private fun EditText.singleLine() {
-        setSingleLine(true)
-        setTextColor(ContextCompat.getColor(requireContext(), R.color.fitto_text_dark))
-        setHintTextColor(ContextCompat.getColor(requireContext(), R.color.fitto_text_secondary))
-    }
 
     private val Int.dp: Int
         get() = (this * resources.displayMetrics.density).toInt()
@@ -439,16 +374,8 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
         super.onDestroyView()
     }
 
-    private data class FridgeIngredient(
-        val id: String,
-        val name: String,
-        val amount: String,
-        val unit: String
-    )
 
     companion object {
-        private const val FRIDGE_PREFS = "fitto_fridge_inventory"
-        private const val FRIDGE_ITEMS_KEY = "items"
         private const val TAG_RECIPE_DETAIL = "recipe_detail"
         private val TURKISH_LOCALE = Locale("tr", "TR")
     }

@@ -1,7 +1,6 @@
 package com.example.fitto.feature_recipes
 
 import android.content.Context
-import com.example.fitto.data.local.session.UserSessionDataGuard
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Canvas
@@ -32,15 +31,16 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
     private val binding: FragmentShoppingListBinding
         get() = _binding!!
 
-    private val items: MutableList<String> = mutableListOf()
+    private lateinit var shoppingController: RecipeShoppingListController
+    private lateinit var shoppingStore: RecipeShoppingListStore
     private lateinit var adapter: ShoppingListAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentShoppingListBinding.bind(view)
 
-        items.clear()
-        items.addAll(loadItems())
+        shoppingStore = SharedPreferencesRecipeShoppingListStore(requireContext())
+        shoppingController = RecipeShoppingListController(shoppingStore.items())
 
         binding.backButton.setOnClickListener { parentFragmentManager.popBackStack() }
         binding.editButton.isVisible = false
@@ -105,10 +105,8 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
                     // Adapter pozisyonunu doğrudan kaynak liste index'i sanmıyoruz.
                     // Liste SharedPreferences'tan sıralı geldiği ve sonradan yeniden kurulduğu için
                     // silinecek satırı raw değer üzerinden eşliyoruz.
-                    val sourceIndex = items.indexOfFirst { it == removed.raw }
-                    if (sourceIndex != -1) {
-                        items.removeAt(sourceIndex)
-                        saveItems()
+                    if (shoppingController.removeRawItem(removed.raw)) {
+                        persistItems()
                     }
 
                     adapter.removeAt(position)
@@ -221,20 +219,19 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
             Toast.makeText(requireContext(), R.string.recipes_shopping_list_add_empty, Toast.LENGTH_SHORT).show()
             return
         }
-        items.add(value)
-        saveItems()
+        shoppingController.addItem(value)
+        persistItems()
         binding.newItemEditText.setText("")
         renderItems()
     }
 
     private fun renderItems() = with(binding) {
-        val adapterItems = items.mapIndexed { index, raw ->
-            val parsed = parseShoppingLine(raw)
+        val adapterItems = shoppingController.lines().mapIndexed { index, line ->
             ShoppingListAdapter.Item(
                 sourceIndex = index,
-                raw = raw,
-                name = parsed.name,
-                amountUnit = parsed.amountUnit
+                raw = line.raw,
+                name = line.name,
+                amountUnit = line.amountUnit
             )
         }
 
@@ -244,10 +241,9 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
     }
 
     private fun showItemDialog(index: Int) {
-        if (index !in items.indices) return
+        val parsed = shoppingController.lineAt(index) ?: return
 
         val context = requireContext()
-        val parsed = parseShoppingLine(items[index])
         val container = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(22.dp, 20.dp, 22.dp, 14.dp)
@@ -300,16 +296,8 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
                 return@setOnClickListener
             }
 
-            val amountUnit = listOf(
-                amountEdit.second.text?.toString().orEmpty().trim(),
-                unitEdit.second.text?.toString().orEmpty().trim()
-            ).filter { it.isNotBlank() }.joinToString(" ")
-
-            if (index in items.indices) {
-                items[index] = listOf(amountUnit, name)
-                    .filter { it.isNotBlank() }
-                    .joinToString(" ")
-                saveItems()
+            if (shoppingController.updateItem(index, name, amountEdit.second.text?.toString().orEmpty(), unitEdit.second.text?.toString().orEmpty())) {
+                persistItems()
                 renderItems()
             }
             dialog.dismiss()
@@ -385,16 +373,11 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
     }
 
     private fun exportShoppingList() {
-        val cleanItems = items.map { it.trim() }.filter { it.isNotBlank() }
-        if (cleanItems.isEmpty()) {
+        val title = getString(R.string.recipes_shopping_list_title)
+        val text = shoppingController.exportText(title)
+        if (text == null) {
             Toast.makeText(requireContext(), R.string.recipes_shopping_list_empty, Toast.LENGTH_SHORT).show()
             return
-        }
-
-        val title = getString(R.string.recipes_shopping_list_title)
-        val text = buildString {
-            append(title).append('\n')
-            cleanItems.forEach { item -> append("• ").append(item).append('\n') }
         }
 
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -405,47 +388,8 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
         startActivity(Intent.createChooser(intent, getString(R.string.recipes_shopping_list_export)))
     }
 
-    private fun parseShoppingLine(value: String): ShoppingLine {
-        val tokens = value.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-        if (tokens.isEmpty()) return ShoppingLine(value, "", "")
-
-        var nameStart = 0
-        val amountParts = mutableListOf<String>()
-
-        if (tokens.first().any { it.isDigit() } || tokens.first().contains('/')) {
-            amountParts.add(tokens.first())
-            nameStart = 1
-            while (nameStart < tokens.size &&
-                tokens[nameStart].lowercase() in UNIT_WORDS &&
-                amountParts.size < 5
-            ) {
-                amountParts.add(tokens[nameStart])
-                nameStart++
-            }
-        }
-
-        val name = tokens.drop(nameStart).joinToString(" ").ifBlank { value.trim() }
-        val amountUnit = amountParts.joinToString(" ")
-        val amount = amountParts.firstOrNull().orEmpty()
-        val unit = amountParts.drop(1).joinToString(" ")
-        return ShoppingLine(name, amountUnit, amount, unit)
-    }
-
-    private fun loadItems(): List<String> {
-        return UserSessionDataGuard.scopedSharedPreferences(requireContext(), SHOPPING_PREFS)
-            .getStringSet(SHOPPING_ITEMS_KEY, emptySet())
-            .orEmpty()
-            .map { it.trim() }
-            .filter { it.isNotBlank() }
-            .sorted()
-    }
-
-    private fun saveItems() {
-        val cleanItems = items.map { it.trim() }.filter { it.isNotBlank() }.toSet()
-        UserSessionDataGuard.scopedSharedPreferences(requireContext(), SHOPPING_PREFS)
-            .edit()
-            .putStringSet(SHOPPING_ITEMS_KEY, cleanItems)
-            .apply()
+    private fun persistItems() {
+        shoppingStore.replaceItems(shoppingController.items)
     }
 
     private val Int.dp: Int
@@ -457,20 +401,4 @@ class ShoppingListFragment : Fragment(R.layout.fragment_shopping_list) {
         super.onDestroyView()
     }
 
-    private data class ShoppingLine(
-        val name: String,
-        val amountUnit: String,
-        val amount: String = "",
-        val unit: String = ""
-    )
-
-    companion object {
-        private const val SHOPPING_PREFS = "fitto_recipe_shopping_list"
-        private const val SHOPPING_ITEMS_KEY = "items"
-        private val UNIT_WORDS = setOf(
-            "adet", "g", "gr", "gram", "kg", "ml", "lt", "litre", "su", "bardağı", "bardak",
-            "küçük", "yemek", "tatlı", "çay", "kaşığı", "kaşık", "dilim", "demet", "tutam",
-            "avuç", "paket", "kase", "diş"
-        )
-    }
 }
