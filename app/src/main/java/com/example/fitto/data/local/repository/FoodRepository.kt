@@ -7,6 +7,7 @@ import com.example.fitto.data.local.session.UserSessionDataGuard
 import kotlinx.coroutines.flow.Flow
 import com.example.fitto.data.local.entity.FavoriteFoodEntity
 import com.example.fitto.data.remote.usda.UsdaFoodDataCentralClient
+import com.example.fitto.data.remote.usda.UsdaFoodSearchSource
 import com.example.fitto.data.remote.usda.UsdaFoodTranslationDictionary
 import com.example.fitto.BuildConfig
 import com.example.fitto.data.remote.logmeal.LogMealFoodCandidate
@@ -15,7 +16,8 @@ import java.util.UUID
 class FoodRepository(context: Context) {
 
     private val appContext = context.applicationContext
-    private val usdaClient = UsdaFoodDataCentralClient(BuildConfig.USDA_API_KEY)
+    private val usdaClient: UsdaFoodSearchSource =
+        UsdaFoodDataCentralClient(BuildConfig.USDA_API_KEY)
     private val database = FittoDatabaseProvider.getDatabase(appContext)
     private val mealDao = database.mealDao()
     private val foodDao = database.foodDao()

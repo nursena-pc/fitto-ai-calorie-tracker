@@ -18,6 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.data.local.repository.FoodRepository
 import com.example.fitto.data.remote.logmeal.LogMealFoodRecognitionClient
+import com.example.fitto.data.remote.logmeal.LogMealFoodRecognizer
 import com.example.fitto.databinding.FragmentCameraFoodEntryBinding
 import com.example.fitto.feature_meal.model.MealType
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +33,7 @@ class CameraFoodEntryFragment : Fragment(R.layout.fragment_camera_food_entry) {
     private val binding get() = _binding!!
 
     private lateinit var foodRepository: FoodRepository
-    private lateinit var logMealClient: LogMealFoodRecognitionClient
+    private lateinit var logMealClient: LogMealFoodRecognizer
 
     private var imageCapture: ImageCapture? = null
     private var capturedPhotoFile: File? = null
