@@ -13,18 +13,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.data.local.entity.FoodEntity
-import com.example.fitto.data.local.repository.FoodRepository
-import com.example.fitto.data.local.repository.MealRepository
-import com.example.fitto.data.seed.SeedDataImporter
 import com.example.fitto.databinding.FragmentAddMealBinding
 import com.example.fitto.feature_meal.model.FoodUiModel
 import com.example.fitto.feature_meal.model.MealType
 import com.example.fitto.feature_meal.model.SelectedFoodUiModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
@@ -40,8 +35,6 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         MealType.fromArgument(arguments?.getString(ARG_MEAL_TYPE))
     }
 
-    private lateinit var foodRepository: FoodRepository
-    private lateinit var mealRepository: MealRepository
     private lateinit var suggestedFoodAdapter: AddMealFoodAdapter
     private lateinit var selectedFoodAdapter: SelectedFoodAdapter
     private var currentFoodResults: List<FoodEntity> = emptyList()
@@ -54,13 +47,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private val foodPresentationResolver = AddMealFoodPresentationResolver()
     private val selectionStateResolver = AddMealSelectionStateResolver()
     private val searchStateResolver = AddMealSearchStateResolver()
-    private lateinit var foodSearchAction: AddMealFoodSearchAction
-    private lateinit var loadMoreAction: AddMealLoadMoreAction
-    private lateinit var saveAction: AddMealSaveAction
-    private lateinit var customFoodAction: AddMealCustomFoodAction
-    private lateinit var detectedFoodsAction: AddMealDetectedFoodsAction
-    private lateinit var favoritesAction: AddMealFavoritesAction
-    private lateinit var foodCatalogInitializer: AddMealFoodCatalogInitializer
+    private lateinit var coordinator: AddMealCoordinator
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -85,64 +72,9 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     }
 
     private fun initializeDependencies(appContext: Context) {
-        foodRepository = FoodRepository(appContext)
-        mealRepository = MealRepository(appContext)
-        foodCatalogInitializer = AddMealFoodCatalogInitializer {
-            SeedDataImporter.importFoodSeedIfNeeded(appContext)
-        }
-        foodSearchAction = AddMealFoodSearchAction(
-            getRecentFoods = foodRepository::getRecentFoods,
-            searchLocalFoods = { query, mealType, limit ->
-                foodRepository.searchFoods(
-                    query = query,
-                    mealType = mealType,
-                    limit = limit
-                )
-            },
-            searchOnlineFoods = { query, mealType, limit, pageNumber ->
-                foodRepository.searchUsdaFoods(
-                    query = query,
-                    mealType = mealType,
-                    limit = limit,
-                    pageNumber = pageNumber
-                )
-            }
-        )
-        loadMoreAction = AddMealLoadMoreAction { query, mealType, limit, pageNumber ->
-            foodRepository.searchUsdaFoods(
-                query = query,
-                mealType = mealType,
-                limit = limit,
-                pageNumber = pageNumber
-            )
-        }
-        saveAction = AddMealSaveAction { mealType, selectedFoods, entryDate ->
-            mealRepository.addManualMealEntry(
-                mealType = mealType,
-                selectedFoods = selectedFoods,
-                entryDate = entryDate
-            )
-        }
-        customFoodAction = AddMealCustomFoodAction { request ->
-            foodRepository.createCustomFood(
-                name = request.name,
-                defaultServingAmount = request.servingAmount,
-                defaultUnit = request.unit,
-                caloriesPer100g = request.caloriesPer100g,
-                proteinPer100g = request.proteinPer100g,
-                carbsPer100g = request.carbsPer100g,
-                fatPer100g = request.fatPer100g,
-                mealType = request.mealType
-            )
-        }
-        detectedFoodsAction = AddMealDetectedFoodsAction(
-            getFoodById = foodRepository::getFoodById,
+        coordinator = AddMealCoordinator(
+            dataSource = LocalAddMealDataSource(appContext),
             presentationResolver = foodPresentationResolver
-        )
-        favoritesAction = AddMealFavoritesAction(
-            getFavoriteFoods = foodRepository::getFavoriteFoods,
-            getFavoriteFoodIds = foodRepository::getFavoriteFoodIds,
-            toggleFavoriteFood = foodRepository::toggleFavoriteFood
         )
     }
 
@@ -285,9 +217,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             val request = AddMealDetectedFoodsRequest(foodIds = foodIds)
 
             viewLifecycleOwner.lifecycleScope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    detectedFoodsAction.load(request)
-                }
+                val result = coordinator.loadDetectedFoods(request)
 
                 if (_binding == null) return@launch
 
@@ -372,7 +302,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
-            when (val result = withContext(Dispatchers.IO) { customFoodAction.create(request) }) {
+            when (val result = coordinator.createCustomFood(request)) {
                 is AddMealCustomFoodResult.Created -> showCreatedCustomFood(result.food)
                 is AddMealCustomFoodResult.Failed -> showCustomFoodSaveError()
             }
@@ -426,23 +356,18 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                 )
             }
 
-            val searchResult = withContext(Dispatchers.IO) {
-                foodCatalogInitializer.ensureInitialized()
-                foodSearchAction.search(
-                    AddMealFoodSearchRequest(
-                        normalizedQuery = normalizedQuery,
-                        mealType = targetMealType.argumentValue,
-                        allowOnlineSearch = allowOnlineSearch,
-                        onlinePageSize = USDA_PAGE_SIZE
-                    )
+            val searchResult = coordinator.search(
+                AddMealFoodSearchRequest(
+                    normalizedQuery = normalizedQuery,
+                    mealType = targetMealType.argumentValue,
+                    allowOnlineSearch = allowOnlineSearch,
+                    onlinePageSize = USDA_PAGE_SIZE
                 )
-            }
+            )
 
             if (_binding == null) return@launch
 
-            val favoriteIds = withContext(Dispatchers.IO) {
-                favoritesAction.loadFavoriteIds()
-            }
+            val favoriteIds = coordinator.loadFavoriteIds()
 
             binding.foodsSectionTitleText.text = getString(searchResult.section.titleRes())
             showEmptySearchFeedback(searchResult.emptyFeedback)
@@ -477,7 +402,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
         )
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) { loadMoreAction.load(request) }
+            val result = coordinator.loadMore(request)
 
             if (_binding == null) return@launch
 
@@ -497,9 +422,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
                     canLoadMoreUsda = result.canLoadMore
                     currentFoodResults = result.foods
 
-                    val favoriteIds = withContext(Dispatchers.IO) {
-                        favoritesAction.loadFavoriteIds()
-                    }
+                    val favoriteIds = coordinator.loadFavoriteIds()
 
                     if (_binding == null) return@launch
 
@@ -574,9 +497,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
     private fun showFavoriteFoods() {
         searchJob?.cancel()
         searchJob = viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                favoritesAction.loadFavorites()
-            }
+            val result = coordinator.loadFavorites()
 
             if (_binding == null) return@launch
 
@@ -602,9 +523,7 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
 
     private fun toggleFavoriteFood(food: FoodUiModel) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                favoritesAction.toggle(food.id)
-            }
+            val result = coordinator.toggleFavorite(food.id)
 
             val message = when (result.feedback) {
                 AddMealFavoriteToggleFeedback.ADDED -> {
@@ -635,13 +554,13 @@ class AddMealFragment : Fragment(R.layout.fragment_add_meal) {
             entryDate = targetEntryDate
         )
 
-        if (!saveAction.canSave(request.selectedFoods)) return
+        if (!coordinator.canSave(request.selectedFoods)) return
 
         binding.addMealButton.isEnabled = false
         binding.addMealButton.alpha = 0.65f
 
         viewLifecycleOwner.lifecycleScope.launch {
-            when (val result = withContext(Dispatchers.IO) { saveAction.save(request) }) {
+            when (val result = coordinator.save(request)) {
                 AddMealSaveResult.EmptySelection -> restoreSaveButton()
                 is AddMealSaveResult.Failed -> showSaveError()
                 is AddMealSaveResult.Saved -> showSaveSuccess(result)
