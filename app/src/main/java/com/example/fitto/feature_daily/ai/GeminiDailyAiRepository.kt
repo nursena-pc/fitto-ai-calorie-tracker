@@ -2,7 +2,7 @@ package com.example.fitto.feature_daily.ai
 
 import android.util.Log
 import com.example.fitto.BuildConfig
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
@@ -15,6 +15,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class GeminiDailyAiRepository(
+    private val ioDispatcher: CoroutineDispatcher,
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(25, TimeUnit.SECONDS)
@@ -23,7 +24,7 @@ class GeminiDailyAiRepository(
 ) {
 
     suspend fun requestDailyAnalysis(prompt: String, appLanguage: String): AiDailyAnalysisResult =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val rawBody = executeGeminiRequest(prompt)
             parseDailyAnalysis(rawBody, appLanguage.normalizedResponseLanguage())
         }
