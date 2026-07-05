@@ -12,6 +12,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
+import com.example.fitto.core.coroutines.CoroutineTaskRunner
 import com.example.fitto.databinding.FragmentDailyBinding
 import com.example.fitto.feature_daily.data.WaterTrackingStore
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
@@ -19,14 +20,14 @@ import com.example.fitto.feature_dietplans.planning.DailyPlannedMealsUiModel
 import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_health.HealthConnectDailySummary
 import com.example.fitto.feature_meal.model.MealType
+import com.example.fitto.fittoAppContainer
 import java.time.LocalDate
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class DailyFragment : Fragment(R.layout.fragment_daily) {
 
     private lateinit var healthConnectSummaryAction: DailyHealthConnectSummaryAction
+    private lateinit var backgroundTaskRunner: CoroutineTaskRunner
     private var _binding: FragmentDailyBinding? = null
     private val binding get() = _binding!!
     private val dashboardStateStore = DailyDashboardStateStore(
@@ -116,8 +117,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
             containerId = R.id.homeTabContainer
         )
 
-        val dependencies = DailyDashboardDependenciesFactory(
-            context = requireContext(),
+        val dependencies = requireContext().fittoAppContainer.createDailyDashboardDependencies(
             defaultTargets = DailyDashboardDefaultTargets(
                 calories = DEFAULT_DAILY_CALORIE_TARGET,
                 proteinGrams = DEFAULT_PROTEIN_TARGET_GRAMS,
@@ -137,10 +137,11 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     refreshDashboard(DailyDashboardRefreshPlans.ACTIVE_PLAN_PROGRESS_CHANGED)
                 }
             }
-        ).create()
+        )
         dashboardStateStore.updateDailyCalorieTarget(
             dependencies.initialDailyTargetCalories
         )
+        backgroundTaskRunner = dependencies.backgroundTaskRunner
         profileMetricsLoadAction = dependencies.profileMetricsLoadAction
         dailySummaryLoadAction = dependencies.dailySummaryLoadAction
         weeklyProgressLoadAction = dependencies.weeklyProgressLoadAction
@@ -244,7 +245,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         if (!::profileMetricsLoadAction.isInitialized) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
+            val result = backgroundTaskRunner.run {
                 profileMetricsLoadAction.load(
                     fallbackWeightKg = DEFAULT_PROFILE_WEIGHT_KG
                 )
@@ -462,7 +463,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
 
         viewLifecycleOwner.lifecycleScope.launch {
             val requestedDate = selectedDate
-            val result = withContext(Dispatchers.IO) {
+            val result = backgroundTaskRunner.run {
                 weeklyProgressLoadAction.load(
                     DailyWeeklyProgressLoadRequest(
                         selectedDate = requestedDate,
@@ -659,7 +660,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         val loadToken = dashboardStateStore.beginActivePlanLoad()
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
+            val result = backgroundTaskRunner.run {
                 activePlanLoadAction.load(loadToken.targetCalories)
             }
 
@@ -752,7 +753,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         viewLifecycleOwner.lifecycleScope.launch {
             val requestedDate = selectedDate
             val selectedDateIso = requestedDate.toString()
-            val result = withContext(Dispatchers.IO) {
+            val result = backgroundTaskRunner.run {
                 dailySummaryLoadAction.load(
                     DailySummaryLoadRequest(
                         dateIso = selectedDateIso,
@@ -838,7 +839,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
         binding.applyPlannedMealButton.isEnabled = false
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
+            val result = backgroundTaskRunner.run {
                 plannedMealAction.execute(
                     request = applyRequest,
                     entryDate = entryDate

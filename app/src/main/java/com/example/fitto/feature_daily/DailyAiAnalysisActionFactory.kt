@@ -7,12 +7,16 @@ import com.example.fitto.feature_daily.ai.AiDailyAnalysisCache
 import com.example.fitto.feature_daily.ai.AiDailyPromptBuilder
 import com.example.fitto.feature_daily.ai.GeminiDailyAiRepository
 import java.util.Locale
+import kotlinx.coroutines.CoroutineDispatcher
 
 object DailyAiAnalysisActionFactory {
 
-    fun create(context: Context): DailyAiAnalysisAction {
+    fun create(
+        context: Context,
+        ioDispatcher: CoroutineDispatcher
+    ): DailyAiAnalysisAction {
         val appContext = context.applicationContext
-        val repository = GeminiDailyAiRepository()
+        val repository = GeminiDailyAiRepository(ioDispatcher = ioDispatcher)
         val labels = DailyAiStructuredMessageBuilder.Labels(
             mealComments = appContext.getString(R.string.daily_ai_meal_comments_label),
             unknownEntry = appContext.getString(R.string.daily_ai_entry_unknown),

@@ -1,16 +1,15 @@
 package com.example.fitto
 
 import android.app.Application
-import com.example.fitto.data.seed.SeedDataImporter
-import com.example.fitto.feature_home.presentation.notifications.FittoNotificationChannels
-import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
 
 class FittoApplication : Application() {
 
+    internal lateinit var appContainer: FittoAppContainer
+        private set
+
     override fun onCreate() {
         super.onCreate()
-        SeedDataImporter.importIfNeeded(this)
-        FittoNotificationChannels.ensureCreated(this)
-        SocialNotificationObserver.start(this)
+        appContainer = FittoAppContainer(this)
+        appContainer.startupCoordinator.start()
     }
 }

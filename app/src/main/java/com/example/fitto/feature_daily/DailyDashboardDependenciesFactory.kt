@@ -2,6 +2,8 @@ package com.example.fitto.feature_daily
 
 import android.content.Context
 import com.example.fitto.R
+import com.example.fitto.core.coroutines.AppCoroutineDispatchers
+import com.example.fitto.core.coroutines.CoroutineTaskRunner
 import com.example.fitto.data.local.entity.UserProfileEntity
 import com.example.fitto.data.local.repository.DietPlanSeedRepository
 import com.example.fitto.data.local.repository.MealRepository
@@ -39,7 +41,8 @@ internal data class DailyDashboardDependencies(
     val healthConnectSummaryAction: DailyHealthConnectSummaryAction,
     val stepCounterAction: DailyStepCounterAction,
     val sleepTrackingAction: DailySleepTrackingAction,
-    val dailyAiDashboardCoordinator: DailyAiDashboardCoordinator
+    val dailyAiDashboardCoordinator: DailyAiDashboardCoordinator,
+    val backgroundTaskRunner: CoroutineTaskRunner
 )
 
 internal data class DailyDashboardDefaultTargets(
@@ -53,6 +56,7 @@ internal data class DailyDashboardDefaultTargets(
 internal class DailyDashboardDependenciesFactory(
     private val context: Context,
     private val defaultTargets: DailyDashboardDefaultTargets,
+    private val coroutineDispatchers: AppCoroutineDispatchers,
     private val onFastingTick: (planId: String, remainingMillis: Long) -> Unit,
     private val onFastingFinish: (planId: String) -> Unit
 ) {
@@ -233,14 +237,18 @@ internal class DailyDashboardDependenciesFactory(
                 getLogForDate = sleepLogStore::getLogForDate,
                 saveLog = sleepLogStore::saveLog
             ),
-            dailyAiDashboardCoordinator = createDailyAiDashboardCoordinator(appContext)
+            dailyAiDashboardCoordinator = createDailyAiDashboardCoordinator(appContext),
+            backgroundTaskRunner = CoroutineTaskRunner(coroutineDispatchers.io)
         )
     }
 
 
     private fun createDailyAiDashboardCoordinator(appContext: Context): DailyAiDashboardCoordinator {
         return DailyAiDashboardCoordinator(
-            analysisAction = DailyAiAnalysisActionFactory.create(appContext),
+            analysisAction = DailyAiAnalysisActionFactory.create(
+                context = appContext,
+                ioDispatcher = coroutineDispatchers.io
+            ),
             snapshotBuilder = DailyAiSnapshotFactory(
                 appName = appContext.getString(R.string.app_name),
                 snackMealLabel = appContext.getString(R.string.daily_snack),
