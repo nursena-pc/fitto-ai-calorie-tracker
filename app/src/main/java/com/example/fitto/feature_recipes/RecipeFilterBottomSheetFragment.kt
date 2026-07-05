@@ -19,6 +19,7 @@ import com.example.fitto.databinding.DialogRecipeIngredientPickerBinding
 import com.example.fitto.feature_recipes.data.RecipeFilterCatalog
 import com.example.fitto.feature_recipes.model.RecipeFilterOption
 import com.example.fitto.feature_recipes.model.RecipeFilterState
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -51,9 +52,10 @@ class RecipeFilterBottomSheetFragment : BottomSheetDialogFragment(R.layout.botto
 
         _binding = BottomSheetRecipeFiltersBinding.bind(view)
         catalog = RecipeFilterCatalog(resources)
-        filterCoordinator = RecipeFilterCoordinator(
-            LocalRecipeFilterDataSource(requireContext())
-        )
+        filterCoordinator = requireContext()
+            .fittoAppContainer
+            .createRecipeFeatureDependencies()
+            .createFilterCoordinator()
 
         setupClicks()
         setupIncludeExcludeSectionToggles()

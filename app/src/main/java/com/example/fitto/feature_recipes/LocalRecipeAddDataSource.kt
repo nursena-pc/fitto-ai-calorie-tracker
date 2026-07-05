@@ -1,14 +1,11 @@
 package com.example.fitto.feature_recipes
 
-import android.content.Context
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.data.UserRecipeDraft
 
 class LocalRecipeAddDataSource(
-    context: Context
+    private val repository: RecipeRepository
 ) : RecipeAddDataSource {
-
-    private val repository = RecipeRepository(context.applicationContext)
 
     override fun addUserRecipe(draft: UserRecipeDraft): String {
         return repository.addUserRecipe(draft)

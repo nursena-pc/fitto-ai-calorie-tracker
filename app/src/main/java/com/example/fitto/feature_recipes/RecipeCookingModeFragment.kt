@@ -14,7 +14,7 @@ import com.example.fitto.R
 import com.example.fitto.databinding.FragmentRecipeCookingModeBinding
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_recipes.model.RecipeUiModel
-import kotlinx.coroutines.Dispatchers
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -25,6 +25,7 @@ class RecipeCookingModeFragment : Fragment(R.layout.fragment_recipe_cooking_mode
     private val binding: FragmentRecipeCookingModeBinding
         get() = _binding!!
 
+    private lateinit var dependencies: RecipeFeatureDependencies
     private lateinit var repository: RecipeRepository
     private var recipe: RecipeUiModel? = null
     private var stepIndex: Int = 0
@@ -43,7 +44,8 @@ class RecipeCookingModeFragment : Fragment(R.layout.fragment_recipe_cooking_mode
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentRecipeCookingModeBinding.bind(view)
-        repository = RecipeRepository(requireContext())
+        dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        repository = dependencies.repository
         binding.root.keepScreenOn = true
 
         binding.backButton.setOnClickListener { parentFragmentManager.popBackStack() }
@@ -54,7 +56,7 @@ class RecipeCookingModeFragment : Fragment(R.layout.fragment_recipe_cooking_mode
 
         val recipeId = arguments?.getString(ARG_RECIPE_ID)
         viewLifecycleOwner.lifecycleScope.launch {
-            recipe = withContext(Dispatchers.IO) { recipeId?.let { repository.findById(it) } }
+            recipe = withContext(dependencies.ioDispatcher) { recipeId?.let { repository.findById(it) } }
             if (_binding == null) return@launch
             if (recipe == null) {
                 Toast.makeText(requireContext(), R.string.recipes_detail_not_found, Toast.LENGTH_SHORT).show()

@@ -210,7 +210,7 @@ class RecipeHeaderAdapter(
     }
 
     companion object {
-        const val KEY_ALL_CATEGORIES = "all"
+        const val KEY_ALL_CATEGORIES = RecipeCategorySelectionKeys.ALL
         private const val HEADER_POSITION = 0
         private const val HEADER_STABLE_ID = Long.MIN_VALUE
     }

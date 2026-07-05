@@ -20,6 +20,7 @@ import com.example.fitto.R
 import com.example.fitto.databinding.FragmentFridgeInventoryBinding
 import com.example.fitto.feature_recipes.model.RecipeUiModel
 import com.example.fitto.feature_recipes.util.RecipeImageLoader
+import com.example.fitto.fittoAppContainer
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
@@ -40,12 +41,11 @@ class FridgeInventoryFragment : Fragment(R.layout.fragment_fridge_inventory) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFridgeInventoryBinding.bind(view)
-        inventoryStore = SharedPreferencesFridgeInventoryStore(requireContext())
+        val dependencies = requireContext().fittoAppContainer.createRecipeFeatureDependencies()
+        inventoryStore = dependencies.fridgeInventoryStore
         val storedIngredients = inventoryStore.ingredients()
         inventoryController = FridgeInventoryController(storedIngredients)
-        inventoryCoordinator = FridgeInventoryCoordinator(
-            LocalFridgeRecipeSuggestionDataSource(requireContext())
-        )
+        inventoryCoordinator = dependencies.createFridgeCoordinator()
         if (storedIngredients.isEmpty()) {
             persistIngredients()
         }

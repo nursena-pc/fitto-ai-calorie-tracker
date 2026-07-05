@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentCustomDietPlanDetailBinding
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_dietplans.data.CustomDietPlanStore
 import com.example.fitto.feature_dietplans.data.DietPlanPreferenceStore
 import com.example.fitto.feature_dietplans.model.CustomDietPlanLocalModel
@@ -31,13 +32,11 @@ class CustomDietPlanDetailFragment : Fragment(R.layout.fragment_custom_diet_plan
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentCustomDietPlanDetailBinding.bind(view)
 
-        customDietPlanStore = CustomDietPlanStore(requireContext().applicationContext)
-        preferenceStore = DietPlanPreferenceStore(requireContext())
-        customPlanDeletionAction = CustomDietPlanDeletionAction.from(
-            customPlanStore = customDietPlanStore,
-            preferenceStore = preferenceStore
-        )
-        dietPlanPreferenceAction = DietPlanPreferenceAction.from(preferenceStore)
+        val dependencies = requireContext().fittoAppContainer.createDietPlanFeatureDependencies()
+        customDietPlanStore = dependencies.customPlanStore
+        preferenceStore = dependencies.preferenceStore
+        customPlanDeletionAction = dependencies.deletionAction
+        dietPlanPreferenceAction = dependencies.preferenceAction
 
         currentPlan = customDietPlanStore.getPlan(planId)
 
