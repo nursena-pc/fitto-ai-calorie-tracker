@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentNotificationsBinding
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
 import com.google.android.material.tabs.TabLayout
@@ -23,13 +24,13 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
     private var _binding: FragmentNotificationsBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
 
     private lateinit var notificationAdapter: NotificationAdapter
 
-    private var socialNotifications: List<FittoNotification> = emptyList()
-    private var latestThreads: List<MessageThreadUiModel> = emptyList()
-    private var selectedTab: NotificationTab = NotificationTab.ALL
+    private val stateStore = NotificationsScreenStateStore()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,16 +97,20 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         addTab(newTab().setText("Tümü"))
         addTab(newTab().setText("Sosyal"))
 
-        getTabAt(0)?.select()
+        getTabAt(
+            if (stateStore.state.selectedTab == NotificationScreenTab.SOCIAL) 1 else 0
+        )?.select()
 
         addOnTabSelectedListener(
             object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
-                    selectedTab = when (tab.position) {
-                        1 -> NotificationTab.SOCIAL
-                        else -> NotificationTab.ALL
-                    }
-
+                    stateStore.selectTab(
+                        if (tab.position == 1) {
+                            NotificationScreenTab.SOCIAL
+                        } else {
+                            NotificationScreenTab.ALL
+                        }
+                    )
                     submitNotifications()
                 }
 
@@ -119,7 +124,7 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.observeNotifications(requireContext()).collect { notifications ->
-                    socialNotifications = notifications
+                    stateStore.updateSocialNotifications(notifications)
                     submitNotifications()
                 }
             }
@@ -130,7 +135,7 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 repository.observeMessageThreads().collect { threads ->
-                    latestThreads = threads
+                    stateStore.updateThreads(threads)
 
                     threads
                         .filter { it.unreadCount == 0 }
@@ -160,39 +165,18 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
     private fun submitNotifications() {
         if (_binding == null) return
 
-        val localNotifications =
-            FittoNotificationStore.getNotifications(requireContext())
-
-        val readThreadIds = latestThreads
-            .filter { it.unreadCount == 0 }
-            .map { it.id }
-            .toSet()
-
-        val notifications = (socialNotifications + localNotifications)
-            .distinctBy { it.id }
-            .filterNot { notification ->
-                notification.isMessageType() &&
-                        notification.targetId in readThreadIds
-            }
-            .sortedByDescending { it.createdAt }
+        val localNotifications = FittoNotificationStore.getNotifications(requireContext())
+        val notifications = stateStore.allNotifications(localNotifications)
+        val filtered = stateStore.visibleNotifications(localNotifications)
 
         updateTabTitles(notifications)
-
-        val filtered = notifications.filter { notification ->
-            when (selectedTab) {
-                NotificationTab.ALL -> true
-                NotificationTab.SOCIAL -> notification.isSocialType()
-            }
-        }
-
-        binding.notificationsEmptyText.text = when (selectedTab) {
-            NotificationTab.ALL -> "Henüz bildirimin yok."
-            NotificationTab.SOCIAL -> "Sosyal bildirimin yok."
+        binding.notificationsEmptyText.text = when (stateStore.state.selectedTab) {
+            NotificationScreenTab.ALL -> "Henüz bildirimin yok."
+            NotificationScreenTab.SOCIAL -> "Sosyal bildirimin yok."
         }
 
         binding.notificationsEmptyText.isVisible = filtered.isEmpty()
         binding.notificationsRecyclerView.isVisible = filtered.isNotEmpty()
-
         notificationAdapter.submitList(toListItems(filtered))
     }
 
@@ -200,7 +184,7 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         notifications: List<FittoNotification>
     ) = with(binding.notificationsTabLayout) {
         val allCount = notifications.size
-        val socialCount = notifications.count { it.isSocialType() }
+        val socialCount = notifications.count(stateStore::isSocialNotification)
 
         getTabAt(0)?.text = "Tümü ($allCount)"
         getTabAt(1)?.text = "Sosyal ($socialCount)"
@@ -221,7 +205,7 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         )
 
         if (
-            notification.isMessageType() &&
+            stateStore.isMessageNotification(notification) &&
             !notification.targetId.isNullOrBlank()
         ) {
             FittoNotificationStore.removeMessageNotificationsForThread(
@@ -355,27 +339,4 @@ class NotificationsFragment : DialogFragment(R.layout.fragment_notifications) {
         super.onDestroyView()
     }
 
-    private fun FittoNotification.isMessageType(): Boolean {
-        return type == FittoNotification.TYPE_MESSAGE ||
-                type == FittoNotification.TYPE_GROUP_MESSAGE ||
-                type == FittoNotification.TYPE_GROUP_ADDED
-    }
-
-    private fun FittoNotification.isSocialType(): Boolean {
-        return type == FittoNotification.TYPE_POST_LIKE ||
-                type == FittoNotification.TYPE_POST_COMMENT ||
-                type == FittoNotification.TYPE_FOLLOWING_POST ||
-                type == FittoNotification.TYPE_COMMENT_REPLY ||
-                type == FittoNotification.TYPE_COMMENT_LIKE ||
-                type == FittoNotification.TYPE_FOLLOW ||
-                type == FittoNotification.TYPE_UNFOLLOW ||
-                type == FittoNotification.TYPE_MESSAGE ||
-                type == FittoNotification.TYPE_GROUP_MESSAGE ||
-                type == FittoNotification.TYPE_GROUP_ADDED
-    }
-
-    private enum class NotificationTab {
-        ALL,
-        SOCIAL
-    }
 }

@@ -16,11 +16,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import kotlinx.coroutines.launch
 
 class ThreadSharedContentFragment : DialogFragment(R.layout.fragment_thread_shared_content) {
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
     private lateinit var adapter: SharedContentAdapter
 
     private val threadId: String by lazy {

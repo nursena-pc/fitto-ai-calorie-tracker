@@ -13,6 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentSocialDraftsBinding
 import kotlinx.coroutines.launch
 
@@ -47,7 +48,10 @@ class SocialDraftsFragment : DialogFragment(R.layout.fragment_social_drafts) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentSocialDraftsBinding.bind(view)
-        viewModel = ViewModelProvider(this)[SocialViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            requireContext().fittoAppContainer.socialFeatureDependencies.createViewModelFactory()
+        )[SocialViewModel::class.java]
 
         adapter = SocialProfilePostAdapter(
             onPostClick = { post ->

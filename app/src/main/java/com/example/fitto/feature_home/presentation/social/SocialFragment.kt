@@ -15,12 +15,12 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentSocialBinding
 import com.example.fitto.feature_recipes.RecipeDetailFragment
 import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationStore
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
@@ -31,7 +31,11 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
     private val binding get() = _binding!!
     private lateinit var gestureDetector: GestureDetectorCompat
     private lateinit var viewModel: SocialViewModel
-    private lateinit var recipeRepository: RecipeRepository
+    private val socialDependencies by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies
+    }
+    private val recipeRepository: RecipeRepository
+        get() = socialDependencies.recipeRepository
     private lateinit var headerAdapter: SocialCreateHeaderAdapter
     private lateinit var postAdapter: SocialPostAdapter
     private lateinit var layoutManager: LinearLayoutManager
@@ -40,9 +44,11 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentSocialBinding.bind(view)
-        viewModel = ViewModelProvider(this)[SocialViewModel::class.java]
-        recipeRepository = RecipeRepository(requireContext())
-        RealtimePresenceManager.start()
+        viewModel = ViewModelProvider(
+            this,
+            socialDependencies.createViewModelFactory()
+        )[SocialViewModel::class.java]
+        socialDependencies.startRealtimePresence()
 
 
         setupRecyclerView()
@@ -184,7 +190,7 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
             }
 
             if (post.savedByMe) {
-                val alreadyInBook = withContext(Dispatchers.IO) {
+                val alreadyInBook = withContext(socialDependencies.ioDispatcher) {
                     recipeRepository.hasCommunityRecipeFromPost(post.id)
                 }
 
@@ -223,7 +229,7 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
     }
 
     private suspend fun saveRecipeFromPost(post: SocialPost): String? {
-        return withContext(Dispatchers.IO) {
+        return withContext(socialDependencies.ioDispatcher) {
             recipeRepository.saveRecipeFromCommunityPost(
                 postId = post.id,
                 postUserId = post.userId,
@@ -243,8 +249,8 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
     }
 
     private fun currentUserIdOrLocal(): String {
-        return com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid
-            ?.takeIf { uid -> uid.isNotBlank() }
+        return socialDependencies.repository.currentUserId()
+            .takeIf { uid -> uid.isNotBlank() }
             ?: "local_user"
     }
 
@@ -252,7 +258,7 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
         if (post.recipeId.isNullOrBlank() && post.recipeTitle.isNullOrBlank() && post.mealInfo.isNullOrBlank()) return
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val localRecipeId = withContext(Dispatchers.IO) {
+            val localRecipeId = withContext(socialDependencies.ioDispatcher) {
                 recipeRepository.ensureRecipeAvailableFromCommunityPost(
                     postId = post.id,
                     postUserId = post.userId,
@@ -347,7 +353,7 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
     }
 
     private fun showMySocialProfile() {
-        val myUserId = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
+        val myUserId = socialDependencies.repository.currentUserId()
         if (myUserId.isBlank()) return
 
         SocialProfileFragment
@@ -444,7 +450,9 @@ class SocialFragment : Fragment(R.layout.fragment_social) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            val thread = runCatching { SocialRepository().getMessageThread(threadId) }.getOrNull()
+            val thread = runCatching {
+                socialDependencies.repository.getMessageThread(threadId)
+            }.getOrNull()
             if (thread == null || _binding == null) {
                 showMessagesScreen()
                 return@launch

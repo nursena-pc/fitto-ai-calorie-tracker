@@ -36,11 +36,11 @@ import androidx.recyclerview.widget.GridLayoutManager
 import coil.load
 import coil.transform.CircleCropTransformation
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentSocialProfileBinding
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -70,7 +70,11 @@ class SocialProfileFragment : DialogFragment(R.layout.fragment_social_profile) {
     private var latestSavedPosts: List<SocialPost> = emptyList()
 
     private val isMyProfile: Boolean
-        get() = FirebaseAuth.getInstance().currentUser?.uid == userId
+        get() = requireContext()
+            .fittoAppContainer
+            .socialFeatureDependencies
+            .repository
+            .currentUserId() == userId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +104,10 @@ class SocialProfileFragment : DialogFragment(R.layout.fragment_social_profile) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentSocialProfileBinding.bind(view)
-        viewModel = ViewModelProvider(this)[SocialViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            requireContext().fittoAppContainer.socialFeatureDependencies.createViewModelFactory()
+        )[SocialViewModel::class.java]
 
         binding.profileMessageButton.isVisible = false
         binding.profilePhotoEditButton.isVisible = isMyProfile

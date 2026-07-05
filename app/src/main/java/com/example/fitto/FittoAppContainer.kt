@@ -15,10 +15,14 @@ import com.example.fitto.feature_health.HealthConnectConnectionCoordinator
 import com.example.fitto.feature_health.HealthConnectConnectionDependencies
 import com.example.fitto.feature_health.HealthConnectManager
 import com.example.fitto.feature_home.presentation.notifications.FittoNotificationChannels
+import com.example.fitto.feature_home.presentation.social.RealtimePresenceManager
+import com.example.fitto.feature_home.presentation.social.SocialFeatureDependencies
 import com.example.fitto.feature_home.presentation.social.SocialNotificationObserver
+import com.example.fitto.feature_home.presentation.social.SocialRepository
 import com.example.fitto.feature_meal.AddMealCoordinator
 import com.example.fitto.feature_meal.LocalAddMealDataSource
 import com.example.fitto.feature_recipes.RecipeFeatureDependencies
+import com.example.fitto.feature_recipes.data.RecipeRepository
 import com.example.fitto.feature_sleep.data.SleepLogStore
 
 /** Application-level composition root for shared infrastructure and feature dependency graphs. */
@@ -33,6 +37,15 @@ internal class FittoAppContainer(
         ensureNotificationChannels = { FittoNotificationChannels.ensureCreated(appContext) },
         startSocialNotificationObserver = { SocialNotificationObserver.start(appContext) }
     )
+
+    val socialFeatureDependencies: SocialFeatureDependencies by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        SocialFeatureDependencies(
+            repositoryFactory = ::SocialRepository,
+            recipeRepositoryFactory = { RecipeRepository(appContext) },
+            ioDispatcher = coroutineDispatchers.io,
+            startPresence = RealtimePresenceManager::start
+        )
+    }
 
     fun createAddExerciseCoordinator(): AddExerciseCoordinator {
         return AddExerciseCoordinator(

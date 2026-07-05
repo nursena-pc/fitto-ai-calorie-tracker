@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import coil.load
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentGroupInfoBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.graphics.Color
@@ -34,7 +35,9 @@ class GroupInfoFragment : DialogFragment(R.layout.fragment_group_info) {
     private var _binding: FragmentGroupInfoBinding? = null
     private val binding get() = _binding!!
 
-    private val repository = SocialRepository()
+    private val repository by lazy(LazyThreadSafetyMode.NONE) {
+        requireContext().fittoAppContainer.socialFeatureDependencies.repository
+    }
 
     private val threadId: String by lazy { requireArguments().getString(ARG_THREAD_ID).orEmpty() }
     private val threadTitle: String by lazy { requireArguments().getString(ARG_THREAD_TITLE).orEmpty() }

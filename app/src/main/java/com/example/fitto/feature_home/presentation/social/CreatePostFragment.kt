@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import coil.load
 import com.example.fitto.R
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.databinding.FragmentCreatePostBinding
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
@@ -116,7 +117,10 @@ class CreatePostFragment : DialogFragment(R.layout.fragment_create_post) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentCreatePostBinding.bind(view)
-        viewModel = ViewModelProvider(this)[SocialViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            requireContext().fittoAppContainer.socialFeatureDependencies.createViewModelFactory()
+        )[SocialViewModel::class.java]
 
         binding.commentsSwitch.isChecked = ProfilePreferenceStore.areCommentsEnabled(requireContext())
 
