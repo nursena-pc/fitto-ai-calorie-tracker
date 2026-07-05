@@ -3,8 +3,6 @@ package com.example.fitto.feature_exercise
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -19,6 +17,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.fitto.R
 import com.example.fitto.databinding.FragmentAddExerciseBinding
+import com.example.fitto.fittoAppContainer
 import com.example.fitto.feature_exercise.data.ExerciseLogLocalModel
 import com.example.fitto.feature_exercise.model.ExerciseCategory
 import com.example.fitto.feature_exercise.model.ExerciseDurationRange
@@ -29,6 +28,8 @@ import com.example.fitto.feature_exercise.model.ExerciseUiModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -43,17 +44,16 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
     private lateinit var activityAdapter: ExerciseActivityAdapter
     private var logListRenderer: ExerciseLogListRenderer? = null
     private var isApplyingCategorySelection: Boolean = false
-    private val searchHandler = Handler(Looper.getMainLooper())
-    private var pendingSearchRunnable: Runnable? = null
+    private var pendingSearchJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddExerciseBinding.bind(view)
 
-        coordinator = AddExerciseCoordinator(
-            LocalAddExerciseDataSource(requireContext())
-        )
-        controller.initialize(coordinator.loadActivities())
+        coordinator = requireContext()
+            .fittoAppContainer
+            .createAddExerciseCoordinator()
+        controller.initializeIfNeeded(coordinator::loadActivities)
         logListRenderer = ExerciseLogListRenderer(
             context = requireContext(),
             logsContainer = binding.todayExerciseLogsContainer,
@@ -67,8 +67,8 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
         setupActivitiesRecyclerView()
         setupFilterResultListener()
         setupClicks()
+        restoreControllerStateToView()
         setupSearch()
-        binding.categoryToggleGroup.check(R.id.cardioCategoryButton)
 
         renderCategoryChipColors()
         renderUserWeight()
@@ -76,6 +76,11 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
         renderSelectedExercise()
         renderTodayExerciseLogs()
         loadUserWeightAndRender()
+    }
+
+    private fun restoreControllerStateToView() {
+        checkCategoryChipForCategory(controller.state.selectedCategory)
+        binding.exerciseSearchInput.setText(controller.state.rawSearchQuery)
     }
 
     private fun setupActivitiesRecyclerView() = with(binding) {
@@ -312,11 +317,11 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
     }
 
     private fun scheduleRenderActivities() {
-        pendingSearchRunnable?.let(searchHandler::removeCallbacks)
-        pendingSearchRunnable = Runnable {
+        pendingSearchJob?.cancel()
+        pendingSearchJob = viewLifecycleOwner.lifecycleScope.launch {
+            delay(SEARCH_DEBOUNCE_MILLIS)
             renderActivities()
         }
-        searchHandler.postDelayed(requireNotNull(pendingSearchRunnable), 180L)
     }
 
     private fun syncSearchQueryFromView() {
@@ -508,8 +513,8 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
         get() = (this * resources.displayMetrics.density).roundToInt()
 
     override fun onDestroyView() {
-        pendingSearchRunnable?.let(searchHandler::removeCallbacks)
-        pendingSearchRunnable = null
+        pendingSearchJob?.cancel()
+        pendingSearchJob = null
         binding.activitiesRecyclerView.adapter = null
         logListRenderer = null
         super.onDestroyView()
@@ -524,6 +529,7 @@ class AddExerciseFragment : Fragment(R.layout.fragment_add_exercise) {
         const val BUNDLE_EXERCISE_DURATION_MINUTES = "bundle_exercise_duration_minutes"
         const val BUNDLE_EXERCISE_DATE = "bundle_exercise_date"
         private const val ARG_ENTRY_DATE = "arg_entry_date"
+        private const val SEARCH_DEBOUNCE_MILLIS = 180L
 
         fun newInstance(entryDate: String): AddExerciseFragment {
             return AddExerciseFragment().apply {

@@ -14,11 +14,11 @@ import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
-class HealthConnectManager(
+internal class HealthConnectManager(
     private val context: Context
-) {
+) : HealthConnectConnectionSource {
 
-    val permissions: Set<String> = setOf(
+    override val permissions: Set<String> = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class)
     )
@@ -30,11 +30,11 @@ class HealthConnectManager(
         )
     }
 
-    fun isAvailable(): Boolean {
+    override fun isAvailable(): Boolean {
         return availabilityStatus() == HealthConnectClient.SDK_AVAILABLE
     }
 
-    fun needsInstallOrUpdate(): Boolean {
+    override fun needsInstallOrUpdate(): Boolean {
         return availabilityStatus() == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED
     }
 
@@ -49,7 +49,7 @@ class HealthConnectManager(
         }
     }
 
-    suspend fun hasAllPermissions(): Boolean {
+    override suspend fun hasAllPermissions(): Boolean {
         val client = clientOrNull() ?: return false
         val granted = client.permissionController.getGrantedPermissions()
         return granted.containsAll(permissions)
