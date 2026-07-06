@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/targetWeightReasonRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_fitto_bottom_sheet"
+        android:clipToPadding="false"
+        android:paddingStart="24dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="28dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        <View
+                android:layout_width="48dp"
+                android:layout_height="5dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="22dp"
+                android:background="@drawable/bg_fitto_bottom_sheet_handle" />
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+            <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:background="@drawable/bg_fitto_circle_soft"
+                    android:contentDescription="@string/target_weight_ai_reason_title"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_auto_awesome"
+                    app:tint="@color/fitto_green" />
+
+            <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:text="@string/target_weight_ai_reason_title"
+                    android:textColor="@color/fitto_text_dark"
+                    android:textSize="23sp"
+                    android:textStyle="bold" />
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_fitto_pill_soft_green"
+                    android:paddingStart="12dp"
+                    android:paddingTop="7dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="7dp"
+                    android:text="@string/target_weight_ai_badge"
+                    android:textColor="@color/fitto_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:lineSpacingExtra="5dp"
+                android:text="@string/target_weight_ai_reason_description"
+                android:textColor="@color/fitto_text_secondary"
+                android:textSize="16sp" />
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="170dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_target_weight_reason_metric_blue"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                <ImageView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_profile_person"
+                        app:tint="@color/tag_chip_blue_text" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="@string/target_weight_ai_reason_current_selection"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="14sp" />
+
+                <TextView
+                        android:id="@+id/targetWeightReasonCurrentWeightText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center"
+                        android:textColor="@color/tag_chip_blue_text"
+                        android:textSize="21sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/target_weight_ai_reason_current_selection_caption"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="170dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_target_weight_reason_metric_green"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                <ImageView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_auto_awesome"
+                        app:tint="@color/fitto_green" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="@string/target_weight_ai_reason_recommendation"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="14sp" />
+
+                <TextView
+                        android:id="@+id/targetWeightReasonAiWeightText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="21sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/target_weight_ai_reason_recommendation_caption"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="170dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_target_weight_reason_metric_purple"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                <ImageView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_fitto_circle_soft"
+                        android:padding="11dp"
+                        android:src="@drawable/ic_schedule"
+                        app:tint="@color/tag_chip_purple_text" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:text="@string/target_weight_ai_reason_duration"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="14sp" />
+
+                <TextView
+                        android:id="@+id/targetWeightReasonDurationText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center"
+                        android:textColor="@color/tag_chip_purple_text"
+                        android:textSize="19sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:lineSpacingExtra="2dp"
+                        android:text="@string/target_weight_ai_reason_duration_caption"
+                        android:textColor="@color/fitto_text_secondary"
+                        android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="@string/target_weight_ai_reason_inputs_title"
+                android:textColor="@color/fitto_text_dark"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        <com.google.android.material.chip.ChipGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingVertical="8dp">
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_current_weight"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_monitor_weight"
+                    app:chipIconTint="@color/fitto_green" />
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_height"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_straighten"
+                    app:chipIconTint="@color/fitto_green" />
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_age"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_calendar_today"
+                    app:chipIconTint="@color/fitto_green" />
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_gender"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_profile_person"
+                    app:chipIconTint="@color/fitto_green" />
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_activity"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_fitness"
+                    app:chipIconTint="@color/fitto_green" />
+
+            <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:text="@string/target_weight_ai_reason_input_goal"
+                    app:chipBackgroundColor="@color/fitto_chip_background"
+                    app:chipIcon="@drawable/ic_bullseye_arrow"
+                    app:chipIconTint="@color/fitto_green" />
+
+        </com.google.android.material.chip.ChipGroup>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_target_weight_reason_panel"
+                android:gravity="top"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+            <ImageView
+                    android:layout_width="58dp"
+                    android:layout_height="58dp"
+                    android:background="@drawable/bg_fitto_circle_soft"
+                    android:padding="13dp"
+                    android:src="@drawable/ic_auto_awesome"
+                    app:tint="@color/fitto_green" />
+
+            <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/target_weight_ai_reason_evaluation_title"
+                        android:textColor="@color/fitto_green"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                <TextView
+                        android:id="@+id/targetWeightReasonEvaluationText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:lineSpacingExtra="5dp"
+                        android:textColor="@color/fitto_text_dark"
+                        android:textSize="15sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/targetWeightReasonUseAiButton"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:layout_marginTop="22dp"
+                android:text="@string/target_weight_ai_use_button"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/fitto_green"
+                app:cornerRadius="16dp"
+                app:icon="@drawable/ic_auto_awesome"
+                app:iconTint="@color/white" />
+
+        <com.google.android.material.button.MaterialButton
+                android:id="@+id/targetWeightReasonContinueOwnButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:text="@string/target_weight_ai_continue_own_target"
+                android:textAllCaps="false"
+                android:textColor="@color/fitto_green"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="16dp"
+                app:strokeColor="@color/fitto_green" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

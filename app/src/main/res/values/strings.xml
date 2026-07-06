@@ -49,7 +49,7 @@
     <string name="meal_entry_edit_updated_message">Öğün kaydı güncellendi.</string>
     <string name="meal_entry_edit_error_message">Öğün kaydı güncellenemedi.</string>
     <string name="meal_entry_food_kcal_value">%1$d kcal</string>
-    <string name="meal_entry_food_macro_value">P %1$.1f g · K %2$.1f g · Y %3$.1f g</string>
+    <string name="meal_entry_food_macro_value">P %.1f g · K %.1f g · Y %.1f g</string>
     <string name="meal_entry_foods_title">Öğündeki besinler</string>
     <string name="meal_entry_foods_subtitle">Besinleri tek tek düzenleyebilir veya silebilirsin.</string>
     <string name="meal_entry_foods_empty">Bu öğün kaydında besin bulunamadı.</string>
@@ -547,11 +547,11 @@
     <string name="daily_needs_note">Sağlıklı ve sürdürülebilir bir plan için ilk adımı atıyoruz.</string>
     <string name="daily_needs_button">Gİ’mi Ayarla</string>
     <string name="target_weight_title">Hedef kilon nedir?</string>
-    <string name="target_weight_description">Hedefine uygun plan oluşturabilmemiz için hedef kilonu öğrenmemiz gerekiyor.</string>
+    <string name="target_weight_description">Sana uygun ve sürdürülebilir bir hedef belirlemene yardımcı olalım.</string>
     <string name="target_weight_label">Hedef kilo</string>
     <string name="target_weight_info">Küçük ve kısa vadeli bir hedef seçmek süreci daha ulaşılabilir kılar.</string>
-    <string name="target_weight_guidance_title">Hedef kilonu nasıl seçmelisin?</string>
-    <string name="target_weight_guidance">Gerçekçi ve ulaşılabilir bir hedef belirlemek süreci kolaylaştırır. Büyük değişimler için önce küçük bir ara hedef belirlemek daha sürdürülebilir olabilir.</string>
+    <string name="target_weight_guidance_title">Hedef yaklaşımın</string>
+    <string name="target_weight_guidance">Dengeli yaklaşım, sağlığını koruyarak istikrarlı ilerlemeni destekler.</string>
     <string name="target_weight_error_empty">Hedef kilo boş bırakılamaz.</string>
     <string name="target_weight_error_invalid">Hedef kilo sayısal bir değer olmalıdır.</string>
     <string name="target_weight_error_range">Lütfen 25 ile 300 kg arasında gerçekçi bir değer girin.</string>
@@ -560,8 +560,8 @@
     <string name="target_weight_info_full">
 Küçük ve kısa vadeli bir hedef seçmek süreci daha ulaşılabilir kılar. Büyük değişimler için önce daha yakın ve sürdürülebilir bir ara hedef belirleyebilirsin.
 </string>
-    <string name="target_weight_ai_title">Fitto AI Önerisi</string>
-    <string name="target_weight_ai_description">Hedef kilonda kararsız mısın? Fitto AI, bilgilerine göre ulaşılabilir bir başlangıç hedefini otomatik hazırlayabilir.</string>
+    <string name="target_weight_ai_title">Yapay zeka önerisi</string>
+    <string name="target_weight_ai_description">Profilin ve mevcut ilerlemen analiz edildi. Daha sağlıklı ve sürdürülebilir bir sonuç için sana özel bir önerimiz var.</string>
     <string name="target_weight_ai_auto_loading">Fitto AI senin için başlangıç hedefi hazırlıyor...</string>
     <string name="target_weight_ai_button">AI’dan hedef önerisi al</string>
     <string name="target_weight_ai_error">Fitto AI şu anda yanıt veremiyor. Daha sonra tekrar deneyebilirsin.</string>
@@ -572,7 +572,38 @@ Küçük ve kısa vadeli bir hedef seçmek süreci daha ulaşılabilir kılar. B
     <string name="target_weight_ai_error_invalid_response">Fitto AI yanıtı okunamadı. Tekrar deneyebilirsin.</string>
     <string name="target_weight_ai_error_rate_limited">Fitto AI için çok sık istek atıldı. Biraz sonra tekrar deneyebilirsin.</string>
     <string name="target_weight_ai_result_weight_format">Önerilen hedef: %1$d kg</string>
-    <string name="target_weight_ai_use_button">Bu hedefi kullan</string>
+    <string name="target_weight_ai_use_button">Öneriyi uygula</string>
+
+    <string name="target_weight_input_card_helper">Bu, vermek için hedef kilon olarak belirleyeceğin ağırlıktır.</string>
+    <string name="target_weight_ai_badge">Fitto AI</string>
+    <string name="target_weight_ai_recommended_target_label">Önerilen hedef:</string>
+    <string name="target_weight_ai_estimated_duration_label">Tahmini sağlıklı süre:</string>
+    <string name="target_weight_ai_why_button">Neden bu hedef?</string>
+    <string name="target_weight_duration_weeks_format">%1$d–%2$d hafta</string>
+    <string name="target_weight_approach_title">Hedef yaklaşımın</string>
+    <string name="target_weight_approach_relaxed">Rahat</string>
+    <string name="target_weight_approach_balanced">Dengeli</string>
+    <string name="target_weight_approach_fast">Hızlı</string>
+    <string name="target_weight_approach_balanced_description">Dengeli yaklaşım, sağlığını koruyarak istikrarlı ilerlemeni destekler.</string>
+    <string name="target_weight_success_guidance">Gerçekçi ve sürdürülebilir bir hedef, uzun vadede başarıya ulaşmanın en sağlıklı yoludur. Küçük adımlarla büyük değişimler mümkündür!</string>
+    <string name="target_weight_ai_reason_title">Bu hedef neden önerildi?</string>
+    <string name="target_weight_ai_reason_description">Profil bilgilerin, mevcut kilon, hedef türün ve sağlıklı ilerleme aralığın analiz edilerek sana daha sürdürülebilir bir hedef önerildi.</string>
+    <string name="target_weight_ai_reason_current_selection">Mevcut seçimin</string>
+    <string name="target_weight_ai_reason_current_selection_caption">Kullanıcının girdiği hedef</string>
+    <string name="target_weight_ai_reason_recommendation">Fitto AI önerisi</string>
+    <string name="target_weight_ai_reason_recommendation_caption">Daha dengeli ve sürdürülebilir hedef</string>
+    <string name="target_weight_ai_reason_duration">Tahmini sağlıklı süre</string>
+    <string name="target_weight_ai_reason_duration_caption">Sağlıklı ilerleme aralığı</string>
+    <string name="target_weight_ai_reason_inputs_title">Neye göre hesaplandı?</string>
+    <string name="target_weight_ai_reason_input_current_weight">Mevcut kilo</string>
+    <string name="target_weight_ai_reason_input_height">Boy</string>
+    <string name="target_weight_ai_reason_input_age">Yaş</string>
+    <string name="target_weight_ai_reason_input_gender">Cinsiyet</string>
+    <string name="target_weight_ai_reason_input_activity">Aktivite seviyesi</string>
+    <string name="target_weight_ai_reason_input_goal">Hedef türü</string>
+    <string name="target_weight_ai_reason_evaluation_title">Fitto AI değerlendirmesi</string>
+    <string name="target_weight_ai_reason_evaluation_body">Bu hedef, haftalık kilo değişiminin daha kontrollü ilerlemesini destekler. Daha hızlı hedefler kısa vadede cazip görünse de sürdürülebilirlik açısından zorlayıcı olabilir. Dengeli hedef, günlük kalori ve makro planının daha gerçekçi oluşturulmasına yardımcı olur.</string>
+    <string name="target_weight_ai_continue_own_target">Kendi hedefimle devam et</string>
     <string name="target_weight_warning_dialog_title">Hedefin oldukça iddialı görünüyor</string>
     <string name="target_weight_blocked_dialog_title">Hedef kilo güvenli görünmüyor</string>
     <string name="target_weight_ai_difference_dialog_title">AI önerisinden daha iddialı</string>

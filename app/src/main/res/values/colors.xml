@@ -132,4 +132,15 @@
     <color name="ai_status_red_bg">#FDECEC</color>
     <color name="ai_status_red_text">#9A3030</color>
 
+    <!-- Target weight AI surface colors -->
+    <color name="target_weight_ai_card_background">#F4FBF1</color>
+    <color name="target_weight_ai_card_stroke">#D6EBD2</color>
+    <color name="target_weight_success_card_background">#FAFFF7</color>
+    <color name="target_weight_reason_green_bg">#F2FAF1</color>
+    <color name="target_weight_reason_green_stroke">#D6EBD2</color>
+    <color name="target_weight_reason_blue_bg">#F3F7FF</color>
+    <color name="target_weight_reason_blue_stroke">#D7E2F8</color>
+    <color name="target_weight_reason_purple_bg">#FBF5FF</color>
+    <color name="target_weight_reason_purple_stroke">#E8D6F4</color>
+
 </resources>

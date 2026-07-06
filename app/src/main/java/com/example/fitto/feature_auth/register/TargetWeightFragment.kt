@@ -1,6 +1,8 @@
 package com.example.fitto.feature_auth.register
 
 import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.View
 import androidx.annotation.ColorRes
@@ -9,13 +11,16 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.fitto.R
+import com.example.fitto.databinding.BottomSheetTargetWeightAiReasonBinding
 import com.example.fitto.databinding.FragmentTargetWeightBinding
 import com.example.fitto.feature_home.presentation.profile.ProfileLanguage
 import com.example.fitto.feature_home.presentation.profile.ProfilePreferenceStore
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Job
@@ -35,7 +40,7 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentTargetWeightBinding.bind(view)
-        onboardingViewModel = obtainOnboardingViewModel()
+        onboardingViewModel = ViewModelProvider(requireActivity())[OnboardingViewModel::class.java]
 
         binding.root.setOnboardingProgress(10)
 
@@ -78,17 +83,12 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
 
         targetWeightUseAiButton.setOnClickListener {
             val suggestion = onboardingViewModel.aiTargetUiState.value.aiTargetSuggestion ?: return@setOnClickListener
-            val suggestionText = suggestion.suggestedTargetWeightKg.toString()
+            applyAiSuggestionToInput(suggestion)
+        }
 
-            if (targetWeightEditText.text?.toString() == suggestionText) {
-                hideLiveFeedback()
-                return@setOnClickListener
-            }
-
-            targetWeightEditText.setText(suggestionText)
-            targetWeightEditText.setSelection(targetWeightEditText.text?.length ?: 0)
-            targetWeightInputLayout.error = null
-            hideLiveFeedback()
+        targetWeightAiReasonButton.setOnClickListener {
+            val suggestion = freshAiSuggestion() ?: return@setOnClickListener
+            showAiReasonBottomSheet(suggestion)
         }
 
         targetWeightNextButton.setOnClickListener {
@@ -97,8 +97,8 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
     }
 
     private fun setupInput() = with(binding) {
-        targetWeightEditText.setOnFocusChangeListener { _, hasFocus ->
-            targetWeightInfoCard.isVisible = hasFocus
+        targetWeightEditText.setOnFocusChangeListener { _, _ ->
+            targetWeightInfoCard.isVisible = false
         }
 
         targetWeightEditText.doAfterTextChanged { editable ->
@@ -112,6 +112,7 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
             }
 
             targetWeightInputLayout.error = null
+            targetWeightInfoCard.isVisible = false
             scheduleTargetWeightLiveFeedback()
         }
 
@@ -147,15 +148,15 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
             }
 
         targetWeightAiResultCard.isVisible = suggestion != null
+        targetWeightUseAiButton.isVisible = suggestion != null
+        targetWeightAiReasonButton.isVisible = suggestion != null
         if (suggestion != null) {
-            targetWeightAiResultTitleText.text = getString(R.string.target_weight_ai_result_title)
-            targetWeightAiResultWeightText.text = getString(
-                R.string.target_weight_ai_result_weight_format,
-                suggestion.suggestedTargetWeightKg
-            )
-            targetWeightAiResultExplanationText.text = buildAiExplanationText(suggestion)
-            targetWeightAiResultWarningText.text = getString(R.string.target_weight_ai_medical_warning)
-            targetWeightUseAiButton.isVisible = true
+            targetWeightAiResultTitleText.text = getString(R.string.target_weight_ai_recommended_target_label)
+            targetWeightAiResultWeightText.text = formatWeightText(suggestion.suggestedTargetWeightKg)
+            targetWeightAiResultExplanationText.text = getString(
+                R.string.target_weight_ai_estimated_duration_label
+            ) + " " + formatHealthyDurationText(suggestion)
+            targetWeightAiResultWarningText.isVisible = false
 
             scheduleTargetWeightLiveFeedback()
         }
@@ -170,6 +171,94 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
         }
 
         renderTargetWeightLiveFeedbackState()
+    }
+
+    private fun applyAiSuggestionToInput(suggestion: AiTargetSuggestion) = with(binding) {
+        val suggestionText = suggestion.suggestedTargetWeightKg.toString()
+
+        if (targetWeightEditText.text?.toString() == suggestionText) {
+            hideLiveFeedback()
+            return@with
+        }
+
+        targetWeightEditText.setText(suggestionText)
+        targetWeightEditText.setSelection(targetWeightEditText.text?.length ?: 0)
+        targetWeightInputLayout.error = null
+        targetWeightInfoCard.isVisible = false
+        hideLiveFeedback()
+    }
+
+    private fun showAiReasonBottomSheet(suggestion: AiTargetSuggestion) {
+        val sheetBinding = BottomSheetTargetWeightAiReasonBinding.inflate(layoutInflater)
+        val dialog = BottomSheetDialog(requireContext())
+        val currentSelection = currentVisibleTargetWeight() ?: suggestion.suggestedTargetWeightKg
+
+        sheetBinding.targetWeightReasonCurrentWeightText.text = formatWeightText(currentSelection)
+        sheetBinding.targetWeightReasonAiWeightText.text = formatWeightText(suggestion.suggestedTargetWeightKg)
+        sheetBinding.targetWeightReasonDurationText.text = formatHealthyDurationText(suggestion)
+        sheetBinding.targetWeightReasonEvaluationText.text = buildAiReasonEvaluationText(suggestion)
+
+        sheetBinding.targetWeightReasonUseAiButton.setOnClickListener {
+            applyAiSuggestionToInput(suggestion)
+            dialog.dismiss()
+        }
+
+        sheetBinding.targetWeightReasonContinueOwnButton.setOnClickListener {
+            dialog.dismiss()
+            submitTargetWeight()
+        }
+
+        dialog.setContentView(sheetBinding.root)
+        dialog.setOnShowListener {
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        }
+        dialog.show()
+    }
+
+    private fun buildAiReasonEvaluationText(suggestion: AiTargetSuggestion): String {
+        val reasons = suggestion.reasons
+            .filter { it.isNotBlank() }
+            .take(MAX_REASON_ITEMS)
+
+        if (reasons.isEmpty()) {
+            return getString(R.string.target_weight_ai_reason_evaluation_body)
+        }
+
+        return buildString {
+            append(getString(R.string.target_weight_ai_reason_evaluation_body))
+            append("\n\n")
+            reasons.forEach { reason ->
+                append("• ")
+                append(reason.trim())
+                append('\n')
+            }
+        }.trim()
+    }
+
+    private fun formatHealthyDurationText(suggestion: AiTargetSuggestion): String {
+        val durationWeeks = TargetWeightAiPresentationResolver.estimatedHealthyDurationWeeks(
+            currentWeightKg = onboardingViewModel.state.weight,
+            suggestedTargetWeightKg = suggestion.suggestedTargetWeightKg,
+            goalType = onboardingViewModel.state.goalType
+        )
+        return getString(
+            R.string.target_weight_duration_weeks_format,
+            durationWeeks.first,
+            durationWeeks.last
+        )
+    }
+
+    private fun formatWeightText(weightKg: Int): String {
+        return getString(R.string.target_weight_ai_result_weight_format, weightKg)
+            .substringAfter(": ", missingDelimiterValue = "${weightKg} kg")
+    }
+
+    private fun currentVisibleTargetWeight(): Int? {
+        return binding.targetWeightEditText.text
+            ?.toString()
+            ?.trim()
+            ?.toIntOrNull()
+            ?: onboardingViewModel.state.targetWeight.takeIf { it > 0 }
     }
 
     private fun buildAiExplanationText(suggestion: AiTargetSuggestion): String {
@@ -526,5 +615,6 @@ class TargetWeightFragment : Fragment(R.layout.fragment_target_weight) {
 
     private companion object {
         const val LOCAL_FEEDBACK_DEBOUNCE_MS = 450L
+        const val MAX_REASON_ITEMS = 3
     }
 }
