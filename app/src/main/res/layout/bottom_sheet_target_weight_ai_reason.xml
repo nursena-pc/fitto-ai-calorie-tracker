@@ -7,9 +7,9 @@
         android:background="@drawable/bg_fitto_bottom_sheet"
         android:clipToPadding="false"
         android:overScrollMode="never"
-        android:paddingStart="20dp"
+        android:paddingStart="18dp"
         android:paddingTop="10dp"
-        android:paddingEnd="20dp"
+        android:paddingEnd="18dp"
         android:paddingBottom="24dp">
 
     <LinearLayout
@@ -21,7 +21,7 @@
                 android:layout_width="48dp"
                 android:layout_height="5dp"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="20dp"
+                android:layout_marginBottom="18dp"
                 android:background="@drawable/bg_fitto_bottom_sheet_handle" />
 
         <LinearLayout
@@ -31,23 +31,23 @@
                 android:orientation="horizontal">
 
             <ImageView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_fitto_circle_soft"
                     android:contentDescription="@string/target_weight_ai_reason_title"
-                    android:padding="11dp"
+                    android:padding="9dp"
                     android:src="@drawable/ic_auto_awesome"
                     app:tint="@color/fitto_green" />
 
             <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:lineSpacingExtra="2dp"
                     android:text="@string/target_weight_ai_reason_title"
                     android:textColor="@color/fitto_text_dark"
-                    android:textSize="21sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
             <TextView
@@ -61,7 +61,7 @@
                     android:paddingBottom="6dp"
                     android:text="@string/target_weight_ai_badge"
                     android:textColor="@color/fitto_green"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
         </LinearLayout>
@@ -69,8 +69,8 @@
         <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:lineSpacingExtra="4dp"
+                android:layout_marginTop="14dp"
+                android:lineSpacingExtra="3dp"
                 android:text="@string/target_weight_ai_reason_description"
                 android:textColor="@color/fitto_text_secondary"
                 android:textSize="15sp" />
@@ -78,47 +78,47 @@
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="18dp"
                 android:baselineAligned="false"
                 android:gravity="center"
                 android:orientation="horizontal">
 
             <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="136dp"
+                    android:layout_height="116dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_target_weight_reason_metric_blue"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingStart="6dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="6dp"
-                    android:paddingBottom="10dp">
+                    android:paddingStart="5dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="5dp"
+                    android:paddingBottom="8dp">
 
                 <ImageView
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/bg_fitto_circle_soft"
-                        android:padding="8dp"
+                        android:padding="7dp"
                         android:src="@drawable/ic_profile_person"
                         app:tint="@color/tag_chip_blue_text" />
 
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
+                        android:layout_marginTop="6dp"
                         android:gravity="center"
                         android:maxLines="2"
                         android:text="@string/target_weight_ai_reason_current_selection"
                         android:textColor="@color/fitto_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="10sp" />
 
                 <TextView
                         android:id="@+id/targetWeightReasonCurrentWeightText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
-                        android:autoSizeMaxTextSize="19sp"
+                        android:autoSizeMaxTextSize="17sp"
                         android:autoSizeMinTextSize="12sp"
                         android:autoSizeStepGranularity="1sp"
                         android:autoSizeTextType="uniform"
@@ -126,7 +126,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:textColor="@color/tag_chip_blue_text"
-                        android:textSize="19sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                 <TextView
@@ -136,6 +136,7 @@
                         android:ellipsize="end"
                         android:gravity="center"
                         android:maxLines="1"
+                        android:visibility="gone"
                         android:text="@string/target_weight_ai_reason_current_selection_caption"
                         android:textColor="@color/fitto_text_secondary"
                         android:textSize="10sp" />
@@ -144,41 +145,41 @@
 
             <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="136dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_height="116dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_target_weight_reason_metric_green"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingStart="6dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="6dp"
-                    android:paddingBottom="10dp">
+                    android:paddingStart="5dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="5dp"
+                    android:paddingBottom="8dp">
 
                 <ImageView
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/bg_fitto_circle_soft"
-                        android:padding="8dp"
+                        android:padding="7dp"
                         android:src="@drawable/ic_auto_awesome"
                         app:tint="@color/fitto_green" />
 
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
+                        android:layout_marginTop="6dp"
                         android:gravity="center"
                         android:maxLines="2"
                         android:text="@string/target_weight_ai_reason_recommendation"
                         android:textColor="@color/fitto_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="10sp" />
 
                 <TextView
                         android:id="@+id/targetWeightReasonAiWeightText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
-                        android:autoSizeMaxTextSize="19sp"
+                        android:autoSizeMaxTextSize="17sp"
                         android:autoSizeMinTextSize="12sp"
                         android:autoSizeStepGranularity="1sp"
                         android:autoSizeTextType="uniform"
@@ -186,7 +187,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:textColor="@color/fitto_green"
-                        android:textSize="19sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                 <TextView
@@ -196,6 +197,7 @@
                         android:ellipsize="end"
                         android:gravity="center"
                         android:maxLines="1"
+                        android:visibility="gone"
                         android:text="@string/target_weight_ai_reason_recommendation_caption"
                         android:textColor="@color/fitto_text_secondary"
                         android:textSize="10sp" />
@@ -204,49 +206,49 @@
 
             <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_height="136dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_height="116dp"
+                    android:layout_marginStart="6dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_target_weight_reason_metric_purple"
                     android:gravity="center"
                     android:orientation="vertical"
-                    android:paddingStart="6dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="6dp"
-                    android:paddingBottom="10dp">
+                    android:paddingStart="5dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="5dp"
+                    android:paddingBottom="8dp">
 
                 <ImageView
-                        android:layout_width="34dp"
-                        android:layout_height="34dp"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/bg_fitto_circle_soft"
-                        android:padding="8dp"
+                        android:padding="7dp"
                         android:src="@drawable/ic_schedule"
                         app:tint="@color/tag_chip_purple_text" />
 
                 <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="7dp"
+                        android:layout_marginTop="6dp"
                         android:gravity="center"
                         android:maxLines="2"
                         android:text="@string/target_weight_ai_reason_duration"
                         android:textColor="@color/fitto_text_secondary"
-                        android:textSize="12sp" />
+                        android:textSize="10sp" />
 
                 <TextView
                         android:id="@+id/targetWeightReasonDurationText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="5dp"
-                        android:autoSizeMaxTextSize="18sp"
+                        android:autoSizeMaxTextSize="17sp"
                         android:autoSizeMinTextSize="12sp"
                         android:autoSizeStepGranularity="1sp"
                         android:autoSizeTextType="uniform"
                         android:ellipsize="end"
                         android:gravity="center"
-                        android:maxLines="2"
+                        android:maxLines="1"
                         android:textColor="@color/tag_chip_purple_text"
-                        android:textSize="18sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                 <TextView
@@ -256,6 +258,7 @@
                         android:ellipsize="end"
                         android:gravity="center"
                         android:maxLines="1"
+                        android:visibility="gone"
                         android:text="@string/target_weight_ai_reason_duration_caption"
                         android:textColor="@color/fitto_text_secondary"
                         android:textSize="10sp" />
@@ -277,15 +280,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                app:chipSpacingHorizontal="8dp"
-                app:chipSpacingVertical="8dp">
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="6dp">
 
             <com.google.android.material.chip.Chip
                     style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_current_weight"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_monitor_weight"
                     app:chipIconTint="@color/fitto_green" />
@@ -295,7 +299,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_height"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_straighten"
                     app:chipIconTint="@color/fitto_green" />
@@ -305,7 +310,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_age"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_calendar_today"
                     app:chipIconTint="@color/fitto_green" />
@@ -315,7 +321,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_gender"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_profile_person"
                     app:chipIconTint="@color/fitto_green" />
@@ -325,7 +332,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_activity"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_fitness"
                     app:chipIconTint="@color/fitto_green" />
@@ -335,7 +343,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/target_weight_ai_reason_input_goal"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
+                    app:chipMinHeight="34dp"
                     app:chipBackgroundColor="@color/fitto_chip_background"
                     app:chipIcon="@drawable/ic_bullseye_arrow"
                     app:chipIconTint="@color/fitto_green" />
@@ -345,15 +354,15 @@
         <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
+                android:layout_marginTop="16dp"
                 android:background="@drawable/bg_target_weight_reason_panel"
                 android:gravity="top"
                 android:orientation="horizontal"
-                android:padding="15dp">
+                android:padding="14dp">
 
             <ImageView
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:background="@drawable/bg_fitto_circle_soft"
                     android:padding="10dp"
                     android:src="@drawable/ic_auto_awesome"
@@ -362,7 +371,7 @@
             <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -378,10 +387,10 @@
                         android:id="@+id/targetWeightReasonEvaluationText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:lineSpacingExtra="4dp"
+                        android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="3dp"
                         android:textColor="@color/fitto_text_dark"
-                        android:textSize="14sp" />
+                        android:textSize="13sp" />
 
             </LinearLayout>
 
@@ -391,15 +400,16 @@
                 android:id="@+id/targetWeightReasonUseAiButton"
                 style="@style/Widget.Material3.Button"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="20dp"
+                android:layout_height="54dp"
+                android:layout_marginTop="18dp"
+                android:includeFontPadding="false"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:maxLines="1"
                 android:text="@string/target_weight_ai_use_button"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 app:backgroundTint="@color/fitto_green"
                 app:cornerRadius="16dp" />
@@ -408,7 +418,7 @@
                 android:id="@+id/targetWeightReasonContinueOwnButton"
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="54dp"
                 android:layout_marginTop="10dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
