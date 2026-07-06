@@ -3354,6 +3354,29 @@ Listed after search</string>
     <string name="profile_goals_water_target_format">Water target: %1$s L</string>
 
     <!-- Daily Fitto AI -->
+    <string name="daily_ai_recommendation_title">Fitto AI recommendation</string>
+    <string name="daily_ai_recommendation_badge_active">• AI active</string>
+    <string name="daily_ai_recommendation_message">Your remaining calories are high today. A protein-focused dinner and completing your water goal are recommended.</string>
+    <string name="daily_ai_recommendation_apply">Apply recommendation</string>
+    <string name="daily_ai_recommendation_applied">✓ Applied</string>
+    <string name="daily_ai_recommendation_reason_button">Why?</string>
+    <string name="daily_ai_recommendation_detail_button">View details</string>
+    <string name="daily_ai_recommendation_applied_snackbar">AI recommendation was added to today’s plan</string>
+    <string name="daily_ai_reason_sheet_title">Why was this recommended?</string>
+    <string name="daily_ai_reason_sheet_description">Based on today’s data, your remaining calories are high, your protein intake is low, and your water goal is still near the starting level. That is why a more balanced dinner was recommended.</string>
+    <string name="daily_ai_reason_remaining_label">Remaining calories</string>
+    <string name="daily_ai_reason_protein_label">Protein</string>
+    <string name="daily_ai_reason_water_label">Water goal</string>
+    <string name="daily_ai_reason_basis_title">What was it based on?</string>
+    <string name="daily_ai_reason_basis_calorie">Calorie status</string>
+    <string name="daily_ai_reason_basis_macro">Macro balance</string>
+    <string name="daily_ai_reason_basis_water">Water tracking</string>
+    <string name="daily_ai_reason_basis_plan">Daily plan</string>
+    <string name="daily_ai_reason_basis_recent">Recent logs</string>
+    <string name="daily_ai_reason_insight_title">AI insight</string>
+    <string name="daily_ai_reason_insight_body">A protein-focused dinner helps you use your remaining calories more evenly. Moving closer to your water goal also supports completing your daily routine.</string>
+    <string name="daily_ai_reason_close">Close</string>
+    <string name="daily_ai_reason_remaining_metric_format">%1$s kcal</string>
     <string name="daily_ai_title">Fitto AI</string>
     <string name="daily_ai_default_message">Tap the card so I can review today’s logs.</string>
     <string name="daily_ai_default_subtitle">Daily insight is prepared using your personal data.</string>

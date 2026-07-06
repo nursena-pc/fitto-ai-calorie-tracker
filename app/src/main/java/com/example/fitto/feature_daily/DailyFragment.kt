@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.fitto.R
 import com.example.fitto.core.coroutines.CoroutineTaskRunner
+import com.example.fitto.databinding.BottomSheetDailyAiRecommendationReasonBinding
 import com.example.fitto.databinding.FragmentDailyBinding
 import com.example.fitto.feature_daily.data.WaterTrackingStore
 import com.example.fitto.feature_dietplans.model.ActiveDietPlanUiModel
@@ -21,6 +23,8 @@ import com.example.fitto.feature_health.HealthConnectBottomSheetFragment
 import com.example.fitto.feature_health.HealthConnectDailySummary
 import com.example.fitto.feature_meal.model.MealType
 import com.example.fitto.fittoAppContainer
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
@@ -82,6 +86,7 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private var plannedMealRenderer: DailyPlannedMealRenderer? = null
     private var fastingRenderer: DailyFastingRenderer? = null
     private var dailyAiCardRenderer: DailyAiCardRenderer? = null
+    private var isDailyAiRecommendationApplied: Boolean = false
     private var dashboardClickBinder: DailyDashboardClickBinder? = null
     private var sleepDialogCoordinator: DailySleepDialogCoordinator? = null
     private lateinit var datePickerCoordinator: DailyDatePickerCoordinator
@@ -291,7 +296,9 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                         weightKg = currentWeightKg
                     )
                 },
-                onDailyAiClick = ::handleDailyAiCardClick
+                onDailyAiClick = ::handleDailyAiCardClick,
+                onDailyAiApplyClick = ::handleDailyAiSuggestionApply,
+                onDailyAiReasonClick = ::showDailyAiRecommendationReason
             )
         ).also(DailyDashboardClickBinder::bind)
     }
@@ -349,6 +356,39 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
     private fun handleDailyAiCardClick() {
         if (!::dailyAiDashboardCoordinator.isInitialized) return
         renderDailyAiEffects(dailyAiDashboardCoordinator.onCardClicked())
+    }
+
+    private fun handleDailyAiSuggestionApply() {
+        isDailyAiRecommendationApplied = true
+        dailyAiCardRenderer?.renderAppliedState()
+        Snackbar.make(
+            binding.dailyRoot,
+            R.string.daily_ai_recommendation_applied_snackbar,
+            Snackbar.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun showDailyAiRecommendationReason() {
+        val dialog = BottomSheetDialog(requireContext())
+        val sheetBinding = BottomSheetDailyAiRecommendationReasonBinding.inflate(
+            LayoutInflater.from(requireContext())
+        )
+
+        sheetBinding.dailyAiReasonRemainingMetricText.text = getString(
+            R.string.daily_ai_reason_remaining_metric_format,
+            binding.remainingCaloriesText.text
+        )
+        sheetBinding.dailyAiReasonProteinMetricText.text = binding.dailyProteinValueText.text
+        sheetBinding.dailyAiReasonWaterMetricText.text = binding.waterAmountText.text
+
+        sheetBinding.dailyAiReasonApplyButton.setOnClickListener {
+            dialog.dismiss()
+            handleDailyAiSuggestionApply()
+        }
+        sheetBinding.dailyAiReasonCloseButton.setOnClickListener { dialog.dismiss() }
+
+        dialog.setContentView(sheetBinding.root)
+        dialog.show()
     }
 
     private fun renderDailyAiEffects(
@@ -430,6 +470,10 @@ class DailyFragment : Fragment(R.layout.fragment_daily) {
                     launchDailyAiRequest(effect.request)
                 }
             }
+        }
+
+        if (isDailyAiRecommendationApplied) {
+            dailyAiCardRenderer?.renderAppliedState()
         }
     }
 

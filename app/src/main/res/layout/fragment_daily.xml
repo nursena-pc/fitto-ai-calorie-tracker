@@ -165,6 +165,153 @@
                         app:iconTint="@color/white" />
             </LinearLayout>
 
+            <!-- Fitto AI Günlük Öneri Kartı -->
+            <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/dailyAiCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground"
+                    app:cardBackgroundColor="@color/fitto_surface_soft"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="2dp"
+                    app:strokeColor="@color/fitto_green"
+                    app:strokeWidth="1dp">
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:layout_width="58dp"
+                            android:layout_height="58dp"
+                            android:layout_marginEnd="14dp"
+                            android:background="@drawable/bg_fitto_chip"
+                            android:elevation="2dp"
+                            android:gravity="center"
+                            android:text="✦"
+                            android:textColor="@color/fitto_green"
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
+
+                    <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <TextView
+                                    android:id="@+id/dailyAiTitleText"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/daily_ai_recommendation_title"
+                                    android:textColor="@color/fitto_green"
+                                    android:textSize="17sp"
+                                    android:textStyle="bold" />
+
+                            <com.google.android.material.progressindicator.CircularProgressIndicator
+                                    android:id="@+id/dailyAiProgressIndicator"
+                                    android:layout_width="28dp"
+                                    android:layout_height="28dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:indeterminate="true"
+                                    android:visibility="gone"
+                                    app:indicatorColor="@color/fitto_green"
+                                    app:indicatorSize="24dp"
+                                    app:trackThickness="3dp"
+                                    tools:visibility="gone" />
+
+                            <TextView
+                                    android:id="@+id/dailyAiStatusBadgeText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/bg_fitto_chip"
+                                    android:paddingStart="10dp"
+                                    android:paddingTop="5dp"
+                                    android:paddingEnd="10dp"
+                                    android:paddingBottom="5dp"
+                                    android:text="@string/daily_ai_recommendation_badge_active"
+                                    android:textColor="@color/fitto_green"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                                android:id="@+id/dailyAiMessageText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:ellipsize="end"
+                                android:lineSpacingExtra="2dp"
+                                android:maxLines="3"
+                                android:text="@string/daily_ai_recommendation_message"
+                                android:textColor="@color/fitto_text_dark"
+                                android:textSize="14sp" />
+
+                        <TextView
+                                android:id="@+id/dailyAiSubtitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/daily_ai_default_subtitle"
+                                android:textColor="@color/fitto_text_secondary"
+                                android:textSize="12sp"
+                                android:visibility="gone" />
+
+                        <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/dailyAiApplyButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="44dp"
+                                    android:layout_marginEnd="10dp"
+                                    android:layout_weight="1"
+                                    android:backgroundTint="@color/fitto_green"
+                                    android:minHeight="0dp"
+                                    android:text="@string/daily_ai_recommendation_apply"
+                                    android:textAllCaps="false"
+                                    android:textColor="@color/white"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="15dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/dailyAiReasonButton"
+                                    style="@style/Widget.Material3.Button.OutlinedButton"
+                                    android:layout_width="0dp"
+                                    android:layout_height="44dp"
+                                    android:layout_weight="1"
+                                    android:minHeight="0dp"
+                                    android:text="@string/daily_ai_recommendation_reason_button"
+                                    android:textAllCaps="false"
+                                    android:textColor="@color/fitto_green"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    app:cornerRadius="15dp"
+                                    app:strokeColor="@color/fitto_green"
+                                    app:strokeWidth="1dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Günlük Özet Kartı -->
             <com.google.android.material.card.MaterialCardView
                     android:id="@+id/dailySummaryCard"
@@ -402,76 +549,6 @@
                                     app:trackColor="@color/fitto_primary_soft" />
                         </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Fitto AI Günlük Yorum Kartı -->
-            <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/dailyAiCard"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackground"
-                    app:cardBackgroundColor="@color/fitto_surface"
-                    app:cardCornerRadius="22dp"
-                    app:cardElevation="2dp"
-                    app:strokeColor="@color/fitto_divider_soft"
-                    app:strokeWidth="1dp">
-
-                <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                    <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                        <TextView
-                                android:id="@+id/dailyAiTitleText"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/daily_ai_title"
-                                android:textColor="@color/fitto_text_dark"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-
-                        <com.google.android.material.progressindicator.CircularProgressIndicator
-                                android:id="@+id/dailyAiProgressIndicator"
-                                android:layout_width="28dp"
-                                android:layout_height="28dp"
-                                android:indeterminate="true"
-                                android:visibility="gone"
-                                app:indicatorColor="@color/fitto_green"
-                                app:indicatorSize="24dp"
-                                app:trackThickness="3dp"
-                                tools:visibility="visible" />
-                    </LinearLayout>
-
-                    <TextView
-                            android:id="@+id/dailyAiMessageText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/daily_ai_default_message"
-                            android:textColor="@color/fitto_text_dark"
-                            android:textSize="14sp"
-                            android:lineSpacingExtra="2dp" />
-
-                    <TextView
-                            android:id="@+id/dailyAiSubtitleText"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="@string/daily_ai_default_subtitle"
-                            android:textColor="@color/fitto_text_secondary"
-                            android:textSize="12sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

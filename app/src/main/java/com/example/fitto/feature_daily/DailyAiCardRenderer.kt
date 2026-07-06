@@ -16,24 +16,34 @@ class DailyAiCardRenderer(
     fun renderDefaultState() = with(binding) {
         applyStatusStyle(AiDailyStatusLevel.GREEN)
         dailyAiProgressIndicator.isVisible = false
-        dailyAiTitleText.text = context.getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = context.getString(R.string.daily_ai_default_message)
+        dailyAiApplyButton.isEnabled = true
+        dailyAiTitleText.text = context.getString(R.string.daily_ai_recommendation_title)
+        dailyAiMessageText.text = context.getString(R.string.daily_ai_recommendation_message)
         dailyAiSubtitleText.text = context.getString(R.string.daily_ai_default_subtitle)
+        dailyAiApplyButton.text = context.getString(R.string.daily_ai_recommendation_apply)
+        dailyAiReasonButton.text = context.getString(R.string.daily_ai_recommendation_reason_button)
     }
 
     fun renderPreparingState() = with(binding) {
+        applyStatusStyle(AiDailyStatusLevel.GREEN)
         dailyAiProgressIndicator.isVisible = true
-        dailyAiTitleText.text = context.getString(R.string.daily_ai_title)
+        dailyAiApplyButton.isEnabled = false
+        dailyAiTitleText.text = context.getString(R.string.daily_ai_recommendation_title)
         dailyAiMessageText.text = context.getString(R.string.daily_ai_preparing)
         dailyAiSubtitleText.text = context.getString(R.string.daily_ai_default_subtitle)
+        dailyAiApplyButton.text = context.getString(R.string.daily_ai_recommendation_apply)
+        dailyAiReasonButton.text = context.getString(R.string.daily_ai_recommendation_reason_button)
     }
 
     fun renderLoading(status: AiDailyStatusLevel) = with(binding) {
         applyStatusStyle(status)
         dailyAiProgressIndicator.isVisible = true
-        dailyAiTitleText.text = context.getString(R.string.daily_ai_title)
+        dailyAiApplyButton.isEnabled = false
+        dailyAiTitleText.text = context.getString(R.string.daily_ai_recommendation_title)
         dailyAiMessageText.text = context.getString(R.string.daily_ai_loading)
         dailyAiSubtitleText.text = context.getString(R.string.daily_ai_default_subtitle)
+        dailyAiApplyButton.text = context.getString(R.string.daily_ai_recommendation_apply)
+        dailyAiReasonButton.text = context.getString(R.string.daily_ai_recommendation_reason_button)
     }
 
     fun renderMessage(
@@ -43,9 +53,26 @@ class DailyAiCardRenderer(
     ) = with(binding) {
         applyStatusStyle(status)
         dailyAiProgressIndicator.isVisible = false
-        dailyAiTitleText.text = context.getString(R.string.daily_ai_title)
-        dailyAiMessageText.text = message
+        dailyAiApplyButton.isEnabled = true
+        dailyAiTitleText.text = context.getString(R.string.daily_ai_recommendation_title)
+        dailyAiMessageText.text = message.ifBlank {
+            context.getString(R.string.daily_ai_recommendation_message)
+        }
         dailyAiSubtitleText.text = subtitle
+        dailyAiApplyButton.text = context.getString(R.string.daily_ai_recommendation_apply)
+        dailyAiReasonButton.text = context.getString(R.string.daily_ai_recommendation_reason_button)
+    }
+
+    fun renderAppliedState() = with(binding) {
+        applyStatusStyle(AiDailyStatusLevel.GREEN)
+        dailyAiProgressIndicator.isVisible = false
+        dailyAiApplyButton.isEnabled = true
+        dailyAiTitleText.text = context.getString(R.string.daily_ai_recommendation_title)
+        if (dailyAiMessageText.text.isNullOrBlank()) {
+            dailyAiMessageText.text = context.getString(R.string.daily_ai_recommendation_message)
+        }
+        dailyAiApplyButton.text = context.getString(R.string.daily_ai_recommendation_applied)
+        dailyAiReasonButton.text = context.getString(R.string.daily_ai_recommendation_detail_button)
     }
 
     fun renderStructuredResult(
@@ -79,19 +106,23 @@ class DailyAiCardRenderer(
     }
 
     private fun applyStatusStyle(status: AiDailyStatusLevel) = with(binding) {
-        val (bgColorRes, textColorRes) = when (status) {
-            AiDailyStatusLevel.GREEN -> R.color.ai_status_green_bg to R.color.ai_status_green_text
-            AiDailyStatusLevel.YELLOW -> R.color.ai_status_yellow_bg to R.color.ai_status_yellow_text
-            AiDailyStatusLevel.RED -> R.color.ai_status_red_bg to R.color.ai_status_red_text
+        val badgeTextColorRes = when (status) {
+            AiDailyStatusLevel.GREEN -> R.color.fitto_green
+            AiDailyStatusLevel.YELLOW -> R.color.ai_status_yellow_text
+            AiDailyStatusLevel.RED -> R.color.ai_status_red_text
         }
+        val badgeTextColor = ContextCompat.getColor(context, badgeTextColorRes)
+        val green = ContextCompat.getColor(context, R.color.fitto_green)
+        val surface = ContextCompat.getColor(context, R.color.fitto_surface_soft)
+        val bodyText = ContextCompat.getColor(context, R.color.fitto_text_dark)
 
-        val bgColor = ContextCompat.getColor(context, bgColorRes)
-        val textColor = ContextCompat.getColor(context, textColorRes)
-        dailyAiCard.setCardBackgroundColor(bgColor)
-        dailyAiCard.strokeColor = textColor
-        dailyAiTitleText.setTextColor(textColor)
-        dailyAiMessageText.setTextColor(textColor)
-        dailyAiSubtitleText.setTextColor(textColor)
-        dailyAiProgressIndicator.setIndicatorColor(textColor)
+        dailyAiCard.setCardBackgroundColor(surface)
+        dailyAiCard.strokeColor = green
+        dailyAiTitleText.setTextColor(green)
+        dailyAiMessageText.setTextColor(bodyText)
+        dailyAiSubtitleText.setTextColor(ContextCompat.getColor(context, R.color.fitto_text_secondary))
+        dailyAiProgressIndicator.setIndicatorColor(green)
+        dailyAiStatusBadgeText.setTextColor(badgeTextColor)
+        dailyAiStatusBadgeText.text = context.getString(R.string.daily_ai_recommendation_badge_active)
     }
 }

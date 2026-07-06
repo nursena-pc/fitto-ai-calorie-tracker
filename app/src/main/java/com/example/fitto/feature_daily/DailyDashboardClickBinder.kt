@@ -24,7 +24,9 @@ internal class DailyDashboardClickBinder(
         val onActivityClick: () -> Unit,
         val onHealthConnectClick: () -> Unit,
         val onSleepClick: () -> Unit,
-        val onDailyAiClick: () -> Unit
+        val onDailyAiClick: () -> Unit,
+        val onDailyAiApplyClick: () -> Unit,
+        val onDailyAiReasonClick: () -> Unit
     )
 
     fun bind() = with(binding) {
@@ -79,7 +81,9 @@ internal class DailyDashboardClickBinder(
         }
 
         sleepCard.setOnClickListener { callbacks.onSleepClick() }
-        dailyAiCard.setOnClickListener { callbacks.onDailyAiClick() }
+        dailyAiCard.setOnClickListener { callbacks.onDailyAiReasonClick() }
+        dailyAiApplyButton.setOnClickListener { callbacks.onDailyAiApplyClick() }
+        dailyAiReasonButton.setOnClickListener { callbacks.onDailyAiReasonClick() }
     }
 
     fun clear() = with(binding) {
@@ -109,5 +113,7 @@ internal class DailyDashboardClickBinder(
         activityDurationText.setOnClickListener(null)
         sleepCard.setOnClickListener(null)
         dailyAiCard.setOnClickListener(null)
+        dailyAiApplyButton.setOnClickListener(null)
+        dailyAiReasonButton.setOnClickListener(null)
     }
 }

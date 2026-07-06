@@ -3354,6 +3354,29 @@ Ara deyince listelenir</string>
     <string name="profile_goals_water_target_format">Su hedefi: %1$s L</string>
 
     <!-- Daily Fitto AI -->
+    <string name="daily_ai_recommendation_title">Fitto AI önerisi</string>
+    <string name="daily_ai_recommendation_badge_active">• Yapay zeka aktif</string>
+    <string name="daily_ai_recommendation_message">Bugün kalori açığın yüksek. Protein ağırlıklı bir akşam öğünü ve su hedefini tamamlaman önerilir.</string>
+    <string name="daily_ai_recommendation_apply">Öneriyi uygula</string>
+    <string name="daily_ai_recommendation_applied">✓ Uygulandı</string>
+    <string name="daily_ai_recommendation_reason_button">Neden?</string>
+    <string name="daily_ai_recommendation_detail_button">Detay gör</string>
+    <string name="daily_ai_recommendation_applied_snackbar">AI önerisi bugünkü planına eklendi</string>
+    <string name="daily_ai_reason_sheet_title">Bu öneri neden verildi?</string>
+    <string name="daily_ai_reason_sheet_description">Bugünkü verilerine göre kalori açığın yüksek, protein alımın düşük ve su hedefin henüz başlangıç seviyesinde. Bu yüzden daha dengeli bir akşam öğünü önerildi.</string>
+    <string name="daily_ai_reason_remaining_label">Kalan kalori</string>
+    <string name="daily_ai_reason_protein_label">Protein</string>
+    <string name="daily_ai_reason_water_label">Su hedefi</string>
+    <string name="daily_ai_reason_basis_title">Neye göre hesaplandı?</string>
+    <string name="daily_ai_reason_basis_calorie">Kalori durumu</string>
+    <string name="daily_ai_reason_basis_macro">Makro dengesi</string>
+    <string name="daily_ai_reason_basis_water">Su takibi</string>
+    <string name="daily_ai_reason_basis_plan">Günlük plan</string>
+    <string name="daily_ai_reason_basis_recent">Son kayıtlar</string>
+    <string name="daily_ai_reason_insight_title">AI içgörüsü</string>
+    <string name="daily_ai_reason_insight_body">Protein odaklı bir akşam öğünü, kalan kalorini daha dengeli kullanmana yardımcı olur. Su hedefine yaklaşman da günlük rutini tamamlamanı destekler.</string>
+    <string name="daily_ai_reason_close">Kapat</string>
+    <string name="daily_ai_reason_remaining_metric_format">%1$s kcal</string>
     <string name="daily_ai_title">Fitto AI</string>
     <string name="daily_ai_default_message">Bugünkü kayıtlarını yorumlamam için karta dokun.</string>
     <string name="daily_ai_default_subtitle">Günlük yorum kişisel verilerine göre hazırlanır.</string>
