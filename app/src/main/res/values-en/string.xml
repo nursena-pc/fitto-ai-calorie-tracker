@@ -55,7 +55,7 @@
     <string name="meal_entry_edit_updated_message">Meal entry updated.</string>
     <string name="meal_entry_edit_error_message">Could not update meal entry.</string>
     <string name="meal_entry_food_kcal_value">%1$d kcal</string>
-    <string name="meal_entry_food_macro_value">P %1$.1f g · C %2$.1f g · F %3$.1f g</string>
+    <string name="meal_entry_food_macro_value">P %.1f g · C %.1f g · F %.1f g</string>
     <string name="meal_entry_foods_title">Foods in meal</string>
     <string name="meal_entry_foods_subtitle">You can edit or delete foods individually.</string>
     <string name="meal_entry_foods_empty">No foods found in this meal entry.</string>
@@ -555,11 +555,11 @@
     <string name="daily_needs_note">Let’s take the first step.</string>
     <string name="daily_needs_button">Set My Needs</string>
     <string name="target_weight_title">What is your target weight?</string>
-    <string name="target_weight_description">We need this to create your plan.</string>
+    <string name="target_weight_description">Let us help you set a suitable and sustainable target.</string>
     <string name="target_weight_label">Target weight</string>
     <string name="target_weight_info">Smaller goals make the process easier.</string>
-    <string name="target_weight_guidance_title">How to choose your target?</string>
-    <string name="target_weight_guidance">Choose realistic and achievable goals.</string>
+    <string name="target_weight_guidance_title">Your target approach</string>
+    <string name="target_weight_guidance">A balanced approach supports steady progress while protecting your health.</string>
     <string name="target_weight_error_empty">Target weight cannot be empty.</string>
     <string name="target_weight_error_invalid">Target weight must be a number.</string>
     <string name="target_weight_error_should_be_lower">To lose weight, your target weight should be lower than your current weight.</string>
@@ -568,8 +568,8 @@
     <string name="target_weight_info_full">
 Choosing a smaller short-term goal makes the process more achievable. For big changes, start with a closer and more sustainable milestone.
 </string>
-    <string name="target_weight_ai_title">Fitto AI Suggestion</string>
-    <string name="target_weight_ai_description">Unsure about your target weight? Fitto AI can automatically prepare an achievable starting target based on your information.</string>
+    <string name="target_weight_ai_title">AI suggestion</string>
+    <string name="target_weight_ai_description">Your profile and current progress were analyzed. We have a personalized suggestion for a healthier and more sustainable result.</string>
     <string name="target_weight_ai_auto_loading">Fitto AI is preparing a starting target for you...</string>
     <string name="target_weight_ai_button">Get an AI target suggestion</string>
     <string name="target_weight_ai_error">Fitto AI cannot respond right now. You can try again later.</string>
@@ -580,7 +580,38 @@ Choosing a smaller short-term goal makes the process more achievable. For big ch
     <string name="target_weight_ai_retry_button">Try again</string>
     <string name="target_weight_ai_error_rate_limited">Too many Fitto AI requests were sent. You can try again shortly.</string>
     <string name="target_weight_ai_result_weight_format">Suggested target: %1$d kg</string>
-    <string name="target_weight_ai_use_button">Use this target</string>
+    <string name="target_weight_ai_use_button">Apply suggestion</string>
+
+    <string name="target_weight_input_card_helper">This is the weight you will set as your target.</string>
+    <string name="target_weight_ai_badge">Fitto AI</string>
+    <string name="target_weight_ai_recommended_target_label">Suggested target:</string>
+    <string name="target_weight_ai_estimated_duration_label">Estimated healthy duration:</string>
+    <string name="target_weight_ai_why_button">Why this target?</string>
+    <string name="target_weight_duration_weeks_format">%1$d–%2$d weeks</string>
+    <string name="target_weight_approach_title">Your target approach</string>
+    <string name="target_weight_approach_relaxed">Relaxed</string>
+    <string name="target_weight_approach_balanced">Balanced</string>
+    <string name="target_weight_approach_fast">Fast</string>
+    <string name="target_weight_approach_balanced_description">A balanced approach supports steady progress while protecting your health.</string>
+    <string name="target_weight_success_guidance">A realistic and sustainable target is the healthiest way to achieve long-term success. Small steps can create big changes!</string>
+    <string name="target_weight_ai_reason_title">Why was this target suggested?</string>
+    <string name="target_weight_ai_reason_description">Your profile information, current weight, goal type, and healthy progress range were analyzed to suggest a more sustainable target.</string>
+    <string name="target_weight_ai_reason_current_selection">Your current choice</string>
+    <string name="target_weight_ai_reason_current_selection_caption">Target entered by the user</string>
+    <string name="target_weight_ai_reason_recommendation">Fitto AI suggestion</string>
+    <string name="target_weight_ai_reason_recommendation_caption">A more balanced and sustainable target</string>
+    <string name="target_weight_ai_reason_duration">Estimated healthy duration</string>
+    <string name="target_weight_ai_reason_duration_caption">Healthy progress range</string>
+    <string name="target_weight_ai_reason_inputs_title">What was calculated from?</string>
+    <string name="target_weight_ai_reason_input_current_weight">Current weight</string>
+    <string name="target_weight_ai_reason_input_height">Height</string>
+    <string name="target_weight_ai_reason_input_age">Age</string>
+    <string name="target_weight_ai_reason_input_gender">Gender</string>
+    <string name="target_weight_ai_reason_input_activity">Activity level</string>
+    <string name="target_weight_ai_reason_input_goal">Goal type</string>
+    <string name="target_weight_ai_reason_evaluation_title">Fitto AI evaluation</string>
+    <string name="target_weight_ai_reason_evaluation_body">This target supports more controlled weekly weight change. Faster targets may look attractive in the short term, but they can be harder to sustain. A balanced target helps create a more realistic daily calorie and macro plan.</string>
+    <string name="target_weight_ai_continue_own_target">Continue with my target</string>
     <string name="target_weight_warning_dialog_title">Your target looks quite ambitious</string>
     <string name="target_weight_blocked_dialog_title">Target weight does not look safe</string>
     <string name="target_weight_ai_difference_dialog_title">More ambitious than the AI suggestion</string>
