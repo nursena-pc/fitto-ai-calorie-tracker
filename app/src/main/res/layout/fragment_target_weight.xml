@@ -259,7 +259,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="18dp">
+                        android:padding="16dp">
 
                     <LinearLayout
                             android:layout_width="match_parent"
@@ -268,11 +268,11 @@
                             android:orientation="horizontal">
 
                         <ImageView
-                                android:layout_width="46dp"
-                                android:layout_height="46dp"
+                                android:layout_width="42dp"
+                                android:layout_height="42dp"
                                 android:background="@drawable/bg_fitto_circle_soft"
                                 android:contentDescription="@string/target_weight_ai_title"
-                                android:padding="11dp"
+                                android:padding="10dp"
                                 android:src="@drawable/ic_auto_awesome"
                                 app:tint="@color/fitto_green" />
 
@@ -296,7 +296,7 @@
                                         android:layout_weight="1"
                                         android:text="@string/target_weight_ai_title"
                                         android:textColor="@color/fitto_green"
-                                        android:textSize="19sp"
+                                        android:textSize="18sp"
                                         android:textStyle="bold" />
 
                                 <TextView
@@ -320,10 +320,10 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="10dp"
-                                    android:lineSpacingExtra="4dp"
+                                    android:lineSpacingExtra="3dp"
                                     android:text="@string/target_weight_ai_description"
                                     android:textColor="@color/fitto_text_secondary"
-                                    android:textSize="15sp" />
+                                    android:textSize="14sp" />
 
                         </LinearLayout>
 
@@ -379,7 +379,7 @@
                             android:id="@+id/targetWeightAiResultCard"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="16dp"
+                            android:layout_marginTop="14dp"
                             android:visibility="gone"
                             app:cardBackgroundColor="@color/fitto_surface"
                             app:cardCornerRadius="20dp"
@@ -395,11 +395,11 @@
                                 android:padding="14dp">
 
                             <ImageView
-                                    android:layout_width="52dp"
-                                    android:layout_height="52dp"
+                                    android:layout_width="44dp"
+                                    android:layout_height="44dp"
                                     android:background="@drawable/bg_fitto_circle_soft"
                                     android:contentDescription="@string/target_weight_ai_result_title"
-                                    android:padding="13dp"
+                                    android:padding="11dp"
                                     android:src="@drawable/ic_monitor_weight"
                                     app:tint="@color/fitto_green" />
 
@@ -422,7 +422,7 @@
                                             android:layout_height="wrap_content"
                                             android:text="@string/target_weight_ai_recommended_target_label"
                                             android:textColor="@color/fitto_text_dark"
-                                            android:textSize="18sp"
+                                            android:textSize="16sp"
                                             android:textStyle="bold" />
 
                                     <TextView
@@ -431,7 +431,7 @@
                                             android:layout_height="wrap_content"
                                             android:layout_marginStart="6dp"
                                             android:textColor="@color/fitto_green"
-                                            android:textSize="20sp"
+                                            android:textSize="18sp"
                                             android:textStyle="bold" />
 
                                 </LinearLayout>
@@ -443,7 +443,7 @@
                                         android:layout_marginTop="8dp"
                                         android:lineSpacingExtra="3dp"
                                         android:textColor="@color/fitto_text_secondary"
-                                        android:textSize="15sp" />
+                                        android:textSize="14sp" />
 
                                 <TextView
                                         android:id="@+id/targetWeightAiResultWarningText"
@@ -460,7 +460,7 @@
                     <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp"
+                            android:layout_marginTop="12dp"
                             android:gravity="center"
                             android:orientation="horizontal">
 
@@ -468,35 +468,38 @@
                                 android:id="@+id/targetWeightUseAiButton"
                                 style="@style/Widget.Material3.Button"
                                 android:layout_width="0dp"
-                                android:layout_height="54dp"
+                                android:layout_height="50dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:maxLines="1"
+                                android:ellipsize="end"
                                 android:text="@string/target_weight_ai_use_button"
                                 android:textAllCaps="false"
                                 android:textColor="@color/white"
-                                android:textSize="16sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold"
                                 android:visibility="gone"
                                 app:backgroundTint="@color/fitto_green"
-                                app:cornerRadius="18dp"
-                                app:icon="@drawable/ic_auto_awesome"
-                                app:iconTint="@color/white" />
+                                app:cornerRadius="16dp" />
 
                         <com.google.android.material.button.MaterialButton
                                 android:id="@+id/targetWeightAiReasonButton"
                                 style="@style/Widget.Material3.Button.OutlinedButton"
                                 android:layout_width="0dp"
-                                android:layout_height="54dp"
-                                android:layout_marginStart="10dp"
+                                android:layout_height="50dp"
+                                android:layout_marginStart="8dp"
                                 android:layout_weight="1"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:maxLines="2"
                                 android:text="@string/target_weight_ai_why_button"
                                 android:textAllCaps="false"
                                 android:textColor="@color/fitto_green"
-                                android:textSize="15sp"
+                                android:textSize="13sp"
                                 android:textStyle="bold"
                                 android:visibility="gone"
-                                app:cornerRadius="18dp"
-                                app:icon="@drawable/ic_info"
-                                app:iconTint="@color/fitto_green"
+                                app:cornerRadius="16dp"
                                 app:strokeColor="@color/fitto_green" />
 
                     </LinearLayout>
