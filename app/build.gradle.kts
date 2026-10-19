@@ -118,7 +118,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:$cameraxVersion")
     implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
     implementation("androidx.camera:camera-view:$cameraxVersion")
-    implementation("com.google.guava:guava:33.3.1-android")
+    implementation("com.google.guava:guava:33.7.2-android")
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.health.connect:connect-client:1.1.0")
