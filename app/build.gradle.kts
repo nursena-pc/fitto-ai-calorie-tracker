@@ -110,7 +110,7 @@ dependencies {
     kapt("androidx.room:room-compiler:2.8.4")
 
     //api
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp:5.5.0")
 
     // CameraX
     val cameraxVersion = "1.6.0"
