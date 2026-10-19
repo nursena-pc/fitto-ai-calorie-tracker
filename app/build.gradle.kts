@@ -122,7 +122,7 @@ dependencies {
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.health.connect:connect-client:1.1.0")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.bumptech.glide:glide:5.0.9")
     implementation("androidx.work:work-runtime-ktx:2.10.5")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 }
